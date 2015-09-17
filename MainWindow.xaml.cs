@@ -19,6 +19,7 @@ using VpdbAgent.Vpdb.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using VpdbAgent.Vpdb.Network;
+using System.Net.Http;
 
 namespace VpdbAgent
 {
@@ -38,18 +39,19 @@ namespace VpdbAgent
 
 		private async void GetReleases()
 		{
-			VpdbApi vpdbApi = RestService.For<VpdbApi>("http://localhost:3000", new RefitSettings
-				{
-					JsonSerializerSettings = new JsonSerializerSettings {
-						ContractResolver = new SnakeCasePropertyNamesContractResolver()
-					}
+			VpdbApi vpdbApi = RestService.For<VpdbApi>("http://localhost:3001", new RefitSettings {
+				JsonSerializerSettings = new JsonSerializerSettings {
+					ContractResolver = new SnakeCasePropertyNamesContractResolver()
 				}
-			);
+			});
 
-			Releases = await vpdbApi.GetReleases();
-			foreach (Release release in Releases)
-			{
-				Console.WriteLine("{0} ({1}) - {2}", release.Name, release.Id, release.Authors);
+			try {
+				Releases = await vpdbApi.GetReleases();
+				foreach (Release release in Releases) {
+					Console.WriteLine("{0} ({1})", release.Name, release.Id);
+				}
+			} catch (HttpRequestException e) {
+				Console.WriteLine("Error retrieving releases: {0}", e.Message);
 			}
 		}
 	}
