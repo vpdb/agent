@@ -13,17 +13,32 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using MahApps.Metro.Controls;
+using Refit;
+using VpdbAgent.Vpdb;
+using VpdbAgent.Vpdb.Models;
 
 namespace VpdbAgent
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
-    public partial class MainWindow
-    {
-        public MainWindow()
-        {
-            InitializeComponent();
-        }
-    }
+	/// <summary>
+	/// Interaction logic for MainWindow.xaml
+	/// </summary>
+	public partial class MainWindow
+	{
+		public MainWindow()
+		{
+			InitializeComponent();
+			GetReleases();
+		}
+
+		private async void GetReleases()
+		{
+			VpdbApi vpdbApi = RestService.For<VpdbApi>("http://localhost:3000");
+
+			List<Release> releases = await vpdbApi.GetReleases();
+			foreach (Release release in releases)
+			{
+				Console.WriteLine("{0} ({1})", release.Name, release.Id);
+			}
+		}
+	}
 }

@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:VpdbAgent"
         xmlns:Controls="http://metro.mahapps.com/winfx/xaml/controls"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525">
+        Title="VPDB Agent" Height="350" Width="525">
     <Grid>
         <Label x:Name="label" Content="Label" HorizontalAlignment="Left" Margin="44,45,0,0" VerticalAlignment="Top"/>
         <Button x:Name="button" Content="Button" HorizontalAlignment="Left" Margin="44,120,0,0" VerticalAlignment="Top" Width="75"/>
