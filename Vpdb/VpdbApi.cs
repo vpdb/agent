@@ -9,7 +9,6 @@ namespace VpdbAgent.Vpdb
 {
 	interface VpdbApi
 	{
-
 		[Get("/api/v1/releases")]
 		Task<List<Models.Release>> GetReleases();
 	}

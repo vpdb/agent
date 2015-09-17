@@ -74,6 +74,14 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="RefitStubs.cs" />
+    <Compile Include="Vpdb\Models\Author.cs" />
+    <Compile Include="Vpdb\Models\File.cs" />
+    <Compile Include="Vpdb\Models\Flavor.cs" />
+    <Compile Include="Vpdb\Models\Game.cs" />
+    <Compile Include="Vpdb\Models\Image.cs" />
+    <Compile Include="Vpdb\Models\User.cs" />
+    <Compile Include="Vpdb\Models\Version.cs" />
+    <Compile Include="Vpdb\Network\SnakeCasePropertyNamesContractResolver.cs" />
     <Compile Include="Vpdb\VpdbApi.cs" />
     <Compile Include="Vpdb\Models\Release.cs" />
     <Page Include="MainWindow.xaml">

@@ -16,6 +16,9 @@ using MahApps.Metro.Controls;
 using Refit;
 using VpdbAgent.Vpdb;
 using VpdbAgent.Vpdb.Models;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
+using VpdbAgent.Vpdb.Network;
 
 namespace VpdbAgent
 {
@@ -24,6 +27,9 @@ namespace VpdbAgent
 	/// </summary>
 	public partial class MainWindow
 	{
+
+		public List<Release> Releases;
+
 		public MainWindow()
 		{
 			InitializeComponent();
@@ -32,12 +38,18 @@ namespace VpdbAgent
 
 		private async void GetReleases()
 		{
-			VpdbApi vpdbApi = RestService.For<VpdbApi>("http://localhost:3000");
+			VpdbApi vpdbApi = RestService.For<VpdbApi>("http://localhost:3000", new RefitSettings
+				{
+					JsonSerializerSettings = new JsonSerializerSettings {
+						ContractResolver = new SnakeCasePropertyNamesContractResolver()
+					}
+				}
+			);
 
-			List<Release> releases = await vpdbApi.GetReleases();
-			foreach (Release release in releases)
+			Releases = await vpdbApi.GetReleases();
+			foreach (Release release in Releases)
 			{
-				Console.WriteLine("{0} ({1})", release.Name, release.Id);
+				Console.WriteLine("{0} ({1}) - {2}", release.Name, release.Id, release.Authors);
 			}
 		}
 	}
