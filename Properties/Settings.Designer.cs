@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace vpdb_agent.Properties
+namespace VpdbAgent.Properties
 {
 
 
