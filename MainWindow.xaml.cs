@@ -12,7 +12,7 @@ namespace VpdbAgent
 		public MainWindow()
 		{
 			InitializeComponent();
-            MainFrame.Navigate(new MainPage());
+			MainFrame.Navigate(new MainPage());
 		}
 
 		private void SettingsButton_Click(object sender, RoutedEventArgs e)

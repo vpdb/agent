@@ -16,18 +16,41 @@
             <Button  x:Name="SettingsButton" Content="Settings" Width="75" Click="SettingsButton_Click" />
         </StackPanel>
 
-
-        <Frame x:Name="MainFrame"/>
-
-        <!--ControlTemplate TargetType="MainFrame">
-
-            <StackPanel Margin="7" Orientation="Horizontal">
-                <Button Content="Avast! Go back!"  Command="{x:Static NavigationCommands.BrowseBack}" IsEnabled="{TemplateBinding CanGoBack}" />
-                <Button Content="Forward you dogs!" Command="{x:Static NavigationCommands.BrowseForward}" IsEnabled="{TemplateBinding CanGoForward}" />
-            </StackPanel>
-
-
-        </-->
+        <Frame x:Name="MainFrame">
+            <Frame.Template>
+                <ControlTemplate TargetType="Frame">
+                    <DockPanel Margin="7" >
+                        <StackPanel Margin="7" Orientation="Horizontal" DockPanel.Dock="Top">
+                            <Button Command="{x:Static NavigationCommands.BrowseBack}" IsEnabled="{TemplateBinding CanGoBack}" Margin="0,0,10,0" >
+                                <Canvas Width="42.765" Height="73.997">
+                                    <Canvas>
+                                        <Path Fill="{Binding Foreground, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}}" Data="F1 M 11.621,37.042 L 42.682,5.810 L 36.872,0.000 L 0.000,37.042 L 36.954,73.997 L 42.765,68.186 L 11.621,37.042 Z"/>
+                                    </Canvas>
+                                </Canvas>
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Style.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="Foreground" Value="Red" />
+                                            </Trigger>
+                                            <Trigger Property="IsMouseOver" Value="False">
+                                                <Setter Property="Foreground" Value="Gray" />
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+                            <Button Command="{x:Static NavigationCommands.BrowseForward}" IsEnabled="{TemplateBinding CanGoForward}">
+                                <Viewbox Width="15" Height="15">
+                                    <Frame Source="Resources/Icons/angle-right.xaml" />
+                                </Viewbox>
+                            </Button>
+                        </StackPanel>
+                        <ContentPresenter />
+                    </DockPanel>
+                </ControlTemplate>
+            </Frame.Template>
+        </Frame>
 
     </DockPanel>
 </Controls:MetroWindow>
