@@ -8,11 +8,11 @@ namespace VpdbAgent.Vpdb.Models
 {
 	public class User
 	{
-		public string Id;
-		public string Name;
-		public string Username;
-		public string GravatarId;
-		public UserCounter Counter;
+		public string Id { get; set; }
+		public string Name { get; set; }
+		public string Username { get; set; }
+		public string GravatarId { get; set; }
+		public UserCounter Counter { get; set; }
 
 		public class UserCounter
 		{

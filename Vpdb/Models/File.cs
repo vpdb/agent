@@ -9,18 +9,18 @@ namespace VpdbAgent.Vpdb.Models
 {
 	public class File
 	{
-		public DateTime ReleasedAt;
-		public Flavor Flavor;
+		public DateTime ReleasedAt { get; set; }
+		public Flavor Flavor { get; set; }
 		public List<string> Compatibility;
 		[JsonProperty(PropertyName = "file")]
-		public FileReference Reference;
+		public FileReference Reference { get; set; }
 
 		public class FileReference
 		{
-			public string Id;
-			public string Name;
-			public long Bytes;
-			public string MimeType;
+			public string Id { get; set; }
+			public string Name { get; set; }
+			public long Bytes { get; set; }
+			public string MimeType { get; set; }
 		}
 	}
 }

@@ -1,0 +1,21 @@
+﻿<Controls:MetroWindow x:Class="VpdbAgent.Settings.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:VpdbAgent.Settings"
+		xmlns:Controls="http://metro.mahapps.com/winfx/xaml/controls"
+        mc:Ignorable="d"
+        Title="Settings" Height="260" Width="442.134"
+		ResizeMode="NoResize">
+    <Grid Margin="20" >
+        <TextBox x:Name="ApiKey" HorizontalAlignment="Left" Height="23" Margin="0,31,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="396"/>
+        <TextBox x:Name="AuthUser" HorizontalAlignment="Left" Height="23" Margin="0,104,0,0" TextWrapping="Wrap" Text="vpdb" VerticalAlignment="Top" Width="190"/>
+        <PasswordBox x:Name="AuthPass" HorizontalAlignment="Left" Margin="206,104,0,0" VerticalAlignment="Top" Width="190"/>
+        <Label x:Name="label" Content="API Key" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+        <Label x:Name="label1" Content="HTTP Basic Auth" HorizontalAlignment="Left" Margin="0,73,0,0" VerticalAlignment="Top"/>
+        <Button x:Name="SubmitButton" Content="Save" HorizontalAlignment="Right"  VerticalAlignment="Bottom" Width="75" Click="SubmitButton_Click"/>
+        <Button x:Name="CancelButton" Content="Cancel" HorizontalAlignment="Right"  VerticalAlignment="Bottom" Width="75" Click="CancelButton_Click" Margin="0,0,80,0"/>
+
+    </Grid>
+</Controls:MetroWindow>

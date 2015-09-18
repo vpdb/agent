@@ -8,9 +8,9 @@ namespace VpdbAgent.Vpdb.Models
 {
 	public class Image
 	{
-		public string Url;
-		public bool isProtected;
-		public int Width;
-		public int Height;
+		public string Url { get; set; }
+		public bool isProtected { get; set; }
+		public int Width { get; set; }
+		public int Height { get; set; }
 	}
 }

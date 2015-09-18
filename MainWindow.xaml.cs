@@ -1,25 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using MahApps.Metro.Controls;
-using Refit;
+using VpdbAgent.PinballX;
+using VpdbAgent.Settings;
 using VpdbAgent.Vpdb;
 using VpdbAgent.Vpdb.Models;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
-using VpdbAgent.Vpdb.Network;
-using System.Net.Http;
 
 namespace VpdbAgent
 {
@@ -28,31 +13,47 @@ namespace VpdbAgent
 	/// </summary>
 	public partial class MainWindow
 	{
-
-		public List<Release> Releases;
+		public List<Release> Releases { get; set; }
 
 		public MainWindow()
 		{
 			InitializeComponent();
-			GetReleases();
+			getReleases();
+			//getMenu();
 		}
 
-		private async void GetReleases()
+		private async void getReleases()
 		{
-			VpdbApi vpdbApi = RestService.For<VpdbApi>("http://localhost:3001", new RefitSettings {
-				JsonSerializerSettings = new JsonSerializerSettings {
-					ContractResolver = new SnakeCasePropertyNamesContractResolver()
-				}
-			});
+
+			VpdbClient client = new VpdbClient();
 
 			try {
-				Releases = await vpdbApi.GetReleases();
+				Releases = await client.Api.GetReleases();
+				ReleaseList.ItemsSource = Releases;
 				foreach (Release release in Releases) {
-					Console.WriteLine("{0} ({1})", release.Name, release.Id);
+					Console.WriteLine("{0} - {1} ({2})", release.Game.Title, release.Name, release.Id);
 				}
-			} catch (HttpRequestException e) {
+			} catch (Exception e) {
 				Console.WriteLine("Error retrieving releases: {0}", e.Message);
 			}
+		}
+
+		private void getMenu()
+		{
+			MenuManager menuManager = new MenuManager();
+			PinballX.Models.Menu menu = menuManager.parseXml();
+
+			Console.WriteLine("Parsed {0} games.", menu.Games.Count);
+			foreach (PinballX.Models.Game game in menu.Games) {
+				Console.WriteLine("{0} - {1} ({2})", game.Filename, game.Description, game.ReleaseId);
+			}
+			//menuManager.saveXml(menu);
+		}
+
+		private void SettingsButton_Click(object sender, RoutedEventArgs e)
+		{
+			SettingsWindow settings = new SettingsWindow();
+			settings.Show();
 		}
 	}
 }

@@ -8,7 +8,7 @@ namespace VpdbAgent.Vpdb.Models
 {
 	public class Flavor
 	{
-		public string Lighting;
-		public string Orientation;
+		public string Lighting { get; set; }
+		public string Orientation { get; set; }
 	}
 }

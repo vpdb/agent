@@ -8,8 +8,8 @@ namespace VpdbAgent.Vpdb.Models
 {
 	public class Author
 	{
-		public List<string> Roles;
-		public User User;
+		public List<string> Roles { get; set; }
+		public User User { get; set; }
 
 		public override string ToString()
 		{

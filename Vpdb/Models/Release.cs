@@ -8,19 +8,19 @@ namespace VpdbAgent.Vpdb.Models
 {
 	public class Release
 	{
-		public string Id;
-		public string Name;
-		public DateTime CreatedAt;
-		public List<Author> Authors;
-		public ReleaseCounter Counter;
-		public Game Game;
-		public Version LatestVersion;
+		public string Id { get; set; }
+		public string Name { get; set; }
+		public DateTime CreatedAt { get; set; }
+		public List<Author> Authors { get; set; }
+		public ReleaseCounter Counter { get; set; }
+		public Game Game { get; set; }
+		public Version LatestVersion { get; set; }
 
 		public class ReleaseCounter
 		{
-			public int Comments;
-			public int Stars;
-			public int Downloads;
+			public int Comments { get; set; }
+			public int Stars { get; set; }
+			public int Downloads { get; set; }
 		}
 	}
 }

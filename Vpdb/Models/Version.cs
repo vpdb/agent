@@ -10,14 +10,14 @@ namespace VpdbAgent.Vpdb.Models
 	public class Version
 	{
 		[JsonProperty(PropertyName = "version")]
-		public string Name;
-		public VersionThumb Thumb;
-		public List<File> Files;
+		public string Name { get; set; }
+		public VersionThumb Thumb { get; set; }
+		public List<File> Files { get; set; }
 
 		public class VersionThumb
 		{
-			public Image Image;
-			public Flavor Flavor;
+			public Image Image { get; set; }
+			public Flavor Flavor { get; set; }
 		}
 	}
 }

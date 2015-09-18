@@ -8,7 +8,7 @@ namespace VpdbAgent.Vpdb.Models
 {
 	public class Game
 	{
-		public string Id;
-		public string Name;
+		public string Id { get; set; }
+		public string Title { get; set; }
 	}
 }

@@ -5,12 +5,40 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:VpdbAgent"
         xmlns:Controls="http://metro.mahapps.com/winfx/xaml/controls"
+		xmlns:UserControls="clr-namespace:VpdbAgent.Views"
         mc:Ignorable="d"
-        Title="VPDB Agent" Height="350" Width="525">
-    <Grid>
-        <Label x:Name="label" Content="Label 1" HorizontalAlignment="Left" Margin="0,0,0,0" VerticalAlignment="Top"/>
-        <Button x:Name="button" Content="Button" HorizontalAlignment="Left" Margin="44,120,0,0" VerticalAlignment="Top" Width="75"/>
-        <TextBox x:Name="textBox" HorizontalAlignment="Left" Height="23" Margin="44,76,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="120"/>
+        Title="VPDB Agent" Height="800" Width="600">
+    <DockPanel LastChildFill="True">
+        <Button Content="Dock=Left" DockPanel.Dock="Bottom"/>
+        <Grid>
+           
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="100" />
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
 
-    </Grid>
+            <Button Grid.Row="0" Grid.Column="0" x:Name="SettingsButton" Content="Settings" HorizontalAlignment="Center" VerticalAlignment="Top" Width="75" Click="SettingsButton_Click" RenderTransformOrigin="4.624,5.858"/>
+
+			
+            <GridSplitter HorizontalAlignment="Right" 
+                  VerticalAlignment="Stretch" 
+                  Grid.Column="1" ResizeBehavior="PreviousAndNext"
+
+                  Width="5" Background="#FFBCBCBC"/>
+            <Grid Grid.Row="0" Grid.Column="2" Background="#111">
+                <ItemsControl Name="ReleaseList">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <UserControls:ReleaseTemplate Release="{Binding}" Margin="4" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+
+                </ItemsControl>
+            </Grid>
+
+        </Grid>
+
+    </DockPanel>
+   
 </Controls:MetroWindow>
