@@ -7,7 +7,7 @@
 	  xmlns:UserControls="clr-namespace:VpdbAgent.Pages"
       mc:Ignorable="d" 
       d:DesignHeight="300" d:DesignWidth="300"
-      Title="MainPage">
+      Title="VPDB Agent">
 
     <Grid>
         <Grid.ColumnDefinitions>

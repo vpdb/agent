@@ -5,17 +5,43 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:VpdbAgent.Pages"
       mc:Ignorable="d" 
-      d:DesignHeight="300" d:DesignWidth="300"
-      Title="SettingsPage">
+      d:DesignHeight="320" d:DesignWidth="400"
+      Title="Settings">
 
-    <Grid Margin="20" >
-        <TextBox x:Name="ApiKey" HorizontalAlignment="Left" Height="23" Margin="0,31,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="396"/>
-        <TextBox x:Name="AuthUser" HorizontalAlignment="Left" Height="23" Margin="0,104,0,0" TextWrapping="Wrap" Text="vpdb" VerticalAlignment="Top" Width="190"/>
-        <PasswordBox x:Name="AuthPass" HorizontalAlignment="Left" Margin="206,104,0,0" VerticalAlignment="Top" Width="190"/>
-        <Label x:Name="label" Content="API Key" HorizontalAlignment="Left" VerticalAlignment="Top"/>
-        <Label x:Name="label1" Content="HTTP Basic Auth" HorizontalAlignment="Left" Margin="0,73,0,0" VerticalAlignment="Top"/>
-        <Button x:Name="SubmitButton" Content="Save" HorizontalAlignment="Right"  VerticalAlignment="Bottom" Width="75" Click="SubmitButton_Click"/>
-        <Button x:Name="CancelButton" Content="Cancel" HorizontalAlignment="Right"  VerticalAlignment="Bottom" Width="75" Click="CancelButton_Click" Margin="0,0,80,0"/>
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <StackPanel Grid.Row="0" Orientation="Vertical">
 
+            <!-- API KEY -->
+            <Label Content="API Key" HorizontalAlignment="Left" />
+            <TextBox x:Name="ApiKey" HorizontalAlignment="Stretch" Height="23" TextWrapping="Wrap" />
+
+            <!-- [X] Advanced Options -->
+            <CheckBox x:Name="ShowAdvancedOptions" Content="Show Advanced Options" Margin="0,20,0,0" Checked="ShowAdvancedOptions_Checked" Unchecked="ShowAdvancedOptions_Checked"/>
+
+            <!-- API Endpoint -->
+            <Label x:Name="ApiEndpointLabel" Content="VPDB API Endpoiunt" HorizontalAlignment="Left" Margin="0,20,0,0"/>
+            <TextBox x:Name="ApiEndpoint" HorizontalAlignment="Stretch" Height="23" TextWrapping="Wrap" />
+
+            <!-- HTTP Basic Auth -->
+            <Label x:Name="BasicAuthLabel" Content="HTTP Basic Auth" Margin="0,10,0,0" HorizontalAlignment="Left" />
+            <Grid x:Name="BasicAuth" >
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBox x:Name="AuthUser" Height="23" Grid.Column="0"/>
+                <PasswordBox x:Name="AuthPass"  Height="23" Grid.Column="2"/>
+            </Grid>
+
+        </StackPanel>
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button x:Name="CancelButton" Content="Cancel" Width="75" Click="CancelButton_Click" Margin="0,0,10,0" />
+            <Button x:Name="SubmitButton" Content="Save" Width="75" Click="SubmitButton_Click"/>
+        </StackPanel>
     </Grid>
 </Page>
