@@ -12,7 +12,7 @@ using VpdbAgent.Vpdb;
 using VpdbAgent.Vpdb.Models;
 using VpdbAgent.Vpdb.Network;
 
-namespace VpdbAgent.Views
+namespace VpdbAgent.Pages
 {
 	/// <summary>
 	/// Interaction logic for ReleaseTemplate.xaml
