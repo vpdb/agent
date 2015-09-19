@@ -71,5 +71,17 @@ namespace VpdbAgent.Properties {
                 this["Endpoint"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string PbxFolder {
+            get {
+                return ((string)(this["PbxFolder"]));
+            }
+            set {
+                this["PbxFolder"] = value;
+            }
+        }
     }
 }

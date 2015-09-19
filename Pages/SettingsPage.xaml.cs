@@ -7,6 +7,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
+using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -30,6 +31,7 @@ namespace VpdbAgent.Pages
 			AuthUser.Text = (string)Properties.Settings.Default["AuthUser"];
 			AuthPass.Password = (string)Properties.Settings.Default["AuthPass"];
 			ApiEndpoint.Text = (string)Properties.Settings.Default["Endpoint"];
+			PinballXFolderLabel.Content = (string)Properties.Settings.Default["PbxFolder"];
 		}
 
 		private void SubmitButton_Click(object sender, RoutedEventArgs e)
@@ -38,8 +40,26 @@ namespace VpdbAgent.Pages
 			Properties.Settings.Default["AuthUser"] = AuthUser.Text;
 			Properties.Settings.Default["AuthPass"] = AuthPass.Password;
 			Properties.Settings.Default["Endpoint"] = ApiEndpoint.Text;
+			Properties.Settings.Default["PbxFolder"] = PinballXFolderLabel.Content;
 			Properties.Settings.Default.Save();
 			NavigationService.GoBack();
+		}
+
+		private void PinballXFolderButton_Click(object sender, RoutedEventArgs e)
+		{
+			var dialog = new FolderBrowserDialog();
+			dialog.ShowNewFolderButton = false;
+			if (PinballXFolderLabel.Content.ToString().Length > 0) {
+				dialog.SelectedPath = PinballXFolderLabel.Content.ToString();
+			}
+			DialogResult result = dialog.ShowDialog();
+
+			if (result == DialogResult.OK) {
+				PinballXFolderLabel.Content = dialog.SelectedPath;
+
+			} else {
+				PinballXFolderLabel.Content = string.Empty;
+			}
 		}
 
 		private void CancelButton_Click(object sender, RoutedEventArgs e)
@@ -66,5 +86,6 @@ namespace VpdbAgent.Pages
 				BasicAuth.Visibility = Visibility.Visible;
 			}
 		}
+
 	}
 }

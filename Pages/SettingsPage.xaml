@@ -19,6 +19,18 @@
             <Label Content="API Key" HorizontalAlignment="Left" />
             <TextBox x:Name="ApiKey" HorizontalAlignment="Stretch" Height="23" TextWrapping="Wrap" />
 
+            <!-- PINBALLX/HYPERPIN FOLDER -->
+            <Label Content="PinballX Folder" HorizontalAlignment="Left" />
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Label x:Name="PinballXFolderLabel" Grid.Column="0"/>
+                <Button x:Name="PinballXFolderButton" Content="Choose Folder" Grid.Column="2" Click="PinballXFolderButton_Click"/>
+            </Grid>
+
             <!-- [X] Advanced Options -->
             <CheckBox x:Name="ShowAdvancedOptions" Content="Show Advanced Options" Margin="0,20,0,0" Checked="ShowAdvancedOptions_Checked" Unchecked="ShowAdvancedOptions_Checked"/>
 
