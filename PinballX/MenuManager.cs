@@ -64,6 +64,7 @@ namespace VpdbAgent.PinballX
 				foreach (Game game in menu.Games) {
 					game.System = system;
 				}
+				return menu;
 
 			} catch (System.InvalidOperationException e) {
 				Console.WriteLine("Error parsing XML: {0}", e.Message);
