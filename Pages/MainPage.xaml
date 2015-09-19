@@ -6,12 +6,12 @@
       xmlns:local="clr-namespace:VpdbAgent.Pages"
 	  xmlns:UserControls="clr-namespace:VpdbAgent.Views"
       mc:Ignorable="d" 
-      d:DesignHeight="300" d:DesignWidth="300"
+      d:DesignHeight="300" d:DesignWidth="900"
       Title="VPDB Agent">
 
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="150" />
+            <ColumnDefinition Width="200" />
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
@@ -32,7 +32,7 @@
         <GridSplitter Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" ResizeBehavior="PreviousAndNext" Width="3" Background="#40ffffff"/>
 
         <!-- RIGHT PANEL -->
-        <Grid Grid.Column="2" Background="#111">
+        <Grid Grid.Column="2" Background="#202020">
             <ScrollViewer>
 
                 <ItemsControl Name="GamesList">

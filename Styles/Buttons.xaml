@@ -2,23 +2,58 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:local="clr-namespace:VpdbAgent">
 
+
+    <Style x:Key="SecondaryButton" TargetType="Button">
+        <Style.Triggers>
+            <Trigger Property="IsEnabled" Value="False">
+                <Setter Property="Background" Value="#20ffffff" />
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="True">
+                <Setter Property="Background" Value="#60ffffff" />
+            </Trigger>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="#80ffffff" />
+            </Trigger>
+            <Trigger Property="IsPressed" Value="True">
+                <Setter Property="Background" Value="#a0ffffff" />
+            </Trigger>
+        </Style.Triggers>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border Background="{Binding Background, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}}" CornerRadius="9" Padding="15,0,15,0" Height="18">
+                        <ContentPresenter/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="TertiaryButton" TargetType="Button" BasedOn="{StaticResource SecondaryButton}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border BorderThickness="1" BorderBrush="{Binding Background, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}}" CornerRadius="11" Padding="15,2,15,2" Height="22">
+                        <ContentPresenter TextBlock.Foreground="{Binding Background, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}}"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <Style x:Key="NavigationButton" TargetType="Button">
         <Style.Triggers>
             <Trigger Property="IsEnabled" Value="False">
                 <Setter Property="Foreground" Value="#30ffffff" />
-                <Setter Property="Background" Value="Green" />
             </Trigger>
             <Trigger Property="IsEnabled" Value="True">
                 <Setter Property="Foreground" Value="#80ffffff" />
-                <Setter Property="Background" Value="Green" />
             </Trigger>
             <Trigger Property="IsMouseOver" Value="True">
                 <Setter Property="Foreground" Value="#b0ffffff" />
-                <Setter Property="Background" Value="Green" />
             </Trigger>
             <Trigger Property="IsPressed" Value="True">
                 <Setter Property="Foreground" Value="#ffffffff" />
-                <Setter Property="Background" Value="Green" />
             </Trigger>
         </Style.Triggers>
         <Setter Property="Template">
