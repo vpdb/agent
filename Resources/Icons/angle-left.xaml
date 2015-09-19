@@ -1,16 +1,16 @@
 <!-- Created with Ai->XAML Export Plug-In Version 0.2 (PC/64) -->
 <!-- By Mike Swanson (http://blog.mikeswanson.com/)           -->
 
-<Viewbox Width="42.765" Height="73.997"
+<Viewbox Width="10.119" Height="17.509"
   xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <Canvas Width="42.765" Height="73.997">
+<Canvas Width="10.119" Height="17.509">
 
-        <Canvas>
+  <Canvas>
 
-            <!-- Layer 1/<Path> -->
-            <Path Fill="{Binding Foreground, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}}" Data="F1 M 11.621,37.042 L 42.682,5.810 L 36.872,0.000 L 0.000,37.042 L 36.954,73.997 L 42.765,68.186 L 11.621,37.042 Z"/>
+  <!-- Layer 1/<Path> -->
+  <Path Fill="#ff000000" Data="F1 M 2.750,8.765 L 10.099,1.375 L 8.724,0.000 L 0.000,8.765 L 8.744,17.509 L 10.119,16.134 L 2.750,8.765 Z"/>
 
-        </Canvas>
-    </Canvas>
+  </Canvas>
+</Canvas>
 </Viewbox>
