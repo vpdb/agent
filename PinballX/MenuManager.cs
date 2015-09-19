@@ -21,11 +21,10 @@ namespace VpdbAgent.PinballX
 		{
 			Systems = new List<PinballXSystem>();
 			if (rootFolder != null && rootFolder.Length > 0) {
-				string pbxConfig = rootFolder + "\\Config\\PinballX.ini";
+				string pbxConfig = rootFolder + @"\Config\PinballX.ini";
 				if (File.Exists(pbxConfig)) {
 					var parser = new FileIniDataParser();
 					IniData data = parser.ReadFile(pbxConfig);
-
 					Systems.Add(new PinballXSystem(Type.VP, data["VisualPinball"]));
 					Systems.Add(new PinballXSystem(Type.FP, data["FuturePinball"]));
 					for (int i = 0; i < 20; i++) {
@@ -37,12 +36,35 @@ namespace VpdbAgent.PinballX
 			}
 		}
 
-		public Menu parseXml()
+		public List<Game> GetGames()
+		{
+			List<Game> games = new List<Game>();
+			string xmlPath;
+			foreach (PinballXSystem system in Systems) {
+				xmlPath = rootFolder + @"\Databases\" + system.Name;
+				if (system.Enabled && Directory.Exists(xmlPath)) {
+					foreach (string filePath in Directory.GetFiles(xmlPath)) {
+						if ("xml".Equals(filePath.Substring(filePath .Length - 3), StringComparison.InvariantCultureIgnoreCase)) {
+							games.AddRange(parseXml(filePath, system).Games);
+						}
+					}
+				}
+			}
+
+			return games;
+		}
+
+		private Menu parseXml(string filepath, PinballXSystem system)
 		{
 			try {
 				XmlSerializer serializer = new XmlSerializer(typeof(Menu));
-				Stream reader = new FileStream("E:\\Pinball\\PinballX\\Databases\\Visual Pinball\\Visual Pinball.xml", FileMode.Open);
-				return (Menu)serializer.Deserialize(reader);
+				Stream reader = new FileStream(filepath, FileMode.Open);
+				Menu menu = (Menu)serializer.Deserialize(reader);
+
+				foreach (Game game in menu.Games) {
+					game.System = system;
+				}
+
 			} catch (System.InvalidOperationException e) {
 				Console.WriteLine("Error parsing XML: {0}", e.Message);
 			}

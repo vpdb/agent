@@ -22,7 +22,7 @@ namespace VpdbAgent.Pages
 			MenuManager = new MenuManager();
 			InitializeComponent();
 			getReleases();
-			getMenu();
+			MenuManager.GetGames();
 
 			Systems.ItemsSource = MenuManager.Systems.Where(p => (p.Enabled == true));
 			foreach (PinballXSystem system in MenuManager.Systems) {
@@ -45,19 +45,5 @@ namespace VpdbAgent.Pages
 				Console.WriteLine("Error retrieving releases: {0}", e.Message);
 			}
 		}
-
-		private void getMenu()
-		{
-
-			PinballX.Models.Menu menu = MenuManager.parseXml();
-
-			Console.WriteLine("Parsed {0} games.", menu.Games.Count);
-			foreach (PinballX.Models.Game game in menu.Games) {
-				Console.WriteLine("{0} - {1} ({2})", game.Filename, game.Description, game.ReleaseId);
-			}
-			//menuManager.saveXml(menu);
-		}
 	}
-
-
 }

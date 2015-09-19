@@ -10,22 +10,25 @@ namespace VpdbAgent.PinballX.Models
 	[XmlRoot("game")]
 	public class Game
 	{
+		[XmlIgnore]
+		public PinballXSystem System { get; set; }
+
 		// "official hyperpin" fields
 		// ----------------------------------
 		[XmlAttribute("name")]
-		public String Filename;
+		public String Filename { get; set; }
 
 		[XmlElement("description")]
-		public String Description;
+		public String Description { get; set; }
 
 		[XmlElement("manufacturer")]
-		public String Manufacturer;
+		public String Manufacturer { get; set; }
 
 		[XmlElement("year")]
-		public String Year;
+		public String Year { get; set; }
 
 		[XmlElement("type")]
-		public String Type;
+		public String Type { get; set; }
 
 		// pinballx fields
 		// ----------------------------------
