@@ -4,6 +4,7 @@ using VpdbAgent.Vpdb;
 using VpdbAgent.PinballX;
 using VpdbAgent.Vpdb.Models;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace VpdbAgent.Pages
 {
@@ -14,12 +15,19 @@ namespace VpdbAgent.Pages
 	{
 
 		public List<Release> Releases { get; set; }
+		public MenuManager MenuManager { get; set; }
 
 		public MainPage()
 		{
+			MenuManager = new MenuManager();
 			InitializeComponent();
 			getReleases();
-			//getMenu();
+			getMenu();
+
+			Systems.ItemsSource = MenuManager.Systems.Where(p => (p.Enabled == true));
+			foreach (PinballXSystem system in MenuManager.Systems) {
+				Console.WriteLine("+++ System {0} - {1}", system.Name, system.Enabled);
+			}
 		}
 
 		private async void getReleases()
@@ -40,8 +48,8 @@ namespace VpdbAgent.Pages
 
 		private void getMenu()
 		{
-			MenuManager menuManager = new MenuManager();
-			PinballX.Models.Menu menu = menuManager.parseXml();
+
+			PinballX.Models.Menu menu = MenuManager.parseXml();
 
 			Console.WriteLine("Parsed {0} games.", menu.Games.Count);
 			foreach (PinballX.Models.Game game in menu.Games) {
