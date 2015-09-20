@@ -29,6 +29,8 @@ namespace VpdbAgent.Pages
 			}
 			Games = MenuManager.GetGames();
 			GamesList.ItemsSource = Games;
+
+			GameManager gameManager = new GameManager();
 		}
 
 		private async void getReleases()

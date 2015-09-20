@@ -10,9 +10,6 @@ namespace VpdbAgent.PinballX.Models
 	[XmlRoot("game")]
 	public class Game
 	{
-		[XmlIgnore]
-		public PinballXSystem System { get; set; }
-
 		// "official hyperpin" fields
 		// ----------------------------------
 		[XmlAttribute("name")]
@@ -33,9 +30,16 @@ namespace VpdbAgent.PinballX.Models
 		// pinballx fields
 		// ----------------------------------
 
-		// vpdb fields
-		// ----------------------------------
-		[XmlAttribute("vpdb-release-id")]
-		public String ReleaseId;
+		[XmlElement("hidedmd")]
+		public Boolean HideDmd { get; set; }
+
+		[XmlElement("hidebackglass")]
+		public Boolean HideBackglass { get; set; }
+
+		[XmlElement("enabled")]
+		public Boolean Enabled { get; set; }
+
+		[XmlElement("rating")]
+		public Double Rating { get; set; }
 	}
 }

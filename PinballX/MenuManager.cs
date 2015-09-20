@@ -59,12 +59,7 @@ namespace VpdbAgent.PinballX
 			try {
 				XmlSerializer serializer = new XmlSerializer(typeof(Menu));
 				Stream reader = new FileStream(filepath, FileMode.Open);
-				Menu menu = (Menu)serializer.Deserialize(reader);
-
-				foreach (Game game in menu.Games) {
-					game.System = system;
-				}
-				return menu;
+				return (Menu)serializer.Deserialize(reader);
 
 			} catch (System.InvalidOperationException e) {
 				Console.WriteLine("Error parsing XML: {0}", e.Message);

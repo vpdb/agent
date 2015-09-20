@@ -42,6 +42,16 @@ The above implicates:
 - [INI File Parser](https://github.com/rickyah/ini-parser) for parsing PinballX config
 
 
+## Database
+
+The goal is not to touch at all current XML files that make the PinballX
+database. Instead, we keep a `vpdb.json` in each folder that contains the 
+additional data we need to work with. This file basically serves as our local
+database is updated as the XMLs are changed manually or by another application.
+
+As for adding new games, we'll be using a separate XML that sits besides the
+current ones.
+
 ## License
 
 GPLv2, see [LICENSE](LICENSE).
