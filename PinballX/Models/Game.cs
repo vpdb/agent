@@ -31,13 +31,13 @@ namespace VpdbAgent.PinballX.Models
 		// ----------------------------------
 
 		[XmlElement("hidedmd")]
-		public Boolean HideDmd { get; set; }
+		public String HideDmd { get; set; }
 
 		[XmlElement("hidebackglass")]
-		public Boolean HideBackglass { get; set; }
+		public String HideBackglass { get; set; }
 
 		[XmlElement("enabled")]
-		public Boolean Enabled { get; set; }
+		public String Enabled { get; set; }
 
 		[XmlElement("rating")]
 		public Double Rating { get; set; }

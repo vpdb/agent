@@ -16,21 +16,22 @@ namespace VpdbAgent.Pages
 
 		public List<PinballX.Models.Game> Games { get; set; }
 		public List<Release> Releases { get; set; }
-		public MenuManager MenuManager { get; set; }
+		//public MenuManager MenuManager { get; set; }
 
 		public MainPage()
 		{
-			MenuManager = new MenuManager();
 			InitializeComponent();
-			//getReleases();
+
+/*			getReleases();
 			Systems.ItemsSource = MenuManager.Systems.Where(p => (p.Enabled == true));
 			foreach (PinballXSystem system in MenuManager.Systems) {
 				Console.WriteLine("+++ System {0} - {1}", system.Name, system.Enabled);
 			}
 			Games = MenuManager.GetGames();
 			GamesList.ItemsSource = Games;
+*/
 
-			GameManager gameManager = new GameManager();
+			GameManager gameManager = GameManager.GetInstance();
 		}
 
 		private async void getReleases()

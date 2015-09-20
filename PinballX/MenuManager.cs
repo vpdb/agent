@@ -13,20 +13,34 @@ namespace VpdbAgent.PinballX
 {
 	public class MenuManager
 	{
+		private static MenuManager INSTANCE;
+		private static readonly string rootFolder = (string)Properties.Settings.Default["PbxFolder"];
+		private static readonly string iniPath = rootFolder + @"\Config\PinballX.ini";
 
-		private string rootFolder = (string)Properties.Settings.Default["PbxFolder"];
 		public List<PinballXSystem> Systems { set; get; }
 
-		public MenuManager()
+		private MenuManager()
 		{
+			parseIni();
+
+			FileWatcher fileWatcher = FileWatcher.GetInstance();
+			fileWatcher.SetupIni(iniPath);
+			fileWatcher.IniChanged += new FileWatcher.IniChangedHandler(parseIni);
+		}
+
+		/// <summary>
+		/// Parses PinballX.ini and reads all systems from it.
+		/// </summary>
+		private void parseIni()
+		{
+			Console.WriteLine("Parsing systems from PinballX.ini...");
 			Systems = new List<PinballXSystem>();
 			if (rootFolder != null && rootFolder.Length > 0) {
-				string pbxConfig = rootFolder + @"\Config\PinballX.ini";
-				if (File.Exists(pbxConfig)) {
+				if (File.Exists(iniPath)) {
 					var parser = new FileIniDataParser();
-					IniData data = parser.ReadFile(pbxConfig);
-					Systems.Add(new PinballXSystem(Type.VP, data["VisualPinball"]));
-					Systems.Add(new PinballXSystem(Type.FP, data["FuturePinball"]));
+					IniData data = parser.ReadFile(iniPath);
+					Systems.Add(new PinballXSystem(VpdbAgent.Models.Platform.PlatformType.VP, data["VisualPinball"]));
+					Systems.Add(new PinballXSystem(VpdbAgent.Models.Platform.PlatformType.FP, data["FuturePinball"]));
 					for (int i = 0; i < 20; i++) {
 						if (data["System_" + i] != null) {
 							Systems.Add(new PinballXSystem(data["System_" + i]));
@@ -34,6 +48,20 @@ namespace VpdbAgent.PinballX
 					}
 				}
 			}
+			Console.WriteLine("Done, {0} systems parsed.", Systems.Count);
+		}
+
+		public List<Game> GetGames(string path)
+		{
+			List<Game> games = new List<Game>();
+			if (Directory.Exists(path)) {
+				foreach (string filePath in Directory.GetFiles(path)) {
+					if ("xml".Equals(filePath.Substring(filePath.Length - 3), StringComparison.InvariantCultureIgnoreCase)) {
+						games.AddRange(parseXml(filePath).Games);
+					}
+				}
+			}
+			return games;
 		}
 
 		public List<Game> GetGames()
@@ -42,27 +70,22 @@ namespace VpdbAgent.PinballX
 			string xmlPath;
 			foreach (PinballXSystem system in Systems) {
 				xmlPath = rootFolder + @"\Databases\" + system.Name;
-				if (system.Enabled && Directory.Exists(xmlPath)) {
-					foreach (string filePath in Directory.GetFiles(xmlPath)) {
-						if ("xml".Equals(filePath.Substring(filePath .Length - 3), StringComparison.InvariantCultureIgnoreCase)) {
-							games.AddRange(parseXml(filePath, system).Games);
-						}
-					}
+				if (system.Enabled) {
+					games.AddRange(GetGames(xmlPath));
 				}
 			}
-
 			return games;
 		}
 
-		private Menu parseXml(string filepath, PinballXSystem system)
+		private Menu parseXml(string filepath)
 		{
 			try {
 				XmlSerializer serializer = new XmlSerializer(typeof(Menu));
 				Stream reader = new FileStream(filepath, FileMode.Open);
-				return (Menu)serializer.Deserialize(reader);
+				return serializer.Deserialize(reader) as Menu;
 
 			} catch (System.InvalidOperationException e) {
-				Console.WriteLine("Error parsing XML: {0}", e.Message);
+				Console.WriteLine("Error parsing {0}: {1}", filepath, e.Message);
 			}
 			return new Menu();
 		}
@@ -76,5 +99,14 @@ namespace VpdbAgent.PinballX
 			writer.Serialize(file, menu, ns);
 			file.Close();
 		}
+
+		public static MenuManager GetInstance()
+		{
+			if (INSTANCE == null) {
+				INSTANCE = new MenuManager();
+			}
+			return INSTANCE;
+		}
+
 	}
 }
