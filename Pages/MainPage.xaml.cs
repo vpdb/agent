@@ -18,8 +18,6 @@ namespace VpdbAgent.Pages
 		public ICollectionView Platforms { get; private set; }
 		public ICollectionView Games { get; private set; }
 
-		//public MenuManager MenuManager { get; set; }
-
 		public MainPage()
 		{
 			InitializeComponent();

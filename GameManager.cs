@@ -12,6 +12,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Data;
+using VpdbAgent.Common;
 using VpdbAgent.Models;
 using VpdbAgent.PinballX;
 using VpdbAgent.Vpdb.Network;
@@ -90,16 +91,22 @@ namespace VpdbAgent
 
 		/// <summary>
 		/// Returns all games of currently selected platforms
+		/// 
+		/// This is terribly ineffecient since on every game add, all listeners
+		/// are notified (times number of platforms). Probably should roll our 
+		/// own publisher. 
+		/// @FIXME
 		/// </summary>
 		/// <returns></returns>
-		public ObservableCollection<Game> GetGames(ICollectionView platforms)
+		public LazyObservableCollection<Game> GetGames(ICollectionView platforms)
 		{
-			ObservableCollection<Game> games = new ObservableCollection<Game>();
+			LazyObservableCollection<Game> games = new LazyObservableCollection<Game>();
+
+			// update data on when platforms change
 			platforms.CollectionChanged += new System.Collections.Specialized.NotifyCollectionChangedEventHandler((a, b) =>
 			{
 				ListCollectionView list = a as ListCollectionView;
 				NotifyCollectionChangedEventArgs args = b as NotifyCollectionChangedEventArgs;
-				logger.Info("Platforms changed! {0}, {1}", a, b);
 				games.Clear();
 				foreach (Platform platform in list) {
 					foreach (Game game in platform.Games) {
@@ -108,6 +115,7 @@ namespace VpdbAgent
 				}
 			});
 
+			// initial data
 			foreach (Platform platform in platforms) {
 				foreach (Game game in platform.Games) {
 					games.Add(game);
