@@ -49,7 +49,7 @@ namespace VpdbAgent
 		private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
 		private MenuManager menuManager = MenuManager.GetInstance();
-		public ObservableCollection<Platform> Platforms { get; private set; } = new ObservableCollection<Platform>();
+		public LazyObservableCollection<Platform> Platforms { get; private set; } = new LazyObservableCollection<Platform>();
 
 		/// <summary>
 		/// Private constructor
@@ -86,6 +86,7 @@ namespace VpdbAgent
 					logger.Debug("Retrieving vpdb.json at {0}", system.DatabasePath);
 					Platforms.Add(syncPlatform(new Platform(system)));
 				}
+				Platforms.NotifyRepopulated();
 			});
 		}
 
