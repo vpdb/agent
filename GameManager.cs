@@ -61,10 +61,12 @@ namespace VpdbAgent
 			}
 			Console.WriteLine("Merged {0} games", platform.Games.Count);
 
-
 			saveJson(platform, vpdbJson);
 
-			// todo check if exists first
+			Platform existingPlatform = Platforms.FirstOrDefault(p => { return p.Name.Equals(platform.Name); });
+			if (existingPlatform != null) {
+				Platforms.Remove(existingPlatform);
+			}
 			Platforms.Add(platform);
 			return platform;
 		}

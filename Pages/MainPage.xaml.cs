@@ -21,14 +21,6 @@ namespace VpdbAgent.Pages
 		{
 			InitializeComponent();
 	
-/*			getReleases();
-			Systems.ItemsSource = MenuManager.Systems.Where(p => (p.Enabled == true));
-			foreach (PinballXSystem system in MenuManager.Systems) {
-				Console.WriteLine("+++ System {0} - {1}", system.Name, system.Enabled);
-			}
-			Games = MenuManager.GetGames();
-			GamesList.ItemsSource = Games;
-*/
 			GameManager gameManager = GameManager.GetInstance();
 			Platforms.ItemsSource = gameManager.Platforms.Where(platform => { return platform.Enabled; });
 			GamesList.ItemsSource = gameManager.GetGames();

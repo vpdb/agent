@@ -33,7 +33,7 @@ namespace VpdbAgent.PinballX
 		/// </summary>
 		private void parseIni()
 		{
-			Console.WriteLine("Parsing systems from PinballX.ini...");
+			Console.WriteLine("Parsing systems from PinballX.ini");
 			Systems = new List<PinballXSystem>();
 			if (rootFolder != null && rootFolder.Length > 0) {
 				if (File.Exists(iniPath)) {

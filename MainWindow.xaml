@@ -14,7 +14,8 @@
         TitleCaps="False"
         RenderOptions.ClearTypeHint="Enabled"
         Style="{DynamicResource CleanWindowStyleKey}"
-        WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="CenterScreen"
+        Icon="vpdb-agent.ico">
 
     <Controls:MetroWindow.Resources>
         <SolidColorBrush x:Key="TransparentBrush" Color="Transparent" />
