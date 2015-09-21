@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NLog;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -11,6 +12,8 @@ namespace VpdbAgent.Vpdb.Network
 {
 	public class AuthenticatedHttpClientHandler : HttpClientHandler
 	{
+		private static readonly Logger logger = LogManager.GetCurrentClassLogger();
+
 		private readonly string apiKey;
 		private readonly string authUser;
 		private readonly string authPass;
@@ -44,7 +47,7 @@ namespace VpdbAgent.Vpdb.Network
 			} else {
 				request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
 			}
-			Console.WriteLine("=> {0} {1}", request.Method, request.RequestUri);
+			logger.Debug("=> {0} {1}", request.Method, request.RequestUri);
 			
 			return await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
 		}

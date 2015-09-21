@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using NLog;
 using Refit;
 using System;
 using System.Net;
@@ -11,6 +12,7 @@ namespace VpdbAgent.Vpdb
 	public class VpdbClient
 	{
 		private readonly SettingsManager settingsManager = SettingsManager.GetInstance();
+		private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
 		public readonly VpdbApi Api;
 
@@ -43,7 +45,7 @@ namespace VpdbAgent.Vpdb
 			if (settingsManager.IsInitialized()) {
 				request.Headers.Add("Authorization", "Basic " + Convert.ToBase64String(authHeader));
 			} else {
-				Console.WriteLine("You probably shouldn't do requests if settings are not initialized.");
+				logger.Warn("You probably shouldn't do requests if settings are not initialized.");
 			}
 			return request;
 		}

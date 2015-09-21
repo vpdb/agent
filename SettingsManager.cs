@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NLog;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -10,6 +11,7 @@ namespace VpdbAgent
 	public class SettingsManager
 	{
 		private static SettingsManager INSTANCE;
+		private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
 		public string ApiKey { get; set; }
 		public string AuthUser { get; set; }
@@ -28,7 +30,7 @@ namespace VpdbAgent
 
 		public bool IsInitialized()
 		{
-			Console.WriteLine("Settings initialized: {0}", PbxFolder != null && PbxFolder.Length > 0);
+			logger.Info("Settings initialized: {0}", PbxFolder != null && PbxFolder.Length > 0);
 			return PbxFolder != null && PbxFolder.Length > 0;
 		}
 

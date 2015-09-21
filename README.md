@@ -40,6 +40,7 @@ The above implicates:
 - [Refit](https://github.com/paulcbetts/refit) for type-safe REST access
 - [Mahapps.Metro](http://mahapps.com/) for easy custom styling
 - [INI File Parser](https://github.com/rickyah/ini-parser) for parsing PinballX config
+- [NLog](http://nlog-project.org/) for our logging needs
 
 
 ## Database

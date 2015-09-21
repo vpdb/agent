@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
+using NLog;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -14,32 +15,79 @@ using VpdbAgent.Vpdb.Network;
 
 namespace VpdbAgent
 {
+	/// <summary>
+	/// Our internal game API.
+	/// 
+	/// It manages the games that are defined in the user's XML database of
+	/// PinballX. However, since we're dealing with more data than what's in 
+	/// XMLs, we keep our own data structure in a JSON file.
+	/// 
+	/// JSON files are system-specific, meaning for every system defined in
+	/// PinballX (we call them "Platforms"), there is one JSON file. Games
+	/// are always linked to the respective system so we know where to retrieve
+	/// table files, media etc.
+	/// 
+	/// This is how the JSON files are generated:
+	/// 
+	///  1. GameManager instantiates MenuManager which parses PinballX.ini
+	///  2. GameManager loops through parsed systems and retrieves local vpdb.jsons
+	///  3. GameManager merges games from MenuManager and vpdb.json to new vpdb.jsons
+	///  4. GameManager dumps new vpdb.jsons
+	/// 
+	/// Everything is event-based, since we want to automatically repeat the 
+	/// process when relevant files change. That means, for retrieving the 
+	/// systems mentioned above, we subscribe to the SystemsChangedHandler.
+	/// 
+	/// </summary>
 	public class GameManager
 	{
 		private static GameManager INSTANCE;
+		private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
 		private MenuManager menuManager = MenuManager.GetInstance();
 		public ObservableCollection<Platform> Platforms { get; set; } = new ObservableCollection<Platform>();
 
 		/// <summary>
-		/// So this is how this works:
-		///
-		///  1. GameManager instantiates MenuManager which parses PinballX.ini
-		///  2. GameManager loops through parsed systems and retrieves local vpdb.jsons
-		///  3. GameManager merges games from MenuManager and vpdb.json to new vpdb.jsons
-		///  4. GameManager dumps new vpdb.jsons
-		/// 
+		/// Private constructor
 		/// </summary>
+		/// <see cref="GetInstance"/>
 		private GameManager()
 		{
-			if (menuManager.Systems != null) {
-				foreach (PinballXSystem system in menuManager.Systems) {
-					Console.WriteLine("Retrieving vpdb.json at {0}", system.DatabasePath);
-					syncPlatform(new Platform(system));
-				}
-			}
+			menuManager.SystemsChanged += new MenuManager.SystemsChangedHandler(OnPlatformsChanged);
 		}
 
+
+		/// <summary>
+		/// Triggers data update
+		/// </summary>
+		/// <returns>This instance</returns>
+		public GameManager Initialize()
+		{
+			menuManager.Initialize();
+			return this;
+		}
+
+		/// <summary>
+		/// Platforms have changed or are being initialized.
+		/// 
+		/// Triggered at startup and when PinballX.ini changes.
+		/// </summary>
+		/// <param name="systems">Parsed list of systems (platforms)</param>
+		private void OnPlatformsChanged(List<PinballXSystem> systems)
+		{
+			// run on UI thread
+			App.Current.Dispatcher.Invoke((Action)delegate {
+				foreach (PinballXSystem system in systems) {
+					logger.Debug("Retrieving vpdb.json at {0}", system.DatabasePath);
+					syncPlatform(new Platform(system));
+				}
+			});
+		}
+
+		/// <summary>
+		/// Returns all games of all platforms
+		/// </summary>
+		/// <returns></returns>
 		public List<Game> GetGames()
 		{
 			List<Game> games = new List<Game>();
@@ -56,13 +104,13 @@ namespace VpdbAgent
 			Platform parsedPlatform = parsePlatform(vpdbJson);
 
 			if (parsedPlatform == null) {
-				Console.WriteLine("No vpdb.json at {0}", vpdbJson);
+				logger.Warn("No vpdb.json at {0}", vpdbJson);
 				platform.Games = mergeGames(menuManager.GetGames(platform.DatabasePath), null, platform.TablePath);
 			} else {
-				Console.WriteLine("Found and parsed vpdb.json at {0}", vpdbJson);
+				logger.Info("Found and parsed vpdb.json at {0}", vpdbJson);
 				platform.Games = mergeGames(menuManager.GetGames(platform.DatabasePath), parsedPlatform.Games, platform.TablePath);
 			}
-			Console.WriteLine("Merged {0} games", platform.Games.Count);
+			logger.Trace("Merged {0} games", platform.Games.Count);
 
 			saveJson(platform, vpdbJson);
 
@@ -107,7 +155,7 @@ namespace VpdbAgent
 		private void saveJson(Platform platform, string vpdbJson)
 		{
 			if (!Directory.Exists(Path.GetDirectoryName(vpdbJson))) {
-				Console.WriteLine("Directory {0} does not exist, not writing vpdb.json.", Path.GetDirectoryName(vpdbJson));
+				logger.Warn("Directory {0} does not exist, not writing vpdb.json.", Path.GetDirectoryName(vpdbJson));
 				return;
 			}
 
@@ -120,7 +168,7 @@ namespace VpdbAgent
 			using (JsonWriter writer = new JsonTextWriter(sw)) {
 				serializer.Serialize(writer, platform);
 			}
-			Console.WriteLine("Wrote vpdb.json back to {0}", vpdbJson);
+			logger.Debug("Wrote vpdb.json back to {0}", vpdbJson);
 		}
 
 		public static GameManager GetInstance()

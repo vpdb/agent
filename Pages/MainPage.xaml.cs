@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using VpdbAgent.Models;
 using System.Collections.ObjectModel;
+using NLog;
 
 namespace VpdbAgent.Pages
 {
@@ -14,6 +15,7 @@ namespace VpdbAgent.Pages
 	/// </summary>
 	public partial class MainPage : Page
 	{
+		private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
 		public ObservableCollection<Models.Platform> Platforms { get; private set; }
 		public ObservableCollection<Models.Game> Games { get; private set; }
@@ -26,6 +28,8 @@ namespace VpdbAgent.Pages
 			DataContext = this;
 
 			GameManager gameManager = GameManager.GetInstance();
+			gameManager.Initialize();
+
 			Platforms = gameManager.Platforms;
 			Games = new ObservableCollection<Models.Game>(gameManager.GetGames());
 

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NLog;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -11,6 +12,7 @@ namespace VpdbAgent.PinballX
 	{
 		private static readonly int THRESHOLD = 1000;
 		private static FileWatcher INSTANCE;
+		private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
 		// To watch:
 		//   - pinballx.ini
@@ -31,7 +33,7 @@ namespace VpdbAgent.PinballX
 			if (path == null) {
 				return;
 			}
-			Console.WriteLine("Watching {0}", path);
+			logger.Info("Watching {0}", path);
 			FileSystemWatcher watcher = new FileSystemWatcher();
 			watcher.Path = Path.GetDirectoryName(path);
 			watcher.Filter = Path.GetFileName(path);
