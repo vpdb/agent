@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Windows.Controls;
 using VpdbAgent.Vpdb;
-using VpdbAgent.PinballX;
 using VpdbAgent.Vpdb.Models;
 using System.Collections.Generic;
 using System.Linq;
+using VpdbAgent.Models;
+using System.Collections.ObjectModel;
 
 namespace VpdbAgent.Pages
 {
@@ -13,19 +14,25 @@ namespace VpdbAgent.Pages
 	/// </summary>
 	public partial class MainPage : Page
 	{
-		public List<PinballX.Models.Game> Games { get; set; }
-		public List<Release> Releases { get; set; }
+
+		public ObservableCollection<Models.Platform> Platforms { get; private set; }
+		public ObservableCollection<Models.Game> Games { get; private set; }
+
 		//public MenuManager MenuManager { get; set; }
 
 		public MainPage()
 		{
 			InitializeComponent();
-	
+			DataContext = this;
+
 			GameManager gameManager = GameManager.GetInstance();
-			Platforms.ItemsSource = gameManager.Platforms.Where(platform => { return platform.Enabled; });
-			GamesList.ItemsSource = gameManager.GetGames();
+			Platforms = gameManager.Platforms;
+			Games = new ObservableCollection<Models.Game>(gameManager.GetGames());
+
+//			Platforms = gameManager.Platforms.Where(platform => { return platform.Enabled; });
 		}
 
+		/*
 		private async void getReleases()
 		{
 
@@ -40,6 +47,6 @@ namespace VpdbAgent.Pages
 			} catch (Exception e) {
 				Console.WriteLine("Error retrieving releases: {0}", e.Message);
 			}
-		}
+		}*/
 	}
 }

@@ -3,6 +3,7 @@ using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -18,7 +19,7 @@ namespace VpdbAgent
 		private static GameManager INSTANCE;
 
 		private MenuManager menuManager = MenuManager.GetInstance();
-		public List<Platform> Platforms { get; set; } = new List<Platform>();
+		public ObservableCollection<Platform> Platforms { get; set; } = new ObservableCollection<Platform>();
 
 		/// <summary>
 		/// So this is how this works:

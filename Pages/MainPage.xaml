@@ -19,7 +19,7 @@
         <!-- LEFT PANEL -->
         <StackPanel Grid.Column="0" Orientation="Vertical">
             <Label Content="Title"/>
-            <ItemsControl Name="Platforms">
+            <ItemsControl ItemsSource="{Binding Platforms}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Label Content="{Binding Name}"/>
@@ -35,7 +35,7 @@
         <Grid Grid.Column="2" Background="{StaticResource WhiterBrush}">
             <ScrollViewer>
 
-                <ItemsControl Name="GamesList">
+                <ItemsControl ItemsSource="{Binding Games}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <UserControls:GameTemplate Game="{Binding}" Margin="4" />
