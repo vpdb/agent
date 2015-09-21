@@ -22,29 +22,26 @@ namespace VpdbAgent.Pages
 	public partial class SettingsPage : Page
 	{
 
+		private SettingsManager settingsManager = SettingsManager.GetInstance();
+
 		public SettingsPage()
 		{
 			InitializeComponent();
 
 			updateAdvancedOptions();
-			ApiKey.Text = (string)Properties.Settings.Default["ApiKey"];
-			AuthUser.Text = (string)Properties.Settings.Default["AuthUser"];
-			AuthPass.Password = (string)Properties.Settings.Default["AuthPass"];
-			ApiEndpoint.Text = (string)Properties.Settings.Default["Endpoint"];
-			PinballXFolderLabel.Content = (string)Properties.Settings.Default["PbxFolder"];
+			ApiKey.Text = settingsManager.ApiKey;
+			AuthUser.Text = settingsManager.AuthUser;
+			AuthPass.Password = settingsManager.AuthPass;
+			ApiEndpoint.Text = settingsManager.Endpoint;
+			PinballXFolderLabel.Content = settingsManager.PbxFolder;
+
+			Loaded += (a, b) =>
+			{
+				CancelButton.Visibility = NavigationService.CanGoBack ? Visibility.Visible : Visibility.Hidden;
+			};
 		}
 
-		private void SubmitButton_Click(object sender, RoutedEventArgs e)
-		{
-			Properties.Settings.Default["ApiKey"] = ApiKey.Text;
-			Properties.Settings.Default["AuthUser"] = AuthUser.Text;
-			Properties.Settings.Default["AuthPass"] = AuthPass.Password;
-			Properties.Settings.Default["Endpoint"] = ApiEndpoint.Text;
-			Properties.Settings.Default["PbxFolder"] = PinballXFolderLabel.Content;
-			Properties.Settings.Default.Save();
-			NavigationService.GoBack();
-		}
-
+		
 		private void PinballXFolderButton_Click(object sender, RoutedEventArgs e)
 		{
 			var dialog = new FolderBrowserDialog();
@@ -59,6 +56,31 @@ namespace VpdbAgent.Pages
 
 			} else {
 				PinballXFolderLabel.Content = string.Empty;
+			}
+		}
+
+		private void SubmitButton_Click(object sender, RoutedEventArgs e)
+		{
+
+			settingsManager.ApiKey = ApiKey.Text;
+			settingsManager.AuthUser = AuthUser.Text;
+			settingsManager.AuthPass = AuthPass.Password;
+			settingsManager.Endpoint = ApiEndpoint.Text;
+			settingsManager.PbxFolder = PinballXFolderLabel.Content.ToString();
+
+			Dictionary<string, string> errors = settingsManager.Validate();
+			if (errors.Count == 0) {
+				settingsManager.Save();
+
+				if (NavigationService.CanGoBack) {
+					NavigationService.GoBack();
+				} else {
+					NavigationService.Navigate(new MainPage());
+					NavigationService.RemoveBackEntry();
+				}
+				
+			} else {
+				// TODO properly display error
 			}
 		}
 

@@ -7,8 +7,6 @@ namespace VpdbAgent.PinballX
 	public class PinballXSystem
 	{
 
-		private static readonly string rootFolder = (string)Properties.Settings.Default["PbxFolder"];
-
 		public string Name { get; set; }
 		public bool Enabled { get; set; }
 		public string WorkingPath { get; set; }
@@ -54,14 +52,15 @@ namespace VpdbAgent.PinballX
 
 		private void setByData(KeyDataCollection data)
 		{
-			
+
 			Enabled = "true".Equals(data["Enabled"], StringComparison.InvariantCultureIgnoreCase);
 			WorkingPath = data["WorkingPath"];
 			TablePath = data["TablePath"];
 			Executable = data["Executable"];
 
-			DatabasePath = rootFolder + @"\Databases\" + Name;
-			MediaPath = rootFolder + @"\Media\" + Name;
+			SettingsManager settingsManager = SettingsManager.GetInstance();
+			DatabasePath = settingsManager.PbxFolder + @"\Databases\" + Name;
+			MediaPath = settingsManager.PbxFolder + @"\Media\" + Name;
 		}
 	}
 }

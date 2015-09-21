@@ -28,6 +28,9 @@ namespace VpdbAgent.PinballX
 
 		public void SetupIni(string path)
 		{
+			if (path == null) {
+				return;
+			}
 			Console.WriteLine("Watching {0}", path);
 			FileSystemWatcher watcher = new FileSystemWatcher();
 			watcher.Path = Path.GetDirectoryName(path);

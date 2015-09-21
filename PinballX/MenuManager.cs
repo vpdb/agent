@@ -14,18 +14,23 @@ namespace VpdbAgent.PinballX
 	public class MenuManager
 	{
 		private static MenuManager INSTANCE;
-		private static readonly string rootFolder = (string)Properties.Settings.Default["PbxFolder"];
-		private static readonly string iniPath = rootFolder + @"\Config\PinballX.ini";
 
 		public List<PinballXSystem> Systems { set; get; }
+		
+		private readonly SettingsManager settingsManager = SettingsManager.GetInstance();
+		private readonly string iniPath;
 
 		private MenuManager()
 		{
-			parseIni();
+			if (settingsManager.IsInitialized()) {
 
-			FileWatcher fileWatcher = FileWatcher.GetInstance();
-			fileWatcher.SetupIni(iniPath);
-			fileWatcher.IniChanged += new FileWatcher.IniChangedHandler(parseIni);
+				iniPath = settingsManager.PbxFolder + @"\Config\PinballX.ini";
+				parseIni();
+
+				FileWatcher fileWatcher = FileWatcher.GetInstance();
+				fileWatcher.SetupIni(iniPath);
+				fileWatcher.IniChanged += new FileWatcher.IniChangedHandler(parseIni);
+			}
 		}
 
 		/// <summary>
@@ -35,16 +40,14 @@ namespace VpdbAgent.PinballX
 		{
 			Console.WriteLine("Parsing systems from PinballX.ini");
 			Systems = new List<PinballXSystem>();
-			if (rootFolder != null && rootFolder.Length > 0) {
-				if (File.Exists(iniPath)) {
-					var parser = new FileIniDataParser();
-					IniData data = parser.ReadFile(iniPath);
-					Systems.Add(new PinballXSystem(VpdbAgent.Models.Platform.PlatformType.VP, data["VisualPinball"]));
-					Systems.Add(new PinballXSystem(VpdbAgent.Models.Platform.PlatformType.FP, data["FuturePinball"]));
-					for (int i = 0; i < 20; i++) {
-						if (data["System_" + i] != null) {
-							Systems.Add(new PinballXSystem(data["System_" + i]));
-						}
+			if (File.Exists(iniPath)) {
+				var parser = new FileIniDataParser();
+				IniData data = parser.ReadFile(iniPath);
+				Systems.Add(new PinballXSystem(VpdbAgent.Models.Platform.PlatformType.VP, data["VisualPinball"]));
+				Systems.Add(new PinballXSystem(VpdbAgent.Models.Platform.PlatformType.FP, data["FuturePinball"]));
+				for (int i = 0; i < 20; i++) {
+					if (data["System_" + i] != null) {
+						Systems.Add(new PinballXSystem(data["System_" + i]));
 					}
 				}
 			}
@@ -69,7 +72,7 @@ namespace VpdbAgent.PinballX
 			List<Game> games = new List<Game>();
 			string xmlPath;
 			foreach (PinballXSystem system in Systems) {
-				xmlPath = rootFolder + @"\Databases\" + system.Name;
+				xmlPath = settingsManager.PbxFolder + @"\Databases\" + system.Name;
 				if (system.Enabled) {
 					games.AddRange(GetGames(xmlPath));
 				}

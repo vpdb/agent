@@ -31,9 +31,11 @@ namespace VpdbAgent
 		/// </summary>
 		private GameManager()
 		{
-			foreach (PinballXSystem system in menuManager.Systems) {
-				Console.WriteLine("Retrieving vpdb.json at {0}", system.DatabasePath);
-				syncPlatform(new Platform(system));
+			if (menuManager.Systems != null) {
+				foreach (PinballXSystem system in menuManager.Systems) {
+					Console.WriteLine("Retrieving vpdb.json at {0}", system.DatabasePath);
+					syncPlatform(new Platform(system));
+				}
 			}
 		}
 

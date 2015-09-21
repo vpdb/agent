@@ -10,33 +10,41 @@ namespace VpdbAgent.Vpdb
 {
 	public class VpdbClient
 	{
+		private readonly SettingsManager settingsManager = SettingsManager.GetInstance();
 
 		public readonly VpdbApi Api;
 
-		private byte[] authHeader = Encoding.ASCII.GetBytes((string)Properties.Settings.Default["AuthUser"] + ":" + (string)Properties.Settings.Default["AuthPass"]);
+		private byte[] authHeader;
 
 		public VpdbClient() 
 		{
+			if (settingsManager.IsInitialized()) {
+				authHeader = Encoding.ASCII.GetBytes(settingsManager.AuthUser + ":" + settingsManager.AuthPass);
 
-			Uri endPoint = new Uri((string)Properties.Settings.Default["Endpoint"]);
-			HttpClient client = new HttpClient(new AuthenticatedHttpClientHandler(
-				(string)Properties.Settings.Default["ApiKey"], 
-				(string)Properties.Settings.Default["AuthUser"], 
-				(string)Properties.Settings.Default["AuthPass"])) { BaseAddress = endPoint };
+				Uri endPoint = new Uri(settingsManager.Endpoint);
+				HttpClient client = new HttpClient(new AuthenticatedHttpClientHandler(
+					settingsManager.ApiKey,
+					settingsManager.AuthUser,
+					settingsManager.AuthPass)) { BaseAddress = endPoint };
 
-			RefitSettings settings = new RefitSettings {
-				JsonSerializerSettings = new JsonSerializerSettings {
-					ContractResolver = new SnakeCasePropertyNamesContractResolver()
-				}
-			};
-			Api = RestService.For<VpdbApi>(client, settings);
+				RefitSettings settings = new RefitSettings {
+					JsonSerializerSettings = new JsonSerializerSettings {
+						ContractResolver = new SnakeCasePropertyNamesContractResolver()
+					}
+				};
+				Api = RestService.For<VpdbApi>(client, settings);
+			}
 		}
 
 		public WebRequest GetWebRequest(string path)
 		{
-			string endPoint = (string)Properties.Settings.Default["Endpoint"];
+			string endPoint = settingsManager.Endpoint;
 			WebRequest request = WebRequest.Create(endPoint + path);
-			request.Headers.Add("Authorization", "Basic " + Convert.ToBase64String(authHeader));
+			if (settingsManager.IsInitialized()) {
+				request.Headers.Add("Authorization", "Basic " + Convert.ToBase64String(authHeader));
+			} else {
+				Console.WriteLine("You probably shouldn't do requests if settings are not initialized.");
+			}
 			return request;
 		}
 	}
