@@ -1,6 +1,10 @@
 ﻿using NLog;
+using OLinq;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Linq;
 using System.Windows.Controls;
+using System.Windows.Data;
 
 namespace VpdbAgent.Pages
 {
@@ -11,8 +15,8 @@ namespace VpdbAgent.Pages
 	{
 		private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
-		public ObservableCollection<Models.Platform> Platforms { get; private set; }
-		public ObservableCollection<Models.Game> Games { get; private set; }
+		public ICollectionView Platforms { get; private set; }
+		public ICollectionView Games { get; private set; }
 
 		//public MenuManager MenuManager { get; set; }
 
@@ -24,11 +28,25 @@ namespace VpdbAgent.Pages
 			GameManager gameManager = GameManager.GetInstance();
 			gameManager.Initialize();
 
-			Platforms = gameManager.Platforms;
-			Games = new ObservableCollection<Models.Game>(gameManager.GetGames());
+			Platforms = CollectionViewSource.GetDefaultView(gameManager.Platforms);
+			Platforms.Filter = PlatformFilter;
 
-//			Platforms = gameManager.Platforms.Where(platform => { return platform.Enabled; });
+			Games = CollectionViewSource.GetDefaultView(gameManager.GetGames(Platforms));
+			Games.Filter = GameFilter;
 		}
+
+		private bool PlatformFilter(object item)
+		{
+			Models.Platform platform = item as Models.Platform;
+			return platform.Enabled;
+		}
+
+		private bool GameFilter(object item)
+		{
+			Models.Game game = item as Models.Game;
+			return true;
+		}
+
 
 		/*
 		private async void getReleases()

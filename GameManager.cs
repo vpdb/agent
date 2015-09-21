@@ -5,10 +5,13 @@ using NLog;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Data;
 using VpdbAgent.Models;
 using VpdbAgent.PinballX;
 using VpdbAgent.Vpdb.Network;
@@ -45,7 +48,7 @@ namespace VpdbAgent
 		private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
 		private MenuManager menuManager = MenuManager.GetInstance();
-		public ObservableCollection<Platform> Platforms { get; set; } = new ObservableCollection<Platform>();
+		public ObservableCollection<Platform> Platforms { get; private set; } = new ObservableCollection<Platform>();
 
 		/// <summary>
 		/// Private constructor
@@ -86,14 +89,29 @@ namespace VpdbAgent
 		}
 
 		/// <summary>
-		/// Returns all games of all platforms
+		/// Returns all games of currently selected platforms
 		/// </summary>
 		/// <returns></returns>
-		public List<Game> GetGames()
+		public ObservableCollection<Game> GetGames(ICollectionView platforms)
 		{
-			List<Game> games = new List<Game>();
-			foreach (Platform platform in Platforms) {
-				games.AddRange(platform.Games);
+			ObservableCollection<Game> games = new ObservableCollection<Game>();
+			platforms.CollectionChanged += new System.Collections.Specialized.NotifyCollectionChangedEventHandler((a, b) =>
+			{
+				ListCollectionView list = a as ListCollectionView;
+				NotifyCollectionChangedEventArgs args = b as NotifyCollectionChangedEventArgs;
+				logger.Info("Platforms changed! {0}, {1}", a, b);
+				games.Clear();
+				foreach (Platform platform in list) {
+					foreach (Game game in platform.Games) {
+						games.Add(game);
+					}
+				}
+			});
+
+			foreach (Platform platform in platforms) {
+				foreach (Game game in platform.Games) {
+					games.Add(game);
+				}
 			}
 			return games;
 		}
