@@ -113,6 +113,7 @@ namespace VpdbAgent
 						games.Add(game);
 					}
 				}
+				games.NotifyRepopulated();
 			});
 
 			// initial data

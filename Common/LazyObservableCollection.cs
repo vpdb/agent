@@ -97,6 +97,14 @@ namespace VpdbAgent.Common
 			MoveItem(oldIndex, newIndex);
 		}
 
+		public void NotifyRepopulated()
+		{
+			CheckReentrancy();
+			OnPropertyChanged(CountString);
+			OnPropertyChanged(IndexerName);
+			OnCollectionReset();
+		}
+
 		#endregion Public Methods
 
 
@@ -156,11 +164,11 @@ namespace VpdbAgent.Common
 		/// </summary>
 		protected override void ClearItems()
 		{
-			CheckReentrancy();
+//			CheckReentrancy();
 			base.ClearItems();
-			OnPropertyChanged(CountString);
-			OnPropertyChanged(IndexerName);
-			OnCollectionReset();
+//			OnPropertyChanged(CountString);
+//			OnPropertyChanged(IndexerName);
+//			OnCollectionReset();
 		}
 
 		/// <summary>
@@ -185,12 +193,12 @@ namespace VpdbAgent.Common
 		/// </summary>
 		protected override void InsertItem(int index, T item)
 		{
-			CheckReentrancy();
+//			CheckReentrancy();
 			base.InsertItem(index, item);
 
-			OnPropertyChanged(CountString);
-			OnPropertyChanged(IndexerName);
-			OnCollectionChanged(NotifyCollectionChangedAction.Add, item, index);
+//			OnPropertyChanged(CountString);
+//			OnPropertyChanged(IndexerName);
+//			OnCollectionChanged(NotifyCollectionChangedAction.Add, item, index);
 		}
 
 		/// <summary>
