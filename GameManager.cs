@@ -18,7 +18,7 @@ namespace VpdbAgent
 		private static GameManager INSTANCE;
 
 		private MenuManager menuManager = MenuManager.GetInstance();
-		private List<Platform> platforms = new List<Platform>();
+		public List<Platform> Platforms { get; set; } = new List<Platform>();
 
 		/// <summary>
 		/// So this is how this works:
@@ -35,6 +35,15 @@ namespace VpdbAgent
 				Console.WriteLine("Retrieving vpdb.json at {0}", system.DatabasePath);
 				syncPlatform(new Platform(system));
 			}
+		}
+
+		public List<Game> GetGames()
+		{
+			List<Game> games = new List<Game>();
+			foreach (Platform platform in Platforms) {
+				games.AddRange(platform.Games);
+			}
+			return games;
 		}
 
 		private Platform syncPlatform(Platform platform)
@@ -56,7 +65,7 @@ namespace VpdbAgent
 			saveJson(platform, vpdbJson);
 
 			// todo check if exists first
-			platforms.Add(platform);
+			Platforms.Add(platform);
 			return platform;
 		}
 

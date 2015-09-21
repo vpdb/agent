@@ -15,7 +15,7 @@
         <Image Grid.Column="0" Width="50" Height="50"/>
         <StackPanel Grid.Column="1">
             <Label>
-                <TextBlock TextTrimming="CharacterEllipsis" Text="{Binding Description}" FontSize="22" FontWeight="Bold"/>
+                <TextBlock TextTrimming="CharacterEllipsis" Text="{Binding Id}" FontSize="22" FontWeight="Bold"/>
             </Label>
 
             <Grid Margin="0,-10,0,10">

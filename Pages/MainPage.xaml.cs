@@ -13,7 +13,6 @@ namespace VpdbAgent.Pages
 	/// </summary>
 	public partial class MainPage : Page
 	{
-
 		public List<PinballX.Models.Game> Games { get; set; }
 		public List<Release> Releases { get; set; }
 		//public MenuManager MenuManager { get; set; }
@@ -21,7 +20,7 @@ namespace VpdbAgent.Pages
 		public MainPage()
 		{
 			InitializeComponent();
-
+	
 /*			getReleases();
 			Systems.ItemsSource = MenuManager.Systems.Where(p => (p.Enabled == true));
 			foreach (PinballXSystem system in MenuManager.Systems) {
@@ -30,8 +29,9 @@ namespace VpdbAgent.Pages
 			Games = MenuManager.GetGames();
 			GamesList.ItemsSource = Games;
 */
-
 			GameManager gameManager = GameManager.GetInstance();
+			Platforms.ItemsSource = gameManager.Platforms.Where(platform => { return platform.Enabled; });
+			GamesList.ItemsSource = gameManager.GetGames();
 		}
 
 		private async void getReleases()

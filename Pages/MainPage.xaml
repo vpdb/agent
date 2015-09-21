@@ -19,7 +19,7 @@
         <!-- LEFT PANEL -->
         <StackPanel Grid.Column="0" Orientation="Vertical">
             <Label Content="Title"/>
-            <ItemsControl Name="Systems">
+            <ItemsControl Name="Platforms">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Label Content="{Binding Name}"/>
