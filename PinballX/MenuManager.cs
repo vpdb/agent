@@ -50,13 +50,16 @@ namespace VpdbAgent.PinballX
 		public List<Game> GetGames(string path)
 		{
 			List<Game> games = new List<Game>();
+			int fileCount = 0;
 			if (Directory.Exists(path)) {
 				foreach (string filePath in Directory.GetFiles(path)) {
 					if ("xml".Equals(filePath.Substring(filePath.Length - 3), StringComparison.InvariantCultureIgnoreCase)) {
 						games.AddRange(parseXml(filePath).Games);
+						fileCount++;
 					}
 				}
 			}
+			logger.Debug("Parsed {0} games from {1} XML files at {2}.", games.Count, fileCount, path);
 			return games;
 		}
 
@@ -73,15 +76,15 @@ namespace VpdbAgent.PinballX
 			return games;
 		}
 
-/*		public void saveXml(Menu menu)
-		{
-			XmlSerializerNamespaces ns = new XmlSerializerNamespaces();
-			XmlSerializer writer = new XmlSerializer(typeof(Menu));
-			FileStream file = File.Create("C:\\Games\\PinballX\\Databases\\Visual Pinball\\Visual Pinball - backup.xml");
-			ns.Add("", "");
-			writer.Serialize(file, menu, ns);
-			file.Close();
-		}*/
+		/*		public void saveXml(Menu menu)
+				{
+					XmlSerializerNamespaces ns = new XmlSerializerNamespaces();
+					XmlSerializer writer = new XmlSerializer(typeof(Menu));
+					FileStream file = File.Create("C:\\Games\\PinballX\\Databases\\Visual Pinball\\Visual Pinball - backup.xml");
+					ns.Add("", "");
+					writer.Serialize(file, menu, ns);
+					file.Close();
+				}*/
 
 		/// <summary>
 		/// Parses PinballX.ini and reads all systems from it.
@@ -114,15 +117,15 @@ namespace VpdbAgent.PinballX
 				reader = new FileStream(filepath, FileMode.Open);
 				menu = serializer.Deserialize(reader) as Menu;
 
-			} catch (System.InvalidOperationException e) {
+			} catch (Exception e) {
 				logger.Error(e, "Error parsing {0}: {1}", filepath, e.Message);
-				
+
 			} finally {
 				if (reader != null) {
 					reader.Close();
 				}
 			}
-			return new Menu();
+			return menu;
 		}
 
 		public static MenuManager GetInstance()

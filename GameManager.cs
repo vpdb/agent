@@ -77,9 +77,10 @@ namespace VpdbAgent
 		{
 			// run on UI thread
 			App.Current.Dispatcher.Invoke((Action)delegate {
+				Platforms.Clear();
 				foreach (PinballXSystem system in systems) {
 					logger.Debug("Retrieving vpdb.json at {0}", system.DatabasePath);
-					syncPlatform(new Platform(system));
+					Platforms.Add(syncPlatform(new Platform(system)));
 				}
 			});
 		}
@@ -103,22 +104,17 @@ namespace VpdbAgent
 
 			Platform parsedPlatform = parsePlatform(vpdbJson);
 
+			List<PinballX.Models.Game> xmlGames = menuManager.GetGames(platform.DatabasePath);
 			if (parsedPlatform == null) {
 				logger.Warn("No vpdb.json at {0}", vpdbJson);
-				platform.Games = mergeGames(menuManager.GetGames(platform.DatabasePath), null, platform.TablePath);
+				platform.Games = mergeGames(xmlGames, null, platform.TablePath);
 			} else {
 				logger.Info("Found and parsed vpdb.json at {0}", vpdbJson);
-				platform.Games = mergeGames(menuManager.GetGames(platform.DatabasePath), parsedPlatform.Games, platform.TablePath);
+				platform.Games = mergeGames(xmlGames, parsedPlatform.Games, platform.TablePath);
 			}
-			logger.Trace("Merged {0} games", platform.Games.Count);
+			logger.Trace("Merged {0} games ({1} from XMLs, {2} from vpdb.json)", platform.Games.Count, xmlGames.Count, parsedPlatform != null ? parsedPlatform.Games.Count : 0);
 
 			saveJson(platform, vpdbJson);
-
-			Platform existingPlatform = Platforms.FirstOrDefault(p => { return p.Name.Equals(platform.Name); });
-			if (existingPlatform != null) {
-				Platforms.Remove(existingPlatform);
-			}
-			Platforms.Add(platform);
 			return platform;
 		}
 

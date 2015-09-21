@@ -1,12 +1,6 @@
-﻿using System;
-using System.Windows.Controls;
-using VpdbAgent.Vpdb;
-using VpdbAgent.Vpdb.Models;
-using System.Collections.Generic;
-using System.Linq;
-using VpdbAgent.Models;
+﻿using NLog;
 using System.Collections.ObjectModel;
-using NLog;
+using System.Windows.Controls;
 
 namespace VpdbAgent.Pages
 {
