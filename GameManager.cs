@@ -49,8 +49,8 @@ namespace VpdbAgent
 		private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
 		private MenuManager menuManager = MenuManager.GetInstance();
-		public LazyObservableCollection<Models.Platform> Platforms { get; private set; } = new LazyObservableCollection<Models.Platform>();
-		public LazyObservableCollection<Models.Game> Games { get; private set; } = new LazyObservableCollection<Models.Game>();
+		public LazyObservableList<Models.Platform> Platforms { get; private set; } = new LazyObservableList<Models.Platform>();
+		public LazyObservableList<Models.Game> Games { get; private set; } = new LazyObservableList<Models.Game>();
 
 		/// <summary>
 		/// Private constructor
@@ -118,13 +118,10 @@ namespace VpdbAgent
 			App.Current.Dispatcher.Invoke((Action)delegate {
 
 				// remove all games from changed platform
-				for (int i = Games.Count - 1; i >= 0; i--) {
-					if (Games[i].Platform.Name.Equals(platform.Name)) {
-						Games.RemoveAt(i);
-					}
-				}
+				Games.RemoveAll(g => g.Platform.Name.Equals(platform.Name));
+
 				Games.AddRange(mergedGames);
-				Games.OrderBy(g => g.Id);
+				Games.Sort();
 				Games.NotifyRepopulated();
 
 				logger.Trace("Merged {0} games ({1} from XMLs, {2} from vpdb.json)", mergedGames.Count, xmlGames.Count, db != null ? db.Games.Count : 0);
@@ -160,7 +157,16 @@ namespace VpdbAgent
 
 				using (StreamReader sr = new StreamReader(vpdbJson))
 				using (JsonReader reader = new JsonTextReader(sr)) {
-					return serializer.Deserialize<Database>(reader);
+					try {
+						Database db = serializer.Deserialize<Database>(reader);
+						reader.Close();
+						return db;
+					} catch (Exception e) {
+						logger.Error(e, "Error parsing vpdb.json, deleting and ignoring.");
+						reader.Close();
+						File.Delete(vpdbJson);
+						return null;
+					}
 				}
 			}
 			return null;

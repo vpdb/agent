@@ -9,7 +9,7 @@ using VpdbAgent.PinballX.Models;
 
 namespace VpdbAgent.Models
 {
-	public class Game
+	public class Game : IComparable<Game>
 	{
 
 		public string Id { get; set; }
@@ -52,6 +52,14 @@ namespace VpdbAgent.Models
 				Filename = xmlGame.Filename;
 				Exists = false;
 			}
+		}
+
+		public int CompareTo(Game other)
+		{
+			if (other == null) {
+				return 1;
+			}
+			return Id.CompareTo(other.Id);
 		}
 	}
 }
