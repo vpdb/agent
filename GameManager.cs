@@ -49,8 +49,8 @@ namespace VpdbAgent
 		private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
 		private MenuManager menuManager = MenuManager.GetInstance();
-		public LazyObservableCollection<Platform> Platforms { get; private set; } = new LazyObservableCollection<Platform>();
-		public LazyObservableCollection<Game> Games { get; private set; } = new LazyObservableCollection<Game>();
+		public LazyObservableCollection<Models.Platform> Platforms { get; private set; } = new LazyObservableCollection<Models.Platform>();
+		public LazyObservableCollection<Models.Game> Games { get; private set; } = new LazyObservableCollection<Models.Game>();
 
 		/// <summary>
 		/// Private constructor
@@ -61,7 +61,6 @@ namespace VpdbAgent
 			menuManager.SystemsChanged += new MenuManager.SystemsChangedHandler(OnPlatformsChanged);
 			menuManager.GamesChanged += new MenuManager.GameChangedHandler(OnGamesChanged);
 		}
-
 
 		/// <summary>
 		/// Triggers data update
@@ -79,70 +78,32 @@ namespace VpdbAgent
 		/// Triggered at startup and when PinballX.ini changes.
 		/// </summary>
 		/// <param name="systems">Parsed list of systems (platforms)</param>
-		private void OnPlatformsChanged(List<PinballXSystem> systems)
+		private void OnPlatformsChanged(List<PinballX.Models.PinballXSystem> systems)
 		{
-			// run on UI thread
+			// run on ui thread
 			App.Current.Dispatcher.Invoke((Action)delegate {
 				Platforms.Clear();
 				Games.Clear();
-				foreach (PinballXSystem system in systems) {
-					Platform platform = new Platform(system);
-					Platforms.Add(platform);
-					syncGames(platform);
+				foreach (PinballX.Models.PinballXSystem system in systems) {
+					Platforms.Add(new Platform(system));
 				}
 				Platforms.NotifyRepopulated();
-				Games.NotifyRepopulated();
 			});
 		}
 
-		private void OnGamesChanged(List<PinballX.Models.Game> games)
+		private void OnGamesChanged(PinballX.Models.PinballXSystem system)
 		{
-			logger.Info("OnGamesChanged {0} games.", games.Count);
-		}
-
-		/// <summary>
-		/// Returns all games of currently selected platforms
-		/// 
-		/// This is terribly ineffecient since on every game add, all listeners
-		/// are notified (times number of platforms). Probably should roll our 
-		/// own publisher. 
-		/// @FIXME
-		/// </summary>
-		/// <returns></returns>
-		/*
-		private LazyObservableCollection<Game> getGames()
-		{
-
-			// update data on when platforms change
-			Platforms.CollectionChanged += new NotifyCollectionChangedEventHandler((a, b) =>
-			{
-				ListCollectionView list = a as ListCollectionView;
-				NotifyCollectionChangedEventArgs args = b as NotifyCollectionChangedEventArgs;
-				Games.Clear();
-				foreach (Platform platform in list) {
-					foreach (Game game in platform.Games) {
-						Games.Add(game);
-					}
-				}
-				Games.NotifyRepopulated();
-			});
-
-			// initial data
-			foreach (Platform platform in Platforms) {
-				foreach (Game game in platform.Games) {
-					Games.Add(game);
-				}
+			// retrieve platform based on name
+			Platform platform = Platforms.Where(p => { return p.Name.Equals(system.Name); }).FirstOrDefault();
+			if (platform == null) {
+				logger.Error("Unknown platform {0}, ignoring game changes.", system.Name);
+				return;
 			}
-			return Games;
-		}*/
 
-		private void syncGames(Platform platform)
-		{
 			string vpdbJson = platform.DatabasePath + @"\vpdb.json";
-
 			Database db = readDatabase(vpdbJson);
-			List<PinballX.Models.Game> xmlGames = menuManager.GetGames(platform.DatabasePath);
 
+			List<PinballX.Models.Game> xmlGames = system.Games;
 			List<Game> mergedGames;
 			if (db == null) {
 				logger.Warn("No vpdb.json at {0}", vpdbJson);
@@ -151,26 +112,34 @@ namespace VpdbAgent
 				logger.Info("Found and parsed vpdb.json at {0}", vpdbJson);
 				mergedGames = mergeGames(xmlGames, db.Games, platform.TablePath, platform);
 			}
-			Games.AddRange(mergedGames);
-			logger.Trace("Merged {0} games ({1} from XMLs, {2} from vpdb.json)", mergedGames.Count, xmlGames.Count, db != null ? db.Games.Count : 0);
-
 			writeDatabase(new Database(mergedGames), vpdbJson);
+
+			// run on ui thread
+			App.Current.Dispatcher.Invoke((Action)delegate {
+
+				// remove all games from changed platform
+				for (int i = Games.Count - 1; i >= 0; i--) {
+					if (Games[i].Platform.Name.Equals(platform.Name)) {
+						Games.RemoveAt(i);
+					}
+				}
+				Games.AddRange(mergedGames);
+				Games.OrderBy(g => g.Id);
+				Games.NotifyRepopulated();
+
+				logger.Trace("Merged {0} games ({1} from XMLs, {2} from vpdb.json)", mergedGames.Count, xmlGames.Count, db != null ? db.Games.Count : 0);
+			});
 		}
 
 		private List<Game> mergeGames(List<PinballX.Models.Game> xmlGames, List<Game> jsonGames, string tablePath, Platform platform)
 		{
 			List<Game> games = new List<Game>();
-			if (!platform.Enabled) {
-				logger.Info("Not adding games for disabled platform {0}", platform.Name);
-				return games;
-			}
-
 			foreach (PinballX.Models.Game xmlGame in xmlGames) {
 				Game jsonGame = jsonGames == null ? null : jsonGames.FirstOrDefault(g => (g.Id.Equals(xmlGame.Description)));
 				if (jsonGame == null) {
 					games.Add(new Game(xmlGame, tablePath, platform));
 				} else {
-					games.Add(jsonGame.merge(xmlGame, tablePath));
+					games.Add(jsonGame.merge(xmlGame, tablePath, platform));
 				}
 			}
 			return games;

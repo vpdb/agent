@@ -42,7 +42,7 @@ namespace VpdbAgent.Pages
 		private bool GameFilter(object item)
 		{
 			Models.Game game = item as Models.Game;
-			return true;
+			return game.Platform.Enabled;
 		}
 
 

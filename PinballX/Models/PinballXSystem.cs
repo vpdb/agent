@@ -1,8 +1,9 @@
 ﻿using IniParser.Model;
 using System;
+using System.Collections.Generic;
 using VpdbAgent.Models;
 
-namespace VpdbAgent.PinballX
+namespace VpdbAgent.PinballX.Models
 {
 	public class PinballXSystem
 	{
@@ -17,6 +18,8 @@ namespace VpdbAgent.PinballX
 
 		public string DatabasePath { get; set; }
 		public string MediaPath { get; set; }
+
+		public List<Game> Games { get; set; }
 
 		public PinballXSystem(KeyDataCollection data)
 		{

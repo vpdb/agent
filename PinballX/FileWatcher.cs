@@ -4,7 +4,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using VpdbAgent.PinballX.Models;
 
 namespace VpdbAgent.PinballX
 {
@@ -78,18 +80,22 @@ namespace VpdbAgent.PinballX
 
 			// add new watchers
 			foreach (PinballXSystem system in systems) {
-				string systemPath = path + system.Name;
-				logger.Info("Watching {0}", systemPath);
+				string systemPath = path + system.Name + @"\";
+				if (Directory.Exists(systemPath)) {
+					logger.Info("Watching {0}", systemPath);
 
-				FileSystemWatcher watcher = new FileSystemWatcher();
-				watcher.Path = Path.GetDirectoryName(systemPath);
-				watcher.Filter = "*.xml";
-				watcher.Created += new FileSystemEventHandler(OnXmlChanged);
-				watcher.Changed += new FileSystemEventHandler(OnXmlChanged);
-				watcher.Deleted += new FileSystemEventHandler(OnXmlChanged);
-				watcher.EnableRaisingEvents = true;
+					FileSystemWatcher watcher = new FileSystemWatcher();
+					watcher.Path = Path.GetDirectoryName(systemPath);
+					watcher.Filter = "*.xml";
+					watcher.Created += new FileSystemEventHandler(OnXmlChanged);
+					watcher.Changed += new FileSystemEventHandler(OnXmlChanged);
+					watcher.Deleted += new FileSystemEventHandler(OnXmlChanged);
+					watcher.EnableRaisingEvents = true;
 
-				xmlWatchers.Add(watcher);
+					xmlWatchers.Add(watcher);
+				} else {
+					logger.Warn("Not watching non-existent path {0}", systemPath);
+				}
 			}
 		}
 
@@ -101,6 +107,7 @@ namespace VpdbAgent.PinballX
 				lastUpdate[xmlFilePath] = now;
 
 				if (XmlChanged != null) {
+					Thread.Sleep(TimeSpan.FromMilliseconds(200));
 					XmlChanged(xmlFilePath, e.ChangeType);
 				}
 			}

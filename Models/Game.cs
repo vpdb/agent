@@ -22,9 +22,7 @@ namespace VpdbAgent.Models
 		[JsonIgnoreAttribute]
 		public Platform Platform { get; set; }
 
-		public Game()
-		{
-		}
+		public Game() { }
 
 		public Game(PinballX.Models.Game xmlGame, string tablePath, Platform platform)
 		{
@@ -32,8 +30,9 @@ namespace VpdbAgent.Models
 			updateFromGame(xmlGame, tablePath);
 		}
 
-		internal Game merge(PinballX.Models.Game xmlGame, string tablePath)
+		internal Game merge(PinballX.Models.Game xmlGame, string tablePath, Platform platform)
 		{
+			Platform = platform;
 			updateFromGame(xmlGame, tablePath);
 			return this;
 		}

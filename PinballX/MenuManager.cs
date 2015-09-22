@@ -24,7 +24,7 @@ namespace VpdbAgent.PinballX
 		public event SystemsChangedHandler SystemsChanged;
 
 		// game change handlers
-		public delegate void GameChangedHandler(List<Game> systems);
+		public delegate void GameChangedHandler(PinballXSystem system);
 		public event GameChangedHandler GamesChanged;
 
 		private readonly FileWatcher fileWatcher = FileWatcher.GetInstance();
@@ -48,34 +48,21 @@ namespace VpdbAgent.PinballX
 				iniPath = settingsManager.PbxFolder + @"\Config\PinballX.ini";
 				dbPath = settingsManager.PbxFolder + @"\Databases\";
 
-				parseIni();
-
+				parseSystems();
+				
+				// setup file watchers
 				fileWatcher.SetupIni(iniPath);
-				fileWatcher.IniChanged += new FileWatcher.IniChangedHandler(parseIni);
+				fileWatcher.SetupXml(dbPath, Systems);
+				fileWatcher.IniChanged += new FileWatcher.IniChangedHandler(parseSystems);
+				fileWatcher.XmlChanged += new FileWatcher.XmlChangedHandler(parseGames);
 			}
 			return this;
-		}
-
-		public List<Game> GetGames(string path)
-		{
-			List<Game> games = new List<Game>();
-			int fileCount = 0;
-			if (Directory.Exists(path)) {
-				foreach (string filePath in Directory.GetFiles(path)) {
-					if ("xml".Equals(filePath.Substring(filePath.Length - 3), StringComparison.InvariantCultureIgnoreCase)) {
-						games.AddRange(parseXml(filePath).Games);
-						fileCount++;
-					}
-				}
-			}
-			logger.Debug("Parsed {0} games from {1} XML files at {2}.", games.Count, fileCount, path);
-			return games;
 		}
 
 		/// <summary>
 		/// Parses PinballX.ini and reads all systems from it.
 		/// </summary>
-		private void parseIni()
+		private void parseSystems()
 		{
 			logger.Info("Parsing systems from PinballX.ini");
 			Systems.Clear();
@@ -93,25 +80,49 @@ namespace VpdbAgent.PinballX
 				logger.Error("PinballX.ini at {0} does not exist.", iniPath);
 			}
 			logger.Info("Done, {0} systems parsed.", Systems.Count);
-			SystemsChanged(Systems);
 
-			fileWatcher.SetupXml(dbPath, Systems);
-			fileWatcher.XmlChanged += new FileWatcher.XmlChangedHandler(parseXmls);
+			// announce to subscribers
+			if (SystemsChanged != null) {
+				SystemsChanged(Systems);
+			}
+
+			// parse games
+			foreach (PinballXSystem system in Systems) {
+				parseGames(system.DatabasePath + @"\data.xml", WatcherChangeTypes.Created);
+			}
 		}
 
-		private void parseXmls(string path, WatcherChangeTypes type)
+		private void parseGames(string path, WatcherChangeTypes type)
 		{
+			PinballXSystem system = Systems.Where(s => { return s.DatabasePath.Equals(Path.GetDirectoryName(path)); }).FirstOrDefault();
 
-			logger.Info("XML {0} has changed ({1}).", path, type);
-			/*			switch (type) {
-							case WatcherChangeTypes.Changed:
-							case WatcherChangeTypes.Created:
-							case WatcherChangeTypes.Deleted:
+			if (system == null) {
+				logger.Warn("Unknown system at {0}, ignoring file change.", path);
+				foreach(PinballXSystem s in Systems) {
+					logger.Warn("{0} != {1}", Path.GetDirectoryName(path), s.DatabasePath);
+				}
+				return;
+			}
+			List<Game> games = new List<Game>();
+			int fileCount = 0;
+			if (Directory.Exists(system.DatabasePath)) {
+				foreach (string filePath in Directory.GetFiles(system.DatabasePath)) {
+					if ("xml".Equals(filePath.Substring(filePath.Length - 3), StringComparison.InvariantCultureIgnoreCase)) {
+						games.AddRange(readXml(filePath).Games);
+						fileCount++;
+					}
+				}
+			}
+			logger.Debug("Parsed {0} games from {1} XML files at {2}.", games.Count, fileCount, system.DatabasePath);
+			system.Games = games;
 
-						}*/
+			// announce to subscribers
+			if (GamesChanged != null) {
+				GamesChanged(system);
+			}
 		}
 
-		private Menu parseXml(string filepath)
+		private Menu readXml(string filepath)
 		{
 			Menu menu = new Menu();
 			Stream reader = null;

@@ -119,7 +119,7 @@
     <Compile Include="Models\Database.cs" />
     <Compile Include="PinballX\Models\Game.cs" />
     <Compile Include="PinballX\Models\Menu.cs" />
-    <Compile Include="PinballX\PinballXSystem.cs" />
+    <Compile Include="PinballX\Models\PinballXSystem.cs" />
     <Compile Include="RefitStubs.cs" />
     <Compile Include="Pages\MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
