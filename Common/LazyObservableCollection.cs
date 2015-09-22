@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using VpdbAgent.Models;
 
 namespace VpdbAgent.Common
 {
@@ -146,6 +147,14 @@ namespace VpdbAgent.Common
 		[field: NonSerializedAttribute()]
 #endif
 		public virtual event NotifyCollectionChangedEventHandler CollectionChanged;
+
+		public LazyObservableCollection<T> AddRange(List<T> list)
+		{
+			foreach (T item in list) {
+				Add(item);
+			}
+			return this;
+		}
 
 		#endregion Public Events
 

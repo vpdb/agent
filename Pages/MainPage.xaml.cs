@@ -29,7 +29,7 @@ namespace VpdbAgent.Pages
 			Platforms = CollectionViewSource.GetDefaultView(gameManager.Platforms);
 			Platforms.Filter = PlatformFilter;
 
-			Games = CollectionViewSource.GetDefaultView(gameManager.GetGames(Platforms));
+			Games = CollectionViewSource.GetDefaultView(gameManager.Games);
 			Games.Filter = GameFilter;
 		}
 

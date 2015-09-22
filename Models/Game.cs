@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -18,12 +19,16 @@ namespace VpdbAgent.Models
 		public string ReleaseId { get; set; }
 		public bool Exists { get; set; }
 
+		[JsonIgnoreAttribute]
+		public Platform Platform { get; set; }
+
 		public Game()
 		{
 		}
 
-		public Game(PinballX.Models.Game xmlGame, string tablePath)
+		public Game(PinballX.Models.Game xmlGame, string tablePath, Platform platform)
 		{
+			Platform = platform;
 			updateFromGame(xmlGame, tablePath);
 		}
 

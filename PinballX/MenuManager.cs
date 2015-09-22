@@ -19,11 +19,19 @@ namespace VpdbAgent.PinballX
 
 		public List<PinballXSystem> Systems { set; get; } = new List<PinballXSystem>();
 
+		// system change handlers
 		public delegate void SystemsChangedHandler(List<PinballXSystem> systems);
 		public event SystemsChangedHandler SystemsChanged;
 
+		// game change handlers
+		public delegate void GameChangedHandler(List<Game> systems);
+		public event GameChangedHandler GamesChanged;
+
+		private readonly FileWatcher fileWatcher = FileWatcher.GetInstance();
 		private readonly SettingsManager settingsManager = SettingsManager.GetInstance();
+
 		private string iniPath;
+		private string dbPath;
 
 		/// <summary>
 		/// Private constructor
@@ -38,9 +46,10 @@ namespace VpdbAgent.PinballX
 			if (settingsManager.IsInitialized()) {
 
 				iniPath = settingsManager.PbxFolder + @"\Config\PinballX.ini";
+				dbPath = settingsManager.PbxFolder + @"\Databases\";
+
 				parseIni();
 
-				FileWatcher fileWatcher = FileWatcher.GetInstance();
 				fileWatcher.SetupIni(iniPath);
 				fileWatcher.IniChanged += new FileWatcher.IniChangedHandler(parseIni);
 			}
@@ -63,29 +72,6 @@ namespace VpdbAgent.PinballX
 			return games;
 		}
 
-		public List<Game> GetGames()
-		{
-			List<Game> games = new List<Game>();
-			string xmlPath;
-			foreach (PinballXSystem system in Systems) {
-				xmlPath = settingsManager.PbxFolder + @"\Databases\" + system.Name;
-				if (system.Enabled) {
-					games.AddRange(GetGames(xmlPath));
-				}
-			}
-			return games;
-		}
-
-		/*		public void saveXml(Menu menu)
-				{
-					XmlSerializerNamespaces ns = new XmlSerializerNamespaces();
-					XmlSerializer writer = new XmlSerializer(typeof(Menu));
-					FileStream file = File.Create("C:\\Games\\PinballX\\Databases\\Visual Pinball\\Visual Pinball - backup.xml");
-					ns.Add("", "");
-					writer.Serialize(file, menu, ns);
-					file.Close();
-				}*/
-
 		/// <summary>
 		/// Parses PinballX.ini and reads all systems from it.
 		/// </summary>
@@ -103,9 +89,26 @@ namespace VpdbAgent.PinballX
 						Systems.Add(new PinballXSystem(data["System_" + i]));
 					}
 				}
+			} else {
+				logger.Error("PinballX.ini at {0} does not exist.", iniPath);
 			}
 			logger.Info("Done, {0} systems parsed.", Systems.Count);
 			SystemsChanged(Systems);
+
+			fileWatcher.SetupXml(dbPath, Systems);
+			fileWatcher.XmlChanged += new FileWatcher.XmlChangedHandler(parseXmls);
+		}
+
+		private void parseXmls(string path, WatcherChangeTypes type)
+		{
+
+			logger.Info("XML {0} has changed ({1}).", path, type);
+			/*			switch (type) {
+							case WatcherChangeTypes.Changed:
+							case WatcherChangeTypes.Created:
+							case WatcherChangeTypes.Deleted:
+
+						}*/
 		}
 
 		private Menu parseXml(string filepath)
@@ -135,6 +138,30 @@ namespace VpdbAgent.PinballX
 			}
 			return INSTANCE;
 		}
+
+		/*
+		public List<Game> GetGames()
+		{
+			List<Game> games = new List<Game>();
+			string xmlPath;
+			foreach (PinballXSystem system in Systems) {
+				xmlPath = dbPath + system.Name;
+				if (system.Enabled) {
+					games.AddRange(GetGames(xmlPath));
+				}
+			}
+			return games;
+		}
+
+		public void saveXml(Menu menu)
+		{
+			XmlSerializerNamespaces ns = new XmlSerializerNamespaces();
+			XmlSerializer writer = new XmlSerializer(typeof(Menu));
+			FileStream file = File.Create("C:\\Games\\PinballX\\Databases\\Visual Pinball\\Visual Pinball - backup.xml");
+			ns.Add("", "");
+			writer.Serialize(file, menu, ns);
+			file.Close();
+		}*/
 
 	}
 }

@@ -18,7 +18,7 @@ namespace VpdbAgent.Models
 		public PlatformType Type { get; set; }
 		public string DatabasePath { get; set; }
 		public string MediaPath { get; set; }
-		public List<Game> Games { get; set; } = new List<Game>();
+//		public List<Game> Games { get; set; } = new List<Game>();
 
 		public Platform()
 		{
@@ -37,11 +37,11 @@ namespace VpdbAgent.Models
 			MediaPath = system.MediaPath;
 		}
 
-		public Platform AddGame(Game game)
-		{
-			Games.Add(game);
-			return this;
-		}
+//		public Platform AddGame(Game game)
+//		{
+//			Games.Add(game);
+//			return this;
+//		}
 
 		public enum PlatformType
 		{

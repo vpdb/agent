@@ -24,7 +24,7 @@ namespace VpdbAgent
 	/// 
 	/// It manages the games that are defined in the user's XML database of
 	/// PinballX. However, since we're dealing with more data than what's in 
-	/// XMLs, we keep our own data structure in a JSON file.
+	/// those XMLs, we keep our own data structure in JSON files.
 	/// 
 	/// JSON files are system-specific, meaning for every system defined in
 	/// PinballX (we call them "Platforms"), there is one JSON file. Games
@@ -50,6 +50,7 @@ namespace VpdbAgent
 
 		private MenuManager menuManager = MenuManager.GetInstance();
 		public LazyObservableCollection<Platform> Platforms { get; private set; } = new LazyObservableCollection<Platform>();
+		public LazyObservableCollection<Game> Games { get; private set; } = new LazyObservableCollection<Game>();
 
 		/// <summary>
 		/// Private constructor
@@ -58,6 +59,7 @@ namespace VpdbAgent
 		private GameManager()
 		{
 			menuManager.SystemsChanged += new MenuManager.SystemsChangedHandler(OnPlatformsChanged);
+			menuManager.GamesChanged += new MenuManager.GameChangedHandler(OnGamesChanged);
 		}
 
 
@@ -82,12 +84,20 @@ namespace VpdbAgent
 			// run on UI thread
 			App.Current.Dispatcher.Invoke((Action)delegate {
 				Platforms.Clear();
+				Games.Clear();
 				foreach (PinballXSystem system in systems) {
-					logger.Debug("Retrieving vpdb.json at {0}", system.DatabasePath);
-					Platforms.Add(syncPlatform(new Platform(system)));
+					Platform platform = new Platform(system);
+					Platforms.Add(platform);
+					syncGames(platform);
 				}
 				Platforms.NotifyRepopulated();
+				Games.NotifyRepopulated();
 			});
+		}
+
+		private void OnGamesChanged(List<PinballX.Models.Game> games)
+		{
+			logger.Info("OnGamesChanged {0} games.", games.Count);
 		}
 
 		/// <summary>
@@ -99,54 +109,79 @@ namespace VpdbAgent
 		/// @FIXME
 		/// </summary>
 		/// <returns></returns>
-		public LazyObservableCollection<Game> GetGames(ICollectionView platforms)
+		/*
+		private LazyObservableCollection<Game> getGames()
 		{
-			LazyObservableCollection<Game> games = new LazyObservableCollection<Game>();
 
 			// update data on when platforms change
-			platforms.CollectionChanged += new System.Collections.Specialized.NotifyCollectionChangedEventHandler((a, b) =>
+			Platforms.CollectionChanged += new NotifyCollectionChangedEventHandler((a, b) =>
 			{
 				ListCollectionView list = a as ListCollectionView;
 				NotifyCollectionChangedEventArgs args = b as NotifyCollectionChangedEventArgs;
-				games.Clear();
+				Games.Clear();
 				foreach (Platform platform in list) {
 					foreach (Game game in platform.Games) {
-						games.Add(game);
+						Games.Add(game);
 					}
 				}
-				games.NotifyRepopulated();
+				Games.NotifyRepopulated();
 			});
 
 			// initial data
-			foreach (Platform platform in platforms) {
+			foreach (Platform platform in Platforms) {
 				foreach (Game game in platform.Games) {
-					games.Add(game);
+					Games.Add(game);
+				}
+			}
+			return Games;
+		}*/
+
+		private void syncGames(Platform platform)
+		{
+			string vpdbJson = platform.DatabasePath + @"\vpdb.json";
+
+			Database db = readDatabase(vpdbJson);
+			List<PinballX.Models.Game> xmlGames = menuManager.GetGames(platform.DatabasePath);
+
+			List<Game> mergedGames;
+			if (db == null) {
+				logger.Warn("No vpdb.json at {0}", vpdbJson);
+				mergedGames = mergeGames(xmlGames, null, platform.TablePath, platform);
+			} else {
+				logger.Info("Found and parsed vpdb.json at {0}", vpdbJson);
+				mergedGames = mergeGames(xmlGames, db.Games, platform.TablePath, platform);
+			}
+			Games.AddRange(mergedGames);
+			logger.Trace("Merged {0} games ({1} from XMLs, {2} from vpdb.json)", mergedGames.Count, xmlGames.Count, db != null ? db.Games.Count : 0);
+
+			writeDatabase(new Database(mergedGames), vpdbJson);
+		}
+
+		private List<Game> mergeGames(List<PinballX.Models.Game> xmlGames, List<Game> jsonGames, string tablePath, Platform platform)
+		{
+			List<Game> games = new List<Game>();
+			if (!platform.Enabled) {
+				logger.Info("Not adding games for disabled platform {0}", platform.Name);
+				return games;
+			}
+
+			foreach (PinballX.Models.Game xmlGame in xmlGames) {
+				Game jsonGame = jsonGames == null ? null : jsonGames.FirstOrDefault(g => (g.Id.Equals(xmlGame.Description)));
+				if (jsonGame == null) {
+					games.Add(new Game(xmlGame, tablePath, platform));
+				} else {
+					games.Add(jsonGame.merge(xmlGame, tablePath));
 				}
 			}
 			return games;
 		}
 
-		private Platform syncPlatform(Platform platform)
-		{
-			string vpdbJson = platform.DatabasePath + @"\vpdb.json";
-
-			Platform parsedPlatform = parsePlatform(vpdbJson);
-
-			List<PinballX.Models.Game> xmlGames = menuManager.GetGames(platform.DatabasePath);
-			if (parsedPlatform == null) {
-				logger.Warn("No vpdb.json at {0}", vpdbJson);
-				platform.Games = mergeGames(xmlGames, null, platform.TablePath);
-			} else {
-				logger.Info("Found and parsed vpdb.json at {0}", vpdbJson);
-				platform.Games = mergeGames(xmlGames, parsedPlatform.Games, platform.TablePath);
-			}
-			logger.Trace("Merged {0} games ({1} from XMLs, {2} from vpdb.json)", platform.Games.Count, xmlGames.Count, parsedPlatform != null ? parsedPlatform.Games.Count : 0);
-
-			saveJson(platform, vpdbJson);
-			return platform;
-		}
-
-		private Platform parsePlatform(string vpdbJson)
+		/// <summary>
+		/// De-serializes vpdb.json into an object model.
+		/// </summary>
+		/// <param name="vpdbJson">Path to vpdb.json</param>
+		/// <returns>Deserialized object</returns>
+		private Database readDatabase(string vpdbJson)
 		{
 			if (File.Exists(vpdbJson)) {
 				JsonSerializer serializer = new JsonSerializer();
@@ -156,27 +191,14 @@ namespace VpdbAgent
 
 				using (StreamReader sr = new StreamReader(vpdbJson))
 				using (JsonReader reader = new JsonTextReader(sr)) {
-					return serializer.Deserialize<Platform>(reader);
+					return serializer.Deserialize<Database>(reader);
 				}
 			}
 			return null;
 		}
 
-		private List<Game> mergeGames(List<PinballX.Models.Game> xmlGames, List<Game> jsonGames, string tablePath)
-		{
-			List<Game> games = new List<Game>();
-			foreach (PinballX.Models.Game xmlGame in xmlGames) {
-				Game jsonGame = jsonGames == null ? null : jsonGames.FirstOrDefault(g => (g.Id.Equals(xmlGame.Description)));
-				if (jsonGame == null) {
-					games.Add(new Game(xmlGame, tablePath));
-				} else {
-					games.Add(jsonGame.merge(xmlGame, tablePath));
-				}
-			}
-			return games;
-		}
 
-		private void saveJson(Platform platform, string vpdbJson)
+		private void writeDatabase(Database database, string vpdbJson)
 		{
 			if (!Directory.Exists(Path.GetDirectoryName(vpdbJson))) {
 				logger.Warn("Directory {0} does not exist, not writing vpdb.json.", Path.GetDirectoryName(vpdbJson));
@@ -190,7 +212,7 @@ namespace VpdbAgent
 
 			using (StreamWriter sw = new StreamWriter(vpdbJson))
 			using (JsonWriter writer = new JsonTextWriter(sw)) {
-				serializer.Serialize(writer, platform);
+				serializer.Serialize(writer, database);
 			}
 			logger.Debug("Wrote vpdb.json back to {0}", vpdbJson);
 		}
