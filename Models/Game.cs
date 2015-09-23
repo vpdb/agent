@@ -17,7 +17,12 @@ namespace VpdbAgent.Models
 		public bool Enabled { get; set; } = true;
 
 		public string ReleaseId { get; set; }
+
+		[JsonIgnoreAttribute]
 		public bool Exists { get; set; }
+
+		[JsonIgnoreAttribute]
+		public long FileSize { get; set; }
 
 		[JsonIgnoreAttribute]
 		public Platform Platform { get; set; }
@@ -27,26 +32,28 @@ namespace VpdbAgent.Models
 		public Game(PinballX.Models.Game xmlGame, string tablePath, Platform platform)
 		{
 			Platform = platform;
-			updateFromGame(xmlGame, tablePath);
+			UpdateFromGame(xmlGame, tablePath);
 		}
 
-		internal Game merge(PinballX.Models.Game xmlGame, string tablePath, Platform platform)
+		internal Game Merge(PinballX.Models.Game xmlGame, string tablePath, Platform platform)
 		{
 			Platform = platform;
-			updateFromGame(xmlGame, tablePath);
+			UpdateFromGame(xmlGame, tablePath);
 			return this;
 		}
 
-		private void updateFromGame(PinballX.Models.Game xmlGame, string tablePath)
+		private void UpdateFromGame(PinballX.Models.Game xmlGame, string tablePath)
 		{
 			Id = xmlGame.Description;
 			Enabled = "true".Equals(xmlGame.Enabled, StringComparison.InvariantCultureIgnoreCase);
 
 			if (File.Exists(tablePath + @"\" + xmlGame.Filename + ".vpt")) {
 				Filename = xmlGame.Filename + ".vpt";
+				FileSize = new FileInfo(tablePath + @"\" + xmlGame.Filename + ".vpt").Length;
 				Exists = true;
 			} else if (File.Exists(tablePath + @"\" + xmlGame.Filename + ".vpx")) {
 				Filename = xmlGame.Filename + ".vpx";
+				FileSize = new FileInfo(tablePath + @"\" + xmlGame.Filename + ".vpx").Length;
 				Exists = true;
 			} else {
 				Filename = xmlGame.Filename;
@@ -56,10 +63,7 @@ namespace VpdbAgent.Models
 
 		public int CompareTo(Game other)
 		{
-			if (other == null) {
-				return 1;
-			}
-			return Id.CompareTo(other.Id);
+			return other == null ? 1 : Id.CompareTo(other.Id);
 		}
 	}
 }

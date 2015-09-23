@@ -24,9 +24,9 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <Label Grid.Column="0">
-                    <TextBlock TextTrimming="CharacterEllipsis" Text="{Binding Filename}" />
+                    <TextBlock x:Name="Filename"  TextTrimming="CharacterEllipsis" Text="{Binding Filename}"/>
                 </Label>
-                <Button Style="{StaticResource TertiaryButton}" Grid.Column="1" x:Name="IdentifyButton" Content="IDENTIFY" HorizontalAlignment="Right"/>
+                <Button x:Name="IdentifyButton" Style="{StaticResource TertiaryButton}" Grid.Column="1" Content="IDENTIFY" HorizontalAlignment="Right" Click="IdentifyButton_Click"/>
             </Grid>
            
             <Border BorderBrush="#40ffffff" BorderThickness="0 0 0 1" />

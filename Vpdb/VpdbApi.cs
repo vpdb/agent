@@ -8,5 +8,8 @@ namespace VpdbAgent.Vpdb
 	{
 		[Get("/api/v1/releases?thumb_format=square")]
 		Task<List<Models.Release>> GetReleases();
+
+		[Get("/api/v1/releases?thumb_format=square")]
+		Task<List<Models.Release>> GetReleasesBySize([AliasAs("filesize")] long filesize, [AliasAs("threshold")] long threshold);
 	}
 }

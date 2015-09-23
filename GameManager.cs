@@ -127,7 +127,7 @@ namespace VpdbAgent
 				var jsonGame = jsonGames?.FirstOrDefault(g => (g.Id.Equals(xmlGame.Description)));
 				games.Add(jsonGame == null
 					? new Game(xmlGame, tablePath, platform)
-					: jsonGame.merge(xmlGame, tablePath, platform)
+					: jsonGame.Merge(xmlGame, tablePath, platform)
 					);
 			}
 			return games;

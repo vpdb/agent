@@ -34,7 +34,7 @@ namespace VpdbAgent.Pages
 			Games.Filter = GameFilter;
 
 			Logger.Info("Setting up pusher...");
-			var client = new VpdbClient();
+			var client = VpdbClient.GetInstance();
 			
 			client.Pusher.ConnectionStateChanged += PusherConnectionStateChanged;
 			client.Pusher.Error += PusherError;

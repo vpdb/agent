@@ -12,7 +12,10 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using VpdbAgent.Models;
+using NLog;
+using VpdbAgent.Vpdb;
+using VpdbAgent.Vpdb.Models;
+using Game = VpdbAgent.Models.Game;
 
 namespace VpdbAgent.Views
 {
@@ -21,13 +24,13 @@ namespace VpdbAgent.Views
 	/// </summary>
 	public partial class GameTemplate : UserControl
 	{
-
 		public static readonly DependencyProperty GameProperty = DependencyProperty.Register("Game", typeof(Game), typeof(GameTemplate), new PropertyMetadata(default(Game), GamePropertyChanged));
+		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		static void GamePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
 		{
 			var source = d as GameTemplate;
-			source.bind();
+			source?.Bind();
 		}
 
 		public Game Game
@@ -44,9 +47,18 @@ namespace VpdbAgent.Views
 			InitializeComponent();
 		}
 
-		private void bind()
+		private void Bind()
 		{
+			Filename.Background = Game.Exists ? Brushes.Transparent : Brushes.DarkRed;
+			IdentifyButton.IsEnabled = Game.Exists;
+		}
 
+		private async void IdentifyButton_Click(object sender, RoutedEventArgs e)
+		{
+			var client = VpdbClient.GetInstance();
+			var releases = await client.Api.GetReleasesBySize(Game.FileSize, 512);
+
+			Logger.Info("Found {0} matches.", releases.Count);
 		}
 	}
 }

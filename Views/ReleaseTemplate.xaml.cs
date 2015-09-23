@@ -51,7 +51,7 @@ namespace VpdbAgent.Pages
 		{
 			thumb.Opacity = 0;
 			thumb.Source = null;
-			var webRequest = new VpdbClient().GetWebRequest(path);
+			var webRequest = VpdbClient.GetInstance().GetWebRequest(path);
 			webRequest.BeginGetResponse((ar) =>
 			{
 				try {
