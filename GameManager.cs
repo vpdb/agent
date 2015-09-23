@@ -9,6 +9,7 @@ using VpdbAgent.Common;
 using VpdbAgent.Models;
 using VpdbAgent.PinballX;
 using VpdbAgent.PinballX.Models;
+using VpdbAgent.Vpdb.Models;
 using VpdbAgent.Vpdb.Network;
 using Game = VpdbAgent.Models.Game;
 
@@ -43,6 +44,10 @@ namespace VpdbAgent
 
 		private readonly MenuManager _menuManager = MenuManager.GetInstance();
 
+		public LazyObservableList<Platform> Platforms { get; } = new LazyObservableList<Platform>();
+		public LazyObservableList<Game> Games { get; } = new LazyObservableList<Game>();
+
+
 		/// <summary>
 		///     Private constructor
 		/// </summary>
@@ -52,10 +57,7 @@ namespace VpdbAgent
 			_menuManager.SystemsChanged += OnPlatformsChanged;
 			_menuManager.GamesChanged += OnGamesChanged;
 		}
-
-		public LazyObservableList<Platform> Platforms { get; } = new LazyObservableList<Platform>();
-		public LazyObservableList<Game> Games { get; } = new LazyObservableList<Game>();
-
+	
 		/// <summary>
 		///     Triggers data update
 		/// </summary>
@@ -65,6 +67,19 @@ namespace VpdbAgent
 			_menuManager.Initialize();
 			return this;
 		}
+
+		public void LinkRelease(Game game, Release release)
+		{
+			game.Release = release;
+
+			WriteDatabase(new Database(GetGames(game.Platform)), game.Platform);
+			Games.NotifyRepopulated();
+		}
+
+		public IEnumerable<Game> GetGames(Platform platform) {
+			return Games.FindAll(g => g.Platform.Name.Equals(platform.Name));
+		}
+
 
 		/// <summary>
 		///     Platforms have changed or are being initialized.
@@ -93,19 +108,18 @@ namespace VpdbAgent
 				return;
 			}
 
-			var vpdbJson = platform.DatabasePath + @"\vpdb.json";
-			var db = ReadDatabase(vpdbJson);
+			var db = ReadDatabase(platform);
 
 			var xmlGames = system.Games;
 			List<Game> mergedGames;
 			if (db == null) {
-				Logger.Warn("No vpdb.json at {0}", vpdbJson);
+				Logger.Warn("No vpdb.json at {0}", platform.DatabaseFile);
 				mergedGames = MergeGames(xmlGames, null, platform.TablePath, platform);
 			} else {
-				Logger.Info("Found and parsed vpdb.json at {0}", vpdbJson);
+				Logger.Info("Found and parsed vpdb.json at {0}", platform.DatabaseFile);
 				mergedGames = MergeGames(xmlGames, db.Games, platform.TablePath, platform);
 			}
-			WriteDatabase(new Database(mergedGames), vpdbJson);
+			WriteDatabase(new Database(mergedGames), platform);
 
 			// run on ui thread
 			Application.Current.Dispatcher.Invoke(delegate {
@@ -116,11 +130,11 @@ namespace VpdbAgent
 				Games.Sort();
 				Games.NotifyRepopulated();
 
-				Logger.Trace("Merged {0} games ({1} from XMLs, {2} from vpdb.json)", mergedGames.Count, xmlGames.Count, db?.Games.Count ?? 0);
+				Logger.Trace("Merged {0} games ({1} from XMLs)", mergedGames.Count, xmlGames.Count);
 			});
 		}
 
-		private static List<Game> MergeGames(IEnumerable<PinballX.Models.Game> xmlGames, List<Game> jsonGames, string tablePath, Platform platform)
+		private static List<Game> MergeGames(IEnumerable<PinballX.Models.Game> xmlGames, IEnumerable<Game> jsonGames, string tablePath, Platform platform)
 		{
 			var games = new List<Game>();
 			foreach (var xmlGame in xmlGames) {
@@ -138,9 +152,9 @@ namespace VpdbAgent
 		/// </summary>
 		/// <param name="vpdbJson">Path to vpdb.json</param>
 		/// <returns>Deserialized object</returns>
-		private static Database ReadDatabase(string vpdbJson)
+		private static Database ReadDatabase(Platform platform)
 		{
-			if (!File.Exists(vpdbJson)) {
+			if (!System.IO.File.Exists(platform.DatabaseFile)) {
 				return null;
 			}
 
@@ -150,7 +164,7 @@ namespace VpdbAgent
 				Formatting = Formatting.Indented
 			};
 
-			using (var sr = new StreamReader(vpdbJson))
+			using (var sr = new StreamReader(platform.DatabaseFile))
 			using (JsonReader reader = new JsonTextReader(sr)) {
 				try {
 					var db = serializer.Deserialize<Database>(reader);
@@ -159,17 +173,17 @@ namespace VpdbAgent
 				} catch (Exception e) {
 					Logger.Error(e, "Error parsing vpdb.json, deleting and ignoring.");
 					reader.Close();
-					File.Delete(vpdbJson);
+					System.IO.File.Delete(platform.DatabaseFile);
 					return null;
 				}
 			}
 		}
 
 
-		private static void WriteDatabase(Database database, string vpdbJson)
+		private static void WriteDatabase(Database database, Platform platform)
 		{
-			if (vpdbJson != null && !Directory.Exists(Path.GetDirectoryName(vpdbJson))) {
-				Logger.Warn("Directory {0} does not exist, not writing vpdb.json.", Path.GetDirectoryName(vpdbJson));
+			if (platform.DatabaseFile != null && !Directory.Exists(Path.GetDirectoryName(platform.DatabaseFile))) {
+				Logger.Warn("Directory {0} does not exist, not writing vpdb.json.", Path.GetDirectoryName(platform.DatabaseFile));
 				return;
 			}
 
@@ -179,11 +193,11 @@ namespace VpdbAgent
 				Formatting = Formatting.Indented
 			};
 
-			using (var sw = new StreamWriter(vpdbJson))
+			using (var sw = new StreamWriter(platform.DatabaseFile))
 			using (JsonWriter writer = new JsonTextWriter(sw)) {
 				serializer.Serialize(writer, database);
 			}
-			Logger.Debug("Wrote vpdb.json back to {0}", vpdbJson);
+			Logger.Debug("Wrote vpdb.json back to {0}", platform.DatabaseFile);
 		}
 
 		public static GameManager GetInstance()

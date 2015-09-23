@@ -23,12 +23,6 @@ namespace VpdbAgent.Common
 			OnCollectionReset();
 		}
 
-		public void NotifyChanged()
-		{
-			OnPropertyChanged(CountString);
-			OnPropertyChanged(IndexerName);
-		}
-
 		#endregion Public Events
 
 

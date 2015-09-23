@@ -19,7 +19,8 @@ namespace VpdbAgent.Models
 		public PlatformType Type { get; set; }
 		public string DatabasePath { get; set; }
 		public string MediaPath { get; set; }
-//		public List<Game> Games { get; set; } = new List<Game>();
+		public String DatabaseFile { get { return DatabasePath + @"\vpdb.json"; } }
+
 
 		public Platform()
 		{

@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using VpdbAgent.PinballX.Models;
 
 namespace VpdbAgent.Models
 {
@@ -16,10 +15,13 @@ namespace VpdbAgent.Models
 		public string Filename { get; set; }
 		public bool Enabled { get; set; } = true;
 
-		public string ReleaseId { get; set; }
+		public Vpdb.Models.Release Release { get; set; }
 
 		[JsonIgnoreAttribute]
 		public bool Exists { get; set; }
+
+		[JsonIgnoreAttribute]
+		public bool HasRelease { get { return Release != null; } }
 
 		[JsonIgnoreAttribute]
 		public long FileSize { get; set; }
@@ -45,7 +47,7 @@ namespace VpdbAgent.Models
 		private void UpdateFromGame(PinballX.Models.Game xmlGame, string tablePath)
 		{
 			Id = xmlGame.Description;
-			Enabled = "true".Equals(xmlGame.Enabled, StringComparison.InvariantCultureIgnoreCase);
+			Enabled = xmlGame.Enabled == null || "true".Equals(xmlGame.Enabled, StringComparison.InvariantCultureIgnoreCase);
 
 			if (File.Exists(tablePath + @"\" + xmlGame.Filename + ".vpt")) {
 				Filename = xmlGame.Filename + ".vpt";

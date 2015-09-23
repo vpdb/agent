@@ -8,11 +8,11 @@ namespace VpdbAgent.Models
 {
 	public class Database
 	{
-		public List<Game> Games { set; get; } = new List<Game>();
+		public IEnumerable<Game> Games { set; get; } = new List<Game>();
 
 		public Database() { }
 
-		public Database(List<Game> games)
+		public Database(IEnumerable<Game> games)
 		{
 			Games = games;
 		}

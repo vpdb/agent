@@ -5,20 +5,25 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:VpdbAgent.Views"
              mc:Ignorable="d" 
-             d:DesignWidth="300">
+             d:DesignWidth="300"
+			 Padding="10,0,10,0">
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="100" />
+            <ColumnDefinition Width="80" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
-        <Image Grid.Column="0" Width="50" Height="50"/>
+        <Image x:Name="Thumb" Grid.Column="0" Margin="0,10,0,0" Width="70" Height="70" VerticalAlignment="Top" HorizontalAlignment="Left"/>
         <StackPanel Grid.Column="1">
-            <Label>
+            <Label Margin="0,0,0,-10">
                 <TextBlock TextTrimming="CharacterEllipsis" Text="{Binding Id}" FontSize="22" FontWeight="Bold"/>
             </Label>
 
-            <Grid Margin="0,-10,0,10">
+            <Label x:Name="ReleaseNameWrapper" Margin="0,0,0,-10">
+                <TextBlock x:Name="ReleaseName" TextTrimming="CharacterEllipsis" />
+            </Label>
+
+            <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
@@ -29,7 +34,7 @@
                 <Button x:Name="IdentifyButton" Style="{StaticResource TertiaryButton}" Grid.Column="1" Content="IDENTIFY" HorizontalAlignment="Right" Click="IdentifyButton_Click"/>
             </Grid>
            
-            <Border BorderBrush="#40ffffff" BorderThickness="0 0 0 1" />
+            <Border BorderBrush="#40ffffff" BorderThickness="0 0 0 1" Margin="5,10,0,0"/>
         </StackPanel>
     </Grid>
 </UserControl>
