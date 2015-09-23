@@ -14,7 +14,7 @@ namespace VpdbAgent.Pages
 	/// </summary>
 	public partial class MainPage : Page
 	{
-		private static readonly Logger logger = LogManager.GetCurrentClassLogger();
+		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		public ICollectionView Platforms { get; private set; }
 		public ICollectionView Games { get; private set; }
@@ -24,7 +24,7 @@ namespace VpdbAgent.Pages
 			InitializeComponent();
 			DataContext = this;
 
-			GameManager gameManager = GameManager.GetInstance();
+			var gameManager = GameManager.GetInstance();
 			gameManager.Initialize();
 
 			Platforms = CollectionViewSource.GetDefaultView(gameManager.Platforms);
@@ -33,47 +33,47 @@ namespace VpdbAgent.Pages
 			Games = CollectionViewSource.GetDefaultView(gameManager.Games);
 			Games.Filter = GameFilter;
 
-			logger.Info("Setting up pusher...");
-			VpdbClient client = new VpdbClient();
+			Logger.Info("Setting up pusher...");
+			var client = new VpdbClient();
 			
 			client.Pusher.ConnectionStateChanged += PusherConnectionStateChanged;
 			client.Pusher.Error += PusherError;
 
-			Channel testChannel = client.Pusher.Subscribe("test-channel");
+			var testChannel = client.Pusher.Subscribe("test-channel");
 			testChannel.Subscribed += PusherSubscribed;
 
 			// inline binding
 			testChannel.Bind("test-message", (dynamic data) => {
-				logger.Info("[{0}]: {1}", data.name, data.message);
+				Logger.Info("[{0}]: {1}", data.name, data.message);
 			});
 
 			client.Pusher.Connect();
 		}
 
-		private bool PlatformFilter(object item)
+		private static bool PlatformFilter(object item)
 		{
-			Models.Platform platform = item as Models.Platform;
-			return platform.Enabled;
+			var platform = item as Models.Platform;
+			return platform != null && platform.Enabled;
 		}
 
-		private bool GameFilter(object item)
+		private static bool GameFilter(object item)
 		{
-			Models.Game game = item as Models.Game;
-			return game.Platform.Enabled;
+			var game = item as Models.Game;
+			return game != null && game.Platform.Enabled;
 		}
 
-		private void PusherConnectionStateChanged(object sender, ConnectionState state)
+		private static void PusherConnectionStateChanged(object sender, ConnectionState state)
 		{
-			logger.Info("Pusher connection {0}", state);
+			Logger.Info("Pusher connection {0}", state);
 		}
 
-		private void PusherError(object sender, PusherException error) {
-			logger.Error(error, "Pusher error!");
+		private static void PusherError(object sender, PusherException error) {
+			Logger.Error(error, "Pusher error!");
 		}
 
-		private void PusherSubscribed(object sender)
+		private static void PusherSubscribed(object sender)
 		{
-			logger.Info("Subscribed to channel.");
+			Logger.Info("Subscribed to channel.");
 		}
 
 
