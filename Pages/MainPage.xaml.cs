@@ -1,10 +1,11 @@
 ﻿using NLog;
-using OLinq;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows.Controls;
 using System.Windows.Data;
+using VpdbAgent.Vpdb;
+using PusherClient;
 
 namespace VpdbAgent.Pages
 {
@@ -31,6 +32,22 @@ namespace VpdbAgent.Pages
 
 			Games = CollectionViewSource.GetDefaultView(gameManager.Games);
 			Games.Filter = GameFilter;
+
+			logger.Info("Setting up pusher...");
+			VpdbClient client = new VpdbClient();
+			
+			client.Pusher.ConnectionStateChanged += PusherConnectionStateChanged;
+			client.Pusher.Error += PusherError;
+
+			Channel testChannel = client.Pusher.Subscribe("test-channel");
+			testChannel.Subscribed += PusherSubscribed;
+
+			// inline binding
+			testChannel.Bind("test-message", (dynamic data) => {
+				logger.Info("[{0}]: {1}", data.name, data.message);
+			});
+
+			client.Pusher.Connect();
 		}
 
 		private bool PlatformFilter(object item)
@@ -43,6 +60,20 @@ namespace VpdbAgent.Pages
 		{
 			Models.Game game = item as Models.Game;
 			return game.Platform.Enabled;
+		}
+
+		private void PusherConnectionStateChanged(object sender, ConnectionState state)
+		{
+			logger.Info("Pusher connection {0}", state);
+		}
+
+		private void PusherError(object sender, PusherException error) {
+			logger.Error(error, "Pusher error!");
+		}
+
+		private void PusherSubscribed(object sender)
+		{
+			logger.Info("Subscribed to channel.");
 		}
 
 

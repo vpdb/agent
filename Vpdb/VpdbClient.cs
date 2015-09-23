@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Http;
 using System.Text;
 using VpdbAgent.Vpdb.Network;
+using PusherClient;
 
 namespace VpdbAgent.Vpdb
 {
@@ -15,6 +16,7 @@ namespace VpdbAgent.Vpdb
 		private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
 		public readonly VpdbApi Api;
+		public readonly Pusher Pusher;
 
 		private byte[] authHeader;
 
@@ -35,6 +37,11 @@ namespace VpdbAgent.Vpdb
 					}
 				};
 				Api = RestService.For<VpdbApi>(client, settings);
+
+				Pusher = new Pusher("02ee40b62e1fb0696e02", new PusherOptions() {
+					Encrypted = true
+					//Authorizer = new HttpAuthorizer("http://localhost:8888/auth/")
+				});
 			}
 		}
 

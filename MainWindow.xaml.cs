@@ -1,5 +1,7 @@
 ﻿using System.Windows;
+using PusherClient;
 using VpdbAgent.Pages;
+using VpdbAgent.Vpdb;
 
 namespace VpdbAgent
 {
@@ -16,7 +18,7 @@ namespace VpdbAgent
 			SettingsManager settingsManager = SettingsManager.GetInstance();
 
 			if (settingsManager.IsInitialized()) {
-				MainFrame.Navigate(new MainPage());				
+				MainFrame.Navigate(new MainPage());
 			} else {
 				MainFrame.Navigate(new SettingsPage());
 			}
