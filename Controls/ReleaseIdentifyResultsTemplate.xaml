@@ -1,0 +1,53 @@
+﻿<UserControl x:Class="VpdbAgent.Controls.ReleaseIdentifyResultsTemplate"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:controls="clr-namespace:VpdbAgent.Controls"
+             mc:Ignorable="d" 
+             d:DesignHeight="100" d:DesignWidth="600" d:DataContext="{d:DesignData ReleaseIdentifyResultsTemplate}">
+
+    <Expander IsExpanded="False" x:Name="IdentifyResults" Style="{StaticResource AnimatedExpander}">
+        <Grid Margin="-110,0,-20,0">
+            <Grid.Background>
+                <SolidColorBrush Color="Black" Opacity="0.35" />
+            </Grid.Background>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="110" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Image Grid.Column="0" Width="20" Height="20" VerticalAlignment="Top" HorizontalAlignment="Left"/>
+
+            <StackPanel Grid.Column="1" Orientation="Vertical" Margin="0,5,10,5">
+
+                <ItemsControl ItemsSource="{Binding Releases}" Margin="0,10,0,10">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="0,5,0,5">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="50" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <controls:UrlImage Grid.Column="0" Width="50" Height="50" UrlSource="{Binding LatestVersion.Thumb.Image.Url}" />
+
+                                <StackPanel Grid.Column="1" Orientation="Vertical">
+                                    <Label Grid.Column="1" Padding="0">
+                                        <TextBlock Text="{Binding Game.Title}" TextTrimming="CharacterEllipsis" />
+                                    </Label>
+                                    <Label Grid.Column="2" Padding="0">
+                                        <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                                    </Label>
+                                </StackPanel>
+
+                                <Button Style="{StaticResource TertiaryButton}" Grid.Column="2" Content="SELECT" HorizontalAlignment="Right"/>
+
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </Grid>
+    </Expander>
+</UserControl>

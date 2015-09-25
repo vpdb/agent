@@ -113,6 +113,10 @@
     </ApplicationDefinition>
     <Compile Include="Common\ImageUtils.cs" />
     <Compile Include="Common\LazyObservableList.cs" />
+    <Compile Include="Controls\ReleaseIdentifyResultsTemplate.xaml.cs">
+      <DependentUpon>ReleaseIdentifyResultsTemplate.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\UrlImage.cs" />
     <Compile Include="GameManager.cs" />
     <Compile Include="Models\Game.cs" />
     <Compile Include="Models\Platform.cs" />
@@ -145,6 +149,10 @@
     <Compile Include="Vpdb\VpdbApi.cs" />
     <Compile Include="Vpdb\Models\Release.cs" />
     <Compile Include="Vpdb\VpdbClient.cs" />
+    <Page Include="Controls\ReleaseIdentifyResultsTemplate.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -196,6 +204,10 @@
     <Page Include="Controls\GameTemplate.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Themes\Generic.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
   <ItemGroup>

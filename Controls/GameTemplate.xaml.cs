@@ -80,9 +80,9 @@ namespace VpdbAgent.Controls
 		{
 			var releases = await _vpdbClient.Api.GetReleasesBySize(Game.FileSize, 512);
 
-			IdentifiedReleases = releases;
-			IdentifyResults.Visibility = Visibility.Visible;
-			IdentifyResults.IsExpanded = true;
+			var identifyResults = new ReleaseIdentifyResultsTemplate(releases);
+			Panel.Children.Add(identifyResults);
+			identifyResults.IdentifyResults.IsExpanded = true;
 
 			// TODO handle # results correctly
 			if (releases.Count > 0) {
@@ -91,6 +91,6 @@ namespace VpdbAgent.Controls
 
 			Logger.Info("Found {0} matches.", releases.Count);
 		}
-		
+
 	}
 }
