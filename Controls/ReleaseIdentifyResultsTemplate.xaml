@@ -34,7 +34,7 @@
 
                                 <StackPanel Grid.Column="1" Orientation="Vertical">
                                     <Label Grid.Column="1" Padding="0">
-                                        <TextBlock Text="{Binding Game.Title}" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Text="{Binding Game.DisplayName}" TextTrimming="CharacterEllipsis" />
                                     </Label>
                                     <Label Grid.Column="2" Padding="0">
                                         <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" />

@@ -83,6 +83,7 @@ namespace VpdbAgent.Controls
 			Progress.Start();
 			
 			var releases = await _vpdbClient.Api.GetReleasesBySize(Game.FileSize, 512);
+			Logger.Info("Found {0} matches.", releases.Count);
 
 			Progress.Visibility = Visibility.Collapsed;
 			Progress.Stop();
@@ -96,7 +97,6 @@ namespace VpdbAgent.Controls
 				//				_gameManager.LinkRelease(Game, releases[0]);
 			}
 
-			Logger.Info("Found {0} matches.", releases.Count);
 		}
 
 	}
