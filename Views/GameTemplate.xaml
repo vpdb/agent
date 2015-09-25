@@ -5,7 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:VpdbAgent.Views"
              mc:Ignorable="d" 
-             d:DesignWidth="300"
+             d:DesignWidth="500"
 			 Padding="10,0,10,0">
     <Grid>
         <Grid.ColumnDefinitions>
@@ -33,7 +33,41 @@
                 </Label>
                 <Button x:Name="IdentifyButton" Style="{StaticResource TertiaryButton}" Grid.Column="1" Content="IDENTIFY" HorizontalAlignment="Right" Click="IdentifyButton_Click"/>
             </Grid>
-           
+
+            <!-- Identification results -->
+            <Grid Margin="-90,0,-10,0">
+                <Grid.Background>
+                    <SolidColorBrush Color="Black" Opacity="0.5" />
+                </Grid.Background>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="95" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Image Grid.Column="0" Width="20" Height="20" VerticalAlignment="Top" HorizontalAlignment="Left"/>
+
+                <StackPanel Grid.Column="1" Orientation="Vertical" Margin="0,5,10,5">
+                    <!-- Each result -->
+                    <Grid Margin="0,5,0,5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="50" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Image Grid.Column="0" Width="50" Height="50"/>
+                        <StackPanel Grid.Column="1" Orientation="Vertical">
+                            <Label Grid.Column="1" Padding="0">
+                                <TextBlock Text="Game name" TextTrimming="CharacterEllipsis" />
+                            </Label>
+                            <Label Grid.Column="2" Padding="0">
+                                <TextBlock Text="Release Name" TextTrimming="CharacterEllipsis" />
+                            </Label>
+                        </StackPanel>
+                        <Button Style="{StaticResource TertiaryButton}" Grid.Column="2" Content="SELECT" HorizontalAlignment="Right" Click="IdentifyButton_Click"/>
+                    </Grid>
+                </StackPanel>
+            </Grid>
             <Border BorderBrush="#40ffffff" BorderThickness="0 0 0 1" Margin="5,10,0,0"/>
         </StackPanel>
     </Grid>
