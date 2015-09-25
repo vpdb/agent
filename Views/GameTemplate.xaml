@@ -35,7 +35,7 @@
             </Grid>
 
             <!-- Identification results -->
-            <Expander x:Name="IdentifyResults" Style="{StaticResource AnimatedExpander}">
+            <Expander Visibility="Collapsed" IsExpanded="False" x:Name="IdentifyResults" Style="{StaticResource AnimatedExpander}">
                 <Grid Margin="-110,0,-20,0">
                     <Grid.Background>
                         <SolidColorBrush Color="Black" Opacity="0.5" />
@@ -46,26 +46,33 @@
                     </Grid.ColumnDefinitions>
                     <Image Grid.Column="0" Width="20" Height="20" VerticalAlignment="Top" HorizontalAlignment="Left"/>
 
-                    <StackPanel Grid.Column="1" Orientation="Vertical" Margin="0,5,10,5" Grid.ColumnSpan="2">
+                    <StackPanel Grid.Column="1" Orientation="Vertical" Margin="0,5,10,5">
                         <!-- Each result -->
-                        <Grid Margin="0,5,0,5">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="50" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
 
-                            <Image Grid.Column="0" Width="50" Height="50"/>
-                            <StackPanel Grid.Column="1" Orientation="Vertical">
-                                <Label Grid.Column="1" Padding="0">
-                                    <TextBlock Text="Game name" TextTrimming="CharacterEllipsis" />
-                                </Label>
-                                <Label Grid.Column="2" Padding="0">
-                                    <TextBlock Text="Release Name" TextTrimming="CharacterEllipsis" />
-                                </Label>
-                            </StackPanel>
-                            <Button Style="{StaticResource TertiaryButton}" Grid.Column="2" Content="SELECT" HorizontalAlignment="Right" Click="IdentifyButton_Click"/>
-                        </Grid>
+                        <ItemsControl ItemsSource="{Binding IdentifyResults}" Margin="0,10,0,10">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,5,0,5">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="50" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <Image Grid.Column="0" Width="50" Height="50"/>
+                                        <StackPanel Grid.Column="1" Orientation="Vertical">
+                                            <Label Grid.Column="1" Padding="0">
+                                                <TextBlock Text="Game name" TextTrimming="CharacterEllipsis" />
+                                            </Label>
+                                            <Label Grid.Column="2" Padding="0">
+                                                <TextBlock Text="Release Name" TextTrimming="CharacterEllipsis" />
+                                            </Label>
+                                        </StackPanel>
+                                        <Button Style="{StaticResource TertiaryButton}" Grid.Column="2" Content="SELECT" HorizontalAlignment="Right" Click="IdentifyButton_Click"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
                     </StackPanel>
                 </Grid>
             </Expander>

@@ -16,6 +16,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 using NLog;
+using VpdbAgent.Common;
 using VpdbAgent.Vpdb;
 using VpdbAgent.Vpdb.Models;
 using Game = VpdbAgent.Models.Game;
@@ -32,6 +33,7 @@ namespace VpdbAgent.Views
 
 		private readonly GameManager _gameManager = GameManager.GetInstance();
 		private readonly VpdbClient _vpdbClient = VpdbClient.GetInstance();
+		private readonly ImageUtils _imageUtils = ImageUtils.GetInstance();
 
 		static void GamePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
 		{
@@ -42,11 +44,10 @@ namespace VpdbAgent.Views
 		public Game Game
 		{
 			get { return GetValue(GameProperty) as Game; }
-			set
-			{
-				SetValue(GameProperty, value);
-			}
+			set { SetValue(GameProperty, value); }
 		}
+
+		public List<Release> IdentifiedReleases { get; private set; }
 
 		public GameTemplate()
 		{
@@ -62,7 +63,7 @@ namespace VpdbAgent.Views
 				ReleaseName.Text = Game.Release.Name;
 
 				Thumb.Visibility = Visibility.Visible;
-				LoadImage(Game.Release.LatestVersion.Thumb.Image.Url, Thumb);
+				_imageUtils.LoadImage(Game.Release.LatestVersion.Thumb.Image.Url, Thumb, Dispatcher);
 				IdentifyButton.Visibility = Visibility.Collapsed;
 
 			} else {
@@ -79,50 +80,17 @@ namespace VpdbAgent.Views
 		{
 			var releases = await _vpdbClient.Api.GetReleasesBySize(Game.FileSize, 512);
 
+			IdentifiedReleases = releases;
+			IdentifyResults.Visibility = Visibility.Visible;
+			IdentifyResults.IsExpanded = true;
+
 			// TODO handle # results correctly
 			if (releases.Count > 0) {
-				_gameManager.LinkRelease(Game, releases[0]);
+				//				_gameManager.LinkRelease(Game, releases[0]);
 			}
 
 			Logger.Info("Found {0} matches.", releases.Count);
 		}
-
-
-		private void LoadImage(string path, System.Windows.Controls.Image imageView)
-		{
-			imageView.Opacity = 0;
-			imageView.Source = null;
-			var webRequest = VpdbClient.GetInstance().GetWebRequest(path);
-			webRequest.BeginGetResponse((ar) =>
-			{
-				try {
-					var response = webRequest.EndGetResponse(ar);
-					var stream = response.GetResponseStream();
-					if (stream.CanRead) {
-						Byte[] buffer = new Byte[response.ContentLength];
-						stream.BeginRead(buffer, 0, buffer.Length, (aResult) =>
-						{
-							stream.EndRead(aResult);
-							BitmapImage image = new BitmapImage();
-							image.BeginInit();
-							image.StreamSource = new MemoryStream(buffer);
-							image.EndInit();
-							image.Freeze();
-							this.Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(delegate {
-
-								DoubleAnimation da = new DoubleAnimation();
-								da.From = 0;
-								da.To = 1;
-								da.Duration = new Duration(TimeSpan.FromMilliseconds(200));
-								imageView.Source = image;
-								imageView.BeginAnimation(OpacityProperty, da);
-							}));
-						}, null);
-					}
-				} catch (Exception e) {
-					Console.WriteLine("Error loading image {0}: {1}", webRequest.RequestUri.AbsoluteUri, e.Message);
-				}
-			}, null);
-		}
+		
 	}
 }
