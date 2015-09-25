@@ -111,6 +111,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Common\ImageUtils.cs" />
     <Compile Include="Common\LazyObservableList.cs" />
     <Compile Include="GameManager.cs" />
     <Compile Include="Models\Game.cs" />
@@ -129,11 +130,8 @@
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="SettingsManager.cs" />
-    <Compile Include="Views\GameTemplate.xaml.cs">
+    <Compile Include="Controls\GameTemplate.xaml.cs">
       <DependentUpon>GameTemplate.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Views\ReleaseTemplate.xaml.cs">
-      <DependentUpon>ReleaseTemplate.xaml</DependentUpon>
     </Compile>
     <Compile Include="Vpdb\Models\Author.cs" />
     <Compile Include="Vpdb\Models\File.cs" />
@@ -195,11 +193,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\GameTemplate.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Views\ReleaseTemplate.xaml">
+    <Page Include="Controls\GameTemplate.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

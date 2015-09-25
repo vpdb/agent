@@ -21,7 +21,7 @@ using VpdbAgent.Vpdb;
 using VpdbAgent.Vpdb.Models;
 using Game = VpdbAgent.Models.Game;
 
-namespace VpdbAgent.Views
+namespace VpdbAgent.Controls
 {
 	/// <summary>
 	/// Interaction logic for GameTemplate.xaml
