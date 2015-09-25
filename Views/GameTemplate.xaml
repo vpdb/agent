@@ -6,7 +6,7 @@
              xmlns:local="clr-namespace:VpdbAgent.Views"
              mc:Ignorable="d" 
              d:DesignWidth="500"
-			 Padding="10,0,10,0">
+             Padding="20,0,20,0">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="80" />
@@ -35,39 +35,40 @@
             </Grid>
 
             <!-- Identification results -->
-            <Grid Margin="-90,0,-10,0">
-                <Grid.Background>
-                    <SolidColorBrush Color="Black" Opacity="0.5" />
-                </Grid.Background>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="95" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <Image Grid.Column="0" Width="20" Height="20" VerticalAlignment="Top" HorizontalAlignment="Left"/>
+            <Expander x:Name="IdentifyResults" Style="{StaticResource AnimatedExpander}">
+                <Grid Margin="-110,0,-20,0">
+                    <Grid.Background>
+                        <SolidColorBrush Color="Black" Opacity="0.5" />
+                    </Grid.Background>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="110" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Image Grid.Column="0" Width="20" Height="20" VerticalAlignment="Top" HorizontalAlignment="Left"/>
 
-                <StackPanel Grid.Column="1" Orientation="Vertical" Margin="0,5,10,5">
-                    <!-- Each result -->
-                    <Grid Margin="0,5,0,5">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="50" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="1" Orientation="Vertical" Margin="0,5,10,5" Grid.ColumnSpan="2">
+                        <!-- Each result -->
+                        <Grid Margin="0,5,0,5">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="50" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
 
-                        <Image Grid.Column="0" Width="50" Height="50"/>
-                        <StackPanel Grid.Column="1" Orientation="Vertical">
-                            <Label Grid.Column="1" Padding="0">
-                                <TextBlock Text="Game name" TextTrimming="CharacterEllipsis" />
-                            </Label>
-                            <Label Grid.Column="2" Padding="0">
-                                <TextBlock Text="Release Name" TextTrimming="CharacterEllipsis" />
-                            </Label>
-                        </StackPanel>
-                        <Button Style="{StaticResource TertiaryButton}" Grid.Column="2" Content="SELECT" HorizontalAlignment="Right" Click="IdentifyButton_Click"/>
-                    </Grid>
-                </StackPanel>
-            </Grid>
+                            <Image Grid.Column="0" Width="50" Height="50"/>
+                            <StackPanel Grid.Column="1" Orientation="Vertical">
+                                <Label Grid.Column="1" Padding="0">
+                                    <TextBlock Text="Game name" TextTrimming="CharacterEllipsis" />
+                                </Label>
+                                <Label Grid.Column="2" Padding="0">
+                                    <TextBlock Text="Release Name" TextTrimming="CharacterEllipsis" />
+                                </Label>
+                            </StackPanel>
+                            <Button Style="{StaticResource TertiaryButton}" Grid.Column="2" Content="SELECT" HorizontalAlignment="Right" Click="IdentifyButton_Click"/>
+                        </Grid>
+                    </StackPanel>
+                </Grid>
+            </Expander>
             <Border BorderBrush="#40ffffff" BorderThickness="0 0 0 1" Margin="5,10,0,0"/>
         </StackPanel>
     </Grid>

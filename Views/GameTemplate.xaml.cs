@@ -30,8 +30,8 @@ namespace VpdbAgent.Views
 		public static readonly DependencyProperty GameProperty = DependencyProperty.Register("Game", typeof(Game), typeof(GameTemplate), new PropertyMetadata(default(Game), GamePropertyChanged));
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		private readonly GameManager GameManager = GameManager.GetInstance();
-		private readonly VpdbClient VpdbClient = VpdbClient.GetInstance();
+		private readonly GameManager _gameManager = GameManager.GetInstance();
+		private readonly VpdbClient _vpdbClient = VpdbClient.GetInstance();
 
 		static void GamePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
 		{
@@ -77,11 +77,11 @@ namespace VpdbAgent.Views
 
 		private async void IdentifyButton_Click(object sender, RoutedEventArgs e)
 		{
-			var releases = await VpdbClient.Api.GetReleasesBySize(Game.FileSize, 512);
+			var releases = await _vpdbClient.Api.GetReleasesBySize(Game.FileSize, 512);
 
 			// TODO handle # results correctly
 			if (releases.Count > 0) {
-				GameManager.LinkRelease(Game, releases[0]);
+				_gameManager.LinkRelease(Game, releases[0]);
 			}
 
 			Logger.Info("Found {0} matches.", releases.Count);
