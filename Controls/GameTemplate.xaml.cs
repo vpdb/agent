@@ -78,7 +78,14 @@ namespace VpdbAgent.Controls
 
 		private async void IdentifyButton_Click(object sender, RoutedEventArgs e)
 		{
+			IdentifyButton.Visibility = Visibility.Collapsed;
+			Progress.Visibility = Visibility.Visible;
+			Progress.Start();
+			
 			var releases = await _vpdbClient.Api.GetReleasesBySize(Game.FileSize, 512);
+
+			Progress.Visibility = Visibility.Collapsed;
+			Progress.Stop();
 
 			var identifyResults = new ReleaseIdentifyResultsTemplate(releases);
 			Panel.Children.Add(identifyResults);

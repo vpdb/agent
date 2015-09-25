@@ -3,10 +3,10 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:VpdbAgent.Controls"
+             xmlns:c="clr-namespace:VpdbAgent.Controls"
              mc:Ignorable="d" 
              d:DesignWidth="500"
-             Padding="20,0,20,0">
+             Padding="20,0,0,0">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="80" />
@@ -31,7 +31,8 @@
                 <Label Grid.Column="0">
                     <TextBlock x:Name="Filename"  TextTrimming="CharacterEllipsis" Text="{Binding Filename}"/>
                 </Label>
-                <Button x:Name="IdentifyButton" Style="{StaticResource TertiaryButton}" Grid.Column="1" Content="IDENTIFY" HorizontalAlignment="Right" Click="IdentifyButton_Click"/>
+                <Button x:Name="IdentifyButton" Style="{StaticResource TertiaryButton}" Grid.Column="1" Content="IDENTIFY" HorizontalAlignment="Right" Click="IdentifyButton_Click" Margin="0,0,10,0"/>
+                <c:IndeterminateProgress x:Name="Progress" Grid.Column="1" Height="22" Width="22" Visibility="Collapsed" HorizontalAlignment="Right" Margin="0,0,10,0"/>
             </Grid>
             <Border BorderBrush="#40ffffff" BorderThickness="0 0 0 1" Margin="5,10,0,0"/>
         </StackPanel>
