@@ -89,7 +89,7 @@ namespace VpdbAgent.Controls
 			Progress.Stop();
 
 			var identifyResults = new ReleaseIdentifyResultsTemplate(releases);
-			Panel.Children.Add(identifyResults);
+			Panel.Children.Insert(Panel.Children.Count - 1, identifyResults);
 			identifyResults.IdentifyResults.IsExpanded = true;
 
 			// TODO handle # results correctly

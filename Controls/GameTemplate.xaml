@@ -23,7 +23,7 @@
                 <TextBlock x:Name="ReleaseName" TextTrimming="CharacterEllipsis" />
             </Label>
 
-            <Grid>
+            <Grid Margin="0,0,0,10">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
@@ -34,7 +34,7 @@
                 <Button x:Name="IdentifyButton" Style="{StaticResource TertiaryButton}" Grid.Column="1" Content="IDENTIFY" HorizontalAlignment="Right" Click="IdentifyButton_Click" Margin="0,0,10,0"/>
                 <c:IndeterminateProgress x:Name="Progress" Grid.Column="1" Height="22" Width="22" Visibility="Collapsed" HorizontalAlignment="Right" Margin="0,0,10,0"/>
             </Grid>
-            <Border BorderBrush="#40ffffff" BorderThickness="0 0 0 1" Margin="5,10,0,0"/>
+            <Border BorderBrush="#40ffffff" BorderThickness="0 0 0 1" Margin="5,0,0,0"/>
         </StackPanel>
     </Grid>
 </UserControl>

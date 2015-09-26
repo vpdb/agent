@@ -28,6 +28,15 @@ namespace VpdbAgent.Controls
 			Releases = releases;
 			InitializeComponent();
 			DataContext = this;
+
+			if (releases.Count > 0) {
+				NoResult.Visibility = Visibility.Collapsed;
+				Results.Visibility = Visibility.Visible;
+
+			} else {
+				NoResult.Visibility = Visibility.Visible;
+				Results.Visibility = Visibility.Collapsed;
+			}
 		}
 	}
 }
