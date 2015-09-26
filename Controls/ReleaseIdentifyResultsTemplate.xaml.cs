@@ -21,15 +21,37 @@ namespace VpdbAgent.Controls
 	/// </summary>
 	public partial class ReleaseIdentifyResultsTemplate : UserControl
 	{
-		public List<Release> Releases { get; private set; }
+		private List<Release> _releases;
+		private readonly GameTemplate.IReleaseResult _callback;
 
-		public ReleaseIdentifyResultsTemplate(List<Release> releases)
+		public List<Release> Releases
 		{
-			Releases = releases;
+			get { return _releases; }
+			set
+			{
+				_releases = value;
+				UpdateElements();
+			}
+		}
+
+		public ReleaseIdentifyResultsTemplate(List<Release> releases, GameTemplate.IReleaseResult callback)
+		{
+			if (releases == null) {
+				throw new ArgumentNullException(nameof(releases));
+			}
+			if (callback == null) {
+				throw new ArgumentNullException(nameof(callback));
+			}
+			_releases = releases;
+			_callback = callback;
 			InitializeComponent();
 			DataContext = this;
+			UpdateElements();
+		}
 
-			if (releases.Count > 0) {
+		private void UpdateElements()
+		{
+			if (_releases.Count > 0) {
 				NoResult.Visibility = Visibility.Collapsed;
 				Results.Visibility = Visibility.Visible;
 
@@ -37,6 +59,11 @@ namespace VpdbAgent.Controls
 				NoResult.Visibility = Visibility.Visible;
 				Results.Visibility = Visibility.Collapsed;
 			}
+		}
+
+		private void CloseButton_Click(object sender, RoutedEventArgs e)
+		{
+			_callback.OnCanceled();
 		}
 	}
 }

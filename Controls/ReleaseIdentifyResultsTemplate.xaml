@@ -21,14 +21,14 @@
             <StackPanel Grid.Column="1" Orientation="Vertical" Margin="0,5,10,5">
 
                 <!-- no match found -->
-                <Grid  x:Name="NoResult"  Margin="0,5,10,5">
+                <Grid  x:Name="NoResult" Margin="0,5,10,5">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
                     <Label Grid.Column="0" Content="No match found."/>
-                    <Button Grid.Column="1" Style="{StaticResource TertiaryButton}" Content="CLOSE" HorizontalAlignment="Right"/>
+                    <Button Grid.Column="1" Style="{StaticResource TertiaryButton}" Content="CLOSE" HorizontalAlignment="Right" Click="CloseButton_Click"/>
                 </Grid>
 
                 <!-- result list -->

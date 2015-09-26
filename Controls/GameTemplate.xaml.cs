@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.RightsManagement;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -26,7 +27,7 @@ namespace VpdbAgent.Controls
 	/// <summary>
 	/// Interaction logic for GameTemplate.xaml
 	/// </summary>
-	public partial class GameTemplate : UserControl
+	public partial class GameTemplate : UserControl, GameTemplate.IReleaseResult
 	{
 		public static readonly DependencyProperty GameProperty = DependencyProperty.Register("Game", typeof(Game), typeof(GameTemplate), new PropertyMetadata(default(Game), GamePropertyChanged));
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -81,23 +82,52 @@ namespace VpdbAgent.Controls
 			IdentifyButton.Visibility = Visibility.Collapsed;
 			Progress.Visibility = Visibility.Visible;
 			Progress.Start();
-			
+
 			var releases = await _vpdbClient.Api.GetReleasesBySize(Game.FileSize, 512);
 			Logger.Info("Found {0} matches.", releases.Count);
 
 			Progress.Visibility = Visibility.Collapsed;
 			Progress.Stop();
-
-			var identifyResults = new ReleaseIdentifyResultsTemplate(releases);
-			Panel.Children.Insert(Panel.Children.Count - 1, identifyResults);
-			identifyResults.IdentifyResults.IsExpanded = true;
-
-			// TODO handle # results correctly
-			if (releases.Count > 0) {
-				//				_gameManager.LinkRelease(Game, releases[0]);
-			}
-
+			ExpandIdentifyResult(releases);
 		}
 
+		private void ExpandIdentifyResult(List<Release> releases)
+		{
+			ReleaseIdentifyResultsTemplate identifyResults;
+			if (Panel.Children[Panel.Children.Count - 2] is ReleaseIdentifyResultsTemplate) {
+				identifyResults = Panel.Children[Panel.Children.Count - 2] as ReleaseIdentifyResultsTemplate;
+				identifyResults.Releases = releases;
+				Logger.Info("Re-using existing view!");
+			} else {
+				identifyResults = new ReleaseIdentifyResultsTemplate(releases, this);
+				Panel.Children.Insert(Panel.Children.Count - 1, identifyResults);
+				Logger.Info("Creating new view");
+			}
+			identifyResults.IdentifyResults.IsExpanded = true;
+		}
+
+		private void CollapseIdentifyResult()
+		{
+			(Panel.Children[Panel.Children.Count - 2] as ReleaseIdentifyResultsTemplate).IdentifyResults.IsExpanded = false;
+		}
+
+		public void OnCanceled()
+		{
+			IdentifyButton.Visibility = Visibility.Visible;
+			CollapseIdentifyResult();
+		}
+
+		public void OnResult(Release result)
+		{
+			_gameManager.LinkRelease(Game, result);
+			CollapseIdentifyResult();
+		}
+
+
+		public interface IReleaseResult
+		{
+			void OnCanceled();
+			void OnResult(Release result);
+		}
 	}
 }
