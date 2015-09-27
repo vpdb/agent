@@ -19,8 +19,8 @@
 
             <!-- close button -->
             <Button Style="{StaticResource IconButton}" Grid.Column="0" Width="40" Height="40" VerticalAlignment="Top" HorizontalAlignment="Left" Click="CloseButton_Click">
-                <c:IconControl Height="15"
-                    Width="15"
+                <c:IconControl Height="12"
+                    Width="12"
                     Foreground="#40ffffff"
                     Data="{StaticResource IconClose}" />
             </Button>
