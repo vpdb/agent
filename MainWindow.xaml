@@ -24,7 +24,7 @@
     <Controls:MetroWindow.IconTemplate>
         <DataTemplate>
             <Canvas>
-                <c:IconControl Height="25" Width="25" Margin="10,10,0,0" Foreground="#ffec843d" Data="{StaticResource IconVpdb}" />
+                <c:IconControl Height="25" Width="25" Margin="10,10,0,0" Foreground="{StaticResource PrimaryColorBrush}" Data="{StaticResource IconVpdb}" />
             </Canvas>
         </DataTemplate>
     </Controls:MetroWindow.IconTemplate>

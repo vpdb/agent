@@ -6,6 +6,9 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using VpdbAgent.Vpdb;
 using PusherClient;
+using System;
+using System.Windows;
+using System.Collections.Generic;
 
 namespace VpdbAgent.Pages
 {
@@ -19,6 +22,8 @@ namespace VpdbAgent.Pages
 		public ICollectionView Platforms { get; private set; }
 		public ICollectionView Games { get; private set; }
 
+		private static readonly List<string> _platformFilter = new List<string>();
+
 		public MainPage()
 		{
 			InitializeComponent();
@@ -27,15 +32,21 @@ namespace VpdbAgent.Pages
 			var gameManager = GameManager.GetInstance();
 			gameManager.Initialize();
 
+			foreach (Models.Platform platform in gameManager.Platforms) {
+				_platformFilter.Add(platform.Name);
+			}
+
 			Platforms = CollectionViewSource.GetDefaultView(gameManager.Platforms);
 			Platforms.Filter = PlatformFilter;
 
 			Games = CollectionViewSource.GetDefaultView(gameManager.Games);
 			Games.Filter = GameFilter;
 
+
+			// pusher test
 			Logger.Info("Setting up pusher...");
 			var client = VpdbClient.GetInstance();
-			
+
 			client.Pusher.ConnectionStateChanged += PusherConnectionStateChanged;
 			client.Pusher.Error += PusherError;
 
@@ -43,17 +54,30 @@ namespace VpdbAgent.Pages
 			testChannel.Subscribed += PusherSubscribed;
 
 			// inline binding
-			testChannel.Bind("test-message", (dynamic data) => {
+			testChannel.Bind("test-message", (dynamic data) =>
+			{
 				Logger.Info("[{0}]: {1}", data.name, data.message);
 			});
 
 			client.Pusher.Connect();
 		}
 
+		private void OnPlatformFilterChanged(object sender, RoutedEventArgs e)
+		{
+			var checkbox = (sender as CheckBox);
+			string platformName = checkbox.Tag as string;
+
+			if (checkbox.IsChecked == true) {
+				_platformFilter.Add(platformName);
+			} else {
+				_platformFilter.Remove(platformName);
+			}
+		}
+
 		private static bool PlatformFilter(object item)
 		{
 			var platform = item as Models.Platform;
-			return platform != null && platform.Enabled;
+			return platform != null && platform.Enabled && _platformFilter.Contains(platform.Name);
 		}
 
 		private static bool GameFilter(object item)
@@ -62,12 +86,14 @@ namespace VpdbAgent.Pages
 			return game != null && game.Platform.Enabled;
 		}
 
+		#region Pusher
 		private static void PusherConnectionStateChanged(object sender, ConnectionState state)
 		{
 			Logger.Info("Pusher connection {0}", state);
 		}
 
-		private static void PusherError(object sender, PusherException error) {
+		private static void PusherError(object sender, PusherException error)
+		{
 			Logger.Error(error, "Pusher error!");
 		}
 
@@ -75,6 +101,7 @@ namespace VpdbAgent.Pages
 		{
 			Logger.Info("Subscribed to channel.");
 		}
+		#endregion
 
 
 		/*

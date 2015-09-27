@@ -19,11 +19,12 @@
 
         <!-- LEFT PANEL -->
         <StackPanel Grid.Column="0" Orientation="Vertical">
-            <Label Content="Title"/>
+            <Label Content="Systems"/>
             <ItemsControl ItemsSource="{Binding Platforms}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <Label Content="{Binding Name}"/>
+                        <CheckBox IsChecked="True" Tag="{Binding Name}" Checked="OnPlatformFilterChanged" Unchecked="OnPlatformFilterChanged"
+                                  Content="{Binding Name}" Style="{StaticResource CheckBox}" Margin="10,5,0,0" FontSize="18"/>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
