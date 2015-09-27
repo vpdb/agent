@@ -61,9 +61,19 @@ namespace VpdbAgent.Controls
 			}
 		}
 
+		private void SelectButton_Click(object sender, RoutedEventArgs e)
+		{
+			var button = sender as Button;
+			if (button != null) {
+				_callback.OnResult(button.DataContext as Release);
+			}
+		}
+
 		private void CloseButton_Click(object sender, RoutedEventArgs e)
 		{
 			_callback.OnCanceled();
 		}
+
+
 	}
 }

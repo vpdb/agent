@@ -16,8 +16,13 @@
                 <ColumnDefinition Width="110" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-            <Button Foreground="#40ffffff" Template="{StaticResource VectorIconButton}" Grid.Column="0" Width="15" Height="15" VerticalAlignment="Top" HorizontalAlignment="Left">
-                
+
+            <!-- close button -->
+            <Button Style="{StaticResource IconButton}" Grid.Column="0" Width="40" Height="40" VerticalAlignment="Top" HorizontalAlignment="Left" Click="CloseButton_Click">
+                <c:IconControl Height="15"
+                    Width="15"
+                    Foreground="#40ffffff"
+                    Data="{StaticResource IconClose}" />
             </Button>
 
             <StackPanel Grid.Column="1" Orientation="Vertical" Margin="0,5,10,5">
@@ -55,7 +60,7 @@
                                     </Label>
                                 </StackPanel>
 
-                                <Button Style="{StaticResource TertiaryButton}" Grid.Column="2" Content="SELECT" HorizontalAlignment="Right"/>
+                                <Button Click="SelectButton_Click" Style="{StaticResource TertiaryButton}" Grid.Column="2" Content="SELECT" HorizontalAlignment="Right"/>
 
                             </Grid>
                         </DataTemplate>

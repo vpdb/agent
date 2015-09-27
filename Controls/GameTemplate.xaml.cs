@@ -121,6 +121,8 @@ namespace VpdbAgent.Controls
 		{
 			_gameManager.LinkRelease(Game, result);
 			CollapseIdentifyResult();
+			Game.Release = result;
+			Bind();
 		}
 
 
