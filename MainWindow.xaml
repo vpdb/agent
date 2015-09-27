@@ -29,11 +29,22 @@
         </DataTemplate>
     </Controls:MetroWindow.IconTemplate>
 
+    <Controls:MetroWindow.RightWindowCommands>
+        <Controls:WindowCommands>
+            <Button Style="{StaticResource IconButton}" Height="30" Click="SettingsButton_Click">
+                <StackPanel Orientation="Horizontal">
+                    <c:IconControl Height="15" Width="15" Foreground="#80ffffff" Data="{StaticResource IconSettings}" Margin="10,0,10,0" />
+                    <TextBlock VerticalAlignment="Center" Text="SETTINGS" Margin="0,0,10,0" />
+                </StackPanel>
+            </Button>
+        </Controls:WindowCommands>
+
+    </Controls:MetroWindow.RightWindowCommands>
+
     <DockPanel LastChildFill="True">
 
         <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal">
             <Label Content="Status info. All green." />
-            <Button  x:Name="SettingsButton" Content="Settings" Width="75" Click="SettingsButton_Click" />
         </StackPanel>
 
         <Frame x:Name="MainFrame">
