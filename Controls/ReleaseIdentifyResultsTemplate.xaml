@@ -8,7 +8,7 @@
              d:DesignHeight="100" d:DesignWidth="600" d:DataContext="{d:DesignData ReleaseIdentifyResultsTemplate}">
 
     <Expander IsExpanded="False" x:Name="IdentifyResults" Style="{StaticResource AnimatedExpander}">
-        <Grid Margin="-110,0,-10,0">
+        <Grid Margin="-105,0,-10,0">
             <Grid.Background>
                 <SolidColorBrush Color="Black" Opacity="0.35" />
             </Grid.Background>
@@ -16,7 +16,9 @@
                 <ColumnDefinition Width="110" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-            <Image Grid.Column="0" Width="20" Height="20" VerticalAlignment="Top" HorizontalAlignment="Left"/>
+            <Button Foreground="#40ffffff" Template="{StaticResource VectorIconButton}" Grid.Column="0" Width="15" Height="15" VerticalAlignment="Top" HorizontalAlignment="Left">
+                
+            </Button>
 
             <StackPanel Grid.Column="1" Orientation="Vertical" Margin="0,5,10,5">
 

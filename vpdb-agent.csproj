@@ -113,6 +113,7 @@
     </ApplicationDefinition>
     <Compile Include="Common\ImageUtils.cs" />
     <Compile Include="Common\LazyObservableList.cs" />
+    <Compile Include="Common\Size2ScaleConverter.cs" />
     <Compile Include="Controls\IndeterminateProgress.cs" />
     <Compile Include="Controls\ReleaseIdentifyResultsTemplate.xaml.cs">
       <DependentUpon>ReleaseIdentifyResultsTemplate.xaml</DependentUpon>
@@ -182,6 +183,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="Resources\Icons\close.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="Resources\Icons\vpdb.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -195,6 +200,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Styles\Expanders.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Styles\Icons.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
