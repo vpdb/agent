@@ -32,7 +32,7 @@ namespace VpdbAgent.Pages
 			var gameManager = GameManager.GetInstance();
 			gameManager.Initialize();
 
-			foreach (Models.Platform platform in gameManager.Platforms) {
+			foreach (var platform in gameManager.Platforms) {
 				_platformFilter.Add(platform.Name);
 			}
 
@@ -65,25 +65,30 @@ namespace VpdbAgent.Pages
 		private void OnPlatformFilterChanged(object sender, RoutedEventArgs e)
 		{
 			var checkbox = (sender as CheckBox);
-			string platformName = checkbox.Tag as string;
+			if (checkbox == null) {
+				return;
+			}
+			var platformName = checkbox.Tag as string;
 
 			if (checkbox.IsChecked == true) {
 				_platformFilter.Add(platformName);
 			} else {
 				_platformFilter.Remove(platformName);
 			}
+			GameManager.GetInstance().Games.NotifyRepopulated();
+
 		}
 
 		private static bool PlatformFilter(object item)
 		{
 			var platform = item as Models.Platform;
-			return platform != null && platform.Enabled && _platformFilter.Contains(platform.Name);
+			return platform != null && platform.Enabled;
 		}
 
 		private static bool GameFilter(object item)
 		{
 			var game = item as Models.Game;
-			return game != null && game.Platform.Enabled;
+			return game != null && game.Platform.Enabled && _platformFilter.Contains(game.Platform.Name);
 		}
 
 		#region Pusher
