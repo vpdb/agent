@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using VpdbAgent.Common;
 using VpdbAgent.PinballX.Models;
 
 namespace VpdbAgent.PinballX
@@ -40,6 +41,11 @@ namespace VpdbAgent.PinballX
 		#region Ini
 		public void SetupIni(string path)
 		{
+
+			var fixture = (new FilesystemWatchCache()).Register(Path.GetDirectoryName(path), Path.GetFileName(path));
+			fixture.Subscribe(Console.WriteLine);
+
+			/*
 			if (path == null) {
 				return;
 			}
@@ -49,7 +55,7 @@ namespace VpdbAgent.PinballX
 			watcher.Filter = Path.GetFileName(path);
 			watcher.Changed += new FileSystemEventHandler(OnIniChanged);
 
-			watcher.EnableRaisingEvents = true;
+			watcher.EnableRaisingEvents = true;*/
 		}
 
 		private void OnIniChanged(object source, FileSystemEventArgs e)
