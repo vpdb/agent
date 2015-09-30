@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
+using ReactiveUI;
 using VpdbAgent.PinballX.Models;
 
 namespace VpdbAgent.PinballX
@@ -17,11 +18,10 @@ namespace VpdbAgent.PinballX
 		private static MenuManager _instance;
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		public List<PinballXSystem> Systems { set; get; } = new List<PinballXSystem>();
-
-		// system change handlers
-		public delegate void SystemsChangedHandler(List<PinballXSystem> systems);
-		public event SystemsChangedHandler SystemsChanged;
+		/// <summary>
+		/// Systems read from PinballX.ini.
+		/// </summary>
+		public ReactiveList<PinballXSystem> Systems { get; } = new ReactiveList<PinballXSystem>();
 
 		// game change handlers
 		public delegate void GameChangedHandler(PinballXSystem system);
@@ -63,25 +63,24 @@ namespace VpdbAgent.PinballX
 		/// </summary>
 		private void ParseSystems(string iniPath)
 		{
-			Logger.Info("Parsing systems from {0}", iniPath);
-			Systems.Clear();
-			if (File.Exists(iniPath)) {
-				var parser = new FileIniDataParser();
-				var data = parser.ReadFile(iniPath);
-				Systems.Add(new PinballXSystem(VpdbAgent.Models.Platform.PlatformType.VP, data["VisualPinball"]));
-				Systems.Add(new PinballXSystem(VpdbAgent.Models.Platform.PlatformType.FP, data["FuturePinball"]));
-				for (var i = 0; i < 20; i++) {
-					if (data["System_" + i] != null) {
-						Systems.Add(new PinballXSystem(data["System_" + i]));
+			using (Systems.SuppressChangeNotifications()) {
+				Logger.Info("Parsing systems from {0}", iniPath);
+				Systems.Clear();
+				if (File.Exists(iniPath)) {
+					var parser = new FileIniDataParser();
+					var data = parser.ReadFile(iniPath);
+					Systems.Add(new PinballXSystem(VpdbAgent.Models.Platform.PlatformType.VP, data["VisualPinball"]));
+					Systems.Add(new PinballXSystem(VpdbAgent.Models.Platform.PlatformType.FP, data["FuturePinball"]));
+					for (var i = 0; i < 20; i++) {
+						if (data["System_" + i] != null) {
+							Systems.Add(new PinballXSystem(data["System_" + i]));
+						}
 					}
+				} else {
+					Logger.Error("PinballX.ini at {0} does not exist.", iniPath);
 				}
-			} else {
-				Logger.Error("PinballX.ini at {0} does not exist.", iniPath);
+				Logger.Info("Done, {0} systems parsed.", Systems.Count);
 			}
-			Logger.Info("Done, {0} systems parsed.", Systems.Count);
-
-			// announce to subscribers
-			SystemsChanged?.Invoke(Systems);
 
 			// parse games
 			foreach (var system in Systems) {

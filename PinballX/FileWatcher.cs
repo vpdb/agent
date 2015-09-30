@@ -36,7 +36,7 @@ namespace VpdbAgent.PinballX
 		#endregion
 
 		#region Xml
-		public IObservable<string> SetupXml(string path, List<PinballXSystem> systems)
+		public IObservable<string> SetupXml(string path, IList<PinballXSystem> systems)
 		{
 
 			IObservable<string> result = null;

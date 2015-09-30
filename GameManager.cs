@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Windows;
 using Newtonsoft.Json;
 using NLog;
+using ReactiveUI;
 using VpdbAgent.Common;
 using VpdbAgent.Models;
 using VpdbAgent.PinballX;
@@ -47,6 +50,9 @@ namespace VpdbAgent
 		public LazyObservableList<Platform> Platforms { get; } = new LazyObservableList<Platform>();
 		public LazyObservableList<Game> Games { get; } = new LazyObservableList<Game>();
 
+		public ReactiveList<Platform> ReactivePlatforms { get; } = new ReactiveList<Platform>();
+
+
 
 		/// <summary>
 		///     Private constructor
@@ -54,7 +60,10 @@ namespace VpdbAgent
 		/// <see cref="GetInstance" />
 		private GameManager()
 		{
-			_menuManager.SystemsChanged += OnPlatformsChanged;
+			
+			_menuManager.Systems.Changed
+				.Subscribe(OnPlatformsChanged);
+
 			_menuManager.GamesChanged += OnGamesChanged;
 		}
 	
@@ -85,14 +94,16 @@ namespace VpdbAgent
 		///     Platforms have changed or are being initialized.
 		///     Triggered at startup and when PinballX.ini changes.
 		/// </summary>
-		/// <param name="systems">Parsed list of systems (platforms)</param>
-		private void OnPlatformsChanged(List<PinballXSystem> systems)
+		/// <param name="args">What changed</param>
+		private void OnPlatformsChanged(NotifyCollectionChangedEventArgs args)
 		{
+			Logger.Info("Systems changed, updating platforms.");
+
 			// run on ui thread
 			Application.Current.Dispatcher.Invoke(delegate {
 				Platforms.Clear();
 				Games.Clear();
-				foreach (var system in systems) {
+				foreach (var system in _menuManager.Systems) {
 					Platforms.Add(new Platform(system));
 				}
 				Platforms.NotifyRepopulated();
