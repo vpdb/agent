@@ -45,13 +45,12 @@ namespace VpdbAgent
 		private static GameManager _instance;
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
+		// deps
 		private readonly MenuManager _menuManager = MenuManager.GetInstance();
 
-		public LazyObservableList<Platform> Platforms { get; } = new LazyObservableList<Platform>();
-		public LazyObservableList<Game> Games { get; } = new LazyObservableList<Game>();
-
-		public ReactiveList<Platform> ReactivePlatforms { get; } = new ReactiveList<Platform>();
-
+		// props
+		public IReactiveDerivedList<Platform> Platforms { get; }
+		public ReactiveList<Game> Games { get; } = new ReactiveList<Game>();
 
 
 		/// <summary>
@@ -60,9 +59,11 @@ namespace VpdbAgent
 		/// <see cref="GetInstance" />
 		private GameManager()
 		{
-			
-			_menuManager.Systems.Changed
-				.Subscribe(OnPlatformsChanged);
+			Platforms = _menuManager.Systems.CreateDerivedCollection(system => new Platform(system));
+
+			// http://stackoverflow.com/questions/15254708/creating-a-reactiveui-derived-collection-with-more-elements-than-the-original
+			IObservable<List<PinballX.Models.Game>> games = _menuManager.Systems.Changed
+				.Select(_ => _menuManager.Systems.SelectMany(x => x.Games).ToList());
 
 			_menuManager.GamesChanged += OnGamesChanged;
 		}
@@ -82,11 +83,10 @@ namespace VpdbAgent
 			game.Release = release;
 
 			WriteDatabase(new Database(GetGames(game.Platform)), game.Platform);
-			Games.NotifyRepopulated();
 		}
 
 		public IEnumerable<Game> GetGames(Platform platform) {
-			return Games.FindAll(g => g.Platform.Name.Equals(platform.Name));
+			return Games.Where(game => game.Platform.Name.Equals(platform.Name));
 		}
 
 
@@ -95,6 +95,7 @@ namespace VpdbAgent
 		///     Triggered at startup and when PinballX.ini changes.
 		/// </summary>
 		/// <param name="args">What changed</param>
+		/*
 		private void OnPlatformsChanged(NotifyCollectionChangedEventArgs args)
 		{
 			Logger.Info("Systems changed, updating platforms.");
@@ -108,7 +109,7 @@ namespace VpdbAgent
 				}
 				Platforms.NotifyRepopulated();
 			});
-		}
+		}*/
 
 		private void OnGamesChanged(PinballXSystem system)
 		{
@@ -132,15 +133,16 @@ namespace VpdbAgent
 			}
 			WriteDatabase(new Database(mergedGames), platform);
 
-			// run on ui thread
 			Application.Current.Dispatcher.Invoke(delegate {
+				using (Games.SuppressChangeNotifications()) {
 
-				// remove all games from changed platform
-				Games.RemoveAll(g => g.Platform.Name.Equals(platform.Name));
-				Games.AddRange(mergedGames);
-				Games.Sort();
-				Games.NotifyRepopulated();
-
+					var itemsToRemove = Games.Where(game => game.Platform.Name.Equals(platform.Name)).ToArray();
+					foreach (var item in itemsToRemove) {
+						Games.Remove(item);
+					}
+					Games.AddRange(mergedGames);
+					Games.Sort();
+				};
 				Logger.Trace("Merged {0} games ({1} from XMLs)", mergedGames.Count, xmlGames.Count);
 			});
 		}

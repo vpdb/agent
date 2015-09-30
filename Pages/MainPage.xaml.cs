@@ -9,6 +9,7 @@ using PusherClient;
 using System;
 using System.Windows;
 using System.Collections.Generic;
+using VpdbAgent.Pages.ViewModels;
 
 namespace VpdbAgent.Pages
 {
@@ -19,16 +20,17 @@ namespace VpdbAgent.Pages
 	{
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		public ICollectionView Platforms { get; private set; }
-		public ICollectionView Games { get; private set; }
+//		public ICollectionView Platforms { get; private set; }
+//		public ICollectionView Games { get; private set; }
 
 		private static readonly List<string> _platformFilter = new List<string>();
 
 		public MainPage()
 		{
 			InitializeComponent();
-			DataContext = this;
+			DataContext = new MainViewModel();
 
+			/*
 			var gameManager = GameManager.GetInstance();
 			gameManager.Initialize();
 
@@ -59,7 +61,7 @@ namespace VpdbAgent.Pages
 				Logger.Info("[{0}]: {1}", data.name, data.message);
 			});
 
-			client.Pusher.Connect();
+			client.Pusher.Connect();*/
 		}
 
 		private void OnPlatformFilterChanged(object sender, RoutedEventArgs e)
@@ -75,7 +77,7 @@ namespace VpdbAgent.Pages
 			} else {
 				_platformFilter.Remove(platformName);
 			}
-			GameManager.GetInstance().Games.NotifyRepopulated();
+			//GameManager.GetInstance().Games.NotifyRepopulated();
 
 		}
 

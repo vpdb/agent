@@ -10,6 +10,8 @@ using System.Threading.Tasks;
 using System.Xml.Serialization;
 using ReactiveUI;
 using VpdbAgent.PinballX.Models;
+using System.Reactive.Linq;
+using System.Reactive.Concurrency;
 
 namespace VpdbAgent.PinballX
 {
@@ -27,10 +29,8 @@ namespace VpdbAgent.PinballX
 		public delegate void GameChangedHandler(PinballXSystem system);
 		public event GameChangedHandler GamesChanged;
 
-		private readonly FileWatcher _fileWatcher = FileWatcher.GetInstance();
+		private readonly FileSystemWatcher _watcher = FileSystemWatcher.GetInstance();
 		private readonly SettingsManager _settingsManager = SettingsManager.GetInstance();
-
-		private string _dbPath;
 
 		/// <summary>
 		/// Private constructor
@@ -47,13 +47,19 @@ namespace VpdbAgent.PinballX
 			}
 
 			var iniPath = _settingsManager.PbxFolder + @"\Config\PinballX.ini";
-			_dbPath = _settingsManager.PbxFolder + @"\Databases\";
+			var dbPath = _settingsManager.PbxFolder + @"\Databases\";
 
 			ParseSystems(iniPath);
 
-			// setup file watchers
-			_fileWatcher.SetupIni(iniPath).Subscribe(ParseSystems);
-			_fileWatcher.SetupXml(_dbPath, Systems).Subscribe(ParseGames);
+			// setup watchers
+			_watcher.FileWatcher(iniPath).ObserveOn(RxApp.MainThreadScheduler).Subscribe(ParseSystems);
+			_watcher.DatabaseWatcher(dbPath, Systems).ObserveOn(RxApp.MainThreadScheduler).Subscribe(XmlChanged);
+			
+			// parse games when systems change
+			Systems.Changed.ObserveOn(RxApp.MainThreadScheduler).Subscribe(_ => ParseGames());
+
+			// initially parse
+			ParseGames();
 
 			return this;
 		}
@@ -81,18 +87,26 @@ namespace VpdbAgent.PinballX
 				}
 				Logger.Info("Done, {0} systems parsed.", Systems.Count);
 			}
+		}
 
-			// parse games
+		private void XmlChanged(string path)
+		{
+			ParseGames(Path.GetDirectoryName(path));
+		}
+
+		private void ParseGames()
+		{
+			Logger.Info("Parsing all games from all systems...");
 			foreach (var system in Systems) {
-				ParseGames(system.DatabasePath + @"\data.xml");
+				ParseGames(system.DatabasePath);
 			}
 		}
 
 		private void ParseGames(string path)
 		{
-			Logger.Info("XML {0} changed, updating games.", path);
+			Logger.Info("Parsing games at {0}...", path);
 
-			var system = Systems.FirstOrDefault(s => s.DatabasePath.Equals(Path.GetDirectoryName(path)));
+			var system = Systems.FirstOrDefault(s => s.DatabasePath.Equals(path));
 
 			if (system == null) {
 				Logger.Warn("Unknown system at {0}, ignoring file change.", path);

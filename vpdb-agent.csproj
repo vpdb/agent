@@ -154,7 +154,8 @@
     <Compile Include="Pages\SettingsPage.xaml.cs">
       <DependentUpon>SettingsPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="PinballX\FileWatcher.cs" />
+    <Compile Include="Pages\ViewModels\MainViewModel.cs" />
+    <Compile Include="PinballX\FileSystemWatcher.cs" />
     <Compile Include="PinballX\MenuManager.cs" />
     <Compile Include="Models\Database.cs" />
     <Compile Include="PinballX\Models\Game.cs" />
