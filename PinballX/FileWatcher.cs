@@ -14,9 +14,8 @@ namespace VpdbAgent.PinballX
 {
 	public class FileWatcher
 	{
-		private static readonly int THRESHOLD = 1000;
-		private static FileWatcher INSTANCE;
-		private static readonly Logger logger = LogManager.GetCurrentClassLogger();
+		private static FileWatcher _instance;
+		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		// To watch:
 		//   - pinballx.ini
@@ -31,7 +30,7 @@ namespace VpdbAgent.PinballX
 		#region Ini
 		public IObservable<string> SetupIni(string path)
 		{
-			logger.Info("Watching {0}", path);
+			Logger.Info("Watching {0}", path);
 			return (new FilesystemWatchCache()).Register(Path.GetDirectoryName(path), Path.GetFileName(path));
 		}
 		#endregion
@@ -41,17 +40,11 @@ namespace VpdbAgent.PinballX
 		{
 
 			IObservable<string> result = null;
-			foreach (PinballXSystem system in systems) {
-				string systemPath = path + system.Name + @"\";
-				if (Directory.Exists(systemPath)) {
-					logger.Info("Watching {0}", systemPath);
-					var watcher = (new FilesystemWatchCache()).Register(systemPath, "*.xml");
-					if (result == null) {
-						result = watcher;
-					} else {
-						result = result.Concat(watcher);
-					}
-				}
+			foreach (var sysPath in systems.Select(system => path + system.Name + @"\").Where(Directory.Exists))
+			{
+				Logger.Info("Watching {0}", sysPath);
+				var watcher = (new FilesystemWatchCache()).Register(sysPath, "*.xml");
+				result = result == null ? watcher : result.Merge(watcher);
 			}
 			return result;
 		}
@@ -59,11 +52,7 @@ namespace VpdbAgent.PinballX
 
 		public static FileWatcher GetInstance()
 		{
-			if (INSTANCE == null) {
-				INSTANCE = new FileWatcher();
-			}
-			return INSTANCE;
+			return _instance ?? (_instance = new FileWatcher());
 		}
-
 	}
 }
