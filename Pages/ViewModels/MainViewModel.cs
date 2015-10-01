@@ -17,7 +17,6 @@ namespace VpdbAgent.Pages.ViewModels
 	{
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-
 		// data
 		public IReactiveDerivedList<Platform> Platforms { get; private set; }
 		public IReactiveDerivedList<Game> Games { get; private set; }
@@ -27,21 +26,25 @@ namespace VpdbAgent.Pages.ViewModels
 		// privates
 		private readonly ReactiveList<string> _platformFilter = new ReactiveList<string>();
 
-
 		public MainViewModel()
 		{
 			var gameManager = GameManager.GetInstance();
 			gameManager.Initialize();
 
+			// create platforms
 			Platforms = gameManager.Platforms.CreateDerivedCollection(
 				platform => platform,
-				platform => platform.Enabled,
+				platform => platform.IsEnabled,
 				(x, y) => string.Compare(x.Name, y.Name, StringComparison.Ordinal)
 			);
 
+			// populate filter
+			_platformFilter.AddRange(Platforms.Select(p => p.Name));
+
+			// create games
 			Games = gameManager.Games.CreateDerivedCollection(
 				game => game,
-				game => game.Platform.Enabled && _platformFilter.Contains(game.Platform.Name),
+				game => game.Platform.IsEnabled && _platformFilter.Contains(game.Platform.Name),
 				(x, y) => string.Compare(x.Id, y.Id, StringComparison.Ordinal)
 			);
 
@@ -64,8 +67,5 @@ namespace VpdbAgent.Pages.ViewModels
 			//GameManager.GetInstance().Games.NotifyRepopulated();
 
 		}
-
-		
-
 	}
 }

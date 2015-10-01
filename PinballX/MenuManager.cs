@@ -13,6 +13,7 @@ using VpdbAgent.PinballX.Models;
 using System.Reactive.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Subjects;
+using Splat;
 
 namespace VpdbAgent.PinballX
 {
@@ -83,7 +84,7 @@ namespace VpdbAgent.PinballX
 				.ObserveOn(RxApp.MainThreadScheduler)
 				.Subscribe(_ => ParseGames());
 
-			// initially parse
+			// kick off initially parse
 			ParseGames();
 
 			return this;
@@ -132,7 +133,7 @@ namespace VpdbAgent.PinballX
 		/// <param name="path">Path to folder</param>
 		private void ParseGames(string path)
 		{
-			Logger.Info("Parsing games at {0}...", path);
+			Logger.Info("Parsing games at {0}", path);
 
 			var system = Systems.FirstOrDefault(s => s.DatabasePath.Equals(path));
 

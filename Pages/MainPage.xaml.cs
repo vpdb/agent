@@ -10,37 +10,41 @@ using System;
 using System.Windows;
 using System.Collections.Generic;
 using VpdbAgent.Pages.ViewModels;
+using ReactiveUI;
 
 namespace VpdbAgent.Pages
 {
 	/// <summary>
 	/// Interaction logic for MainPage.xaml
 	/// </summary>
-	public partial class MainPage : Page
+	public partial class MainPage : BasePage, IViewFor<MainViewModel>
 	{
-
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
+		private IDisposable disp;
 
 		public MainPage()
 		{
 			InitializeComponent();
-			DataContext = new MainViewModel();
+			//TestPusher();
 
-			/*
-			var gameManager = GameManager.GetInstance();
-			gameManager.Initialize();
+			disp = this.WhenActivated(d =>
+			{
+				d(this.OneWayBind(ViewModel, vm => vm.Platforms, v => v.PlatformList.ItemsSource));
+//				d(this.OneWayBind(ViewModel, vm => vm.Games, v => v.GameList.ItemsSource));
+			});
+		}
 
-			foreach (var platform in gameManager.Platforms) {
-				_platformFilter.Add(platform.Name);
-			}
+		public MainViewModel ViewModel
+		{
+			get { return (MainViewModel)this.GetValue(ViewModelProperty); }
+			set { this.SetValue(ViewModelProperty, value); }
+		}
 
-			Platforms = CollectionViewSource.GetDefaultView(gameManager.Platforms);
-			Platforms.Filter = PlatformFilter;
+		#region Pusher
 
-			Games = CollectionViewSource.GetDefaultView(gameManager.Games);
-			Games.Filter = GameFilter;
-
-
+		private void TestPusher()
+		{
 			// pusher test
 			Logger.Info("Setting up pusher...");
 			var client = VpdbClient.GetInstance();
@@ -57,24 +61,9 @@ namespace VpdbAgent.Pages
 				Logger.Info("[{0}]: {1}", data.name, data.message);
 			});
 
-			client.Pusher.Connect();*/
+			client.Pusher.Connect();
 		}
 
-	
-		private static bool PlatformFilter(object item)
-		{
-			var platform = item as Models.Platform;
-			return platform != null && platform.Enabled;
-		}
-
-		/*
-		private static bool GameFilter(object item)
-		{
-			var game = item as Models.Game;
-			return game != null && game.Platform.Enabled && _platformFilter.Contains(game.Platform.Name);
-		}*/
-
-		#region Pusher
 		private static void PusherConnectionStateChanged(object sender, ConnectionState state)
 		{
 			Logger.Info("Pusher connection {0}", state);
@@ -90,8 +79,7 @@ namespace VpdbAgent.Pages
 			Logger.Info("Subscribed to channel.");
 		}
 		#endregion
-
-
+		
 		/*
 		private async void getReleases()
 		{
