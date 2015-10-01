@@ -3,25 +3,33 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
+using ReactiveUI;
+using static System.String;
 
 namespace VpdbAgent.Models
 {
-	public class Game : IComparable<Game>
+	public class Game : ReactiveObject, IComparable<Game>
 	{
 
+		[DataMember]
 		public string Id { get; set; }
+		[DataMember]
 		public string Filename { get; set; }
+		[DataMember]
 		public bool Enabled { get; set; } = true;
 
+		[DataMember]
 		public Vpdb.Models.Release Release { get; set; }
+
 
 		[JsonIgnoreAttribute]
 		public bool Exists { get; set; }
 
 		[JsonIgnoreAttribute]
-		public bool HasRelease { get { return Release != null; } }
+		public bool HasRelease => Release != null;
 
 		[JsonIgnoreAttribute]
 		public long FileSize { get; set; }
@@ -65,7 +73,7 @@ namespace VpdbAgent.Models
 
 		public int CompareTo(Game other)
 		{
-			return other == null ? 1 : Id.CompareTo(other.Id);
+			return other == null ? 1 : Compare(Id, other.Id, StringComparison.Ordinal);
 		}
 	}
 }

@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ReactiveUI;
 using VpdbAgent.PinballX;
 using VpdbAgent.PinballX.Models;
 
 namespace VpdbAgent.Models
 {
-	public class Platform
+	public class Platform : ReactiveObject
 	{
 		public string Name { get; set; }
 		public bool Enabled { get; set; } = true;
@@ -19,8 +20,7 @@ namespace VpdbAgent.Models
 		public PlatformType Type { get; set; }
 		public string DatabasePath { get; set; }
 		public string MediaPath { get; set; }
-		public String DatabaseFile { get { return DatabasePath + @"\vpdb.json"; } }
-
+		public string DatabaseFile => DatabasePath + @"\vpdb.json";
 
 		public Platform()
 		{
@@ -47,7 +47,7 @@ namespace VpdbAgent.Models
 
 		public enum PlatformType
 		{
-			VP, FP, CUSTOM
+			VP, FP, Custom
 		}
 	}
 }

@@ -18,12 +18,8 @@ namespace VpdbAgent.Pages
 	/// </summary>
 	public partial class MainPage : Page
 	{
+
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
-//		public ICollectionView Platforms { get; private set; }
-//		public ICollectionView Games { get; private set; }
-
-		private static readonly List<string> _platformFilter = new List<string>();
 
 		public MainPage()
 		{
@@ -64,34 +60,19 @@ namespace VpdbAgent.Pages
 			client.Pusher.Connect();*/
 		}
 
-		private void OnPlatformFilterChanged(object sender, RoutedEventArgs e)
-		{
-			var checkbox = (sender as CheckBox);
-			if (checkbox == null) {
-				return;
-			}
-			var platformName = checkbox.Tag as string;
-
-			if (checkbox.IsChecked == true) {
-				_platformFilter.Add(platformName);
-			} else {
-				_platformFilter.Remove(platformName);
-			}
-			//GameManager.GetInstance().Games.NotifyRepopulated();
-
-		}
-
+	
 		private static bool PlatformFilter(object item)
 		{
 			var platform = item as Models.Platform;
 			return platform != null && platform.Enabled;
 		}
 
+		/*
 		private static bool GameFilter(object item)
 		{
 			var game = item as Models.Game;
 			return game != null && game.Platform.Enabled && _platformFilter.Contains(game.Platform.Name);
-		}
+		}*/
 
 		#region Pusher
 		private static void PusherConnectionStateChanged(object sender, ConnectionState state)

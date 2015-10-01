@@ -31,7 +31,7 @@ namespace VpdbAgent.PinballX.Models
 		{
 			var systemType = data["SystemType"];
 			if ("0".Equals(systemType)) {
-				Type = Platform.PlatformType.CUSTOM;
+				Type = Platform.PlatformType.Custom;
 			} else if ("1".Equals(systemType)) {
 				Type = Platform.PlatformType.VP;
 			} else if ("2".Equals(systemType)) {
@@ -52,7 +52,7 @@ namespace VpdbAgent.PinballX.Models
 				case Platform.PlatformType.FP:
 					Name = "Future Pinball";
 					break;
-				case Platform.PlatformType.CUSTOM:
+				case Platform.PlatformType.Custom:
 					Name = "Custom";
 					break;
 				default:
