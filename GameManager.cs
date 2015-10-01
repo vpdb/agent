@@ -36,9 +36,8 @@ namespace VpdbAgent
 	///   3. GameManager merges games from MenuManager and vpdb.json to new vpdb.jsons
 	///   4. GameManager dumps new vpdb.jsons
 	/// 
-	/// Everything is event-based, since we want to automatically repeat the
-	/// process when relevant files change. That means, for retrieving the
-	/// systems mentioned above, we subscribe to the SystemsChangedHandler.
+	/// Everything is event- or subscription based, since we want to automatically
+	/// repeat the process when relevant files change. 
 	/// </summary>
 	public class GameManager
 	{
@@ -52,7 +51,6 @@ namespace VpdbAgent
 		public IReactiveDerivedList<Platform> Platforms { get; }
 		public ReactiveList<Game> Games { get; } = new ReactiveList<Game>();
 
-
 		/// <summary>
 		///     Private constructor
 		/// </summary>
@@ -61,11 +59,8 @@ namespace VpdbAgent
 		{
 			Platforms = _menuManager.Systems.CreateDerivedCollection(system => new Platform(system));
 
-			// http://stackoverflow.com/questions/15254708/creating-a-reactiveui-derived-collection-with-more-elements-than-the-original
-			IObservable<List<PinballX.Models.Game>> games = _menuManager.Systems.Changed
-				.Select(_ => _menuManager.Systems.SelectMany(x => x.Games).ToList());
-
-			_menuManager.GamesChanged += OnGamesChanged;
+			// subscribe to game changes
+			_menuManager.GamesChanged.Subscribe(OnGamesChanged);
 		}
 	
 		/// <summary>
@@ -78,38 +73,20 @@ namespace VpdbAgent
 			return this;
 		}
 
+		/// <summary>
+		/// Links a game to a release at VPDB and saves the database.
+		/// </summary>
+		/// <param name="game">Local game to link</param>
+		/// <param name="release">Release at VPDB</param>
 		public void LinkRelease(Game game, Release release)
 		{
 			game.Release = release;
-
-			WriteDatabase(new Database(GetGames(game.Platform)), game.Platform);
+			MarshalDatabase(new Database(GetGames(game.Platform)), game.Platform);
 		}
 
 		public IEnumerable<Game> GetGames(Platform platform) {
 			return Games.Where(game => game.Platform.Name.Equals(platform.Name));
 		}
-
-
-		/// <summary>
-		///     Platforms have changed or are being initialized.
-		///     Triggered at startup and when PinballX.ini changes.
-		/// </summary>
-		/// <param name="args">What changed</param>
-		/*
-		private void OnPlatformsChanged(NotifyCollectionChangedEventArgs args)
-		{
-			Logger.Info("Systems changed, updating platforms.");
-
-			// run on ui thread
-			Application.Current.Dispatcher.Invoke(delegate {
-				Platforms.Clear();
-				Games.Clear();
-				foreach (var system in _menuManager.Systems) {
-					Platforms.Add(new Platform(system));
-				}
-				Platforms.NotifyRepopulated();
-			});
-		}*/
 
 		private void OnGamesChanged(PinballXSystem system)
 		{
@@ -120,7 +97,7 @@ namespace VpdbAgent
 				return;
 			}
 
-			var db = ReadDatabase(platform);
+			var db = UnmarshalDatabase(platform);
 
 			var xmlGames = system.Games;
 			List<Game> mergedGames;
@@ -131,7 +108,7 @@ namespace VpdbAgent
 				Logger.Info("Found and parsed vpdb.json at {0}", platform.DatabaseFile);
 				mergedGames = MergeGames(xmlGames, db.Games, platform.TablePath, platform);
 			}
-			WriteDatabase(new Database(mergedGames), platform);
+			MarshalDatabase(new Database(mergedGames), platform);
 
 			Application.Current.Dispatcher.Invoke(delegate {
 				using (Games.SuppressChangeNotifications()) {
@@ -147,9 +124,19 @@ namespace VpdbAgent
 			});
 		}
 
+		/// <summary>
+		/// Merges a list of games parsed from an .XML file with a list of 
+		/// games read from the internal .json database file
+		/// </summary>
+		/// <param name="xmlGames">Games read from an .XML file</param>
+		/// <param name="jsonGames">Games read from the internal .json database</param>
+		/// <param name="tablePath">Path to the table folder</param>
+		/// <param name="platform">Platform of the games</param>
+		/// <returns>List of merged games</returns>
 		private static List<Game> MergeGames(IEnumerable<PinballX.Models.Game> xmlGames, IEnumerable<Game> jsonGames, string tablePath, Platform platform)
 		{
 			var games = new List<Game>();
+			// ReSharper disable once LoopCanBeConvertedToQuery
 			foreach (var xmlGame in xmlGames) {
 				var jsonGame = jsonGames?.FirstOrDefault(g => (g.Id.Equals(xmlGame.Description)));
 				games.Add(jsonGame == null
@@ -161,11 +148,12 @@ namespace VpdbAgent
 		}
 
 		/// <summary>
-		///     De-serializes vpdb.json into an object model.
+		/// Reads the internal .json file of a given platform and returns the 
+		/// unmarshaled menu object.
 		/// </summary>
-		/// <param name="vpdbJson">Path to vpdb.json</param>
+		/// <param name="platform">Platform for which to read the database from</param>
 		/// <returns>Deserialized object</returns>
-		private static Database ReadDatabase(Platform platform)
+		private static Database UnmarshalDatabase(Platform platform)
 		{
 			if (!System.IO.File.Exists(platform.DatabaseFile)) {
 				return null;
@@ -192,8 +180,12 @@ namespace VpdbAgent
 			}
 		}
 
-
-		private static void WriteDatabase(Database database, Platform platform)
+		/// <summary>
+		/// Writes the database to the internal .json file for a given platform.
+		/// </summary>
+		/// <param name="database">Database to marshal</param>
+		/// <param name="platform">Platform to which the database belongs to</param>
+		private static void MarshalDatabase(Database database, Platform platform)
 		{
 			if (platform.DatabaseFile != null && !Directory.Exists(Path.GetDirectoryName(platform.DatabaseFile))) {
 				Logger.Warn("Directory {0} does not exist, not writing vpdb.json.", Path.GetDirectoryName(platform.DatabaseFile));

@@ -1,13 +1,19 @@
 ﻿using IniParser.Model;
 using System;
 using System.Collections.Generic;
+using System.Xml.Serialization;
 using VpdbAgent.Models;
 
 namespace VpdbAgent.PinballX.Models
 {
+	/// <summary>
+	/// A "system" as read PinballX.
+	/// 
+	/// This comes live from PinballX.ini and resides only in memory. It's 
+	/// updated when PinballX.ini changes.
+	/// </summary>
 	public class PinballXSystem
 	{
-
 		public string Name { get; set; }
 		public bool Enabled { get; set; }
 		public string WorkingPath { get; set; }
@@ -23,7 +29,7 @@ namespace VpdbAgent.PinballX.Models
 
 		public PinballXSystem(KeyDataCollection data)
 		{
-			string systemType = data["SystemType"];
+			var systemType = data["SystemType"];
 			if ("0".Equals(systemType)) {
 				Type = Platform.PlatformType.CUSTOM;
 			} else if ("1".Equals(systemType)) {
@@ -33,7 +39,7 @@ namespace VpdbAgent.PinballX.Models
 			}
 			Name = data["Name"];
 
-			setByData(data);
+			SetByData(data);
 		}
 
 		public PinballXSystem(Platform.PlatformType type, KeyDataCollection data)
@@ -49,19 +55,20 @@ namespace VpdbAgent.PinballX.Models
 				case Platform.PlatformType.CUSTOM:
 					Name = "Custom";
 					break;
+				default:
+					throw new ArgumentOutOfRangeException(nameof(type), type, null);
 			}
-			setByData(data);
+			SetByData(data);
 		}
 
-		private void setByData(KeyDataCollection data)
+		private void SetByData(KeyDataCollection data)
 		{
-
 			Enabled = "true".Equals(data["Enabled"], StringComparison.InvariantCultureIgnoreCase);
 			WorkingPath = data["WorkingPath"];
 			TablePath = data["TablePath"];
 			Executable = data["Executable"];
 
-			SettingsManager settingsManager = SettingsManager.GetInstance();
+			var settingsManager = SettingsManager.GetInstance();
 			DatabasePath = settingsManager.PbxFolder + @"\Databases\" + Name;
 			MediaPath = settingsManager.PbxFolder + @"\Media\" + Name;
 		}

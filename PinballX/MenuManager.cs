@@ -12,23 +12,37 @@ using ReactiveUI;
 using VpdbAgent.PinballX.Models;
 using System.Reactive.Linq;
 using System.Reactive.Concurrency;
+using System.Reactive.Subjects;
 
 namespace VpdbAgent.PinballX
 {
+	/// <summary>
+	/// Manages PinballX's menu structure.
+	/// 
+	/// When initialized, watches PinballX.ini as well as all .XML files
+	/// that are referenced in it for changes.
+	/// </summary>
+	/// 
+	/// <remarks>
+	/// Games are stored in the systems objects. This class really only does
+	/// read-only maintenance of the user's configuration. See GameManager for
+	/// data structures that are actually used in the application.
+	/// </remarks>
 	public class MenuManager
 	{
 		private static MenuManager _instance;
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		/// <summary>
-		/// Systems read from PinballX.ini.
+		/// Systems parsed from PinballX.ini.
 		/// </summary>
 		public ReactiveList<PinballXSystem> Systems { get; } = new ReactiveList<PinballXSystem>();
 
 		// game change handlers
-		public delegate void GameChangedHandler(PinballXSystem system);
-		public event GameChangedHandler GamesChanged;
+		private readonly Subject<PinballXSystem> _gamesChanged = new Subject<PinballXSystem>();
+		public IObservable<PinballXSystem> GamesChanged => _gamesChanged.AsObservable();
 
+		// dependencies
 		private readonly FileSystemWatcher _watcher = FileSystemWatcher.GetInstance();
 		private readonly SettingsManager _settingsManager = SettingsManager.GetInstance();
 
@@ -40,6 +54,11 @@ namespace VpdbAgent.PinballX
 		{
 		}
 
+		/// <summary>
+		/// Starts watching file system for configuration changes and triggers an
+		/// initial update.
+		/// </summary>
+		/// <returns></returns>
 		public MenuManager Initialize()
 		{
 			if (!_settingsManager.IsInitialized()) {
@@ -52,11 +71,17 @@ namespace VpdbAgent.PinballX
 			ParseSystems(iniPath);
 
 			// setup watchers
-			_watcher.FileWatcher(iniPath).ObserveOn(RxApp.MainThreadScheduler).Subscribe(ParseSystems);
-			_watcher.DatabaseWatcher(dbPath, Systems).ObserveOn(RxApp.MainThreadScheduler).Subscribe(XmlChanged);
+			_watcher.FileWatcher(iniPath)
+				.ObserveOn(RxApp.MainThreadScheduler)
+				.Subscribe(ParseSystems);
+			_watcher.DatabaseWatcher(dbPath, Systems)
+				.ObserveOn(RxApp.MainThreadScheduler)
+				.Subscribe(path => ParseGames(Path.GetDirectoryName(path)));
 			
-			// parse games when systems change
-			Systems.Changed.ObserveOn(RxApp.MainThreadScheduler).Subscribe(_ => ParseGames());
+			// parse all games when systems change
+			Systems.Changed
+				.ObserveOn(RxApp.MainThreadScheduler)
+				.Subscribe(_ => ParseGames());
 
 			// initially parse
 			ParseGames();
@@ -69,6 +94,7 @@ namespace VpdbAgent.PinballX
 		/// </summary>
 		private void ParseSystems(string iniPath)
 		{
+			// only notify after this block
 			using (Systems.SuppressChangeNotifications()) {
 				Logger.Info("Parsing systems from {0}", iniPath);
 				Systems.Clear();
@@ -89,19 +115,21 @@ namespace VpdbAgent.PinballX
 			}
 		}
 
-		private void XmlChanged(string path)
-		{
-			ParseGames(Path.GetDirectoryName(path));
-		}
-
+		/// <summary>
+		/// Parses all games for all systems.
+		/// </summary>
 		private void ParseGames()
 		{
-			Logger.Info("Parsing all games from all systems...");
+			Logger.Info("Parsing all games for all systems...");
 			foreach (var system in Systems) {
 				ParseGames(system.DatabasePath);
 			}
 		}
 
+		/// <summary>
+		/// Parses all games at a given path.
+		/// </summary>
+		/// <param name="path">Path to folder</param>
 		private void ParseGames(string path)
 		{
 			Logger.Info("Parsing games at {0}...", path);
@@ -120,7 +148,7 @@ namespace VpdbAgent.PinballX
 			if (Directory.Exists(system.DatabasePath)) {
 				foreach (var filePath in Directory.GetFiles(system.DatabasePath)
 					.Where(filePath => "xml".Equals(filePath.Substring(filePath.Length - 3), StringComparison.InvariantCultureIgnoreCase))) {
-					games.AddRange(ReadXml(filePath).Games);
+					games.AddRange(UnmarshalXml(filePath).Games);
 					fileCount++;
 				}
 			}
@@ -128,10 +156,15 @@ namespace VpdbAgent.PinballX
 			system.Games = games;
 
 			// announce to subscribers
-			GamesChanged?.Invoke(system);
+			_gamesChanged.OnNext(system);
 		}
-
-		private static Menu ReadXml(string filepath)
+		
+		/// <summary>
+		/// Returns an unmarshaled object for a given .XML file
+		/// </summary>
+		/// <param name="filepath">Absolute path to the .XML file</param>
+		/// <returns></returns>
+		private static Menu UnmarshalXml(string filepath)
 		{
 			var menu = new Menu();
 			Stream reader = null;
@@ -153,30 +186,5 @@ namespace VpdbAgent.PinballX
 		{
 			return _instance ?? (_instance = new MenuManager());
 		}
-
-		/*
-		public List<Game> GetGames()
-		{
-			List<Game> games = new List<Game>();
-			string xmlPath;
-			foreach (PinballXSystem system in Systems) {
-				xmlPath = dbPath + system.Name;
-				if (system.Enabled) {
-					games.AddRange(GetGames(xmlPath));
-				}
-			}
-			return games;
-		}
-
-		public void saveXml(Menu menu)
-		{
-			XmlSerializerNamespaces ns = new XmlSerializerNamespaces();
-			XmlSerializer writer = new XmlSerializer(typeof(Menu));
-			FileStream file = File.Create("C:\\Games\\PinballX\\Databases\\Visual Pinball\\Visual Pinball - backup.xml");
-			ns.Add("", "");
-			writer.Serialize(file, menu, ns);
-			file.Close();
-		}*/
-
 	}
 }
