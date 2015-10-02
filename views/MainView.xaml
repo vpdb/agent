@@ -1,13 +1,12 @@
-﻿<p:BasePage x:Class="VpdbAgent.Pages.MainPage"
+﻿<UserControl x:Class="VpdbAgent.Views.MainView"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-      xmlns:p="clr-namespace:VpdbAgent.Pages"
+      xmlns:v="clr-namespace:VpdbAgent.Views"
 	  xmlns:c="clr-namespace:VpdbAgent.Controls"
       mc:Ignorable="d" 
-      d:DesignHeight="300" d:DesignWidth="900"
-      Title="VPDB Agent">
+      d:DesignHeight="300" d:DesignWidth="900">
 
     <Grid>
         <Grid.ColumnDefinitions>
@@ -47,4 +46,4 @@
             </ScrollViewer>
         </Grid>
     </Grid>
-</p:BasePage>
+</UserControl>

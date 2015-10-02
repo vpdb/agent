@@ -152,12 +152,12 @@
     <Compile Include="GameManager.cs" />
     <Compile Include="Models\Game.cs" />
     <Compile Include="Models\Platform.cs" />
-    <Compile Include="Pages\BasePage.cs" />
-    <Compile Include="Pages\IReactiveView.cs" />
+    <Compile Include="ViewModels\AppViewModel.cs" />
+    <Compile Include="Views\BaseView.cs" />
     <Compile Include="Pages\SettingsPage.xaml.cs">
       <DependentUpon>SettingsPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Pages\ViewModels\MainViewModel.cs" />
+    <Compile Include="ViewModels\MainViewModel.cs" />
     <Compile Include="PinballX\FileSystemWatcher.cs" />
     <Compile Include="PinballX\MenuManager.cs" />
     <Compile Include="Models\Database.cs" />
@@ -165,8 +165,8 @@
     <Compile Include="PinballX\Models\Menu.cs" />
     <Compile Include="PinballX\Models\PinballXSystem.cs" />
     <Compile Include="RefitStubs.cs" />
-    <Compile Include="Pages\MainPage.xaml.cs">
-      <DependentUpon>MainPage.xaml</DependentUpon>
+    <Compile Include="Views\MainView.xaml.cs">
+      <DependentUpon>MainView.xaml</DependentUpon>
     </Compile>
     <Compile Include="SettingsManager.cs" />
     <Compile Include="Controls\GameTemplate.xaml.cs">
@@ -204,7 +204,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Pages\MainPage.xaml">
+    <Page Include="Views\MainView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

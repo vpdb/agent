@@ -1,21 +1,20 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Reactive;
-using System.Reactive.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
 using System.Windows.Controls;
 using NLog;
 using ReactiveUI;
 using VpdbAgent.Models;
+using System.Reactive.Disposables;
 
-namespace VpdbAgent.Pages.ViewModels
+namespace VpdbAgent.ViewModels
 {
-	public class MainViewModel : ReactiveObject
+	public class MainViewModel : ReactiveObject, IRoutableViewModel
 	{
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
+		// screen
+		public IScreen HostScreen { get; protected set; }
+		public string UrlPathSegment => "main";
 
 		// data
 		public IReactiveDerivedList<Platform> Platforms { get; private set; }
@@ -26,8 +25,10 @@ namespace VpdbAgent.Pages.ViewModels
 		// privates
 		private readonly ReactiveList<string> _platformFilter = new ReactiveList<string>();
 
-		public MainViewModel()
+		public MainViewModel(IScreen screen)
 		{
+			HostScreen = screen;
+
 			var gameManager = GameManager.GetInstance();
 			gameManager.Initialize();
 
@@ -49,6 +50,18 @@ namespace VpdbAgent.Pages.ViewModels
 			);
 
 			Logger.Info("We got {0} platforms and {1} games.", Platforms.Count, Games.Count);
+
+			this.WhenNavigatedTo(() => Bar());
+		}
+
+		private IDisposable Bar()
+		{
+			return Disposable.Create(() => Foo());
+		}
+
+		private void Foo()
+		{
+			if (true) { }
 		}
 
 		public void OnPlatformFilterChanged(object sender, object e)

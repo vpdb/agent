@@ -14,7 +14,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace VpdbAgent.Pages
+namespace VpdbAgent.Views
 {
 	/// <summary>
 	/// Interaction logic for SettingsPage.xaml
@@ -75,7 +75,7 @@ namespace VpdbAgent.Pages
 				if (NavigationService.CanGoBack) {
 					NavigationService.GoBack();
 				} else {
-					NavigationService.Navigate(new MainPage());
+					NavigationService.Navigate(new MainView());
 					NavigationService.RemoveBackEntry();
 				}
 				

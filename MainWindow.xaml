@@ -6,11 +6,12 @@
         xmlns:local="clr-namespace:VpdbAgent"
         xmlns:Controls="http://metro.mahapps.com/winfx/xaml/controls"
         xmlns:c="clr-namespace:VpdbAgent.Controls"
+        xmlns:rx="clr-namespace:ReactiveUI;assembly=ReactiveUI"
         mc:Ignorable="d"
         ResizeMode="CanResizeWithGrip"
         WindowTitleBrush="{DynamicResource TransparentBrush}"
-        Title="{Binding Path=Content.Title, ElementName=MainFrame}"
-        Height="900" Width="900"
+        Title="VPDB Agent"
+        Height="700" Width="900"
         TitleCaps="False"
         RenderOptions.ClearTypeHint="Enabled"
         Style="{DynamicResource CleanWindowStyleKey}"
@@ -31,7 +32,7 @@
 
     <Controls:MetroWindow.RightWindowCommands>
         <Controls:WindowCommands>
-            <Button Style="{StaticResource IconButton}" Height="30" Click="SettingsButton_Click">
+            <Button Style="{StaticResource IconButton}" Height="30">
                 <StackPanel Orientation="Horizontal">
                     <c:IconControl Height="15" Width="15" Foreground="#80ffffff" Data="{StaticResource IconSettings}" Margin="10,0,10,0" />
                     <TextBlock VerticalAlignment="Center" Text="SETTINGS" Margin="0,0,10,0" />
@@ -46,28 +47,23 @@
         <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal">
             <Label Content="Status info. All green." />
         </StackPanel>
-
-        <Frame x:Name="MainFrame">
-            <Frame.Template>
-                <ControlTemplate TargetType="Frame">
-                    <DockPanel Margin="7" >
-                        <StackPanel Margin="7" Orientation="Horizontal" DockPanel.Dock="Top">
-                            <Button Style="{StaticResource NavigationButton}" Command="{x:Static NavigationCommands.BrowseBack}" IsEnabled="{TemplateBinding CanGoBack}" Margin="0,0,20,0" >
-                                <Canvas Width="10.119" Height="17.509">
-                                    <Path Fill="{Binding Foreground, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}}" Data="F1 M 2.750,8.765 L 10.099,1.375 L 8.724,0.000 L 0.000,8.765 L 8.744,17.509 L 10.119,16.134 L 2.750,8.765 Z"/>
-                                </Canvas>
-                            </Button>
-                            <Button Style="{StaticResource NavigationButton}" Command="{x:Static NavigationCommands.BrowseForward}" IsEnabled="{TemplateBinding CanGoForward}">
-                                <Canvas Width="10.119" Height="17.509">
-                                    <Path Fill="{Binding Foreground, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}}" Data="F1 M 7.369,8.744 L 0.020,16.134 L 1.394,17.509 L 10.119,8.744 L 1.375,0.000 L 0.000,1.375 L 7.369,8.744 Z"/>
-                                </Canvas>
-                            </Button>
-                        </StackPanel>
-                        <ContentPresenter />
-                    </DockPanel>
-                </ControlTemplate>
-            </Frame.Template>
-        </Frame>
-
+        <DockPanel Margin="7" >
+            <StackPanel Margin="7" Orientation="Horizontal" DockPanel.Dock="Top">
+                <Button Style="{StaticResource NavigationButton}" Command="{x:Static NavigationCommands.BrowseBack}" Margin="0,0,20,0" >
+                    <Canvas Width="10.119" Height="17.509">
+                        <Path Fill="{Binding Foreground, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}}" Data="F1 M 2.750,8.765 L 10.099,1.375 L 8.724,0.000 L 0.000,8.765 L 8.744,17.509 L 10.119,16.134 L 2.750,8.765 Z"/>
+                    </Canvas>
+                </Button>
+                <Button Style="{StaticResource NavigationButton}" Command="{x:Static NavigationCommands.BrowseForward}">
+                    <Canvas Width="10.119" Height="17.509">
+                        <Path Fill="{Binding Foreground, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}}" Data="F1 M 7.369,8.744 L 0.020,16.134 L 1.394,17.509 L 10.119,8.744 L 1.375,0.000 L 0.000,1.375 L 7.369,8.744 Z"/>
+                    </Canvas>
+                </Button>
+            </StackPanel>
+            <rx:RoutedViewHost
+                Router="{Binding Router}"
+                HorizontalContentAlignment="Stretch"
+                VerticalContentAlignment="Stretch" />
+        </DockPanel>
     </DockPanel>
 </Controls:MetroWindow>

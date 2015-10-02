@@ -1,6 +1,7 @@
 ﻿using System.Windows;
 using PusherClient;
-using VpdbAgent.Pages;
+using VpdbAgent.ViewModels;
+using VpdbAgent.Views;
 using VpdbAgent.Vpdb;
 
 namespace VpdbAgent
@@ -11,22 +12,14 @@ namespace VpdbAgent
 	public partial class MainWindow
 	{
 
+		public AppViewModel AppViewModel { get; protected set; }
+
 		public MainWindow()
 		{
 			InitializeComponent();
 
-			SettingsManager settingsManager = SettingsManager.GetInstance();
-
-			if (settingsManager.IsInitialized()) {
-				MainFrame.Navigate(new MainPage());
-			} else {
-				MainFrame.Navigate(new SettingsPage());
-			}
-		}
-
-		private void SettingsButton_Click(object sender, RoutedEventArgs e)
-		{
-			MainFrame.Navigate(new SettingsPage());
+			AppViewModel = new AppViewModel();
+			DataContext = AppViewModel;
 		}
 	}
 }

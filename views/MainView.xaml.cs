@@ -9,29 +9,30 @@ using PusherClient;
 using System;
 using System.Windows;
 using System.Collections.Generic;
-using VpdbAgent.Pages.ViewModels;
 using ReactiveUI;
+using VpdbAgent.ViewModels;
 
-namespace VpdbAgent.Pages
+namespace VpdbAgent.Views
 {
 	/// <summary>
 	/// Interaction logic for MainPage.xaml
 	/// </summary>
-	public partial class MainPage : BasePage, IViewFor<MainViewModel>
+	public partial class MainView : UserControl, IViewFor<MainViewModel>
 	{
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		private IDisposable disp;
-
-		public MainPage()
+		public MainView()
 		{
 			InitializeComponent();
 			//TestPusher();
 
-			disp = this.WhenActivated(d =>
+			this.WhenAnyValue(x => x.ViewModel).BindTo(this, x => x.DataContext);
+
+			this.OneWayBind(ViewModel, vm => vm.Platforms, v => v.PlatformList.ItemsSource);
+
+			this.WhenActivated(d =>
 			{
-				d(this.OneWayBind(ViewModel, vm => vm.Platforms, v => v.PlatformList.ItemsSource));
-//				d(this.OneWayBind(ViewModel, vm => vm.Games, v => v.GameList.ItemsSource));
+				d(this.OneWayBind(ViewModel, vm => vm.Games, v => v.GameList.ItemsSource));
 			});
 		}
 
@@ -39,6 +40,15 @@ namespace VpdbAgent.Pages
 		{
 			get { return (MainViewModel)this.GetValue(ViewModelProperty); }
 			set { this.SetValue(ViewModelProperty, value); }
+		}
+
+		public static readonly DependencyProperty ViewModelProperty =
+		   DependencyProperty.Register("ViewModel", typeof(MainViewModel), typeof(MainView), new PropertyMetadata(null));
+
+		object IViewFor.ViewModel
+		{
+			get { return ViewModel; }
+			set { ViewModel = (MainViewModel)value; }
 		}
 
 		#region Pusher
