@@ -45,17 +45,24 @@ namespace VpdbAgent.ViewModels
 			var settingsManager = SettingsManager.GetInstance();
 
 			// Navigate to the opening page of the application
-//			if (settingsManager.IsInitialized()) {
-				Router.Navigate.Execute(new MainViewModel(this));
-//			} else {
-				//MainFrame.Navigate(new SettingsPage());
-//			}
+			//			if (settingsManager.IsInitialized()) {
+			//Router.Navigate.Execute(new MainViewModel(this));
+			Router.Navigate.Execute(new SettingsViewModel(this));
+			//			} else {
+			//MainFrame.Navigate(new SettingsPage());
+			//			}
+		}
+
+		public void SettingsButton_Click()
+		{
+			Router.Navigate.Execute(new SettingsViewModel(this));
 		}
 
 		private void RegisterParts(IMutableDependencyResolver dependencyResolver)
 		{
 			dependencyResolver.RegisterConstant(this, typeof(IScreen));
 			dependencyResolver.Register(() => new MainView(), typeof(IViewFor<MainViewModel>));
+			dependencyResolver.Register(() => new SettingsView(), typeof(IViewFor<SettingsViewModel>));
 		}
 	}
 }

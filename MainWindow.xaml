@@ -39,11 +39,9 @@
                 </StackPanel>
             </Button>
         </Controls:WindowCommands>
-
     </Controls:MetroWindow.RightWindowCommands>
 
     <DockPanel LastChildFill="True">
-
         <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal">
             <Label Content="Status info. All green." />
         </StackPanel>
@@ -66,4 +64,5 @@
                 VerticalContentAlignment="Stretch" />
         </DockPanel>
     </DockPanel>
+	
 </Controls:MetroWindow>

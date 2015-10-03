@@ -13,43 +13,41 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using ReactiveUI;
+using VpdbAgent.ViewModels;
+using UserControl = System.Windows.Controls.UserControl;
 
 namespace VpdbAgent.Views
 {
 	/// <summary>
 	/// Interaction logic for SettingsPage.xaml
 	/// </summary>
-	public partial class SettingsPage : Page
+	public partial class SettingsView : UserControl, IViewFor<SettingsViewModel>
 	{
 
-		private SettingsManager settingsManager = SettingsManager.GetInstance();
-
-		public SettingsPage()
+		public SettingsView()
 		{
 			InitializeComponent();
 
 			updateAdvancedOptions();
-			ApiKey.Text = settingsManager.ApiKey;
-			AuthUser.Text = settingsManager.AuthUser;
-			AuthPass.Password = settingsManager.AuthPass;
-			ApiEndpoint.Text = settingsManager.Endpoint;
-			PinballXFolderLabel.Content = settingsManager.PbxFolder;
 
-			Loaded += (a, b) =>
-			{
-				CancelButton.Visibility = NavigationService.CanGoBack ? Visibility.Visible : Visibility.Hidden;
-			};
+			this.WhenAnyValue(x => x.ViewModel).BindTo(this, x => x.DataContext);
+//			this.Bind(this.ViewModel, x => x.ApiKey);
+
+			//CancelButton.Visibility = NavigationService.CanGoBack ? Visibility.Visible : Visibility.Hidden;
 		}
 
 		
 		private void PinballXFolderButton_Click(object sender, RoutedEventArgs e)
 		{
-			var dialog = new FolderBrowserDialog();
-			dialog.ShowNewFolderButton = false;
+			var dialog = new FolderBrowserDialog {
+				ShowNewFolderButton = false
+			};
+
 			if (PinballXFolderLabel.Content.ToString().Length > 0) {
 				dialog.SelectedPath = PinballXFolderLabel.Content.ToString();
 			}
-			DialogResult result = dialog.ShowDialog();
+			var result = dialog.ShowDialog();
 
 			if (result == DialogResult.OK) {
 				PinballXFolderLabel.Content = dialog.SelectedPath;
@@ -58,10 +56,10 @@ namespace VpdbAgent.Views
 				PinballXFolderLabel.Content = string.Empty;
 			}
 		}
-
+		
 		private void SubmitButton_Click(object sender, RoutedEventArgs e)
 		{
-
+			/*
 			settingsManager.ApiKey = ApiKey.Text;
 			settingsManager.AuthUser = AuthUser.Text;
 			settingsManager.AuthPass = AuthPass.Password;
@@ -81,12 +79,12 @@ namespace VpdbAgent.Views
 				
 			} else {
 				// TODO properly display error
-			}
+			}*/
 		}
 
 		private void CancelButton_Click(object sender, RoutedEventArgs e)
 		{
-			NavigationService.GoBack();
+			//NavigationService.GoBack();
 		}
 
 		private void ShowAdvancedOptions_Checked(object sender, RoutedEventArgs e)
@@ -108,6 +106,23 @@ namespace VpdbAgent.Views
 				BasicAuth.Visibility = Visibility.Visible;
 			}
 		}
+
+		#region ViewModel
+		public SettingsViewModel ViewModel
+		{
+			get { return (SettingsViewModel)this.GetValue(ViewModelProperty); }
+			set { this.SetValue(ViewModelProperty, value); }
+		}
+
+		public static readonly DependencyProperty ViewModelProperty =
+		   DependencyProperty.Register("ViewModel", typeof(SettingsViewModel), typeof(SettingsView), new PropertyMetadata(null));
+
+		object IViewFor.ViewModel
+		{
+			get { return ViewModel; }
+			set { ViewModel = (SettingsViewModel)value; }
+		}
+		#endregion
 
 	}
 }
