@@ -32,11 +32,14 @@ The above implicates:
 - Try pusher.com for instant downloads after starring if enabled
 - Watch folders so data gets updated when files do
 - Be pessimistic on shit, i.e. don't crash if something unexpected happens
+- Some filter needs to be defined where starred releases show up
 
 
 ## Tech Stack / Dependencies
 
 - Microsoft .NET 4.5 WPF Application
+- Asynchronous backend with [Rx Extensions](https://rx.codeplex.com/)
+- UI wiring using [ReactiveUI](http://reactiveui.net/)
 - [Refit](https://github.com/paulcbetts/refit) for type-safe REST access
 - [Mahapps.Metro](http://mahapps.com/) for easy custom styling
 - [INI File Parser](https://github.com/rickyah/ini-parser) for parsing PinballX config
