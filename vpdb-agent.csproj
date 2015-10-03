@@ -153,7 +153,6 @@
     <Compile Include="Models\Game.cs" />
     <Compile Include="Models\Platform.cs" />
     <Compile Include="ViewModels\AppViewModel.cs" />
-    <Compile Include="Views\BaseView.cs" />
     <Compile Include="Pages\SettingsPage.xaml.cs">
       <DependentUpon>SettingsPage.xaml</DependentUpon>
     </Compile>

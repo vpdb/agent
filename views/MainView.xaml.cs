@@ -27,15 +27,14 @@ namespace VpdbAgent.Views
 			//TestPusher();
 
 			this.WhenAnyValue(x => x.ViewModel).BindTo(this, x => x.DataContext);
-
-			this.OneWayBind(ViewModel, vm => vm.Platforms, v => v.PlatformList.ItemsSource);
-
 			this.WhenActivated(d =>
 			{
+				d(this.OneWayBind(ViewModel, vm => vm.Platforms, v => v.PlatformList.ItemsSource));
 				d(this.OneWayBind(ViewModel, vm => vm.Games, v => v.GameList.ItemsSource));
 			});
 		}
 
+		#region ViewModel
 		public MainViewModel ViewModel
 		{
 			get { return (MainViewModel)this.GetValue(ViewModelProperty); }
@@ -49,7 +48,8 @@ namespace VpdbAgent.Views
 		{
 			get { return ViewModel; }
 			set { ViewModel = (MainViewModel)value; }
-		}
+		} 
+		#endregion
 
 		#region Pusher
 
