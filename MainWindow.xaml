@@ -30,34 +30,19 @@
         </DataTemplate>
     </Controls:MetroWindow.IconTemplate>
 
-    <Controls:MetroWindow.RightWindowCommands>
-        <Controls:WindowCommands>
-            <Button Style="{StaticResource IconButton}" Click="SettingsButton_Click" Height="30">
-                <StackPanel Orientation="Horizontal">
-                    <c:IconControl Height="15" Width="15" Foreground="#80ffffff" Data="{StaticResource IconSettings}" Margin="10,0,10,0" />
-                    <TextBlock VerticalAlignment="Center" Text="SETTINGS" Margin="0,0,10,0" />
-                </StackPanel>
-            </Button>
-        </Controls:WindowCommands>
-    </Controls:MetroWindow.RightWindowCommands>
-
     <DockPanel LastChildFill="True">
         <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal">
             <Label Content="Status info. All green." />
         </StackPanel>
         <DockPanel Margin="7" >
-            <StackPanel Margin="7" Orientation="Horizontal" DockPanel.Dock="Top">
-                <Button Style="{StaticResource NavigationButton}" Click="BackButton_Click" Margin="0,0,20,0" >
-                    <Canvas Width="10.119" Height="17.509">
-                        <Path Fill="{Binding Foreground, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}}" Data="F1 M 2.750,8.765 L 10.099,1.375 L 8.724,0.000 L 0.000,8.765 L 8.744,17.509 L 10.119,16.134 L 2.750,8.765 Z"/>
-                    </Canvas>
+            <DockPanel Margin="7" DockPanel.Dock="Top" LastChildFill="False">
+                <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Click="SettingsButton_Click" Height="30">
+                    <StackPanel Orientation="Horizontal">
+                        <c:IconControl Height="15" Width="15" Foreground="#80ffffff" Data="{StaticResource IconSettings}" Margin="10,0,10,0" />
+                        <TextBlock VerticalAlignment="Center" Text="SETTINGS" Margin="0,0,10,0" />
+                    </StackPanel>
                 </Button>
-                <Button Style="{StaticResource NavigationButton}" Click="ForwardButton_Click">
-                    <Canvas Width="10.119" Height="17.509">
-                        <Path Fill="{Binding Foreground, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}}" Data="F1 M 7.369,8.744 L 0.020,16.134 L 1.394,17.509 L 10.119,8.744 L 1.375,0.000 L 0.000,1.375 L 7.369,8.744 Z"/>
-                    </Canvas>
-                </Button>
-            </StackPanel>
+            </DockPanel>
             <rx:RoutedViewHost
                 Router="{Binding Router}"
                 HorizontalContentAlignment="Stretch"

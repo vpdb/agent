@@ -27,16 +27,5 @@ namespace VpdbAgent
 		{
 			AppViewModel.GotoSettings.Execute(null);
 		}
-
-		private void ForwardButton_Click(object sender, RoutedEventArgs e)
-		{
-			AppViewModel.NavigateForward();
-			
-		}
-
-		private void BackButton_Click(object sender, RoutedEventArgs e)
-		{
-			AppViewModel.NavigateBack();
-		}
 	}
 }

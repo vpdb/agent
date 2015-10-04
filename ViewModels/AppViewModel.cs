@@ -32,9 +32,7 @@ namespace VpdbAgent.ViewModels
 		public RoutingState Router { get; private set; }
 
 		// commands
-		public ReactiveCommand<Object> GotoSettings { get; protected set; }
-
-		private IRoutableViewModel _nextViewModel;
+		public ReactiveCommand<object> GotoSettings { get; protected set; }
 
 		public AppViewModel(IMutableDependencyResolver dependencyResolver = null, RoutingState testRouter = null)
 		{
@@ -50,12 +48,11 @@ namespace VpdbAgent.ViewModels
 			var settingsManager = SettingsManager.GetInstance();
 
 			// Navigate to the opening page of the application
-			//			if (settingsManager.IsInitialized()) {
-			Router.Navigate.Execute(new MainViewModel(this));
-			//Router.Navigate.Execute(new SettingsViewModel(this));
-			//			} else {
-			//MainFrame.Navigate(new SettingsPage());
-			//			}
+			if (settingsManager.IsInitialized()) {
+				Router.Navigate.Execute(new MainViewModel(this));
+			} else {
+				Router.Navigate.Execute(new SettingsViewModel(this));
+			}
 
 			GotoSettings = ReactiveCommand.CreateAsyncObservable(_ => Router.Navigate.ExecuteAsync(new SettingsViewModel(this)));
 		}
@@ -65,25 +62,6 @@ namespace VpdbAgent.ViewModels
 			dependencyResolver.RegisterConstant(this, typeof(IScreen));
 			dependencyResolver.Register(() => new MainView(), typeof(IViewFor<MainViewModel>));
 			dependencyResolver.Register(() => new SettingsView(), typeof(IViewFor<SettingsViewModel>));
-		}
-
-		public void Navigate(IRoutableViewModel view)
-		{
-			_nextViewModel = null;
-			Router.Navigate.Execute(view);
-		}
-
-		public void NavigateBack()
-		{
-			Router.CurrentViewModel.Subscribe(viewModel => { _nextViewModel = viewModel; });
-			Router.NavigateBack.Execute(null);
-		}
-
-		public void NavigateForward()
-		{
-			if (_nextViewModel != null) {
-				Router.Navigate.Execute(_nextViewModel);
-			}
 		}
 	}
 }
