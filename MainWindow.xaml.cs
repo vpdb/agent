@@ -1,5 +1,6 @@
 ﻿using System.Windows;
 using PusherClient;
+using ReactiveUI;
 using VpdbAgent.ViewModels;
 using VpdbAgent.Views;
 using VpdbAgent.Vpdb;
@@ -11,7 +12,6 @@ namespace VpdbAgent
 	/// </summary>
 	public partial class MainWindow
 	{
-
 		public AppViewModel AppViewModel { get; protected set; }
 
 		public MainWindow()
@@ -20,6 +20,11 @@ namespace VpdbAgent
 
 			AppViewModel = new AppViewModel();
 			DataContext = AppViewModel;
+		}
+
+		private void SettingsButton_Click(object sender, RoutedEventArgs e)
+		{
+			AppViewModel.GotoSettings.Execute(null);
 		}
 	}
 }

@@ -31,6 +31,9 @@ namespace VpdbAgent.ViewModels
 	{
 		public RoutingState Router { get; private set; }
 
+		// commands
+		public ReactiveCommand<Object> GotoSettings { get; protected set; }
+
 		public AppViewModel(IMutableDependencyResolver dependencyResolver = null, RoutingState testRouter = null)
 		{
 			Router = testRouter ?? new RoutingState();
@@ -46,11 +49,13 @@ namespace VpdbAgent.ViewModels
 
 			// Navigate to the opening page of the application
 			//			if (settingsManager.IsInitialized()) {
-			//Router.Navigate.Execute(new MainViewModel(this));
-			Router.Navigate.Execute(new SettingsViewModel(this));
+			Router.Navigate.Execute(new MainViewModel(this));
+			//Router.Navigate.Execute(new SettingsViewModel(this));
 			//			} else {
 			//MainFrame.Navigate(new SettingsPage());
 			//			}
+
+			GotoSettings = ReactiveCommand.CreateAsyncObservable(_ => Router.Navigate.ExecuteAsync(new SettingsViewModel(this)));
 		}
 
 		public void SettingsButton_Click()
