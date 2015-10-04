@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 using PusherClient;
 using ReactiveUI;
 using VpdbAgent.ViewModels;
@@ -25,6 +26,17 @@ namespace VpdbAgent
 		private void SettingsButton_Click(object sender, RoutedEventArgs e)
 		{
 			AppViewModel.GotoSettings.Execute(null);
+		}
+
+		private void ForwardButton_Click(object sender, RoutedEventArgs e)
+		{
+			AppViewModel.NavigateForward();
+			
+		}
+
+		private void BackButton_Click(object sender, RoutedEventArgs e)
+		{
+			AppViewModel.NavigateBack();
 		}
 	}
 }

@@ -34,6 +34,8 @@ namespace VpdbAgent.ViewModels
 		// commands
 		public ReactiveCommand<Object> GotoSettings { get; protected set; }
 
+		private IRoutableViewModel _nextViewModel;
+
 		public AppViewModel(IMutableDependencyResolver dependencyResolver = null, RoutingState testRouter = null)
 		{
 			Router = testRouter ?? new RoutingState();
@@ -58,16 +60,30 @@ namespace VpdbAgent.ViewModels
 			GotoSettings = ReactiveCommand.CreateAsyncObservable(_ => Router.Navigate.ExecuteAsync(new SettingsViewModel(this)));
 		}
 
-		public void SettingsButton_Click()
-		{
-			Router.Navigate.Execute(new SettingsViewModel(this));
-		}
-
 		private void RegisterParts(IMutableDependencyResolver dependencyResolver)
 		{
 			dependencyResolver.RegisterConstant(this, typeof(IScreen));
 			dependencyResolver.Register(() => new MainView(), typeof(IViewFor<MainViewModel>));
 			dependencyResolver.Register(() => new SettingsView(), typeof(IViewFor<SettingsViewModel>));
+		}
+
+		public void Navigate(IRoutableViewModel view)
+		{
+			_nextViewModel = null;
+			Router.Navigate.Execute(view);
+		}
+
+		public void NavigateBack()
+		{
+			Router.CurrentViewModel.Subscribe(viewModel => { _nextViewModel = viewModel; });
+			Router.NavigateBack.Execute(null);
+		}
+
+		public void NavigateForward()
+		{
+			if (_nextViewModel != null) {
+				Router.Navigate.Execute(_nextViewModel);
+			}
 		}
 	}
 }
