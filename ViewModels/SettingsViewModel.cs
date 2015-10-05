@@ -22,7 +22,7 @@ namespace VpdbAgent.ViewModels
 
 		// commands
 		public ReactiveCommand<object> SaveSettings { get; protected set; }
-		public ReactiveCommand<object> CloseSettings { get; protected set; }
+		public ReactiveCommand<object> CloseSettings { get; protected set; } = ReactiveCommand.Create();
 
 		private string _apiKey;
 		private string _pbxFolder;
@@ -43,8 +43,7 @@ namespace VpdbAgent.ViewModels
 			SaveSettings = ReactiveCommand.Create();
 			SaveSettings.Subscribe(_ => Save());
 
-			CloseSettings = ReactiveCommand.Create();
-			CloseSettings.Subscribe(_ => Close());
+			CloseSettings.InvokeCommand(HostScreen.Router, r => r.NavigateBack);
 		}
 
 		private void Save()
@@ -67,11 +66,6 @@ namespace VpdbAgent.ViewModels
 					Logger.Error("Settings validation error for field {0}: {1}", field, errors[field]);
 				}
 			}
-		}
-
-		private void Close()
-		{
-			HostScreen.Router.NavigateBack.Execute(null);
 		}
 
 		public string ApiKey

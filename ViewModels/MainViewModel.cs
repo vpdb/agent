@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Controls;
 using NLog;
@@ -21,6 +22,7 @@ namespace VpdbAgent.ViewModels
 		public IReactiveDerivedList<Game> Games { get; private set; }
 
 		// commands
+		public ReactiveCommand<object> FilterPlatforms { get; protected set; } = ReactiveCommand.Create();
 
 		// privates
 		private readonly ReactiveList<string> _platformFilter = new ReactiveList<string>();
@@ -49,19 +51,9 @@ namespace VpdbAgent.ViewModels
 				(x, y) => string.Compare(x.Id, y.Id, StringComparison.Ordinal)
 			);
 
+			FilterPlatforms.Subscribe(obj => OnPlatformFilterChanged(obj, null));
+
 			Logger.Info("We got {0} platforms and {1} games.", Platforms.Count, Games.Count);
-
-			this.WhenNavigatedTo(() => Bar());
-		}
-
-		private IDisposable Bar()
-		{
-			return Disposable.Create(() => Foo());
-		}
-
-		private void Foo()
-		{
-			if (true) { }
 		}
 
 		public void OnPlatformFilterChanged(object sender, object e)
@@ -77,8 +69,6 @@ namespace VpdbAgent.ViewModels
 			} else {
 				_platformFilter.Remove(platformName);
 			}
-			//GameManager.GetInstance().Games.NotifyRepopulated();
-
 		}
 	}
 }

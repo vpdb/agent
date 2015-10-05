@@ -33,18 +33,23 @@ namespace VpdbAgent.Views
 			// model
 			this.WhenAnyValue(x => x.ViewModel).BindTo(this, x => x.DataContext);
 
-			// fields
-			this.Bind(ViewModel, vm => vm.ApiKey, v => v.ApiKey.Text);
-			this.Bind(ViewModel, vm => vm.Endpoint, v => v.Endpoint.Text);
-			this.Bind(ViewModel, vm => vm.PbxFolder, v => v.PbxFolder.Content);
-			this.Bind(ViewModel, vm => vm.AuthUser, v => v.AuthUser.Text);
-			this.Bind(ViewModel, vm => vm.AuthPass, v => v.AuthPass.Password);
-
-			// commands
-			this.BindCommand(ViewModel, vm => vm.CloseSettings, v => v.CancelButton);
-			this.BindCommand(ViewModel, vm => vm.SaveSettings, v => v.SaveButton);
+			this.WhenActivated(ApplyBindings);
 
 			//CancelButton.Visibility = NavigationService.CanGoBack ? Visibility.Visible : Visibility.Hidden;
+		}
+
+		private IEnumerable<IDisposable> ApplyBindings()
+		{
+			// fields
+			yield return this.Bind(ViewModel, vm => vm.ApiKey, v => v.ApiKey.Text);
+			yield return this.Bind(ViewModel, vm => vm.Endpoint, v => v.Endpoint.Text);
+			yield return this.Bind(ViewModel, vm => vm.PbxFolder, v => v.PbxFolder.Content);
+			yield return this.Bind(ViewModel, vm => vm.AuthUser, v => v.AuthUser.Text);
+			yield return this.Bind(ViewModel, vm => vm.AuthPass, v => v.AuthPass.Password);
+
+			// commands
+			yield return this.BindCommand(ViewModel, vm => vm.CloseSettings, v => v.CancelButton);
+			yield return this.BindCommand(ViewModel, vm => vm.SaveSettings, v => v.SaveButton);
 		}
 
 

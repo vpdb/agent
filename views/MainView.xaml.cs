@@ -34,6 +34,12 @@ namespace VpdbAgent.Views
 			});
 		}
 
+		public void OnPlatformFilterChanged(object sender, object e)
+		{
+			ViewModel.OnPlatformFilterChanged(sender, e);
+		}
+
+
 		#region ViewModel
 		public MainViewModel ViewModel
 		{
@@ -48,7 +54,7 @@ namespace VpdbAgent.Views
 		{
 			get { return ViewModel; }
 			set { ViewModel = (MainViewModel)value; }
-		} 
+		}
 		#endregion
 
 		#region Pusher
@@ -89,7 +95,7 @@ namespace VpdbAgent.Views
 			Logger.Info("Subscribed to channel.");
 		}
 		#endregion
-		
+
 		/*
 		private async void getReleases()
 		{
