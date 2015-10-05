@@ -26,6 +26,10 @@ namespace VpdbAgent.Common
 
 		public void LoadImage(string path, System.Windows.Controls.Image imageView, Dispatcher dispatcher)
 		{
+			if (IsCached(path)) {
+				imageView.Source = new BitmapImage(new Uri(GetLocalPath(path)));
+				return;
+			}
 			imageView.Opacity = 0;
 			imageView.Source = null;
 			var webRequest = _vpdbClient.GetWebRequest(path);
@@ -41,13 +45,13 @@ namespace VpdbAgent.Common
 					stream?.BeginRead(buffer, 0, buffer.Length, (aResult) =>
 					{
 						stream.EndRead(aResult);
+						Cache(path, buffer);
 						var image = new BitmapImage();
 						image.BeginInit();
 						image.StreamSource = new MemoryStream(buffer);
 						image.EndInit();
 						image.Freeze();
 						dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(delegate {
-
 							var da = new DoubleAnimation {
 								From = 0,
 								To = 1,
@@ -61,6 +65,30 @@ namespace VpdbAgent.Common
 					_logger.Warn("Error loading image {0}: {1}", webRequest.RequestUri.AbsoluteUri, e.Message);
 				}
 			}, null);
+		}
+
+		private static bool IsCached(string path)
+		{
+			return File.Exists(GetLocalPath(path));
+		}
+
+		private static string GetLocalPath(string path)
+		{
+			return Path.Combine(
+				Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+				"VpdbAgent", 
+				"Cache", 
+				path.Replace("/", @"\").Substring(1)
+			);
+		}
+
+		private static void Cache(string path, byte[] bytes)
+		{
+			string localPath = GetLocalPath(path);
+			if (!Directory.Exists(Path.GetDirectoryName(localPath))) {
+				Directory.CreateDirectory(Path.GetDirectoryName(localPath));
+			}
+			File.WriteAllBytes(localPath, bytes);
 		}
 
 		public static ImageUtils GetInstance()
