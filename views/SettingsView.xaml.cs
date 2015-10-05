@@ -28,71 +28,46 @@ namespace VpdbAgent.Views
 		public SettingsView()
 		{
 			InitializeComponent();
+			UpdateAdvancedOptions();
 
-			updateAdvancedOptions();
-
+			// model
 			this.WhenAnyValue(x => x.ViewModel).BindTo(this, x => x.DataContext);
-//			this.Bind(this.ViewModel, x => x.ApiKey);
+
+			// fields
+			this.Bind(ViewModel, vm => vm.ApiKey, v => v.ApiKey.Text);
+			this.Bind(ViewModel, vm => vm.Endpoint, v => v.ApiEndpoint.Text);
+			this.Bind(ViewModel, vm => vm.PbxFolder, v => v.PbxFolder.Content);
+			this.Bind(ViewModel, vm => vm.AuthUser, v => v.AuthUser.Text);
+			this.Bind(ViewModel, vm => vm.AuthPass, v => v.AuthPass.Password);
+
+			// commands
+			this.BindCommand(ViewModel, vm => vm.CloseSettings, v => v.CancelButton);
+			this.BindCommand(ViewModel, vm => vm.SaveSettings, v => v.SaveButton);
 
 			//CancelButton.Visibility = NavigationService.CanGoBack ? Visibility.Visible : Visibility.Hidden;
 		}
 
-		
+
 		private void PinballXFolderButton_Click(object sender, RoutedEventArgs e)
 		{
 			var dialog = new FolderBrowserDialog {
 				ShowNewFolderButton = false
 			};
 
-			if (PinballXFolderLabel.Content.ToString().Length > 0) {
-				dialog.SelectedPath = PinballXFolderLabel.Content.ToString();
+			if (PbxFolder.Content.ToString().Length > 0) {
+				dialog.SelectedPath = PbxFolder.Content.ToString();
 			}
+
 			var result = dialog.ShowDialog();
-
-			if (result == DialogResult.OK) {
-				PinballXFolderLabel.Content = dialog.SelectedPath;
-
-			} else {
-				PinballXFolderLabel.Content = string.Empty;
-			}
-		}
-		
-		private void SubmitButton_Click(object sender, RoutedEventArgs e)
-		{
-			/*
-			settingsManager.ApiKey = ApiKey.Text;
-			settingsManager.AuthUser = AuthUser.Text;
-			settingsManager.AuthPass = AuthPass.Password;
-			settingsManager.Endpoint = ApiEndpoint.Text;
-			settingsManager.PbxFolder = PinballXFolderLabel.Content.ToString();
-
-			Dictionary<string, string> errors = settingsManager.Validate();
-			if (errors.Count == 0) {
-				settingsManager.Save();
-
-				if (NavigationService.CanGoBack) {
-					NavigationService.GoBack();
-				} else {
-					NavigationService.Navigate(new MainView());
-					NavigationService.RemoveBackEntry();
-				}
-				
-			} else {
-				// TODO properly display error
-			}*/
-		}
-
-		private void CancelButton_Click(object sender, RoutedEventArgs e)
-		{
-			//NavigationService.GoBack();
+			PbxFolder.Content = result == DialogResult.OK ? dialog.SelectedPath : string.Empty;
 		}
 
 		private void ShowAdvancedOptions_Checked(object sender, RoutedEventArgs e)
 		{
-			updateAdvancedOptions();
+			UpdateAdvancedOptions();
 		}
 
-		private void updateAdvancedOptions()
+		private void UpdateAdvancedOptions()
 		{
 			if (!(bool)ShowAdvancedOptions.IsChecked) {
 				ApiEndpointLabel.Visibility = Visibility.Hidden;

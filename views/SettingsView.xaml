@@ -16,9 +16,9 @@
 
             <!-- API KEY -->
             <Label Content="API Key" HorizontalAlignment="Left" />
-            <TextBox Text="{Binding ApiKey, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Stretch" Height="23" TextWrapping="Wrap" />
+            <TextBox x:Name="ApiKey" HorizontalAlignment="Stretch" Height="23" TextWrapping="Wrap" />
 
-            <!-- PINBALLX/HYPERPIN FOLDER -->
+            <!-- PINBALLX FOLDER -->
             <Label Content="PinballX Folder" HorizontalAlignment="Left" />
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -26,7 +26,7 @@
                     <ColumnDefinition Width="10"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <Label x:Name="PinballXFolderLabel" Grid.Column="0"/>
+                <Label x:Name="PbxFolder" Grid.Column="0"/>
                 <Button x:Name="PinballXFolderButton" Content="Choose Folder" Grid.Column="2" Click="PinballXFolderButton_Click"/>
             </Grid>
 
@@ -51,8 +51,8 @@
 
         </StackPanel>
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button x:Name="CancelButton" Content="Cancel" Width="75" Click="CancelButton_Click" Margin="0,0,10,0" />
-            <Button x:Name="SubmitButton" Content="Save" Width="75" Click="SubmitButton_Click"/>
+            <Button x:Name="CancelButton" Content="Cancel" Width="75" Margin="0,0,10,0" />
+            <Button x:Name="SaveButton" Content="Save" Width="75" />
         </StackPanel>
     </Grid>
 </UserControl>
