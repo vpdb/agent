@@ -64,8 +64,8 @@ namespace VpdbAgent.ViewModels
 		private void RegisterParts(IMutableDependencyResolver dependencyResolver)
 		{
 			dependencyResolver.RegisterConstant(this, typeof(IScreen));
-			dependencyResolver.Register(() => new MainView(), typeof(IViewFor<MainViewModel>));
-			dependencyResolver.Register(() => new SettingsView(), typeof(IViewFor<SettingsViewModel>));
+			dependencyResolver.RegisterLazySingleton(() => new MainView(), typeof(IViewFor<MainViewModel>));
+			dependencyResolver.RegisterLazySingleton(() => new SettingsView(), typeof(IViewFor<SettingsViewModel>));
 		}
 	}
 }
