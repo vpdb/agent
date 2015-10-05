@@ -35,7 +35,7 @@ namespace VpdbAgent.Views
 
 			// fields
 			this.Bind(ViewModel, vm => vm.ApiKey, v => v.ApiKey.Text);
-			this.Bind(ViewModel, vm => vm.Endpoint, v => v.ApiEndpoint.Text);
+			this.Bind(ViewModel, vm => vm.Endpoint, v => v.Endpoint.Text);
 			this.Bind(ViewModel, vm => vm.PbxFolder, v => v.PbxFolder.Content);
 			this.Bind(ViewModel, vm => vm.AuthUser, v => v.AuthUser.Text);
 			this.Bind(ViewModel, vm => vm.AuthPass, v => v.AuthPass.Password);
@@ -71,12 +71,12 @@ namespace VpdbAgent.Views
 		{
 			if (!(bool)ShowAdvancedOptions.IsChecked) {
 				ApiEndpointLabel.Visibility = Visibility.Hidden;
-				ApiEndpoint.Visibility = Visibility.Hidden;
+				Endpoint.Visibility = Visibility.Hidden;
 				BasicAuthLabel.Visibility = Visibility.Hidden;
 				BasicAuth.Visibility = Visibility.Hidden;
 			} else {
 				ApiEndpointLabel.Visibility = Visibility.Visible;
-				ApiEndpoint.Visibility = Visibility.Visible;
+				Endpoint.Visibility = Visibility.Visible;
 				BasicAuthLabel.Visibility = Visibility.Visible;
 				BasicAuth.Visibility = Visibility.Visible;
 			}

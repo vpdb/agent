@@ -26,7 +26,7 @@ namespace VpdbAgent.ViewModels
 
 		private string _apiKey;
 		private string _pbxFolder;
-		private string _apiEndpoint;
+		private string _endpoint;
 		private string _authUser;
 		private string _authPass;
 
@@ -34,12 +34,11 @@ namespace VpdbAgent.ViewModels
 		{
 			HostScreen = screen;
 
-			_apiKey = _settingsManager.ApiKey;
-			_authUser = _settingsManager.AuthUser;
-			_authPass = _settingsManager.AuthPass;
-			_apiEndpoint = _settingsManager.Endpoint;
-			_pbxFolder = _settingsManager.PbxFolder;
-
+			ApiKey = _settingsManager.ApiKey;
+			AuthUser = _settingsManager.AuthUser;
+			AuthPass = _settingsManager.AuthPass;
+			Endpoint = _settingsManager.Endpoint;
+			PbxFolder = _settingsManager.PbxFolder;
 
 			SaveSettings = ReactiveCommand.Create();
 			SaveSettings.Subscribe(_ => Save());
@@ -53,7 +52,7 @@ namespace VpdbAgent.ViewModels
 			_settingsManager.ApiKey = _apiKey;
 			_settingsManager.AuthUser = _authUser;
 			_settingsManager.AuthPass = _authPass;
-			_settingsManager.Endpoint = _apiEndpoint;
+			_settingsManager.Endpoint = _endpoint;
 			_settingsManager.PbxFolder = _pbxFolder;
 
 			var errors = _settingsManager.Validate();
@@ -92,8 +91,8 @@ namespace VpdbAgent.ViewModels
 		}
 		public string Endpoint
 		{
-			get { return this._apiEndpoint; }
-			set { this.RaiseAndSetIfChanged(ref this._apiEndpoint, value); }
+			get { return this._endpoint; }
+			set { this.RaiseAndSetIfChanged(ref this._endpoint, value); }
 		}
 		public string PbxFolder
 		{

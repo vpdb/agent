@@ -34,8 +34,8 @@
             <CheckBox x:Name="ShowAdvancedOptions" Content="Show Advanced Options" Margin="0,20,0,0" Checked="ShowAdvancedOptions_Checked" Unchecked="ShowAdvancedOptions_Checked"/>
 
             <!-- API Endpoint -->
-            <Label x:Name="ApiEndpointLabel" Content="VPDB API Endpoiunt" HorizontalAlignment="Left" Margin="0,20,0,0"/>
-            <TextBox x:Name="ApiEndpoint" HorizontalAlignment="Stretch" Height="23" TextWrapping="Wrap" />
+            <Label x:Name="ApiEndpointLabel" Content="VPDB API Endpoint" HorizontalAlignment="Left" Margin="0,20,0,0"/>
+            <TextBox x:Name="Endpoint" HorizontalAlignment="Stretch" Height="23" TextWrapping="Wrap" />
 
             <!-- HTTP Basic Auth -->
             <Label x:Name="BasicAuthLabel" Content="HTTP Basic Auth" Margin="0,10,0,0" HorizontalAlignment="Left" />
