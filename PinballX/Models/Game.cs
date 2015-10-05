@@ -10,6 +10,7 @@ namespace VpdbAgent.PinballX.Models
 	[XmlRoot("game")]
 	public class Game
 	{
+	
 		// "official hyperpin" fields
 		// ----------------------------------
 		[XmlAttribute("name")]
@@ -27,9 +28,9 @@ namespace VpdbAgent.PinballX.Models
 		[XmlElement("type")]
 		public String Type { get; set; }
 
+
 		// pinballx fields
 		// ----------------------------------
-
 		[XmlElement("hidedmd")]
 		public String HideDmd { get; set; }
 
@@ -41,5 +42,12 @@ namespace VpdbAgent.PinballX.Models
 
 		[XmlElement("rating")]
 		public Double Rating { get; set; }
+
+		[XmlElement("AlternateExe")]
+		public String AlternateExe { get; set; }
+
+		[XmlElement("SendKeysOnStart")]
+		public String SendKeysOnStart { get; set; }
+
 	}
 }

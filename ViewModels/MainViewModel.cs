@@ -6,6 +6,9 @@ using NLog;
 using ReactiveUI;
 using VpdbAgent.Models;
 using System.Reactive.Disposables;
+using Splat;
+using System.Reactive.Linq;
+using System.Reactive;
 
 namespace VpdbAgent.ViewModels
 {
@@ -17,9 +20,12 @@ namespace VpdbAgent.ViewModels
 		public IScreen HostScreen { get; protected set; }
 		public string UrlPathSegment => "main";
 
+		// dependencies
+		private IGameManager _gameManager = Locator.Current.GetService<IGameManager>();
+
 		// data
 		public IReactiveDerivedList<Platform> Platforms { get; private set; }
-		public IReactiveDerivedList<Game> Games { get; private set; }
+		public ReactiveList<Game> Games { get; private set; } = new ReactiveList<Game>();
 
 		// commands
 		public ReactiveCommand<object> FilterPlatforms { get; protected set; } = ReactiveCommand.Create();
@@ -31,29 +37,32 @@ namespace VpdbAgent.ViewModels
 		{
 			HostScreen = screen;
 
-			var gameManager = GameManager.GetInstance();
-			gameManager.Initialize();
+			_gameManager.Initialize();
 
 			// create platforms
-			Platforms = gameManager.Platforms.CreateDerivedCollection(
+			Platforms = _gameManager.Platforms.CreateDerivedCollection(
 				platform => platform,
 				platform => platform.IsEnabled,
 				(x, y) => string.Compare(x.Name, y.Name, StringComparison.Ordinal)
 			);
 
+			// games
+			Observable.Merge(_gameManager.Games.Changed, _platformFilter.Changed).Subscribe(_ => {
+				using (Games.SuppressChangeNotifications()) {
+					Games.Clear();
+					Games.AddRange(_gameManager.Games
+						.Where(game => game.Platform.IsEnabled && _platformFilter.Contains(game.Platform.Name))
+					);
+					Games.Sort((x, y) => string.Compare(x.Id, y.Id, StringComparison.OrdinalIgnoreCase));
+				}
+			});
+		
 			// populate filter
-			_platformFilter.AddRange(Platforms.Select(p => p.Name));
+			using (_platformFilter.SuppressChangeNotifications()) {
+				_platformFilter.AddRange(Platforms.Select(p => p.Name));
+			};
 
-			// create games
-			Games = gameManager.Games.CreateDerivedCollection(
-				game => game,
-				game => game.Platform.IsEnabled && _platformFilter.Contains(game.Platform.Name),
-				(x, y) => string.Compare(x.Id, y.Id, StringComparison.Ordinal)
-			);
-
-			FilterPlatforms.Subscribe(obj => OnPlatformFilterChanged(obj, null));
-
-			Logger.Info("We got {0} platforms and {1} games.", Platforms.Count, Games.Count);
+			Logger.Info("We got {0} platforms and {1} games.", Platforms.Count, _gameManager.Games.Count);
 		}
 
 		public void OnPlatformFilterChanged(object sender, object e)

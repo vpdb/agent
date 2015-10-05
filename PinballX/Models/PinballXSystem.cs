@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Xml.Serialization;
 using VpdbAgent.Models;
+using Splat;
 
 namespace VpdbAgent.PinballX.Models
 {
@@ -68,7 +69,7 @@ namespace VpdbAgent.PinballX.Models
 			TablePath = data["TablePath"];
 			Executable = data["Executable"];
 
-			var settingsManager = SettingsManager.GetInstance();
+			var settingsManager = Locator.Current.GetService<ISettingsManager>();
 			DatabasePath = settingsManager.PbxFolder + @"\Databases\" + Name;
 			MediaPath = settingsManager.PbxFolder + @"\Media\" + Name;
 		}

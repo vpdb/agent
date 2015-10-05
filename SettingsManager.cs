@@ -8,9 +8,9 @@ using System.Threading.Tasks;
 
 namespace VpdbAgent
 {
-	public class SettingsManager
+	public class SettingsManager : ISettingsManager
 	{
-		private static SettingsManager INSTANCE;
+
 		private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
 		public string ApiKey { get; set; }
@@ -19,7 +19,7 @@ namespace VpdbAgent
 		public string Endpoint { get; set; }
 		public string PbxFolder { get; set; }
 
-		private SettingsManager()
+		public SettingsManager()
 		{
 			ApiKey = (string)Properties.Settings.Default["ApiKey"];
 			AuthUser = (string)Properties.Settings.Default["AuthUser"];
@@ -53,13 +53,19 @@ namespace VpdbAgent
 			Properties.Settings.Default.Save();
 			return this;
 		}
+		
+	}
 
-		public static SettingsManager GetInstance()
-		{
-			if (INSTANCE == null) {
-				INSTANCE = new SettingsManager();
-			}
-			return INSTANCE;
-		}
+	public interface ISettingsManager
+	{
+		string ApiKey { get; set; }
+		string AuthUser { get; set; }
+		string AuthPass { get; set; }
+		string Endpoint { get; set; }
+		string PbxFolder { get; set; }
+
+		bool IsInitialized();
+		Dictionary<string, string> Validate();
+		SettingsManager Save();
 	}
 }

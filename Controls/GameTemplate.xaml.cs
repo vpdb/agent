@@ -17,6 +17,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 using NLog;
+using Splat;
 using VpdbAgent.Common;
 using VpdbAgent.Vpdb;
 using VpdbAgent.Vpdb.Models;
@@ -32,8 +33,8 @@ namespace VpdbAgent.Controls
 		public static readonly DependencyProperty GameProperty = DependencyProperty.Register("Game", typeof(Game), typeof(GameTemplate), new PropertyMetadata(default(Game), GamePropertyChanged));
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		private readonly GameManager _gameManager = GameManager.GetInstance();
-		private readonly VpdbClient _vpdbClient = VpdbClient.GetInstance();
+		private readonly IGameManager _gameManager = Locator.Current.GetService<IGameManager>();
+        private readonly IVpdbClient _vpdbClient = Locator.Current.GetService<IVpdbClient>();
 		private readonly ImageUtils _imageUtils = ImageUtils.GetInstance();
 
 		static void GamePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)

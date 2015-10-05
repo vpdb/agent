@@ -9,19 +9,20 @@ using System.Reactive.Linq;
 
 namespace VpdbAgent.PinballX
 {
-	public class FileSystemWatcher
+	/// <summary>
+	///  To watch:
+	///   - pinballx.ini
+	///   - database xmls
+	///   - database folders
+	///   - table files
+	/// </summary>
+	public class FileSystemWatcher : IFileSystemWatcher
 	{
-		private static FileSystemWatcher _instance;
-		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+		// dependencies
+		private readonly Logger _logger;
 
-		// To watch:
-		//   - pinballx.ini
-		//   - database xmls
-		//   - database folders
-		//   - table files
-
-		private FileSystemWatcher()
-		{
+		public FileSystemWatcher(Logger logger) {
+			_logger = logger;
 		}
 
 		/// <summary>
@@ -32,7 +33,7 @@ namespace VpdbAgent.PinballX
 		/// <returns></returns>
 		public IObservable<string> FileWatcher(string filePath)
 		{
-			Logger.Info("Watching {0}", filePath);
+			_logger.Info("Watching {0}", filePath);
 			return (new FilesystemWatchCache()).Register(Path.GetDirectoryName(filePath), Path.GetFileName(filePath));
 		}
 
@@ -52,18 +53,18 @@ namespace VpdbAgent.PinballX
 		{
 
 			IObservable<string> result = null;
-			foreach (var sysPath in systems.Select(system => dbPath + system.Name + @"\").Where(Directory.Exists))
-			{
-				Logger.Info("Watching {0}", sysPath);
+			foreach (var sysPath in systems.Select(system => dbPath + system.Name + @"\").Where(Directory.Exists)) {
+				_logger.Info("Watching {0}", sysPath);
 				var watcher = (new FilesystemWatchCache()).Register(sysPath, "*.xml");
 				result = result == null ? watcher : result.Merge(watcher);
 			}
 			return result;
 		}
+	}
 
-		public static FileSystemWatcher GetInstance()
-		{
-			return _instance ?? (_instance = new FileSystemWatcher());
-		}
+	public interface IFileSystemWatcher
+	{
+		IObservable<string> FileWatcher(string filePath);
+		IObservable<string> DatabaseWatcher(string dbPath, IList<PinballXSystem> systems);
 	}
 }

@@ -6,7 +6,9 @@ using System.Text;
 using System.Threading.Tasks;
 using ReactiveUI;
 using Splat;
+using VpdbAgent.PinballX;
 using VpdbAgent.Views;
+using VpdbAgent.Vpdb;
 
 namespace VpdbAgent.ViewModels
 {
@@ -49,21 +51,44 @@ namespace VpdbAgent.ViewModels
 			// This is a good place to set up any other app 
 			// startup tasks, like setting the logging level
 			LogHost.Default.Level = LogLevel.Debug;
-			var settingsManager = SettingsManager.GetInstance();
+			var settingsManager = Locator.Current.GetService<ISettingsManager>();
 
 			// Navigate to the opening page of the application
 			if (settingsManager.IsInitialized()) {
 				Router.Navigate.Execute(new MainViewModel(this));
 			} else {
-				Router.Navigate.Execute(new SettingsViewModel(this));
+				Router.Navigate.Execute(new SettingsViewModel(this, Locator.Current.GetService<ISettingsManager>()));
 			}
 
-			GotoSettings = ReactiveCommand.CreateAsyncObservable(_ => Router.Navigate.ExecuteAsync(new SettingsViewModel(this)));
+			GotoSettings = ReactiveCommand.CreateAsyncObservable(_ => Router.Navigate.ExecuteAsync(new SettingsViewModel(this, Locator.Current.GetService<ISettingsManager>())));
 		}
 
 		private void RegisterParts(IMutableDependencyResolver dependencyResolver)
 		{
 			dependencyResolver.RegisterConstant(this, typeof(IScreen));
+
+			dependencyResolver.RegisterLazySingleton(() => NLog.LogManager.GetCurrentClassLogger(), typeof(NLog.Logger));
+			dependencyResolver.RegisterLazySingleton(() => new SettingsManager(), typeof(ISettingsManager));
+			dependencyResolver.RegisterLazySingleton(() => new FileSystemWatcher(
+				Locator.Current.GetService<NLog.Logger>()
+			), typeof(IFileSystemWatcher));
+
+			dependencyResolver.RegisterLazySingleton(() => new MenuManager(
+				Locator.Current.GetService<IFileSystemWatcher>(),
+				Locator.Current.GetService<ISettingsManager>(),
+				Locator.Current.GetService<NLog.Logger>()
+			), typeof(IMenuManager));
+
+			dependencyResolver.RegisterLazySingleton(() => new GameManager(
+				Locator.Current.GetService<IMenuManager>(),
+				Locator.Current.GetService<NLog.Logger>()
+			), typeof(IGameManager));
+
+			dependencyResolver.RegisterLazySingleton(() => new VpdbClient(
+				Locator.Current.GetService<ISettingsManager>(),
+				Locator.Current.GetService<NLog.Logger>()
+			), typeof(IVpdbClient));
+
 			dependencyResolver.RegisterLazySingleton(() => new MainView(), typeof(IViewFor<MainViewModel>));
 			dependencyResolver.RegisterLazySingleton(() => new SettingsView(), typeof(IViewFor<SettingsViewModel>));
 		}

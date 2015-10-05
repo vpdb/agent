@@ -18,7 +18,7 @@ namespace VpdbAgent.ViewModels
 		public string UrlPathSegment => "settings";
 
 		// deps
-		private readonly SettingsManager _settingsManager = SettingsManager.GetInstance();
+		private readonly ISettingsManager _settingsManager;
 
 		// commands
 		public ReactiveCommand<object> SaveSettings { get; protected set; }
@@ -30,9 +30,10 @@ namespace VpdbAgent.ViewModels
 		private string _authUser;
 		private string _authPass;
 
-		public SettingsViewModel(IScreen screen)
+		public SettingsViewModel(IScreen screen, ISettingsManager settingsManager)
 		{
 			HostScreen = screen;
+			_settingsManager = settingsManager;
 
 			ApiKey = _settingsManager.ApiKey;
 			AuthUser = _settingsManager.AuthUser;

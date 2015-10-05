@@ -9,6 +9,7 @@ using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using NLog;
+using Splat;
 using VpdbAgent.Vpdb;
 
 namespace VpdbAgent.Common
@@ -16,9 +17,10 @@ namespace VpdbAgent.Common
 	public class ImageUtils
 	{
 		private static ImageUtils _instance;
-		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		private readonly VpdbClient _vpdbClient = VpdbClient.GetInstance();
+		// dependencies
+		private readonly IVpdbClient _vpdbClient = Locator.Current.GetService<IVpdbClient>();
+		private readonly Logger _logger = Locator.Current.GetService<Logger>();
 
 		private ImageUtils() { }
 
@@ -56,7 +58,7 @@ namespace VpdbAgent.Common
 						}));
 					}, null);
 				} catch (Exception e) {
-					Logger.Warn("Error loading image {0}: {1}", webRequest.RequestUri.AbsoluteUri, e.Message);
+					_logger.Warn("Error loading image {0}: {1}", webRequest.RequestUri.AbsoluteUri, e.Message);
 				}
 			}, null);
 		}

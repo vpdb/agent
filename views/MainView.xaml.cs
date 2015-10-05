@@ -11,6 +11,8 @@ using System.Windows;
 using System.Collections.Generic;
 using ReactiveUI;
 using VpdbAgent.ViewModels;
+using Splat;
+using System.Reactive.Linq;
 
 namespace VpdbAgent.Views
 {
@@ -63,7 +65,7 @@ namespace VpdbAgent.Views
 		{
 			// pusher test
 			Logger.Info("Setting up pusher...");
-			var client = VpdbClient.GetInstance();
+			var client = Locator.Current.GetService<IVpdbClient>();
 
 			client.Pusher.ConnectionStateChanged += PusherConnectionStateChanged;
 			client.Pusher.Error += PusherError;

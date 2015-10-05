@@ -7,23 +7,26 @@ using System.Net.Http;
 using System.Text;
 using VpdbAgent.Vpdb.Network;
 using PusherClient;
+using Splat;
 
 namespace VpdbAgent.Vpdb
 {
-	public class VpdbClient
+	public class VpdbClient : IVpdbClient
 	{
-		private readonly SettingsManager _settingsManager = SettingsManager.GetInstance();
-		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+		// dependencies
+		private readonly ISettingsManager _settingsManager;
+		private readonly Logger _logger;
 
-		public readonly VpdbApi Api;
-		public readonly Pusher Pusher;
-
-		private static VpdbClient _instance;
+		public VpdbApi Api { get; }
+		public Pusher Pusher { get; }
 
 		private readonly byte[] _authHeader;
 
-		private VpdbClient()
+		public VpdbClient(ISettingsManager settingsManager, Logger logger)
 		{
+			_settingsManager = settingsManager;
+			_logger = logger;
+
 			if (!_settingsManager.IsInitialized()) {
 				return;
 			}
@@ -55,14 +58,17 @@ namespace VpdbAgent.Vpdb
 			if (_settingsManager.IsInitialized()) {
 				request.Headers.Add("Authorization", "Basic " + Convert.ToBase64String(_authHeader));
 			} else {
-				Logger.Warn("You probably shouldn't do requests if settings are not initialized.");
+				_logger.Warn("You probably shouldn't do requests if settings are not initialized.");
 			}
 			return request;
 		}
 
-		public static VpdbClient GetInstance()
-		{
-			return _instance ?? (_instance = new VpdbClient());
-		}
+	}
+
+	public interface IVpdbClient
+	{
+		VpdbApi Api { get; }
+		Pusher Pusher { get; }
+		WebRequest GetWebRequest(string path);
 	}
 }
