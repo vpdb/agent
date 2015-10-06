@@ -60,7 +60,7 @@ namespace VpdbAgent.Vpdb
 			{
 				_user = user;
 				_logger.Info("Logged as <{0}>", user.Email);
-				if (user.Permissions.Messages.Contains("receive")) {
+				if (user.Permissions.Messages?.Contains("receive") == true) {
 					SetupPusher(user);
 				}
 			}, error =>

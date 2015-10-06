@@ -38,7 +38,7 @@ namespace VpdbAgent.Vpdb.Network
 			Stream dataStream = null;
 			StreamReader reader = null;
 			WebResponse response = null;
-			RegisterResponse result = null;
+			string result = null;
 			try {
 
 				var body = JsonConvert.SerializeObject(new RegisterRequest(channelName, socketId));
@@ -55,8 +55,7 @@ namespace VpdbAgent.Vpdb.Network
 				dataStream = response.GetResponseStream();
 				reader = new StreamReader(dataStream);
 
-				result = JsonConvert.DeserializeObject<RegisterResponse>(reader.ReadToEnd());
-				_logger.Debug("Received pusher auth token: {0}", result.Auth);
+				result = reader.ReadToEnd();
 
 			} catch (Exception e) {
 				_logger.Error(e, "Error retrieving pusher auth token.");
@@ -67,7 +66,7 @@ namespace VpdbAgent.Vpdb.Network
 				response?.Close();
 			}
 
-			return result?.Auth;
+			return result;
 		}
 	}
 }
