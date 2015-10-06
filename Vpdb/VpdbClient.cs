@@ -94,10 +94,10 @@ namespace VpdbAgent.Vpdb
 		}
 
 		#region Pusher
-		private void SetupPusher(UserFull user)
+		private void SetupPusher(User user)
 		{
 			// pusher test
-			_logger.Info("Setting up pusher...");
+			_logger.Info("Setting up Pusher...");
 
 			Pusher.ConnectionStateChanged += PusherConnectionStateChanged;
 			Pusher.Error += PusherError;
@@ -106,7 +106,7 @@ namespace VpdbAgent.Vpdb
 			testChannel.Subscribed += PusherSubscribed;
 
 			// inline binding
-			testChannel.Bind("test-message", (dynamic data) =>
+			testChannel.Bind("star", (dynamic data) =>
 			{
 				_logger.Info("[{0}]: {1}", data.name, data.message);
 			});
