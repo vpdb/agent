@@ -4,6 +4,7 @@ using Refit;
 using System;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using VpdbAgent.Vpdb.Network;
 using PusherClient;
@@ -35,8 +36,7 @@ namespace VpdbAgent.Vpdb
 
 		public IVpdbClient Initialize()
 		{
-			if (!_settingsManager.IsInitialized())
-			{
+			if (!_settingsManager.IsInitialized()) {
 				return this;
 			}
 
@@ -46,20 +46,23 @@ namespace VpdbAgent.Vpdb
 			var client = new HttpClient(new AuthenticatedHttpClientHandler(
 				_settingsManager.ApiKey,
 				_settingsManager.AuthUser,
-				_settingsManager.AuthPass)) {BaseAddress = endPoint};
+				_settingsManager.AuthPass)) { BaseAddress = endPoint };
 
-			var settings = new RefitSettings
-			{
-				JsonSerializerSettings = new JsonSerializerSettings
-				{
+			var settings = new RefitSettings {
+				JsonSerializerSettings = new JsonSerializerSettings {
 					ContractResolver = new SnakeCasePropertyNamesContractResolver()
 				}
 			};
 			Api = RestService.For<IVpdbApi>(client, settings);
 
-			Api.GetProfile().Subscribe(user => {
+			// retrieve user profile
+			Api.GetProfile().Subscribe(user =>
+			{
 				_user = user;
 				_logger.Info("Logged as <{0}>", user.Email);
+				if (user.Permissions.Messages.Contains("receive")) {
+					SetupPusher(user);
+				}
 			}, error =>
 			{
 				_logger.Info("Error logging in: {0}", error.Message);
@@ -67,8 +70,8 @@ namespace VpdbAgent.Vpdb
 
 
 			Pusher = new Pusher("02ee40b62e1fb0696e02", new PusherOptions() {
-				Encrypted = true
-				//Authorizer = new HttpAuthorizer("http://localhost:8888/auth/")
+				Encrypted = true,
+				Authorizer = new PusherAuthorizer(this, _logger)
 			});
 			return this;
 		}
@@ -78,7 +81,12 @@ namespace VpdbAgent.Vpdb
 			var endPoint = _settingsManager.Endpoint;
 			var request = WebRequest.Create(endPoint + path);
 			if (_settingsManager.IsInitialized()) {
-				request.Headers.Add("Authorization", "Basic " + Convert.ToBase64String(_authHeader));
+				if (!string.IsNullOrEmpty(_settingsManager.AuthUser)) {
+					request.Headers.Add("Authorization", "Basic " + Convert.ToBase64String(_authHeader));
+					request.Headers.Add("X-Authorization", "Bearer " + _settingsManager.ApiKey.Trim());
+				} else {
+					request.Headers.Add("Authorization", "Bearer " + _settingsManager.ApiKey.Trim());
+				}
 			} else {
 				_logger.Warn("You probably shouldn't do requests if settings are not initialized.");
 			}
@@ -86,7 +94,7 @@ namespace VpdbAgent.Vpdb
 		}
 
 		#region Pusher
-		private void SetupPusher(string userId)
+		private void SetupPusher(UserFull user)
 		{
 			// pusher test
 			_logger.Info("Setting up pusher...");
@@ -94,7 +102,7 @@ namespace VpdbAgent.Vpdb
 			Pusher.ConnectionStateChanged += PusherConnectionStateChanged;
 			Pusher.Error += PusherError;
 
-			var testChannel = Pusher.Subscribe("test-channel");
+			var testChannel = Pusher.Subscribe("private-user-" + user.Id);
 			testChannel.Subscribed += PusherSubscribed;
 
 			// inline binding
@@ -113,7 +121,7 @@ namespace VpdbAgent.Vpdb
 
 		private void PusherError(object sender, PusherException error)
 		{
-			_logger.Error(error, "Pusher error!");
+			_logger.Error(error, "Pusher error: {0}", error.Message);
 		}
 
 		private void PusherSubscribed(object sender)

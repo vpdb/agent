@@ -38,8 +38,7 @@ namespace VpdbAgent.Vpdb.Network
 
 		protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
 		{
-			if (!string.IsNullOrEmpty(_authUser))
-			{
+			if (!string.IsNullOrEmpty(_authUser)) {
 				var byteArray = Encoding.ASCII.GetBytes(_authUser + ":" + _authPass);
 				request.Headers.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
 				request.Headers.Add("X-Authorization", "Bearer " + _apiKey.Trim());
@@ -47,7 +46,7 @@ namespace VpdbAgent.Vpdb.Network
 				request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey.Trim());
 			}
 			Logger.Debug("=> {0} {1}", request.Method, request.RequestUri);
-			
+
 			return await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
 		}
 	}
