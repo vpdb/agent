@@ -12,42 +12,41 @@ namespace VpdbAgent.Vpdb.Network
 {
 	public class AuthenticatedHttpClientHandler : HttpClientHandler
 	{
-		private static readonly Logger logger = LogManager.GetCurrentClassLogger();
+		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		private readonly string apiKey;
-		private readonly string authUser;
-		private readonly string authPass;
+		private readonly string _apiKey;
+		private readonly string _authUser;
+		private readonly string _authPass;
 
 		public AuthenticatedHttpClientHandler(string apiKey)
 		{
-			this.apiKey = apiKey;
+			this._apiKey = apiKey;
 		}
 
 		public AuthenticatedHttpClientHandler(string authUser, string authPass)
 		{
-			this.authUser = authUser;
-			this.authPass = authPass;
+			this._authUser = authUser;
+			this._authPass = authPass;
 		}
 
 		public AuthenticatedHttpClientHandler(string apiKey, string authUser, string authPass)
 		{
-			this.apiKey = apiKey;
-			this.authUser = authUser;
-			this.authPass = authPass;
+			this._apiKey = apiKey;
+			this._authUser = authUser;
+			this._authPass = authPass;
 		}
 
 		protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
 		{
-
-			if (authUser != null && authUser.Length > 0)
+			if (!string.IsNullOrEmpty(_authUser))
 			{
-				var byteArray = Encoding.ASCII.GetBytes(authUser + ":" + authPass);
+				var byteArray = Encoding.ASCII.GetBytes(_authUser + ":" + _authPass);
 				request.Headers.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
-				request.Headers.Add("X-Authorization", apiKey);
+				request.Headers.Add("X-Authorization", "Bearer " + _apiKey.Trim());
 			} else {
-				request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+				request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey.Trim());
 			}
-			logger.Debug("=> {0} {1}", request.Method, request.RequestUri);
+			Logger.Debug("=> {0} {1}", request.Method, request.RequestUri);
 			
 			return await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
 		}

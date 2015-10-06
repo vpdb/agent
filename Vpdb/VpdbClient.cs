@@ -9,6 +9,7 @@ using VpdbAgent.Vpdb.Network;
 using PusherClient;
 using ReactiveUI;
 using Splat;
+using VpdbAgent.Vpdb.Models;
 
 namespace VpdbAgent.Vpdb
 {
@@ -18,10 +19,11 @@ namespace VpdbAgent.Vpdb
 		private readonly ISettingsManager _settingsManager;
 		private readonly Logger _logger;
 
-		public VpdbApi Api { get; private set; }
+		public IVpdbApi Api { get; private set; }
 		public Pusher Pusher { get; private set; }
 
 		private byte[] _authHeader;
+		private UserFull _user;
 
 		public ReactiveList<string> StarredReleaseIds { get; } = new ReactiveList<string>();
 
@@ -33,7 +35,8 @@ namespace VpdbAgent.Vpdb
 
 		public IVpdbClient Initialize()
 		{
-			if (!_settingsManager.IsInitialized()) {
+			if (!_settingsManager.IsInitialized())
+			{
 				return this;
 			}
 
@@ -43,14 +46,25 @@ namespace VpdbAgent.Vpdb
 			var client = new HttpClient(new AuthenticatedHttpClientHandler(
 				_settingsManager.ApiKey,
 				_settingsManager.AuthUser,
-				_settingsManager.AuthPass)) { BaseAddress = endPoint };
+				_settingsManager.AuthPass)) {BaseAddress = endPoint};
 
-			var settings = new RefitSettings {
-				JsonSerializerSettings = new JsonSerializerSettings {
+			var settings = new RefitSettings
+			{
+				JsonSerializerSettings = new JsonSerializerSettings
+				{
 					ContractResolver = new SnakeCasePropertyNamesContractResolver()
 				}
 			};
-			Api = RestService.For<VpdbApi>(client, settings);
+			Api = RestService.For<IVpdbApi>(client, settings);
+
+			Api.GetProfile().Subscribe(user => {
+				_user = user;
+				_logger.Info("Logged as <{0}>", user.Email);
+			}, error =>
+			{
+				_logger.Info("Error logging in: {0}", error.Message);
+			});
+
 
 			Pusher = new Pusher("02ee40b62e1fb0696e02", new PusherOptions() {
 				Encrypted = true
@@ -112,7 +126,7 @@ namespace VpdbAgent.Vpdb
 
 	public interface IVpdbClient
 	{
-		VpdbApi Api { get; }
+		IVpdbApi Api { get; }
 		Pusher Pusher { get; }
 
 		IVpdbClient Initialize();

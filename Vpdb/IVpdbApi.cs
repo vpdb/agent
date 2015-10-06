@@ -1,14 +1,15 @@
-﻿using Refit;
+﻿using System;
+using Refit;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using VpdbAgent.Vpdb.Models;
 
 namespace VpdbAgent.Vpdb
 {
-	public interface VpdbApi
+	public interface IVpdbApi
 	{
 		[Get("/api/v1/user")]
-		Task<UserFull> GetProfile();
+		IObservable<UserFull> GetProfile();
 
 		[Get("/api/v1/releases?thumb_format=square")]
 		Task<List<Release>> GetReleases();
