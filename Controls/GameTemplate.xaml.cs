@@ -34,7 +34,7 @@ namespace VpdbAgent.Controls
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		private readonly IGameManager _gameManager = Locator.Current.GetService<IGameManager>();
-        private readonly IVpdbClient _vpdbClient = Locator.Current.GetService<IVpdbClient>();
+		private readonly IVpdbClient _vpdbClient = Locator.Current.GetService<IVpdbClient>();
 		private readonly ImageUtils _imageUtils = ImageUtils.GetInstance();
 
 		static void GamePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)

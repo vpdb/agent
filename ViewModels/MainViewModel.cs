@@ -9,6 +9,7 @@ using System.Reactive.Disposables;
 using Splat;
 using System.Reactive.Linq;
 using System.Reactive;
+using VpdbAgent.Vpdb;
 
 namespace VpdbAgent.ViewModels
 {
@@ -21,7 +22,8 @@ namespace VpdbAgent.ViewModels
 		public string UrlPathSegment => "main";
 
 		// dependencies
-		private IGameManager _gameManager = Locator.Current.GetService<IGameManager>();
+		private readonly IGameManager _gameManager;
+		private readonly IVpdbClient _vpdbClient;
 
 		// data
 		public IReactiveDerivedList<Platform> Platforms { get; private set; }
@@ -33,11 +35,13 @@ namespace VpdbAgent.ViewModels
 		// privates
 		private readonly ReactiveList<string> _platformFilter = new ReactiveList<string>();
 
-		public MainViewModel(IScreen screen)
+		public MainViewModel(IScreen screen, IGameManager gameManager, IVpdbClient vpdbClient)
 		{
 			HostScreen = screen;
 
-			_gameManager.Initialize();
+			// do the initialization here
+			_gameManager = gameManager.Initialize();
+			_vpdbClient = vpdbClient.Initialize();
 
 			// create platforms
 			Platforms = _gameManager.Platforms.CreateDerivedCollection(

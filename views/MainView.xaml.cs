@@ -41,7 +41,6 @@ namespace VpdbAgent.Views
 			ViewModel.OnPlatformFilterChanged(sender, e);
 		}
 
-
 		#region ViewModel
 		public MainViewModel ViewModel
 		{
@@ -56,45 +55,6 @@ namespace VpdbAgent.Views
 		{
 			get { return ViewModel; }
 			set { ViewModel = (MainViewModel)value; }
-		}
-		#endregion
-
-		#region Pusher
-
-		private void TestPusher()
-		{
-			// pusher test
-			Logger.Info("Setting up pusher...");
-			var client = Locator.Current.GetService<IVpdbClient>();
-
-			client.Pusher.ConnectionStateChanged += PusherConnectionStateChanged;
-			client.Pusher.Error += PusherError;
-
-			var testChannel = client.Pusher.Subscribe("test-channel");
-			testChannel.Subscribed += PusherSubscribed;
-
-			// inline binding
-			testChannel.Bind("test-message", (dynamic data) =>
-			{
-				Logger.Info("[{0}]: {1}", data.name, data.message);
-			});
-
-			client.Pusher.Connect();
-		}
-
-		private static void PusherConnectionStateChanged(object sender, ConnectionState state)
-		{
-			Logger.Info("Pusher connection {0}", state);
-		}
-
-		private static void PusherError(object sender, PusherException error)
-		{
-			Logger.Error(error, "Pusher error!");
-		}
-
-		private static void PusherSubscribed(object sender)
-		{
-			Logger.Info("Subscribed to channel.");
 		}
 		#endregion
 

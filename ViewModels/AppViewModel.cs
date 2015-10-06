@@ -55,9 +55,16 @@ namespace VpdbAgent.ViewModels
 
 			// Navigate to the opening page of the application
 			if (settingsManager.IsInitialized()) {
-				Router.Navigate.Execute(new MainViewModel(this));
+				Router.Navigate.Execute(new MainViewModel(
+					this,
+					Locator.Current.GetService<IGameManager>(),
+					Locator.Current.GetService<IVpdbClient>())
+				);
 			} else {
-				Router.Navigate.Execute(new SettingsViewModel(this, Locator.Current.GetService<ISettingsManager>()));
+				Router.Navigate.Execute(new SettingsViewModel(
+					this, 
+					Locator.Current.GetService<ISettingsManager>())
+				);
 			}
 
 			GotoSettings = ReactiveCommand.CreateAsyncObservable(_ => Router.Navigate.ExecuteAsync(new SettingsViewModel(this, Locator.Current.GetService<ISettingsManager>())));

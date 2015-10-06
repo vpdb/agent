@@ -7,6 +7,7 @@ using System.Net.Http;
 using System.Text;
 using VpdbAgent.Vpdb.Network;
 using PusherClient;
+using ReactiveUI;
 using Splat;
 
 namespace VpdbAgent.Vpdb
@@ -17,19 +18,25 @@ namespace VpdbAgent.Vpdb
 		private readonly ISettingsManager _settingsManager;
 		private readonly Logger _logger;
 
-		public VpdbApi Api { get; }
-		public Pusher Pusher { get; }
+		public VpdbApi Api { get; private set; }
+		public Pusher Pusher { get; private set; }
 
-		private readonly byte[] _authHeader;
+		private byte[] _authHeader;
+
+		public ReactiveList<string> StarredReleaseIds { get; } = new ReactiveList<string>();
 
 		public VpdbClient(ISettingsManager settingsManager, Logger logger)
 		{
 			_settingsManager = settingsManager;
 			_logger = logger;
+		}
 
+		public IVpdbClient Initialize()
+		{
 			if (!_settingsManager.IsInitialized()) {
-				return;
+				return this;
 			}
+
 			_authHeader = Encoding.ASCII.GetBytes(_settingsManager.AuthUser + ":" + _settingsManager.AuthPass);
 
 			var endPoint = new Uri(_settingsManager.Endpoint);
@@ -49,6 +56,7 @@ namespace VpdbAgent.Vpdb
 				Encrypted = true
 				//Authorizer = new HttpAuthorizer("http://localhost:8888/auth/")
 			});
+			return this;
 		}
 
 		public WebRequest GetWebRequest(string path)
@@ -63,12 +71,51 @@ namespace VpdbAgent.Vpdb
 			return request;
 		}
 
+		#region Pusher
+		private void SetupPusher(string userId)
+		{
+			// pusher test
+			_logger.Info("Setting up pusher...");
+
+			Pusher.ConnectionStateChanged += PusherConnectionStateChanged;
+			Pusher.Error += PusherError;
+
+			var testChannel = Pusher.Subscribe("test-channel");
+			testChannel.Subscribed += PusherSubscribed;
+
+			// inline binding
+			testChannel.Bind("test-message", (dynamic data) =>
+			{
+				_logger.Info("[{0}]: {1}", data.name, data.message);
+			});
+
+			Pusher.Connect();
+		}
+
+		private void PusherConnectionStateChanged(object sender, ConnectionState state)
+		{
+			_logger.Info("Pusher connection {0}", state);
+		}
+
+		private void PusherError(object sender, PusherException error)
+		{
+			_logger.Error(error, "Pusher error!");
+		}
+
+		private void PusherSubscribed(object sender)
+		{
+			_logger.Info("Subscribed to channel.");
+		}
+		#endregion
+
 	}
 
 	public interface IVpdbClient
 	{
 		VpdbApi Api { get; }
 		Pusher Pusher { get; }
+
+		IVpdbClient Initialize();
 		WebRequest GetWebRequest(string path);
 	}
 }
