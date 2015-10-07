@@ -31,7 +31,7 @@
             </Grid>
 
             <!-- [X] Advanced Options -->
-            <CheckBox x:Name="ShowAdvancedOptions" Content="Show Advanced Options" Margin="0,20,0,0" Checked="ShowAdvancedOptions_Checked" Unchecked="ShowAdvancedOptions_Checked"/>
+            <CheckBox x:Name="ShowAdvancedOptions" Content="Show Advanced Options" FontSize="18" Margin="0,20,0,0" Checked="ShowAdvancedOptions_Checked" Unchecked="ShowAdvancedOptions_Checked"/>
 
             <!-- API Endpoint -->
             <Label x:Name="ApiEndpointLabel" Content="VPDB API Endpoint" HorizontalAlignment="Left" Margin="0,20,0,0"/>

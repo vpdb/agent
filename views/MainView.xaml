@@ -23,8 +23,8 @@
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <CheckBox IsChecked="True" Tag="{Binding Name}"
-                                  Content="{Binding Name}" Style="{StaticResource CheckBox}" 
-								  Checked="OnPlatformFilterChanged" Unchecked="OnPlatformFilterChanged"
+                                  Content="{Binding Name}"
+                                  Checked="OnPlatformFilterChanged" Unchecked="OnPlatformFilterChanged"
                                   Margin="10,5,0,0" FontSize="18"/>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>

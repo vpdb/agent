@@ -63,6 +63,7 @@ namespace VpdbAgent.Controls
 				ReleaseNameWrapper.Visibility = Visibility.Visible;
 				ReleaseName.Visibility = Visibility.Visible;
 				ReleaseName.Text = Game.Release.Name;
+				SyncToggle.Visibility = Visibility.Visible;
 
 				Thumb.Visibility = Visibility.Visible;
 				_imageUtils.LoadImage(Game.Release.LatestVersion.Thumb.Image.Url, Thumb, Dispatcher);
@@ -73,6 +74,7 @@ namespace VpdbAgent.Controls
 				ReleaseName.Visibility = Visibility.Collapsed;
 				Thumb.Visibility = Visibility.Collapsed;
 				IdentifyButton.Visibility = Visibility.Visible;
+				SyncToggle.Visibility = Visibility.Collapsed;
 			}
 			Filename.Background = Game.Exists ? Brushes.Transparent : Brushes.DarkRed;
 			IdentifyButton.IsEnabled = Game.Exists;

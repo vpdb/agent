@@ -67,6 +67,7 @@
         </Setter>
     </Style>
 
+
     <Style x:Key="IconButton" TargetType="Button">
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
