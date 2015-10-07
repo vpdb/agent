@@ -8,11 +8,20 @@ using System.Text;
 using System.Threading.Tasks;
 using ReactiveUI;
 using static System.String;
+using System.Reactive.Linq;
 
 namespace VpdbAgent.Models
 {
 	public class Game : ReactiveObject, IComparable<Game>
 	{
+		#region Read/Write Fields
+		[JsonIgnoreAttribute]
+		private Vpdb.Models.Release release;
+		[JsonIgnoreAttribute]
+		readonly ObservableAsPropertyHelper<bool> hasRelease;
+		[JsonIgnoreAttribute]
+		private bool exists;
+		#endregion
 
 		[DataMember]
 		public string Id { get; set; }
@@ -22,24 +31,32 @@ namespace VpdbAgent.Models
 		public bool Enabled { get; set; } = true;
 
 		[DataMember]
-		public Vpdb.Models.Release Release { get; set; }
+		public Vpdb.Models.Release Release
+		{
+			get { return release; }
+			set { this.RaiseAndSetIfChanged(ref release, value); }
+		}
 
-
-		[JsonIgnoreAttribute]
-		public bool Exists { get; set; }
-
-		[JsonIgnoreAttribute]
-		public bool HasRelease => Release != null;
-
-		[JsonIgnoreAttribute]
+		public bool Exists
+		{
+			get { return exists; }
+			set { this.RaiseAndSetIfChanged(ref exists, value); }
+		}
+		public bool HasRelease { get { return hasRelease.Value; } }
 		public long FileSize { get; set; }
-
-		[JsonIgnoreAttribute]
 		public Platform Platform { get; set; }
 
-		public Game() { }
+		/// <summary>
+		/// Sets up Output Properties
+		/// </summary>
+		public Game()
+		{
+			this.WhenAnyValue(game => game.Release)
+				.Select(release => release != null)
+				.ToProperty(this, game => game.HasRelease, out hasRelease);
+		}
 
-		public Game(PinballX.Models.Game xmlGame, string tablePath, Platform platform)
+		public Game(PinballX.Models.Game xmlGame, string tablePath, Platform platform) : this()
 		{
 			Platform = platform;
 			UpdateFromGame(xmlGame, tablePath);

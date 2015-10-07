@@ -26,7 +26,6 @@ namespace VpdbAgent.Views
 		public MainView()
 		{
 			InitializeComponent();
-			//TestPusher();
 
 			this.WhenAnyValue(x => x.ViewModel).BindTo(this, x => x.DataContext);
 			this.WhenActivated(d =>
@@ -57,22 +56,5 @@ namespace VpdbAgent.Views
 			set { ViewModel = (MainViewModel)value; }
 		}
 		#endregion
-
-		/*
-		private async void getReleases()
-		{
-
-			VpdbClient client = new VpdbClient();
-
-			try {
-				Releases = await client.Api.GetReleases();
-				GamesList.ItemsSource = Releases;
-				foreach (Release release in Releases) {
-					Console.WriteLine("{0} - {1} ({2})", release.Game.Title, release.Name, release.Id);
-				}
-			} catch (Exception e) {
-				Console.WriteLine("Error retrieving releases: {0}", e.Message);
-			}
-		}*/
 	}
 }

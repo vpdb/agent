@@ -1,11 +1,12 @@
-﻿<UserControl x:Class="VpdbAgent.Controls.ReleaseIdentifyResultsTemplate"
+﻿<UserControl x:Class="VpdbAgent.Views.MainReleaseResultsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:c="clr-namespace:VpdbAgent.Controls"
              mc:Ignorable="d" 
-             d:DesignHeight="100" d:DesignWidth="600" d:DataContext="{d:DesignData ReleaseIdentifyResultsTemplate}">
+             d:DesignHeight="100" 
+             d:DesignWidth="600">
 
     <Expander IsExpanded="False" x:Name="IdentifyResults" Style="{StaticResource AnimatedExpander}">
         <Grid Margin="-105,0,-10,0">
@@ -18,7 +19,7 @@
             </Grid.ColumnDefinitions>
 
             <!-- close button -->
-            <Button Style="{StaticResource IconButton}" Grid.Column="0" Width="40" Height="40" VerticalAlignment="Top" HorizontalAlignment="Left" Click="CloseButton_Click">
+            <Button Style="{StaticResource IconButton}" Grid.Column="0" Width="40" Height="40" VerticalAlignment="Top" HorizontalAlignment="Left">
                 <c:IconControl Height="12"
                     Width="12"
                     Foreground="#40ffffff"
@@ -35,7 +36,7 @@
                     </Grid.ColumnDefinitions>
 
                     <Label Grid.Column="0" Content="No match found."/>
-                    <Button Grid.Column="1" Style="{StaticResource TertiaryButton}" Content="CLOSE" HorizontalAlignment="Right" Click="CloseButton_Click"/>
+                    <Button Grid.Column="1" Style="{StaticResource TertiaryButton}" Content="CLOSE" HorizontalAlignment="Right"/>
                 </Grid>
 
                 <!-- result list -->
@@ -60,7 +61,7 @@
                                     </Label>
                                 </StackPanel>
 
-                                <Button Click="SelectButton_Click" Style="{StaticResource TertiaryButton}" Grid.Column="2" Content="SELECT" HorizontalAlignment="Right"/>
+                                <Button Style="{StaticResource TertiaryButton}" Grid.Column="2" Content="SELECT" HorizontalAlignment="Right"/>
 
                             </Grid>
                         </DataTemplate>

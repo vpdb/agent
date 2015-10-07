@@ -27,7 +27,7 @@ namespace VpdbAgent.ViewModels
 
 		// data
 		public IReactiveDerivedList<Platform> Platforms { get; private set; }
-		public ReactiveList<Game> Games { get; private set; } = new ReactiveList<Game>() { ChangeTrackingEnabled = true };
+		public ReactiveList<MainGameViewModel> Games { get; private set; } = new ReactiveList<MainGameViewModel>() { ChangeTrackingEnabled = true };
 
 		// commands
 		public ReactiveCommand<object> FilterPlatforms { get; protected set; } = ReactiveCommand.Create();
@@ -56,8 +56,9 @@ namespace VpdbAgent.ViewModels
 					Games.Clear();
 					Games.AddRange(_gameManager.Games
 						.Where(game => game.Platform.IsEnabled && _platformFilter.Contains(game.Platform.Name))
+						.Select(game => new MainGameViewModel(game))
 					);
-					Games.Sort((x, y) => string.Compare(x.Id, y.Id, StringComparison.OrdinalIgnoreCase));
+					Games.Sort((x, y) => string.Compare(x.Game.Id, y.Game.Id, StringComparison.OrdinalIgnoreCase));
 				}
 			});
 		

@@ -4,6 +4,7 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:v="clr-namespace:VpdbAgent.Views"
+      xmlns:rx="clr-namespace:ReactiveUI;assembly=ReactiveUI"
       mc:Ignorable="d" 
       d:DesignHeight="300" d:DesignWidth="900">
 
@@ -36,13 +37,7 @@
         <!-- RIGHT PANEL -->
         <Grid Grid.Column="2" Background="{StaticResource WhiterBrush}" Grid.ColumnSpan="2">
             <ScrollViewer>
-                <ItemsControl x:Name="GameList" Margin="0,10,0,10">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <v:MainGameView Game="{Binding}" Margin="4" />
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                <ItemsControl x:Name="GameList" Margin="0,10,0,10" />
             </ScrollViewer>
         </Grid>
     </Grid>

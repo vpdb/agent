@@ -12,44 +12,29 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using ReactiveUI;
+using Splat;
+using VpdbAgent.ViewModels;
 using VpdbAgent.Views;
 using VpdbAgent.Vpdb.Models;
 
-namespace VpdbAgent.Controls
+namespace VpdbAgent.Views
 {
 	/// <summary>
 	/// Interaction logic for ReleaseIdentifyResultsTemplate.xaml
 	/// </summary>
-	public partial class ReleaseIdentifyResultsTemplate : UserControl
+	public partial class MainReleaseResultsView : UserControl, IViewFor<MainReleaseResultsViewModel>
 	{
-		private List<Release> _releases;
-		private readonly MainGameView.IReleaseResult _callback;
-
-		public List<Release> Releases
+		
+		public MainReleaseResultsView()
 		{
-			get { return _releases; }
-			set
-			{
-				_releases = value;
-				UpdateElements();
-			}
-		}
-
-		public ReleaseIdentifyResultsTemplate(List<Release> releases, MainGameView.IReleaseResult callback)
-		{
-			if (releases == null) {
-				throw new ArgumentNullException(nameof(releases));
-			}
-			if (callback == null) {
-				throw new ArgumentNullException(nameof(callback));
-			}
-			_releases = releases;
-			_callback = callback;
+			ViewModel = Locator.CurrentMutable.GetService<MainReleaseResultsViewModel>();
 			InitializeComponent();
-			DataContext = this;
-			UpdateElements();
+
+			this.OneWayBind(ViewModel, vm => vm.IdentifiedReleases, v => v.Results.ItemsSource);
 		}
 
+		/*
 		private void UpdateElements()
 		{
 			if (_releases.Count > 0) {
@@ -66,15 +51,31 @@ namespace VpdbAgent.Controls
 		{
 			var button = sender as Button;
 			if (button != null) {
-				_callback.OnResult(button.DataContext as Release);
+				//_callback.OnResult(button.DataContext as Release);
 			}
 		}
 
 		private void CloseButton_Click(object sender, RoutedEventArgs e)
 		{
-			_callback.OnCanceled();
+			//_callback.OnCanceled();
+		}
+		*/
+
+		#region ViewModel
+		public MainReleaseResultsViewModel ViewModel
+		{
+			get { return (MainReleaseResultsViewModel)this.GetValue(ViewModelProperty); }
+			set { this.SetValue(ViewModelProperty, value); }
 		}
 
+		public static readonly DependencyProperty ViewModelProperty =
+		   DependencyProperty.Register("ViewModel", typeof(MainReleaseResultsViewModel), typeof(MainReleaseResultsView), new PropertyMetadata(null));
 
+		object IViewFor.ViewModel
+		{
+			get { return ViewModel; }
+			set { ViewModel = (MainReleaseResultsViewModel)value; }
+		}
+		#endregion
 	}
 }

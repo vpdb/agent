@@ -4,19 +4,36 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ReactiveUI;
+using System.Runtime.Serialization;
 
 namespace VpdbAgent.Vpdb.Models
 {
-	public class Version
+	public class Version : ReactiveObject
 	{
+		private VersionThumb versionThumb;
+
 		[JsonProperty(PropertyName = "version")]
 		public string Name { get; set; }
-		public VersionThumb Thumb { get; set; }
+		[DataMember]
+		public VersionThumb Thumb
+		{
+			get { return versionThumb; }
+			set { this.RaiseAndSetIfChanged(ref versionThumb, value); }
+
+		}
 		public List<File> Files { get; set; }
 
-		public class VersionThumb
+		public class VersionThumb : ReactiveObject
 		{
-			public Image Image { get; set; }
+			private Image image;
+
+			[DataMember]
+			public Image Image
+			{
+				get { return image; }
+				set { this.RaiseAndSetIfChanged(ref image, value); }
+			}
 			public Flavor Flavor { get; set; }
 		}
 	}

@@ -17,9 +17,12 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 using NLog;
+using ReactiveUI;
 using Splat;
 using VpdbAgent.Common;
 using VpdbAgent.Controls;
+using VpdbAgent.ViewModels;
+using VpdbAgent.ViewModels.TypeConverters;
 using VpdbAgent.Vpdb;
 using VpdbAgent.Vpdb.Models;
 using Game = VpdbAgent.Models.Game;
@@ -29,59 +32,45 @@ namespace VpdbAgent.Views
 	/// <summary>
 	/// Interaction logic for GameTemplate.xaml
 	/// </summary>
-	public partial class MainGameView : UserControl, MainGameView.IReleaseResult
+	public partial class MainGameView : UserControl, IViewFor<MainGameViewModel>
 	{
-		public static readonly DependencyProperty GameProperty = DependencyProperty.Register("Game", typeof(Game), typeof(MainGameView), new PropertyMetadata(default(Game), GamePropertyChanged));
-		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+		// deps
+		private static readonly Logger Logger = Locator.CurrentMutable.GetService<Logger>();
 
-		private readonly IGameManager _gameManager = Locator.Current.GetService<IGameManager>();
-		private readonly IVpdbClient _vpdbClient = Locator.Current.GetService<IVpdbClient>();
-		private readonly ImageUtils _imageUtils = ImageUtils.GetInstance();
-
-		static void GamePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-		{
-			var source = d as MainGameView;
-			source?.Bind();
-		}
-
-		public Game Game
-		{
-			get { return GetValue(GameProperty) as Game; }
-			set { SetValue(GameProperty, value); }
-		}
-
-		public List<Release> IdentifiedReleases { get; private set; }
+		private MainReleaseResultsView _identifyResults;
 
 		public MainGameView()
 		{
 			InitializeComponent();
+
+			// game data from .xml
+			this.OneWayBind(ViewModel, vm => vm.Game.Id, v => v.Title.Text);
+			this.OneWayBind(ViewModel, vm => vm.Game.Filename, v => v.Filename.Text);
+			this.OneWayBind(ViewModel, vm => vm.Game.Exists, v => v.Filename.Background, null, new BooleanToBrushHint(Brushes.Transparent, Brushes.DarkRed));
+			this.OneWayBind(ViewModel, vm => vm.Game.Exists, v => v.IdentifyButton.IsEnabled);
+
+			// visibilities
+			this.OneWayBind(ViewModel, vm => vm.Game.HasRelease, v => v.ReleaseNameWrapper.Visibility);
+			this.OneWayBind(ViewModel, vm => vm.Game.HasRelease, v => v.Toggles.Visibility);
+			this.OneWayBind(ViewModel, vm => vm.Game.HasRelease, v => v.IdentifyButton.Visibility, null, BooleanToVisibilityHint.Inverse);
+			this.OneWayBind(ViewModel, vm => vm.SpinnerVisibility, v => v.Spinner.Visibility);
+
+			// vpdb data
+			this.OneWayBind(ViewModel, vm => vm.Game.Release.Name, v => v.ReleaseName.Text);
+			this.OneWayBind(ViewModel, vm => vm.Game.Release.Starred, v => v.Star.Foreground, null, new BooleanToBrushHint(
+				(Brush)FindResource("PrimaryColorBrush"),
+				(Brush)FindResource("LabelTextBrush")
+			));
+			this.OneWayBind(ViewModel, vm => vm.Game.Release.LatestVersion.Thumb.Image, v => v.Thumb.UrlSource);
+
+			this.OneWayBind(ViewModel, vm => vm.ReleaseResults, v => v.ReleaseResultView.ViewModel);
+			
+
+			// commands
+			this.BindCommand(ViewModel, vm => vm.IdentifyRelease, v => v.IdentifyButton);
 		}
 
-		private void Bind()
-		{
-			if (Game.HasRelease) {
-				ReleaseNameWrapper.Visibility = Visibility.Visible;
-				ReleaseName.Visibility = Visibility.Visible;
-				ReleaseName.Text = Game.Release.Name;
-				SyncToggle.Visibility = Visibility.Visible;
-
-				Thumb.Visibility = Visibility.Visible;
-				_imageUtils.LoadImage(Game.Release.LatestVersion.Thumb.Image.Url, Thumb, Dispatcher);
-				IdentifyButton.Visibility = Visibility.Collapsed;
-
-				Star.Foreground = (Brush) FindResource(Game.Release.Starred ? "PrimaryColorBrush" : "LabelTextBrush");
-
-			} else {
-				ReleaseNameWrapper.Visibility = Visibility.Collapsed;
-				ReleaseName.Visibility = Visibility.Collapsed;
-				Thumb.Visibility = Visibility.Collapsed;
-				IdentifyButton.Visibility = Visibility.Visible;
-				SyncToggle.Visibility = Visibility.Collapsed;
-			}
-			Filename.Background = Game.Exists ? Brushes.Transparent : Brushes.DarkRed;
-			IdentifyButton.IsEnabled = Game.Exists;
-		}
-
+		/*
 		private async void IdentifyButton_Click(object sender, RoutedEventArgs e)
 		{
 			IdentifyButton.Visibility = Visibility.Collapsed;
@@ -96,20 +85,7 @@ namespace VpdbAgent.Views
 			ExpandIdentifyResult(releases);
 		}
 
-		private void ExpandIdentifyResult(List<Release> releases)
-		{
-			ReleaseIdentifyResultsTemplate identifyResults;
-			if (Panel.Children[Panel.Children.Count - 2] is ReleaseIdentifyResultsTemplate) {
-				identifyResults = Panel.Children[Panel.Children.Count - 2] as ReleaseIdentifyResultsTemplate;
-				identifyResults.Releases = releases;
-				Logger.Info("Re-using existing view!");
-			} else {
-				identifyResults = new ReleaseIdentifyResultsTemplate(releases, this);
-				Panel.Children.Insert(Panel.Children.Count - 1, identifyResults);
-				Logger.Info("Creating new view");
-			}
-			identifyResults.IdentifyResults.IsExpanded = true;
-		}
+		
 
 		private void CollapseIdentifyResult()
 		{
@@ -135,6 +111,23 @@ namespace VpdbAgent.Views
 		{
 			void OnCanceled();
 			void OnResult(Release result);
+		}*/
+
+		#region ViewModel
+		public MainGameViewModel ViewModel
+		{
+			get { return (MainGameViewModel)this.GetValue(ViewModelProperty); }
+			set { this.SetValue(ViewModelProperty, value); }
 		}
+
+		public static readonly DependencyProperty ViewModelProperty =
+		   DependencyProperty.Register("ViewModel", typeof(MainGameViewModel), typeof(MainGameView), new PropertyMetadata(null));
+
+		object IViewFor.ViewModel
+		{
+			get { return ViewModel; }
+			set { ViewModel = (MainGameViewModel)value; }
+		}
+		#endregion
 	}
 }

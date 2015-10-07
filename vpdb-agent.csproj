@@ -141,13 +141,13 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Common\FilesystemWatchCache.cs" />
-    <Compile Include="Common\ImageUtils.cs" />
     <Compile Include="Common\LazyObservableList.cs" />
     <Compile Include="Common\TransitioningContentControl.cs" />
     <Compile Include="Controls\IconControl.cs" />
     <Compile Include="Controls\IndeterminateProgress.cs" />
-    <Compile Include="Controls\ReleaseIdentifyResultsTemplate.xaml.cs">
-      <DependentUpon>ReleaseIdentifyResultsTemplate.xaml</DependentUpon>
+    <Compile Include="ViewModels\MainReleaseResultsViewModel.cs" />
+    <Compile Include="Views\MainReleaseResultsView.xaml.cs">
+      <DependentUpon>MainReleaseResultsView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\UrlImage.cs" />
     <Compile Include="GameManager.cs" />
@@ -156,6 +156,8 @@
     <Compile Include="ViewModels\AppViewModel.cs" />
     <Compile Include="ViewModels\MainGameViewModel.cs" />
     <Compile Include="ViewModels\SettingsViewModel.cs" />
+    <Compile Include="ViewModels\TypeConverters\ImageToUrlTypeConverter.cs" />
+    <Compile Include="ViewModels\TypeConverters\BooleanToBrushTypeConverter.cs" />
     <Compile Include="Views\SettingsView.xaml.cs">
       <DependentUpon>SettingsView.xaml</DependentUpon>
     </Compile>
@@ -189,7 +191,7 @@
     <Compile Include="Vpdb\IVpdbApi.cs" />
     <Compile Include="Vpdb\Models\Release.cs" />
     <Compile Include="Vpdb\VpdbClient.cs" />
-    <Page Include="Controls\ReleaseIdentifyResultsTemplate.xaml">
+    <Page Include="Views\MainReleaseResultsView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

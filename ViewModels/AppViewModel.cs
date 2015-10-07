@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using ReactiveUI;
 using Splat;
 using VpdbAgent.PinballX;
+using VpdbAgent.ViewModels.TypeConverters;
 using VpdbAgent.Views;
 using VpdbAgent.Vpdb;
 
@@ -70,35 +71,46 @@ namespace VpdbAgent.ViewModels
 			GotoSettings = ReactiveCommand.CreateAsyncObservable(_ => Router.Navigate.ExecuteAsync(new SettingsViewModel(this, Locator.Current.GetService<ISettingsManager>())));
 		}
 
-		private void RegisterParts(IMutableDependencyResolver dependencyResolver)
+		private void RegisterParts(IMutableDependencyResolver locator)
 		{
-			dependencyResolver.RegisterConstant(this, typeof(IScreen));
+			locator.RegisterConstant(this, typeof(IScreen));
 
-			dependencyResolver.RegisterLazySingleton(() => NLog.LogManager.GetCurrentClassLogger(), typeof(NLog.Logger));
-			dependencyResolver.RegisterLazySingleton(() => new SettingsManager(), typeof(ISettingsManager));
-			dependencyResolver.RegisterLazySingleton(() => new FileSystemWatcher(
-				Locator.Current.GetService<NLog.Logger>()
+
+			// services
+			locator.RegisterLazySingleton(() => NLog.LogManager.GetCurrentClassLogger(), typeof(NLog.Logger));
+			locator.RegisterLazySingleton(() => new SettingsManager(), typeof(ISettingsManager));
+			locator.RegisterLazySingleton(() => new FileSystemWatcher(
+				locator.GetService<NLog.Logger>()
 			), typeof(IFileSystemWatcher));
 
-			dependencyResolver.RegisterLazySingleton(() => new MenuManager(
-				Locator.Current.GetService<IFileSystemWatcher>(),
-				Locator.Current.GetService<ISettingsManager>(),
-				Locator.Current.GetService<NLog.Logger>()
+			locator.RegisterLazySingleton(() => new MenuManager(
+				locator.GetService<IFileSystemWatcher>(),
+				locator.GetService<ISettingsManager>(),
+				locator.GetService<NLog.Logger>()
 			), typeof(IMenuManager));
 
-			dependencyResolver.RegisterLazySingleton(() => new VpdbClient(
-				Locator.Current.GetService<ISettingsManager>(),
-				Locator.Current.GetService<NLog.Logger>()
+			locator.RegisterLazySingleton(() => new VpdbClient(
+				locator.GetService<ISettingsManager>(),
+				locator.GetService<NLog.Logger>()
 			), typeof(IVpdbClient));
 
-			dependencyResolver.RegisterLazySingleton(() => new GameManager(
-				Locator.Current.GetService<IMenuManager>(),
-				Locator.Current.GetService<IVpdbClient>(),
-				Locator.Current.GetService<NLog.Logger>()
+			locator.RegisterLazySingleton(() => new GameManager(
+				locator.GetService<IMenuManager>(),
+				locator.GetService<IVpdbClient>(),
+				locator.GetService<NLog.Logger>()
 			), typeof(IGameManager));
 
-			dependencyResolver.RegisterLazySingleton(() => new MainView(), typeof(IViewFor<MainViewModel>));
-			dependencyResolver.RegisterLazySingleton(() => new SettingsView(), typeof(IViewFor<SettingsViewModel>));
+
+			// converters
+			locator.RegisterConstant(new BooleanToBrushTypeConverter(), typeof(IBindingTypeConverter));
+			locator.RegisterConstant(new ImageToUrlTypeConverter(), typeof(IBindingTypeConverter));
+
+
+			// view models
+			locator.RegisterLazySingleton(() => new MainView(), typeof(IViewFor<MainViewModel>));
+			locator.Register(() => new MainGameView(), typeof(IViewFor<MainGameViewModel>));
+			locator.Register(() => new MainReleaseResultsView(), typeof(IViewFor<MainReleaseResultsViewModel>));
+			locator.RegisterLazySingleton(() => new SettingsView(), typeof(IViewFor<SettingsViewModel>));
 		}
 	}
 }

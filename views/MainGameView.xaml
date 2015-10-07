@@ -4,50 +4,69 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:c="clr-namespace:VpdbAgent.Controls"
+             xmlns:v="clr-namespace:VpdbAgent.Views"
+             xmlns:rx="clr-namespace:ReactiveUI;assembly=ReactiveUI"
              mc:Ignorable="d" 
-             d:DesignWidth="500"
+             d:DesignWidth="800"
              Padding="20,0,0,0">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="80" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
+    
+        <c:UrlImage x:Name="Thumb" Grid.Column="0" Margin="0,10,0,0" Width="70" Height="70" VerticalAlignment="Top" HorizontalAlignment="Left"/>
 
-        <Image x:Name="Thumb" Grid.Column="0" Margin="0,10,0,0" Width="70" Height="70" VerticalAlignment="Top" HorizontalAlignment="Left"/>
-        <StackPanel x:Name="Panel" Grid.Column="1">
+        <StackPanel Grid.Column="1" Orientation="Vertical">
 
-            <Grid>
+            <!-- first row -->
+            <Grid Width="Auto">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
+
+                <!-- title -->
                 <Label Grid.Column="0" Margin="0,0,0,-10">
-                    <TextBlock TextTrimming="CharacterEllipsis" Text="{Binding Id}" FontSize="22" FontWeight="Bold"/>
+                    <TextBlock x:Name="Title" TextTrimming="CharacterEllipsis" FontSize="22" FontWeight="Bold" Text="Medieval Madness (Williams 1997)" />
                 </Label>
-                <StackPanel x:Name="SyncToggle" Grid.Column="1" Orientation="Horizontal" Margin="0,5,0,0">
+
+                <!-- controls -->
+                <StackPanel x:Name="Toggles" Grid.Column="1" Orientation="Horizontal" Margin="0,5,0,0">
                     <c:IconControl x:Name="Star"  Height="18" Width="18" Foreground="#80ffffff" Data="{StaticResource IconStar}" Margin="10,-2,12,0" />
                     <ToggleButton Height="20" Margin="5,0,20,0"/>
                     <Label Content="SYNC" FontSize="15"/>
                 </StackPanel>
             </Grid>
-           
 
+            <!-- second row -->
             <Label x:Name="ReleaseNameWrapper" Margin="0,0,0,-10">
-                <TextBlock x:Name="ReleaseName" TextTrimming="CharacterEllipsis" />
+                <TextBlock x:Name="ReleaseName" TextTrimming="CharacterEllipsis" Text="Castle Crusher Edition 1.2"/>
             </Label>
 
+            <!-- third row -->
             <Grid Margin="0,0,0,10">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
+
+                <!-- filename -->
                 <Label Grid.Column="0">
-                    <TextBlock x:Name="Filename"  TextTrimming="CharacterEllipsis" Text="{Binding Filename}"/>
+                    <TextBlock x:Name="Filename" TextTrimming="CharacterEllipsis" Text="Some_weird_filename.vpt"/>
                 </Label>
-                <Button x:Name="IdentifyButton" Style="{StaticResource TertiaryButton}" Grid.Column="1" Content="IDENTIFY" HorizontalAlignment="Right" Click="IdentifyButton_Click" Margin="0,0,10,0"/>
-                <c:IndeterminateProgress x:Name="Progress" Grid.Column="1" Height="22" Width="22" Visibility="Collapsed" HorizontalAlignment="Right" Margin="0,0,10,0"/>
+
+                <!-- identify button -->
+                <Button x:Name="IdentifyButton" Style="{StaticResource TertiaryButton}" Grid.Column="1" Content="IDENTIFY" HorizontalAlignment="Right" Margin="0,0,10,0"/>
+                <c:IndeterminateProgress x:Name="Spinner" Grid.Column="1" Height="22" Width="22" Visibility="Collapsed" HorizontalAlignment="Right" Margin="0,0,10,0"/>
             </Grid>
+
+            <!-- release results -->
+            <rx:ViewModelViewHost x:Name="ReleaseResultView" HorizontalContentAlignment="Stretch" Grid.ColumnSpan="2"></rx:ViewModelViewHost>
+
+            <!-- separator -->
             <Border BorderBrush="#40ffffff" BorderThickness="0 0 0 1" Margin="5,0,0,0"/>
+
         </StackPanel>
     </Grid>
 </UserControl>

@@ -4,6 +4,7 @@ using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Windows;
 using Newtonsoft.Json;
 using NLog;
@@ -60,7 +61,7 @@ namespace VpdbAgent
 
 			Platforms = _menuManager.Systems.CreateDerivedCollection(system => new Platform(system));
 
-			// subscribe to game changes
+			// subscribe to game changes and pusher stuff
 			_menuManager.GamesChanged.Subscribe(OnGamesChanged);
 			_vpdbClient.UserChannel.Subscribe(OnChannelJoined);
 		}
@@ -134,28 +135,38 @@ namespace VpdbAgent
 				return;
 			}
 
-			userChannel.Bind("star", (dynamic data) =>
+			// subscribe through a subject so we can do more fun stuff with it
+			Subject<dynamic> star = new Subject<dynamic>();
+			Subject<dynamic> unstar = new Subject<dynamic>();
+			userChannel.Bind("star", (dynamic data) => star.OnNext(data));
+			userChannel.Bind("unstar", (dynamic data) => unstar.OnNext(data));
+
+			// star
+			star.ObserveOn(RxApp.MainThreadScheduler).Subscribe(data =>
 			{
-				if ("release".Equals((string)data.type))
-				{
+				if ("release".Equals((string)data.type)) {
 					var release = FindRelease((string)data.id);
 					if (release != null) {
 						release.Starred = true;
+						_logger.Info("Toggled star on release {0} [on]", release.Name);
+					} else {
+						_logger.Info("Ignoring star for id {0}", data.id);
 					}
 				}
-
-				_logger.Info("STAR: [{0}]: {1}", data.type, data.id);
 			});
 
-			userChannel.Bind("unstar", (dynamic data) =>
+			// unstar
+			unstar.ObserveOn(RxApp.MainThreadScheduler).Subscribe(data =>
 			{
 				if ("release".Equals((string)data.type)) {
 					var release = FindRelease((string)data.id);
 					if (release != null) {
 						release.Starred = false;
+						_logger.Info("Toggled star on release {0} [off]", release.Name);
+					} else {
+						_logger.Info("Ignoring star for id {0}", data.id);
 					}
 				}
-				_logger.Info("UNSTAR: [{0}]: {1}", data.type, data.id);
 			});
 		}
 
@@ -166,9 +177,7 @@ namespace VpdbAgent
 				.Select(game => game.Release)
 				.FirstOrDefault();
 		}
-
-
-
+		
 		/// <summary>
 		/// Merges a list of games parsed from an .XML file with a list of 
 		/// games read from the internal .json database file
