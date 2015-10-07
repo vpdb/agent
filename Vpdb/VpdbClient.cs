@@ -68,7 +68,6 @@ namespace VpdbAgent.Vpdb
 				_logger.Info("Error logging in: {0}", error.Message);
 			});
 
-
 			Pusher = new Pusher("02ee40b62e1fb0696e02", new PusherOptions() {
 				Encrypted = true,
 				Authorizer = new PusherAuthorizer(this, _logger)
@@ -108,7 +107,12 @@ namespace VpdbAgent.Vpdb
 			// inline binding
 			testChannel.Bind("star", (dynamic data) =>
 			{
-				_logger.Info("[{0}]: {1}", data.name, data.message);
+				_logger.Info("STAR: [{0}]: {1}", data.type, data.id);
+			});
+
+			testChannel.Bind("unstar", (dynamic data) =>
+			{
+				_logger.Info("UNSTAR: [{0}]: {1}", data.type, data.id);
 			});
 
 			Pusher.Connect();
