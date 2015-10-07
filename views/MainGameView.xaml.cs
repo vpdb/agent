@@ -19,18 +19,19 @@ using System.Windows.Threading;
 using NLog;
 using Splat;
 using VpdbAgent.Common;
+using VpdbAgent.Controls;
 using VpdbAgent.Vpdb;
 using VpdbAgent.Vpdb.Models;
 using Game = VpdbAgent.Models.Game;
 
-namespace VpdbAgent.Controls
+namespace VpdbAgent.Views
 {
 	/// <summary>
 	/// Interaction logic for GameTemplate.xaml
 	/// </summary>
-	public partial class GameTemplate : UserControl, GameTemplate.IReleaseResult
+	public partial class MainGameView : UserControl, MainGameView.IReleaseResult
 	{
-		public static readonly DependencyProperty GameProperty = DependencyProperty.Register("Game", typeof(Game), typeof(GameTemplate), new PropertyMetadata(default(Game), GamePropertyChanged));
+		public static readonly DependencyProperty GameProperty = DependencyProperty.Register("Game", typeof(Game), typeof(MainGameView), new PropertyMetadata(default(Game), GamePropertyChanged));
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		private readonly IGameManager _gameManager = Locator.Current.GetService<IGameManager>();
@@ -39,7 +40,7 @@ namespace VpdbAgent.Controls
 
 		static void GamePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
 		{
-			var source = d as GameTemplate;
+			var source = d as MainGameView;
 			source?.Bind();
 		}
 
@@ -51,7 +52,7 @@ namespace VpdbAgent.Controls
 
 		public List<Release> IdentifiedReleases { get; private set; }
 
-		public GameTemplate()
+		public MainGameView()
 		{
 			InitializeComponent();
 		}

@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using VpdbAgent.Views;
 using VpdbAgent.Vpdb.Models;
 
 namespace VpdbAgent.Controls
@@ -22,7 +23,7 @@ namespace VpdbAgent.Controls
 	public partial class ReleaseIdentifyResultsTemplate : UserControl
 	{
 		private List<Release> _releases;
-		private readonly GameTemplate.IReleaseResult _callback;
+		private readonly MainGameView.IReleaseResult _callback;
 
 		public List<Release> Releases
 		{
@@ -34,7 +35,7 @@ namespace VpdbAgent.Controls
 			}
 		}
 
-		public ReleaseIdentifyResultsTemplate(List<Release> releases, GameTemplate.IReleaseResult callback)
+		public ReleaseIdentifyResultsTemplate(List<Release> releases, MainGameView.IReleaseResult callback)
 		{
 			if (releases == null) {
 				throw new ArgumentNullException(nameof(releases));

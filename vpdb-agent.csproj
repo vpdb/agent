@@ -154,6 +154,7 @@
     <Compile Include="Models\Game.cs" />
     <Compile Include="Models\Platform.cs" />
     <Compile Include="ViewModels\AppViewModel.cs" />
+    <Compile Include="ViewModels\MainGameViewModel.cs" />
     <Compile Include="ViewModels\SettingsViewModel.cs" />
     <Compile Include="Views\SettingsView.xaml.cs">
       <DependentUpon>SettingsView.xaml</DependentUpon>
@@ -170,8 +171,8 @@
       <DependentUpon>MainView.xaml</DependentUpon>
     </Compile>
     <Compile Include="SettingsManager.cs" />
-    <Compile Include="Controls\GameTemplate.xaml.cs">
-      <DependentUpon>GameTemplate.xaml</DependentUpon>
+    <Compile Include="Views\MainGameView.xaml.cs">
+      <DependentUpon>MainGameView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Vpdb\Models\Author.cs" />
     <Compile Include="Vpdb\Models\File.cs" />
@@ -252,7 +253,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Controls\GameTemplate.xaml">
+    <Page Include="Views\MainGameView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
