@@ -86,15 +86,16 @@ namespace VpdbAgent.ViewModels
 				Locator.Current.GetService<NLog.Logger>()
 			), typeof(IMenuManager));
 
-			dependencyResolver.RegisterLazySingleton(() => new GameManager(
-				Locator.Current.GetService<IMenuManager>(),
-				Locator.Current.GetService<NLog.Logger>()
-			), typeof(IGameManager));
-
 			dependencyResolver.RegisterLazySingleton(() => new VpdbClient(
 				Locator.Current.GetService<ISettingsManager>(),
 				Locator.Current.GetService<NLog.Logger>()
 			), typeof(IVpdbClient));
+
+			dependencyResolver.RegisterLazySingleton(() => new GameManager(
+				Locator.Current.GetService<IMenuManager>(),
+				Locator.Current.GetService<IVpdbClient>(),
+				Locator.Current.GetService<NLog.Logger>()
+			), typeof(IGameManager));
 
 			dependencyResolver.RegisterLazySingleton(() => new MainView(), typeof(IViewFor<MainViewModel>));
 			dependencyResolver.RegisterLazySingleton(() => new SettingsView(), typeof(IViewFor<SettingsViewModel>));

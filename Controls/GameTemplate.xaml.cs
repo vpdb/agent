@@ -69,6 +69,8 @@ namespace VpdbAgent.Controls
 				_imageUtils.LoadImage(Game.Release.LatestVersion.Thumb.Image.Url, Thumb, Dispatcher);
 				IdentifyButton.Visibility = Visibility.Collapsed;
 
+				Star.Foreground = (Brush) FindResource(Game.Release.Starred ? "PrimaryColorBrush" : "LabelTextBrush");
+
 			} else {
 				ReleaseNameWrapper.Visibility = Visibility.Collapsed;
 				ReleaseName.Visibility = Visibility.Collapsed;

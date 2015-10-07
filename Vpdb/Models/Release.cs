@@ -15,6 +15,7 @@ namespace VpdbAgent.Vpdb.Models
 		public ReleaseCounter Counter { get; set; }
 		public Game Game { get; set; }
 		public Version LatestVersion { get; set; }
+		public bool Starred { get; set; }
 
 		public class ReleaseCounter
 		{

@@ -7,11 +7,13 @@ using System.Reactive.Linq;
 using System.Windows;
 using Newtonsoft.Json;
 using NLog;
+using PusherClient;
 using ReactiveUI;
 using VpdbAgent.Common;
 using VpdbAgent.Models;
 using VpdbAgent.PinballX;
 using VpdbAgent.PinballX.Models;
+using VpdbAgent.Vpdb;
 using VpdbAgent.Vpdb.Models;
 using VpdbAgent.Vpdb.Network;
 using Game = VpdbAgent.Models.Game;
@@ -43,23 +45,26 @@ namespace VpdbAgent
 	{
 		// deps
 		private readonly IMenuManager _menuManager;
+		private readonly IVpdbClient _vpdbClient;
 		private readonly Logger _logger;
 
 		// props
 		public IReactiveDerivedList<Platform> Platforms { get; }
 		public ReactiveList<Game> Games { get; } = new ReactiveList<Game>();
 
-		public GameManager(IMenuManager menuManager, Logger logger)
+		public GameManager(IMenuManager menuManager, IVpdbClient vpdbClient, Logger logger)
 		{
 			_menuManager = menuManager;
+			_vpdbClient = vpdbClient;
 			_logger = logger;
 
 			Platforms = _menuManager.Systems.CreateDerivedCollection(system => new Platform(system));
 
 			// subscribe to game changes
 			_menuManager.GamesChanged.Subscribe(OnGamesChanged);
+			_vpdbClient.UserChannel.Subscribe(OnChannelJoined);
 		}
-	
+
 		/// <summary>
 		///     Triggers data update
 		/// </summary>
@@ -82,7 +87,8 @@ namespace VpdbAgent
 			return this;
 		}
 
-		public IEnumerable<Game> GetGames(Platform platform) {
+		public IEnumerable<Game> GetGames(Platform platform)
+		{
 			return Games.Where(game => game.Platform.Name.Equals(platform.Name));
 		}
 
@@ -121,6 +127,21 @@ namespace VpdbAgent
 				_logger.Trace("Merged {0} games ({1} from XMLs)", mergedGames.Count, xmlGames.Count);
 			});
 		}
+
+		private void OnChannelJoined(Channel userChannel)
+		{
+			userChannel.Bind("star", (dynamic data) =>
+			{
+				_logger.Info("STAR: [{0}]: {1}", data.type, data.id);
+			});
+
+			userChannel.Bind("unstar", (dynamic data) =>
+			{
+				_logger.Info("UNSTAR: [{0}]: {1}", data.type, data.id);
+			});
+		}
+
+
 
 		/// <summary>
 		/// Merges a list of games parsed from an .XML file with a list of 

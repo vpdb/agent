@@ -5,6 +5,8 @@ using System;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Text;
 using VpdbAgent.Vpdb.Network;
 using PusherClient;
@@ -23,10 +25,12 @@ namespace VpdbAgent.Vpdb
 		public IVpdbApi Api { get; private set; }
 		public Pusher Pusher { get; private set; }
 
+		public Subject<Channel> UserChannel { get; } = new Subject<Channel>();
+		public ReactiveList<string> StarredReleaseIds { get; } = new ReactiveList<string>();
+
+		private Channel _userChannel;
 		private byte[] _authHeader;
 		private UserFull _user;
-
-		public ReactiveList<string> StarredReleaseIds { get; } = new ReactiveList<string>();
 
 		public VpdbClient(ISettingsManager settingsManager, Logger logger)
 		{
@@ -101,19 +105,8 @@ namespace VpdbAgent.Vpdb
 			Pusher.ConnectionStateChanged += PusherConnectionStateChanged;
 			Pusher.Error += PusherError;
 
-			var testChannel = Pusher.Subscribe("private-user-" + user.Id);
-			testChannel.Subscribed += PusherSubscribed;
-
-			// inline binding
-			testChannel.Bind("star", (dynamic data) =>
-			{
-				_logger.Info("STAR: [{0}]: {1}", data.type, data.id);
-			});
-
-			testChannel.Bind("unstar", (dynamic data) =>
-			{
-				_logger.Info("UNSTAR: [{0}]: {1}", data.type, data.id);
-			});
+			_userChannel = Pusher.Subscribe("private-user-" + user.Id);
+			_userChannel.Subscribed += PusherSubscribed;
 
 			Pusher.Connect();
 		}
@@ -125,11 +118,13 @@ namespace VpdbAgent.Vpdb
 
 		private void PusherError(object sender, PusherException error)
 		{
+			UserChannel.OnNext(null);
 			_logger.Error(error, "Pusher error: {0}", error.Message);
 		}
 
 		private void PusherSubscribed(object sender)
 		{
+			UserChannel.OnNext(_userChannel);
 			_logger.Info("Subscribed to channel.");
 		}
 		#endregion
@@ -140,6 +135,7 @@ namespace VpdbAgent.Vpdb
 	{
 		IVpdbApi Api { get; }
 		Pusher Pusher { get; }
+		Subject<Channel> UserChannel { get; }
 
 		IVpdbClient Initialize();
 		WebRequest GetWebRequest(string path);
