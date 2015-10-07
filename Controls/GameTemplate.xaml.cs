@@ -58,7 +58,6 @@ namespace VpdbAgent.Controls
 
 		private void Bind()
 		{
-
 			if (Game.HasRelease) {
 				ReleaseNameWrapper.Visibility = Visibility.Visible;
 				ReleaseName.Visibility = Visibility.Visible;

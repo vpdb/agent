@@ -50,7 +50,7 @@ namespace VpdbAgent
 
 		// props
 		public IReactiveDerivedList<Platform> Platforms { get; }
-		public ReactiveList<Game> Games { get; } = new ReactiveList<Game>();
+		public ReactiveList<Game> Games { get; } = new ReactiveList<Game>() { ChangeTrackingEnabled = true };
 
 		public GameManager(IMenuManager menuManager, IVpdbClient vpdbClient, Logger logger)
 		{
@@ -130,15 +130,41 @@ namespace VpdbAgent
 
 		private void OnChannelJoined(Channel userChannel)
 		{
+			if (userChannel == null) {
+				return;
+			}
+
 			userChannel.Bind("star", (dynamic data) =>
 			{
+				if ("release".Equals((string)data.type))
+				{
+					var release = FindRelease((string)data.id);
+					if (release != null) {
+						release.Starred = true;
+					}
+				}
+
 				_logger.Info("STAR: [{0}]: {1}", data.type, data.id);
 			});
 
 			userChannel.Bind("unstar", (dynamic data) =>
 			{
+				if ("release".Equals((string)data.type)) {
+					var release = FindRelease((string)data.id);
+					if (release != null) {
+						release.Starred = false;
+					}
+				}
 				_logger.Info("UNSTAR: [{0}]: {1}", data.type, data.id);
 			});
+		}
+
+		private Release FindRelease(string releaseId)
+		{
+			return Games
+				.Where(game => game.HasRelease && game.Release.Id.Equals(releaseId))
+				.Select(game => game.Release)
+				.FirstOrDefault();
 		}
 
 
