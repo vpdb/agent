@@ -31,8 +31,8 @@ namespace VpdbAgent.ViewModels
 		public Game Game { get; private set; }
 
 		// spinner
-		readonly ObservableAsPropertyHelper<Visibility> _spinnerVisibility;
-		public Visibility SpinnerVisibility => _spinnerVisibility.Value;
+		private readonly ObservableAsPropertyHelper<bool> _isExecuting;
+		public bool IsExecuting => _isExecuting.Value;
 
 
 		public MainGameViewModel(Game game)
@@ -43,9 +43,7 @@ namespace VpdbAgent.ViewModels
 			IdentifyRelease = ReactiveCommand.CreateAsyncTask(async _ => await VpdbClient.Api.GetReleasesBySize(game.FileSize, 512));
 
 			// spinner
-			_spinnerVisibility = IdentifyRelease.IsExecuting
-				.Select(executing => executing ? Visibility.Visible : Visibility.Collapsed)
-				.ToProperty(this, x => x.SpinnerVisibility, Visibility.Hidden);
+			_isExecuting = IdentifyRelease.IsExecuting.ToProperty(this, vm => vm.IsExecuting, out _isExecuting);
 
 			// inner views
 			ReleaseResults = new MainReleaseResultsViewModel(game, IdentifyRelease);

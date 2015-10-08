@@ -32,6 +32,9 @@ namespace VpdbAgent.Views
 			InitializeComponent();
 
 			this.OneWayBind(ViewModel, vm => vm.IdentifiedReleases, v => v.Results.ItemsSource);
+			this.OneWayBind(ViewModel, vm => vm.HasResults, v => v.Results.Visibility);
+			this.OneWayBind(ViewModel, vm => vm.HasResults, v => v.NoResults.Visibility, null, BooleanToVisibilityHint.Inverse);
+			this.OneWayBind(ViewModel, vm => vm.HasFinished, v => v.IdentifyResults.IsExpanded);
 		}
 
 		/*

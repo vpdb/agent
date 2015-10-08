@@ -8,7 +8,7 @@
              d:DesignHeight="100" 
              d:DesignWidth="600">
 
-    <Expander IsExpanded="False" x:Name="IdentifyResults" Style="{StaticResource AnimatedExpander}">
+    <Expander x:Name="IdentifyResults" IsExpanded="False" Style="{StaticResource AnimatedExpander}">
         <Grid Margin="-105,0,-10,0">
             <Grid.Background>
                 <SolidColorBrush Color="Black" Opacity="0.35" />
@@ -29,7 +29,7 @@
             <StackPanel Grid.Column="1" Orientation="Vertical" Margin="0,5,10,5">
 
                 <!-- no match found -->
-                <Grid  x:Name="NoResult" Margin="0,5,10,5">
+                <Grid  x:Name="NoResults" Margin="0,5,10,5">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />

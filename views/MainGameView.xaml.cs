@@ -53,7 +53,7 @@ namespace VpdbAgent.Views
 			this.OneWayBind(ViewModel, vm => vm.Game.HasRelease, v => v.ReleaseNameWrapper.Visibility);
 			this.OneWayBind(ViewModel, vm => vm.Game.HasRelease, v => v.Toggles.Visibility);
 			this.OneWayBind(ViewModel, vm => vm.Game.HasRelease, v => v.IdentifyButton.Visibility, null, BooleanToVisibilityHint.Inverse);
-//			this.OneWayBind(ViewModel, vm => vm.SpinnerVisibility, v => v.Spinner.Visibility);
+			this.OneWayBind(ViewModel, vm => vm.IsExecuting, v => v.Spinner.Visibility);
 
 			// vpdb data
 			this.OneWayBind(ViewModel, vm => vm.Game.Release.Name, v => v.ReleaseName.Text);
