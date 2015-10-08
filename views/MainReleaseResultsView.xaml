@@ -8,7 +8,7 @@
              d:DesignHeight="100" 
              d:DesignWidth="600">
 
-    <Expander x:Name="IdentifyResults" IsExpanded="False" Style="{StaticResource AnimatedExpander}">
+    <Expander x:Name="Panel" IsExpanded="False" Style="{StaticResource AnimatedExpander}">
         <Grid Margin="-105,0,-10,0">
             <Grid.Background>
                 <SolidColorBrush Color="Black" Opacity="0.35" />

@@ -32,8 +32,8 @@ namespace VpdbAgent.ViewModels
 		readonly ObservableAsPropertyHelper<bool> _hasResults;
 		public bool HasResults => _hasResults.Value;
 
-		readonly ObservableAsPropertyHelper<bool> _hasFinished;
-		public bool HasFinished => _hasFinished.Value;
+		readonly ObservableAsPropertyHelper<bool> _hasExecuted;
+		public bool HasExecuted => _hasExecuted.Value;
 
 		public MainReleaseResultsViewModel(Game game, IReactiveCommand<List<Release>> identifyRelease) {
 			Game = game;
@@ -46,7 +46,7 @@ namespace VpdbAgent.ViewModels
 
 			// handle visibitly & expansion status
 			identifyRelease.Select(releases => releases.Count > 0).ToProperty(this, vm => vm.HasResults, out _hasResults);
-			identifyRelease.Select(_ => true).ToProperty(this, vm => vm.HasFinished, out _hasFinished);
+			identifyRelease.Select(_ => true).ToProperty(this, vm => vm.HasExecuted, out _hasExecuted);
 
 		}
 	}

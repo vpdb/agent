@@ -28,28 +28,16 @@ namespace VpdbAgent.Views
 		
 		public MainReleaseResultsView()
 		{
-			//ViewModel = Locator.CurrentMutable.GetService<MainReleaseResultsViewModel>();
 			InitializeComponent();
 
 			this.OneWayBind(ViewModel, vm => vm.IdentifiedReleases, v => v.Results.ItemsSource);
 			this.OneWayBind(ViewModel, vm => vm.HasResults, v => v.Results.Visibility);
 			this.OneWayBind(ViewModel, vm => vm.HasResults, v => v.NoResults.Visibility, null, BooleanToVisibilityHint.Inverse);
-			this.OneWayBind(ViewModel, vm => vm.HasFinished, v => v.IdentifyResults.IsExpanded);
+			this.OneWayBind(ViewModel, vm => vm.HasExecuted, v => v.Panel.IsExpanded);
 		}
 
 		/*
-		private void UpdateElements()
-		{
-			if (_releases.Count > 0) {
-				NoResult.Visibility = Visibility.Collapsed;
-				Results.Visibility = Visibility.Visible;
-
-			} else {
-				NoResult.Visibility = Visibility.Visible;
-				Results.Visibility = Visibility.Collapsed;
-			}
-		}
-
+		
 		private void SelectButton_Click(object sender, RoutedEventArgs e)
 		{
 			var button = sender as Button;

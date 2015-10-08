@@ -34,6 +34,9 @@ namespace VpdbAgent.ViewModels
 		private readonly ObservableAsPropertyHelper<bool> _isExecuting;
 		public bool IsExecuting => _isExecuting.Value;
 
+		private readonly ObservableAsPropertyHelper<bool> _hasExecuted;
+		public bool HasExecuted => _hasExecuted.Value;
+
 
 		public MainGameViewModel(Game game)
 		{
@@ -46,7 +49,15 @@ namespace VpdbAgent.ViewModels
 			_isExecuting = IdentifyRelease.IsExecuting.ToProperty(this, vm => vm.IsExecuting, out _isExecuting);
 
 			// inner views
+			IdentifyRelease.IsExecuting
+				.Skip(1)         // skip initial false value
+				.Where(x => !x)  // then trigger when false again
+				.Select(_ => true)
+				.ToProperty(this, vm => vm.HasExecuted, out _hasExecuted);
+
+			// children
 			ReleaseResults = new MainReleaseResultsViewModel(game, IdentifyRelease);
+
 		}
 	}
 }

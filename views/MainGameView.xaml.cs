@@ -68,6 +68,7 @@ namespace VpdbAgent.Views
 
 			// inner views
 			this.OneWayBind(ViewModel, vm => vm.ReleaseResults, v => v.ReleaseResultView.ViewModel);
+			this.OneWayBind(ViewModel, vm => vm.HasExecuted, v => v.ReleaseResultView.Visibility);
 		}
 
 		/*
