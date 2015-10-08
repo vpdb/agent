@@ -43,11 +43,6 @@ namespace VpdbAgent.Vpdb.Models
 			set { this.RaiseAndSetIfChanged(ref starred, value); }
 		}
 
-		public Release()
-		{
-			Console.WriteLine("instantiated empty release object.");
-		}
-
 		public class ReleaseCounter
 		{
 			public int Comments { get; set; }

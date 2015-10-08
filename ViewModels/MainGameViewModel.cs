@@ -30,13 +30,11 @@ namespace VpdbAgent.ViewModels
 		// data
 		public Game Game { get; private set; }
 
-		// spinner
-		private readonly ObservableAsPropertyHelper<bool> _isExecuting;
+		// statuses
+		readonly ObservableAsPropertyHelper<bool> _isExecuting;
 		public bool IsExecuting => _isExecuting.Value;
-
-		private readonly ObservableAsPropertyHelper<bool> _hasExecuted;
+		readonly ObservableAsPropertyHelper<bool> _hasExecuted;
 		public bool HasExecuted => _hasExecuted.Value;
-
 
 		public MainGameViewModel(Game game)
 		{
@@ -50,14 +48,13 @@ namespace VpdbAgent.ViewModels
 
 			// inner views
 			IdentifyRelease.IsExecuting
-				.Skip(1)         // skip initial false value
-				.Where(x => !x)  // then trigger when false again
-				.Select(_ => true)
+				.Skip(1)             // skip initial false value
+				.Where(x => !x)      // then trigger when false again
+				.Select(_ => true)   // return true for HasExecuted
 				.ToProperty(this, vm => vm.HasExecuted, out _hasExecuted);
 
 			// children
 			ReleaseResults = new MainReleaseResultsViewModel(game, IdentifyRelease);
-
 		}
 	}
 }

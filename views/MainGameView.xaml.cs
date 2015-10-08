@@ -34,11 +34,6 @@ namespace VpdbAgent.Views
 	/// </summary>
 	public partial class MainGameView : UserControl, IViewFor<MainGameViewModel>
 	{
-		// deps
-		private static readonly Logger Logger = Locator.CurrentMutable.GetService<Logger>();
-
-		private MainReleaseResultsView _identifyResults;
-
 		public MainGameView()
 		{
 			InitializeComponent();
@@ -72,32 +67,6 @@ namespace VpdbAgent.Views
 		}
 
 		/*
-		private async void IdentifyButton_Click(object sender, RoutedEventArgs e)
-		{
-			IdentifyButton.Visibility = Visibility.Collapsed;
-			Progress.Visibility = Visibility.Visible;
-			Progress.Start();
-
-			var releases = await _vpdbClient.Api.GetReleasesBySize(Game.FileSize, 512);
-			Logger.Info("Found {0} matches.", releases.Count);
-
-			Progress.Visibility = Visibility.Collapsed;
-			Progress.Stop();
-			ExpandIdentifyResult(releases);
-		}
-
-		
-
-		private void CollapseIdentifyResult()
-		{
-			(Panel.Children[Panel.Children.Count - 2] as ReleaseIdentifyResultsTemplate).IdentifyResults.IsExpanded = false;
-		}
-
-		public void OnCanceled()
-		{
-			IdentifyButton.Visibility = Visibility.Visible;
-			CollapseIdentifyResult();
-		}
 
 		public void OnResult(Release result)
 		{
@@ -105,13 +74,6 @@ namespace VpdbAgent.Views
 			CollapseIdentifyResult();
 			Game.Release = result;
 			Bind();
-		}
-
-
-		public interface IReleaseResult
-		{
-			void OnCanceled();
-			void OnResult(Release result);
 		}*/
 
 		#region ViewModel

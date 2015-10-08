@@ -25,32 +25,22 @@ namespace VpdbAgent.Views
 	/// </summary>
 	public partial class MainReleaseResultsView : UserControl, IViewFor<MainReleaseResultsViewModel>
 	{
-		
 		public MainReleaseResultsView()
 		{
 			InitializeComponent();
 
+			// results
 			this.OneWayBind(ViewModel, vm => vm.IdentifiedReleases, v => v.Results.ItemsSource);
+
+			// visibility
 			this.OneWayBind(ViewModel, vm => vm.HasResults, v => v.Results.Visibility);
 			this.OneWayBind(ViewModel, vm => vm.HasResults, v => v.NoResults.Visibility, null, BooleanToVisibilityHint.Inverse);
 			this.OneWayBind(ViewModel, vm => vm.HasExecuted, v => v.Panel.IsExpanded);
-		}
 
-		/*
-		
-		private void SelectButton_Click(object sender, RoutedEventArgs e)
-		{
-			var button = sender as Button;
-			if (button != null) {
-				//_callback.OnResult(button.DataContext as Release);
-			}
+			// commands
+			this.BindCommand(ViewModel, vm => vm.CloseResults, v => v.CloseButton);
+			this.BindCommand(ViewModel, vm => vm.CloseResults, v => v.ClosePanel);
 		}
-
-		private void CloseButton_Click(object sender, RoutedEventArgs e)
-		{
-			//_callback.OnCanceled();
-		}
-		*/
 
 		#region ViewModel
 		public MainReleaseResultsViewModel ViewModel

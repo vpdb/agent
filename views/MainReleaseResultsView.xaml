@@ -19,7 +19,7 @@
             </Grid.ColumnDefinitions>
 
             <!-- close button -->
-            <Button Style="{StaticResource IconButton}" Grid.Column="0" Width="40" Height="40" VerticalAlignment="Top" HorizontalAlignment="Left">
+            <Button x:Name="ClosePanel" Style="{StaticResource IconButton}" Grid.Column="0" Width="40" Height="40" VerticalAlignment="Top" HorizontalAlignment="Left">
                 <c:IconControl Height="12"
                     Width="12"
                     Foreground="#40ffffff"
@@ -36,7 +36,7 @@
                     </Grid.ColumnDefinitions>
 
                     <Label Grid.Column="0" Content="No match found."/>
-                    <Button Grid.Column="1" Style="{StaticResource TertiaryButton}" Content="CLOSE" HorizontalAlignment="Right"/>
+                    <Button x:Name="CloseButton" Grid.Column="1" Style="{StaticResource TertiaryButton}" Content="CLOSE" HorizontalAlignment="Right"/>
                 </Grid>
 
                 <!-- result list -->

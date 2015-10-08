@@ -9,6 +9,7 @@
         <Setter Property="VerticalContentAlignment" Value="Stretch" />
         <Setter Property="BorderBrush" Value="Transparent" />
         <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="IsExpanded" Value="False" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type Expander}">
