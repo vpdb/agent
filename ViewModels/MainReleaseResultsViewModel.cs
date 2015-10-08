@@ -4,11 +4,15 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Media;
 using NLog;
 using ReactiveUI;
 using Splat;
-using VpdbAgent.Models;
 using VpdbAgent.Vpdb;
+using VpdbAgent.Vpdb.Models;
+using Game = VpdbAgent.Models.Game;
+
 
 namespace VpdbAgent.ViewModels
 {
@@ -21,17 +25,14 @@ namespace VpdbAgent.ViewModels
 		public Game Game { get; set; }
 
 		// release search results
-		ObservableAsPropertyHelper<List<Vpdb.Models.Release>> _identifiedReleases;
-		public List<Vpdb.Models.Release> IdentifiedReleases { get { return _identifiedReleases.Value; } }
+		readonly ObservableAsPropertyHelper<List<Vpdb.Models.Release>> _identifiedReleases;
+		public List<Vpdb.Models.Release> IdentifiedReleases => _identifiedReleases.Value;
 
-		public MainReleaseResultsViewModel(Game game, ReactiveCommand<object> identifyCommand) {
+		public MainReleaseResultsViewModel(Game game, IReactiveCommand<List<Release>> identifyRelease) {
 			Game = game;
 
-			// release identify
-			_identifiedReleases = identifyCommand
-				.ObserveOn(RxApp.MainThreadScheduler)
-				.SelectMany(async x => await VpdbClient.Api.GetReleasesBySize(Game.FileSize, 512))
-				.ToProperty(this, x => x.IdentifiedReleases, new List<Vpdb.Models.Release>());
+			identifyRelease.ToProperty(this, vm => vm.IdentifiedReleases, out _identifiedReleases);
+			identifyRelease.ThrownExceptions.Subscribe(e => { Logger.Error(e, "Error matching game."); });
 		}
 	}
 }

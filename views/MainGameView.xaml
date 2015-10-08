@@ -62,7 +62,7 @@
             </Grid>
 
             <!-- release results -->
-            <rx:ViewModelViewHost x:Name="ReleaseResultView" HorizontalContentAlignment="Stretch" Grid.ColumnSpan="2"></rx:ViewModelViewHost>
+            <rx:ViewModelViewHost x:Name="ReleaseResultView" HorizontalContentAlignment="Stretch" />
 
             <!-- separator -->
             <Border BorderBrush="#40ffffff" BorderThickness="0 0 0 1" Margin="5,0,0,0"/>

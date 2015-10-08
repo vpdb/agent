@@ -28,7 +28,7 @@ namespace VpdbAgent.Views
 		
 		public MainReleaseResultsView()
 		{
-			ViewModel = Locator.CurrentMutable.GetService<MainReleaseResultsViewModel>();
+			//ViewModel = Locator.CurrentMutable.GetService<MainReleaseResultsViewModel>();
 			InitializeComponent();
 
 			this.OneWayBind(ViewModel, vm => vm.IdentifiedReleases, v => v.Results.ItemsSource);

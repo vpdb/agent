@@ -9,8 +9,9 @@ using System.Windows.Media;
 using NLog;
 using ReactiveUI;
 using Splat;
-using VpdbAgent.Models;
 using VpdbAgent.Vpdb;
+using VpdbAgent.Vpdb.Models;
+using Game = VpdbAgent.Models.Game;
 
 namespace VpdbAgent.ViewModels
 {
@@ -24,24 +25,30 @@ namespace VpdbAgent.ViewModels
 		public MainReleaseResultsViewModel ReleaseResults;
 
 		// commands
-		public ReactiveCommand<object> IdentifyRelease { get; protected set; } = ReactiveCommand.Create();
+		public ReactiveCommand<List<Release>> IdentifyRelease { get; protected set; }
 
 		// data
 		public Game Game { get; private set; }
 
 		// spinner
-		ObservableAsPropertyHelper<Visibility> _spinnerVisibility;
-		public Visibility SpinnerVisibility { get { return _spinnerVisibility.Value; } }
+		readonly ObservableAsPropertyHelper<Visibility> _spinnerVisibility;
+		public Visibility SpinnerVisibility => _spinnerVisibility.Value;
+
 
 		public MainGameViewModel(Game game)
 		{
 			Game = game;
-			ReleaseResults = new MainReleaseResultsViewModel(game, IdentifyRelease);
+
+			// release identify
+			IdentifyRelease = ReactiveCommand.CreateAsyncTask(async _ => await VpdbClient.Api.GetReleasesBySize(game.FileSize, 512));
 
 			// spinner
 			_spinnerVisibility = IdentifyRelease.IsExecuting
-				.Select(x => x ? Visibility.Visible : Visibility.Collapsed)
+				.Select(executing => executing ? Visibility.Visible : Visibility.Collapsed)
 				.ToProperty(this, x => x.SpinnerVisibility, Visibility.Hidden);
+
+			// inner views
+			ReleaseResults = new MainReleaseResultsViewModel(game, IdentifyRelease);
 		}
 	}
 }
