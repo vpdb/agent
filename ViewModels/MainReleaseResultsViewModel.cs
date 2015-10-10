@@ -26,13 +26,17 @@ namespace VpdbAgent.ViewModels
 
 		// release search results
 		private readonly ObservableAsPropertyHelper<List<Release>> _identifiedReleases;
-		public List<Vpdb.Models.Release> IdentifiedReleases => _identifiedReleases.Value;
+		public List<Release> IdentifiedReleases => _identifiedReleases.Value;
 
 		// visibility
 		private readonly ObservableAsPropertyHelper<bool> _hasResults;
 		public bool HasResults => _hasResults.Value;
-		private readonly ObservableAsPropertyHelper<bool> _hasExecuted;
-		public bool HasExecuted => _hasExecuted.Value;
+		private bool _hasExecuted;
+		public bool HasExecuted
+		{
+			get { return _hasExecuted; }
+			set { this.RaiseAndSetIfChanged(ref _hasExecuted, value); }
+		}
 
 		// commands
 		public ReactiveCommand<object> CloseResults { get; protected set; } = ReactiveCommand.Create();
@@ -49,12 +53,15 @@ namespace VpdbAgent.ViewModels
 
 			// handle visibility & expansion status
 			identifyRelease.Select(releases => releases.Count > 0).ToProperty(this, vm => vm.HasResults, out _hasResults);
-			identifyRelease.Select(_ => true).ToProperty(this, vm => vm.HasExecuted, out _hasExecuted);
+			identifyRelease.IsExecuting
+				.Skip(1) // skip initial false value
+				.Where(x => !x) // then trigger when false again
+				.Subscribe(_ => { HasExecuted = true; });
+
 			//CloseResults.Select(_ => false).ToProperty(this, vm => vm.HasExecuted, out _hasExecuted);
-			CloseResults.Subscribe(_ =>
-			{
-				Console.WriteLine("Close clicked.");
-			});
+			CloseResults.Subscribe(_ => { HasExecuted = false; });
+
+			
 
 		}
 	}
