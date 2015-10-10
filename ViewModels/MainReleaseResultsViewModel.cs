@@ -13,7 +13,6 @@ using VpdbAgent.Vpdb;
 using VpdbAgent.Vpdb.Models;
 using Game = VpdbAgent.Models.Game;
 
-
 namespace VpdbAgent.ViewModels
 {
 	public class MainReleaseResultsViewModel : ReactiveObject
@@ -58,11 +57,11 @@ namespace VpdbAgent.ViewModels
 				.Where(x => !x) // then trigger when false again
 				.Subscribe(_ => { HasExecuted = true; });
 
-			//CloseResults.Select(_ => false).ToProperty(this, vm => vm.HasExecuted, out _hasExecuted);
+			// select button
+			//SelectResult.Subscribe()
+
+			// close button
 			CloseResults.Subscribe(_ => { HasExecuted = false; });
-
-			
-
 		}
 	}
 }

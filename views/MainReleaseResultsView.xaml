@@ -8,7 +8,7 @@
              d:DesignHeight="100" 
              d:DesignWidth="600">
 
-    <Expander x:Name="Panel" IsExpanded="False" Style="{StaticResource AnimatedExpander}">
+    <Expander x:Name="Panel" Style="{StaticResource AnimatedExpander}">
         <Grid Margin="-105,0,-10,0">
             <Grid.Background>
                 <SolidColorBrush Color="Black" Opacity="0.35" />
@@ -55,16 +55,16 @@
 
                                 <!-- data -->
                                 <StackPanel Grid.Column="1" Orientation="Vertical">
-                                    <Label Grid.Column="1" Padding="0">
+                                    <Label Padding="0">
                                         <TextBlock Text="{Binding Game.DisplayName}" TextTrimming="CharacterEllipsis" />
                                     </Label>
-                                    <Label Grid.Column="2" Padding="0">
+                                    <Label Padding="0">
                                         <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
                                     </Label>
                                 </StackPanel>
 
                                 <!-- select button -->
-                                <Button Style="{StaticResource TertiaryButton}" Grid.Column="2" Content="SELECT" HorizontalAlignment="Right"/>
+                                <Button x:Name="SelectButton" Style="{StaticResource TertiaryButton}" Grid.Column="2" Content="SELECT" HorizontalAlignment="Right"/>
 
                             </Grid>
                         </DataTemplate>
