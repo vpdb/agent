@@ -19,13 +19,13 @@ namespace VpdbAgent.ViewModels
 	{
 		// deps
 		private static readonly Logger Logger = Locator.CurrentMutable.GetService<Logger>();
-		private static readonly IVpdbClient VpdbClient = Locator.CurrentMutable.GetService<IVpdbClient>();
 
+		// public props
 		public Game Game { get; set; }
 
 		// release search results
-		private readonly ObservableAsPropertyHelper<List<Release>> _identifiedReleases;
-		public List<Release> IdentifiedReleases => _identifiedReleases.Value;
+		private readonly ObservableAsPropertyHelper<IEnumerable<MainReleaseResultsItemViewModel>> _identifiedReleases;
+		public IEnumerable<MainReleaseResultsItemViewModel> IdentifiedReleases => _identifiedReleases.Value;
 
 		// visibility
 		private readonly ObservableAsPropertyHelper<bool> _hasResults;
@@ -45,7 +45,14 @@ namespace VpdbAgent.ViewModels
 			Game = game;
 
 			// link results to property
-			identifyRelease.ToProperty(this, vm => vm.IdentifiedReleases, out _identifiedReleases);
+			identifyRelease
+				.Select(releases =>
+				{
+					var test = releases.Select(release => new MainReleaseResultsItemViewModel(game, release));
+					return test; //new List<MainReleaseResultsItemViewModel>();
+				})
+//				.Select(releases => releases.Select(release => new MainReleaseResultsItemViewModel(game, release)))
+				.ToProperty(this, vm => vm.IdentifiedReleases, out _identifiedReleases);
 
 			// handle errors
 			identifyRelease.ThrownExceptions.Subscribe(e => { Logger.Error(e, "Error matching game."); });
@@ -56,9 +63,6 @@ namespace VpdbAgent.ViewModels
 				.Skip(1) // skip initial false value
 				.Where(x => !x) // then trigger when false again
 				.Subscribe(_ => { HasExecuted = true; });
-
-			// select button
-			//SelectResult.Subscribe()
 
 			// close button
 			CloseResults.Subscribe(_ => { HasExecuted = false; });

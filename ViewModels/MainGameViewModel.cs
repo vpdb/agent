@@ -41,7 +41,8 @@ namespace VpdbAgent.ViewModels
 			Game = game;
 
 			// release identify
-			IdentifyRelease = ReactiveCommand.CreateAsyncTask(async _ => await VpdbClient.Api.GetReleasesBySize(game.FileSize, 512));
+			IdentifyRelease = ReactiveCommand.CreateAsyncTask(async _ => 
+				await VpdbClient.Api.GetReleasesBySize(game.FileSize, 512));
 
 			// spinner
 			_isExecuting = IdentifyRelease.IsExecuting.ToProperty(this, vm => vm.IsExecuting, out _isExecuting);

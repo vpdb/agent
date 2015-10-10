@@ -92,6 +92,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Reactive.Core, Version=2.2.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>packages\Rx-Core.2.2.5\lib\net45\System.Reactive.Core.dll</HintPath>
       <Private>True</Private>
@@ -145,7 +146,11 @@
     <Compile Include="Common\TransitioningContentControl.cs" />
     <Compile Include="Controls\IconControl.cs" />
     <Compile Include="Controls\IndeterminateProgress.cs" />
+    <Compile Include="ViewModels\MainReleaseResultsItemViewModel.cs" />
     <Compile Include="ViewModels\MainReleaseResultsViewModel.cs" />
+    <Compile Include="Views\MainReleaseResultsItemView.xaml.cs">
+      <DependentUpon>MainReleaseResultsItemView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\MainReleaseResultsView.xaml.cs">
       <DependentUpon>MainReleaseResultsView.xaml</DependentUpon>
     </Compile>
@@ -191,6 +196,10 @@
     <Compile Include="Vpdb\IVpdbApi.cs" />
     <Compile Include="Vpdb\Models\Release.cs" />
     <Compile Include="Vpdb\VpdbClient.cs" />
+    <Page Include="Views\MainReleaseResultsItemView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\MainReleaseResultsView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
