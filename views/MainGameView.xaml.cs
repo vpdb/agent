@@ -66,16 +66,6 @@ namespace VpdbAgent.Views
 			this.OneWayBind(ViewModel, vm => vm.HasExecuted, v => v.ReleaseResultView.Visibility);
 		}
 
-		/*
-
-		public void OnResult(Release result)
-		{
-			_gameManager.LinkRelease(Game, result);
-			CollapseIdentifyResult();
-			Game.Release = result;
-			Bind();
-		}*/
-
 		#region ViewModel
 		public MainGameViewModel ViewModel
 		{

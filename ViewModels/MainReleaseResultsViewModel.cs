@@ -39,19 +39,13 @@ namespace VpdbAgent.ViewModels
 
 		// commands
 		public ReactiveCommand<object> CloseResults { get; protected set; } = ReactiveCommand.Create();
-		public ReactiveCommand<object> SelectResult { get; protected set; } = ReactiveCommand.Create();
 
 		public MainReleaseResultsViewModel(Game game, IReactiveCommand<List<Release>> identifyRelease) {
 			Game = game;
 
 			// link results to property
 			identifyRelease
-				.Select(releases =>
-				{
-					var test = releases.Select(release => new MainReleaseResultsItemViewModel(game, release));
-					return test; //new List<MainReleaseResultsItemViewModel>();
-				})
-//				.Select(releases => releases.Select(release => new MainReleaseResultsItemViewModel(game, release)))
+				.Select(releases => releases.Select(release => new MainReleaseResultsItemViewModel(game, release, CloseResults)))
 				.ToProperty(this, vm => vm.IdentifiedReleases, out _identifiedReleases);
 
 			// handle errors

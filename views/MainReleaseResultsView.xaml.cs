@@ -38,7 +38,6 @@ namespace VpdbAgent.Views
 			this.OneWayBind(ViewModel, vm => vm.HasExecuted, v => v.Panel.IsExpanded);
 
 			// commands
-//			this.BindCommand(ViewModel, vm => vm.SelectResult, v => v.SelectButton);
 			this.BindCommand(ViewModel, vm => vm.CloseResults, v => v.CloseButton);
 			this.BindCommand(ViewModel, vm => vm.CloseResults, v => v.ClosePanel);
 		}
