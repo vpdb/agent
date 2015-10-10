@@ -25,15 +25,25 @@ namespace VpdbAgent.Controls
 		private static readonly IVpdbClient VpdbClient = Locator.Current.GetService<IVpdbClient>();
 		private static readonly Logger Logger = Locator.Current.GetService<Logger>();
 
-		public static readonly DependencyProperty UrlSourceProperty = 
-			DependencyProperty.Register("UrlSource", typeof(string), typeof(UrlImage), new FrameworkPropertyMetadata(string.Empty));
+		public static readonly DependencyProperty UrlSourceProperty =
+			DependencyProperty.Register("UrlSource", typeof(string), typeof(UrlImage), new FrameworkPropertyMetadata(string.Empty, Changed));
+
+		private static void Changed(DependencyObject d, DependencyPropertyChangedEventArgs e)
+		{
+			if (e.Property.Equals(UrlSourceProperty)) {
+				var image = d as UrlImage;
+				image.LoadImage();
+			}
+		}
 
 		public string UrlSource
 		{
 			get { return (string)GetValue(UrlSourceProperty); }
-			set { 
-				SetValue(UrlSourceProperty, value); 
-				LoadImage(); 
+			set
+			{
+				Console.WriteLine("Loading image {0}...", value);
+				SetValue(UrlSourceProperty, value);
+				LoadImage();
 			}
 		}
 
@@ -73,13 +83,13 @@ namespace VpdbAgent.Controls
 					stream?.BeginRead(buffer, 0, buffer.Length, (aResult) =>
 					{
 						stream.EndRead(aResult);
-						Cache(UrlSource, buffer);
 						var image = new BitmapImage();
 						image.BeginInit();
 						image.StreamSource = new MemoryStream(buffer);
 						image.EndInit();
 						image.Freeze();
 						Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(delegate {
+							Cache(UrlSource, buffer);
 							var da = new DoubleAnimation {
 								From = 0,
 								To = 1,
