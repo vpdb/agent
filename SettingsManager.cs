@@ -30,8 +30,7 @@ namespace VpdbAgent
 
 		public bool IsInitialized()
 		{
-			logger.Info("Settings initialized: {0}", PbxFolder != null && PbxFolder.Length > 0);
-			return PbxFolder != null && PbxFolder.Length > 0;
+			return !string.IsNullOrEmpty(PbxFolder);
 		}
 
 		public Dictionary<string, string> Validate()

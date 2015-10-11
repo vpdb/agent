@@ -1,4 +1,5 @@
 ﻿using System.Windows;
+using NLog;
 using ReactiveUI;
 using Splat;
 using VpdbAgent.ViewModels;
@@ -11,8 +12,11 @@ namespace VpdbAgent
 	/// </summary>
 	public partial class App : Application
 	{
+		private readonly Logger _logger = LogManager.GetCurrentClassLogger();
+
 		public App()
 		{
+			_logger.Info("Starting application.");
 			Locator.CurrentMutable.Register(() => new MainView(), typeof(IViewFor<MainViewModel>));
 		}
 	}

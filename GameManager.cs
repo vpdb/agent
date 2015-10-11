@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
+using System.Reactive;
+using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Windows;
@@ -50,7 +52,7 @@ namespace VpdbAgent
 		private readonly Logger _logger;
 
 		// props
-		public IReactiveDerivedList<Platform> Platforms { get; }
+		public ReactiveList<Platform> Platforms { get; } = new ReactiveList<Platform>() { ChangeTrackingEnabled = true };
 		public ReactiveList<Game> Games { get; } = new ReactiveList<Game>() { ChangeTrackingEnabled = true };
 
 		public GameManager(IMenuManager menuManager, IVpdbClient vpdbClient, Logger logger)
@@ -59,11 +61,52 @@ namespace VpdbAgent
 			_vpdbClient = vpdbClient;
 			_logger = logger;
 
-			Platforms = _menuManager.Systems.CreateDerivedCollection(system => new Platform(system));
+			var systems = _menuManager.Systems;
+
+			// populate platforms when system change
+			systems.Changed
+				.ObserveOn(Scheduler.Default)
+				.Subscribe(UpdatePlatforms);
+
+			// here we push all games in all platforms into the Games list.
+			// see http://stackoverflow.com/questions/15254708/
+			var whenPlatformsOrGamesInThosePlatformsChange = Observable.Merge(
+				Platforms.Changed                                                      // one of the games changes
+					.SelectMany(_ => Platforms.Select(x => x.Games.Changed).Merge())
+					.Select(_ => Unit.Default),
+				Platforms.Changed.Select(_ => Unit.Default));                          // one of the platforms changes
+			whenPlatformsOrGamesInThosePlatformsChange.StartWith(Unit.Default)
+				.Select(_ => Platforms.SelectMany(x => x.Games).ToList())
+				.Where(games => games.Count > 0)
+				.Subscribe(games =>
+				{
+					// TODO better logic
+					using (Games.SuppressChangeNotifications())
+					{
+						Games.Clear();
+						Games.AddRange(games);
+					}
+					_logger.Info("Set {0} games.", games.Count);
+				});
 
 			// subscribe to game changes and pusher stuff
-			_menuManager.GamesChanged.Subscribe(OnGamesChanged);
-			_vpdbClient.UserChannel.Subscribe(OnChannelJoined);
+			//_menuManager.GamesChanged.Subscribe(OnGamesChanged);
+			//_vpdbClient.UserChannel.Subscribe(OnChannelJoined);
+		}
+
+		private void UpdatePlatforms(NotifyCollectionChangedEventArgs args)
+		{
+			// this will also update vpdb.json for every platform
+			var platforms = _menuManager.Systems.Select(system => new Platform(system)).ToList();
+
+			// update platforms back on main thread
+			Application.Current.Dispatcher.Invoke(delegate {
+				using (Platforms.SuppressChangeNotifications()) {
+					// todo make this more intelligent by diff'ing and changing instead of drop-and-create
+					Platforms.Clear();
+					Platforms.AddRange(platforms);
+				}
+			});
 		}
 
 		/// <summary>
@@ -84,7 +127,7 @@ namespace VpdbAgent
 		public IGameManager LinkRelease(Game game, Release release)
 		{
 			game.Release = release;
-			MarshallDatabase(new Database(GetGames(game.Platform)), game.Platform);
+			//MarshallDatabase(new Database(GetGames(game.Platform)), game.Platform);
 			return this;
 		}
 
@@ -93,44 +136,21 @@ namespace VpdbAgent
 			return Games.Where(game => game.Platform.Name.Equals(platform.Name));
 		}
 
-		/// <summary>
-		/// Callback executed when games change on the local file system, e.g.
-		/// an .xml is changed or added or removed.
-		/// </summary>
-		/// <param name="system">System in which the game changed</param>
-		private void OnGamesChanged(PinballXSystem system)
+		
+
+		private void UpdateGames(PinballXSystem system, IReadOnlyCollection<Game> games)
 		{
-			// retrieve platform based on name
-			var platform = Platforms.FirstOrDefault(p => p.Name.Equals(system.Name));
-			if (platform == null) {
-				_logger.Error("Unknown platform {0}, ignoring game changes.", system.Name);
-				return;
-			}
-
-			var db = UnmarshalDatabase(platform);
-
-			var xmlGames = system.Games;
-			List<Game> mergedGames;
-			if (db == null) {
-				_logger.Warn("No vpdb.json at {0}", platform.DatabaseFile);
-				mergedGames = MergeGames(xmlGames, null, platform.TablePath, platform);
-			} else {
-				_logger.Info("Found and parsed vpdb.json at {0}", platform.DatabaseFile);
-				mergedGames = MergeGames(xmlGames, db.Games, platform.TablePath, platform);
-			}
-			MarshallDatabase(new Database(mergedGames), platform);
-
 			Application.Current.Dispatcher.Invoke(delegate {
 				using (Games.SuppressChangeNotifications()) {
 
-					var itemsToRemove = Games.Where(game => game.Platform.Name.Equals(platform.Name)).ToArray();
+					var itemsToRemove = Games.Where(game => game.Platform.Name.Equals(system.Name)).ToArray();
 					foreach (var item in itemsToRemove) {
 						Games.Remove(item);
 					}
-					Games.AddRange(mergedGames);
+					Games.AddRange(games);
 					Games.Sort();
 				};
-				_logger.Trace("Merged {0} games ({1} from XMLs)", mergedGames.Count, xmlGames.Count);
+				_logger.Trace("Merged {0} games.", games.Count);
 			});
 		}
 
@@ -192,93 +212,11 @@ namespace VpdbAgent
 				.Select(game => game.Release)
 				.FirstOrDefault();
 		}
-		
-		/// <summary>
-		/// Merges a list of games parsed from an .XML file with a list of 
-		/// games read from the internal .json database file
-		/// </summary>
-		/// <param name="xmlGames">Games read from an .XML file</param>
-		/// <param name="jsonGames">Games read from the internal .json database</param>
-		/// <param name="tablePath">Path to the table folder</param>
-		/// <param name="platform">Platform of the games</param>
-		/// <returns>List of merged games</returns>
-		private static List<Game> MergeGames(IEnumerable<PinballX.Models.Game> xmlGames, IEnumerable<Game> jsonGames, string tablePath, Platform platform)
-		{
-			var games = new List<Game>();
-			// ReSharper disable once LoopCanBeConvertedToQuery
-			foreach (var xmlGame in xmlGames) {
-				var jsonGame = jsonGames?.FirstOrDefault(g => (g.Id.Equals(xmlGame.Description)));
-				games.Add(jsonGame == null
-					? new Game(xmlGame, tablePath, platform)
-					: jsonGame.Merge(xmlGame, tablePath, platform)
-					);
-			}
-			return games;
-		}
-
-		/// <summary>
-		/// Reads the internal .json file of a given platform and returns the 
-		/// unmarshaled menu object.
-		/// </summary>
-		/// <param name="platform">Platform for which to read the database from</param>
-		/// <returns>Deserialized object</returns>
-		private Database UnmarshalDatabase(Platform platform)
-		{
-			if (!System.IO.File.Exists(platform.DatabaseFile)) {
-				return null;
-			}
-
-			var serializer = new JsonSerializer {
-				NullValueHandling = NullValueHandling.Ignore,
-				ContractResolver = new SnakeCasePropertyNamesContractResolver(),
-				Formatting = Formatting.Indented
-			};
-
-			using (var sr = new StreamReader(platform.DatabaseFile))
-			using (JsonReader reader = new JsonTextReader(sr)) {
-				try {
-					var db = serializer.Deserialize<Database>(reader);
-					reader.Close();
-					return db;
-				} catch (Exception e) {
-					_logger.Error(e, "Error parsing vpdb.json, deleting and ignoring.");
-					reader.Close();
-					System.IO.File.Delete(platform.DatabaseFile);
-					return null;
-				}
-			}
-		}
-
-		/// <summary>
-		/// Writes the database to the internal .json file for a given platform.
-		/// </summary>
-		/// <param name="database">Database to marshal</param>
-		/// <param name="platform">Platform to which the database belongs to</param>
-		private void MarshallDatabase(Database database, Platform platform)
-		{
-			if (platform.DatabaseFile != null && !Directory.Exists(Path.GetDirectoryName(platform.DatabaseFile))) {
-				_logger.Warn("Directory {0} does not exist, not writing vpdb.json.", Path.GetDirectoryName(platform.DatabaseFile));
-				return;
-			}
-
-			var serializer = new JsonSerializer {
-				NullValueHandling = NullValueHandling.Ignore,
-				ContractResolver = new SnakeCasePropertyNamesContractResolver(),
-				Formatting = Formatting.Indented
-			};
-
-			using (var sw = new StreamWriter(platform.DatabaseFile))
-			using (JsonWriter writer = new JsonTextWriter(sw)) {
-				serializer.Serialize(writer, database);
-			}
-			_logger.Debug("Wrote vpdb.json back to {0}", platform.DatabaseFile);
-		}
-
 	}
 
 	public interface IGameManager
 	{
-		IReactiveDerivedList<Platform> Platforms { get; }
+		ReactiveList<Platform> Platforms { get; }
 		ReactiveList<Game> Games { get; }
 
 		IGameManager Initialize();

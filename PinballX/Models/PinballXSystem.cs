@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Xml.Serialization;
+using ReactiveUI;
 using VpdbAgent.Models;
 using Splat;
 
@@ -26,7 +27,7 @@ namespace VpdbAgent.PinballX.Models
 		public string DatabasePath { get; set; }
 		public string MediaPath { get; set; }
 
-		public List<Game> Games { get; set; }
+		public ReactiveList<Game> Games { get; private set; } = new ReactiveList<Game>();
 
 		public PinballXSystem(KeyDataCollection data)
 		{

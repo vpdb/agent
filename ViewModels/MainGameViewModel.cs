@@ -30,6 +30,10 @@ namespace VpdbAgent.ViewModels
 		// data
 		public Game Game { get; private set; }
 
+		// needed for filters
+		private bool _isVisible = true;
+		public bool IsVisible { get { return _isVisible; } set { this.RaiseAndSetIfChanged(ref _isVisible, value); } }
+
 		// statuses
 		readonly ObservableAsPropertyHelper<bool> _isExecuting;
 		public bool IsExecuting => _isExecuting.Value;

@@ -3,8 +3,10 @@ using IniParser.Model;
 using NLog;
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
+using System.Reactive;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
@@ -12,7 +14,10 @@ using ReactiveUI;
 using VpdbAgent.PinballX.Models;
 using System.Reactive.Linq;
 using System.Reactive.Concurrency;
+using System.Reactive.Disposables;
 using System.Reactive.Subjects;
+using System.Threading;
+using System.Windows;
 using Splat;
 
 namespace VpdbAgent.PinballX
@@ -35,7 +40,9 @@ namespace VpdbAgent.PinballX
 		/// <summary>
 		/// Systems parsed from PinballX.ini.
 		/// </summary>
-		public ReactiveList<PinballXSystem> Systems { get; } = new ReactiveList<PinballXSystem>();
+		public ReactiveList<PinballXSystem> Systems { get; } = new ReactiveList<PinballXSystem>() {
+			ChangeTrackingEnabled = true,
+		};
 
 		// game change handlers
 		private readonly Subject<PinballXSystem> _gamesChanged = new Subject<PinballXSystem>();
@@ -60,102 +67,142 @@ namespace VpdbAgent.PinballX
 		/// <returns></returns>
 		public IMenuManager Initialize()
 		{
-			if (!_settingsManager.IsInitialized()) {
+			if (!_settingsManager.IsInitialized())
+			{
 				return this;
 			}
 
 			var iniPath = _settingsManager.PbxFolder + @"\Config\PinballX.ini";
 			var dbPath = _settingsManager.PbxFolder + @"\Databases\";
 
-			ParseSystems(iniPath);
-
-			// setup watchers
+			// update systems when ini changes (or now)
 			_watcher.FileWatcher(iniPath)
-				.ObserveOn(RxApp.MainThreadScheduler)
-				.Subscribe(ParseSystems);
-			_watcher.DatabaseWatcher(dbPath, Systems)
-				.ObserveOn(RxApp.MainThreadScheduler)
-				.Subscribe(path => ParseGames(Path.GetDirectoryName(path)));
+				.StartWith(iniPath)                // kick-off without waiting for first file change
+				.SubscribeOn(Scheduler.Default)    // do work on background thread
+				.Subscribe(UpdateSystems);
 
-			// parse all games when systems change
+			// parse games when systems change
 			Systems.Changed
-				.ObserveOn(RxApp.MainThreadScheduler)
-				.Subscribe(_ => ParseGames());
+				.ObserveOn(Scheduler.Default)
+				.Subscribe(UpdateGames);
 
-			// kick off initially parse
-			ParseGames();
+			Systems.ItemsAdded
+				.ObserveOn(Scheduler.Default)
+				.Subscribe(observer => {
+					_logger.Info("Systems added: {0}", observer);
+				});
+
+
+			/*
+			ParseSystemsObs(iniPath)
+				.SubscribeOn(Scheduler.Default)
+				.Subscribe(systems =>
+				{
+					// setup watchers
+					// todo DISPOSE!
+					_watcher.DatabaseWatcher(dbPath, systems)
+						.Select(Path.GetDirectoryName)
+						.Select(path => systems.FirstOrDefault(s => s.DatabasePath.Equals(path)))
+						.Subscribe(UpdateGames);
+
+					// parse all games when systems change
+					systems.Changed
+						.Subscribe(_ => UpdateGames());
+
+					// kick off initially parse
+					foreach (var system in Systems) {
+						UpdateGames(system);
+					}
+				}); */
+
 
 			return this;
+		}
+
+		private void UpdateSystems(string iniPath)
+		{
+			// here, we're on a worker thread.
+			var systems = ParseSystems(iniPath);
+
+			// treat result back on main thread
+			Application.Current.Dispatcher.Invoke((Action)delegate
+			{
+				using (Systems.SuppressChangeNotifications()) {
+					// todo make this more intelligent by diff'ing and changing instead of drop-and-create
+					Systems.Clear();
+					Systems.AddRange(systems);
+				}
+			});
+		}
+
+		private void UpdateGames(NotifyCollectionChangedEventArgs args)
+		{
+			_logger.Info("Parsing all games for all systems...");
+			foreach (var system in Systems) {
+
+				var games = ParseGames(system);
+				using (system.Games.SuppressChangeNotifications()) {
+					// todo make this more intelligent by diff'ing and changing instead of drop-and-create
+					system.Games.Clear();
+					system.Games.AddRange(games);
+				}
+			}
+			_logger.Info("All games parsed.");
 		}
 
 		/// <summary>
 		/// Parses PinballX.ini and reads all systems from it.
 		/// </summary>
-		private void ParseSystems(string iniPath)
+		private IEnumerable<PinballXSystem> ParseSystems(string iniPath)
 		{
+			var systems = new List<PinballXSystem>();
 			// only notify after this block
-			using (Systems.SuppressChangeNotifications()) {
-				_logger.Info("Parsing systems from {0}", iniPath);
-				Systems.Clear();
-				if (File.Exists(iniPath)) {
-					var parser = new FileIniDataParser();
-					var data = parser.ReadFile(iniPath);
-					Systems.Add(new PinballXSystem(VpdbAgent.Models.Platform.PlatformType.VP, data["VisualPinball"]));
-					Systems.Add(new PinballXSystem(VpdbAgent.Models.Platform.PlatformType.FP, data["FuturePinball"]));
-					for (var i = 0; i < 20; i++) {
-						if (data["System_" + i] != null) {
-							Systems.Add(new PinballXSystem(data["System_" + i]));
-						}
-					}
-				} else {
-					_logger.Error("PinballX.ini at {0} does not exist.", iniPath);
-				}
-				_logger.Info("Done, {0} systems parsed.", Systems.Count);
-			}
-		}
+			_logger.Info("Parsing systems from {0}", iniPath);
 
-		/// <summary>
-		/// Parses all games for all systems.
-		/// </summary>
-		private void ParseGames()
-		{
-			_logger.Info("Parsing all games for all systems...");
-			foreach (var system in Systems) {
-				ParseGames(system.DatabasePath);
+			if (File.Exists(iniPath)) {
+				var parser = new FileIniDataParser();
+				var data = parser.ReadFile(iniPath);
+				systems.Add(new PinballXSystem(VpdbAgent.Models.Platform.PlatformType.VP, data["VisualPinball"]));
+				systems.Add(new PinballXSystem(VpdbAgent.Models.Platform.PlatformType.FP, data["FuturePinball"]));
+				for (var i = 0; i < 20; i++) {
+					if (data["System_" + i] != null) {
+						systems.Add(new PinballXSystem(data["System_" + i]));
+					}
+				}
+			} else {
+				_logger.Error("PinballX.ini at {0} does not exist.", iniPath);
 			}
+			_logger.Info("Done, {0} systems parsed.", systems.Count);
+
+			return systems;
 		}
 
 		/// <summary>
 		/// Parses all games at a given path.
 		/// </summary>
-		/// <param name="path">Path to folder</param>
-		private void ParseGames(string path)
+		/// <param name="system">System to parse games for</param>
+		private IEnumerable<Game> ParseGames(PinballXSystem system)
 		{
-			_logger.Info("Parsing games at {0}", path);
-
-			var system = Systems.FirstOrDefault(s => s.DatabasePath.Equals(path));
-
 			if (system == null) {
-				_logger.Warn("Unknown system at {0}, ignoring file change.", path);
-				foreach (var s in Systems) {
-					_logger.Warn("{0} != {1}", Path.GetDirectoryName(path), s.DatabasePath);
-				}
-				return;
+				_logger.Warn("Unknown system, not parsing games.");
+				return new List<Game>();
 			}
+			_logger.Info("Parsing games at {0}", system.DatabasePath);
+
 			var games = new List<Game>();
 			var fileCount = 0;
 			if (Directory.Exists(system.DatabasePath)) {
 				foreach (var filePath in Directory.GetFiles(system.DatabasePath)
-					.Where(filePath => "xml".Equals(filePath.Substring(filePath.Length - 3), StringComparison.InvariantCultureIgnoreCase))) {
+					.Where(filePath => ".xml".Equals(Path.GetExtension(filePath), StringComparison.InvariantCultureIgnoreCase))) {
 					games.AddRange(UnmarshalXml(filePath).Games);
 					fileCount++;
 				}
 			}
 			_logger.Debug("Parsed {0} games from {1} XML files at {2}.", games.Count, fileCount, system.DatabasePath);
-			system.Games = games;
 
+			return games;
 			// announce to subscribers
-			_gamesChanged.OnNext(system);
+			//_gamesChanged.OnNext(system);
 		}
 
 		/// <summary>

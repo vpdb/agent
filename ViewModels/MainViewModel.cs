@@ -23,11 +23,10 @@ namespace VpdbAgent.ViewModels
 
 		// dependencies
 		private readonly IGameManager _gameManager;
-		private readonly IVpdbClient _vpdbClient;
 
 		// data
 		public IReactiveDerivedList<Platform> Platforms { get; private set; }
-		public ReactiveList<MainGameViewModel> Games { get; private set; } = new ReactiveList<MainGameViewModel>() { ChangeTrackingEnabled = true };
+		public ReactiveList<MainGameViewModel> Games { get; } = new ReactiveList<MainGameViewModel>() { ChangeTrackingEnabled = true };
 
 		// commands
 		public ReactiveCommand<object> FilterPlatforms { get; protected set; } = ReactiveCommand.Create();
@@ -41,7 +40,7 @@ namespace VpdbAgent.ViewModels
 
 			// do the initialization here
 			_gameManager = gameManager.Initialize();
-			_vpdbClient = vpdbClient.Initialize();
+			vpdbClient.Initialize();
 
 			// create platforms
 			Platforms = _gameManager.Platforms.CreateDerivedCollection(
@@ -53,6 +52,7 @@ namespace VpdbAgent.ViewModels
 			// games
 			Observable.Merge(_gameManager.Games.Changed, _platformFilter.Changed).Subscribe(_ => {
 				using (Games.SuppressChangeNotifications()) {
+
 					Games.Clear();
 					Games.AddRange(_gameManager.Games
 						.Where(game => game.Platform.IsEnabled && _platformFilter.Contains(game.Platform.Name))
@@ -61,13 +61,17 @@ namespace VpdbAgent.ViewModels
 					Games.Sort((x, y) => string.Compare(x.Game.Id, y.Game.Id, StringComparison.OrdinalIgnoreCase));
 				}
 			});
-		
-			// populate filter
-			using (_platformFilter.SuppressChangeNotifications()) {
-				_platformFilter.AddRange(Platforms.Select(p => p.Name));
-			};
 
-			Logger.Info("We got {0} platforms and {1} games.", Platforms.Count, _gameManager.Games.Count);
+			Platforms.Changed.Subscribe(_ => {
+				// populate filter
+				using (_platformFilter.SuppressChangeNotifications()) {
+					_platformFilter.AddRange(Platforms.Select(p => p.Name));
+				};
+				Logger.Info("We've got {0} platforms, {2} in filter, {1} in total.", Platforms.Count, _gameManager.Platforms.Count, _platformFilter.Count);
+			});
+			Games.Changed.Subscribe(_ => {
+				Logger.Info("We've got {0} games, {1} in total.", Games.Count, _gameManager.Games.Count);
+			});
 		}
 
 		public void OnPlatformFilterChanged(object sender, object e)
