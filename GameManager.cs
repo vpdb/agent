@@ -67,7 +67,7 @@ namespace VpdbAgent
 		}
 
 		/// <summary>
-		///     Triggers data update
+		/// Triggers data update
 		/// </summary>
 		/// <returns>This instance</returns>
 		public IGameManager Initialize()
@@ -93,6 +93,11 @@ namespace VpdbAgent
 			return Games.Where(game => game.Platform.Name.Equals(platform.Name));
 		}
 
+		/// <summary>
+		/// Callback executed when games change on the local file system, e.g.
+		/// an .xml is changed or added or removed.
+		/// </summary>
+		/// <param name="system">System in which the game changed</param>
 		private void OnGamesChanged(PinballXSystem system)
 		{
 			// retrieve platform based on name
@@ -129,6 +134,11 @@ namespace VpdbAgent
 			});
 		}
 
+		/// <summary>
+		/// Executed when the pusher connection with the private user channel
+		/// is established and we can subscribe to messages.
+		/// </summary>
+		/// <param name="userChannel">User channel object</param>
 		private void OnChannelJoined(Channel userChannel)
 		{
 			if (userChannel == null) {
@@ -136,10 +146,10 @@ namespace VpdbAgent
 			}
 
 			// subscribe through a subject so we can do more fun stuff with it
-			Subject<dynamic> star = new Subject<dynamic>();
-			Subject<dynamic> unstar = new Subject<dynamic>();
-			userChannel.Bind("star", (dynamic data) => star.OnNext(data));
-			userChannel.Bind("unstar", (dynamic data) => unstar.OnNext(data));
+			var star = new Subject<dynamic>();
+			var unstar = new Subject<dynamic>();
+			userChannel.Bind("star", data => star.OnNext(data));
+			userChannel.Bind("unstar", data => unstar.OnNext(data));
 
 			// star
 			star.ObserveOn(RxApp.MainThreadScheduler).Subscribe(data =>
@@ -170,6 +180,11 @@ namespace VpdbAgent
 			});
 		}
 
+		/// <summary>
+		/// Returns a release based on release ID or null if not locally found.
+		/// </summary>
+		/// <param name="releaseId">Release ID</param>
+		/// <returns></returns>
 		private Release FindRelease(string releaseId)
 		{
 			return Games
