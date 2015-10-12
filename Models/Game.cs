@@ -15,12 +15,9 @@ namespace VpdbAgent.Models
 	public class Game : ReactiveObject, IComparable<Game>
 	{
 		#region Read/Write Fields
-		[JsonIgnoreAttribute]
-		private Vpdb.Models.Release release;
-		[JsonIgnoreAttribute]
-		readonly ObservableAsPropertyHelper<bool> hasRelease;
-		[JsonIgnoreAttribute]
-		private bool exists;
+		private Vpdb.Models.Release _release;
+		readonly ObservableAsPropertyHelper<bool> _hasRelease;
+		private bool _exists;
 		#endregion
 
 		[DataMember]
@@ -33,16 +30,16 @@ namespace VpdbAgent.Models
 		[DataMember]
 		public Vpdb.Models.Release Release
 		{
-			get { return release; }
-			set { this.RaiseAndSetIfChanged(ref release, value); }
+			get { return _release; }
+			set { this.RaiseAndSetIfChanged(ref _release, value); }
 		}
 
 		public bool Exists
 		{
-			get { return exists; }
-			set { this.RaiseAndSetIfChanged(ref exists, value); }
+			get { return _exists; }
+			set { this.RaiseAndSetIfChanged(ref _exists, value); }
 		}
-		public bool HasRelease { get { return hasRelease.Value; } }
+		public bool HasRelease => _hasRelease.Value;
 		public long FileSize { get; set; }
 		public Platform Platform { get; set; }
 
@@ -53,7 +50,7 @@ namespace VpdbAgent.Models
 		{
 			this.WhenAnyValue(game => game.Release)
 				.Select(release => release != null)
-				.ToProperty(this, game => game.HasRelease, out hasRelease);
+				.ToProperty(this, game => game.HasRelease, out _hasRelease);
 		}
 
 		public Game(PinballX.Models.Game xmlGame, string tablePath, Platform platform) : this()

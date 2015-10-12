@@ -10,6 +10,7 @@ using Splat;
 using System.Reactive.Linq;
 using System.Reactive;
 using VpdbAgent.Vpdb;
+using static System.String;
 
 namespace VpdbAgent.ViewModels
 {
@@ -25,8 +26,9 @@ namespace VpdbAgent.ViewModels
 		private readonly IGameManager _gameManager;
 
 		// data
-		public IReactiveDerivedList<Platform> Platforms { get; private set; }
-		public ReactiveList<MainGameViewModel> Games { get; } = new ReactiveList<MainGameViewModel>();
+		public IReactiveDerivedList<Platform> Platforms { get; }
+		public IReactiveDerivedList<MainGameViewModel> Games { get; }
+		private IReactiveDerivedList<MainGameViewModel> AllGames { get; }
 
 		// commands
 		public ReactiveCommand<object> FilterPlatforms { get; protected set; } = ReactiveCommand.Create();
@@ -46,20 +48,31 @@ namespace VpdbAgent.ViewModels
 			Platforms = _gameManager.Platforms.CreateDerivedCollection(
 				platform => platform,
 				platform => platform.IsEnabled,
-				(x, y) => string.Compare(x.Name, y.Name, StringComparison.Ordinal)
+				(x, y) => Compare(x.Name, y.Name, StringComparison.Ordinal)
 			);
 
-			// games
-			Observable.Merge(_gameManager.Games.Changed, _platformFilter.Changed).Subscribe(_ => {
-				using (Games.SuppressChangeNotifications()) {
+			// push all games into AllGames as view models and sorted
+			AllGames = _gameManager.Games.CreateDerivedCollection(
+				game => new MainGameViewModel(game),
+				gameViewModel => true,
+				(x, y) => Compare(x.Game.Id, y.Game.Id, StringComparison.Ordinal)
+			);
+			AllGames.ChangeTrackingEnabled = true;
 
-					Games.Clear();
-					Games.AddRange(_gameManager.Games
-						.Where(game => game.Platform.IsEnabled && _platformFilter.Contains(game.Platform.Name))
-						.Select(game => new MainGameViewModel(game))
-					);
-					Games.Sort((x, y) => string.Compare(x.Game.Id, y.Game.Id, StringComparison.OrdinalIgnoreCase));
+			// push filtered game view models into Games
+			Games = AllGames.CreateDerivedCollection(gameViewModel => gameViewModel, gameViewModel => gameViewModel.IsVisible);
+
+			_platformFilter.Changed.Subscribe(_ => {
+
+				Logger.Info("Updating IsVisible status on games...");
+				using (AllGames.SuppressChangeNotifications()) {
+					foreach (var gameViewModel in AllGames) {
+						gameViewModel.IsVisible =
+						gameViewModel.Game.Platform.IsEnabled &&
+						_platformFilter.Contains(gameViewModel.Game.Platform.Name);
+					}
 				}
+				Logger.Info("Done ({0} updated).", AllGames.Count);
 			});
 
 			Platforms.Changed.Subscribe(_ => {
@@ -67,10 +80,10 @@ namespace VpdbAgent.ViewModels
 				using (_platformFilter.SuppressChangeNotifications()) {
 					_platformFilter.AddRange(Platforms.Select(p => p.Name));
 				};
-				Logger.Info("We've got {0} platforms, {2} in filter, {1} in total.", Platforms.Count, _gameManager.Platforms.Count, _platformFilter.Count);
+				Logger.Info("We've got {0} platforms, {2} visible, {1} in total.", Platforms.Count, _gameManager.Platforms.Count, _platformFilter.Count);
 			});
-			Games.Changed.Subscribe(_ => {
-				Logger.Info("We've got {0} games, {1} in total.", Games.Count, _gameManager.Games.Count);
+			AllGames.Changed.Subscribe(_ => {
+				Logger.Info("We've got {0} games, {1} in total.", Games.Count, AllGames.Count);
 			});
 		}
 
