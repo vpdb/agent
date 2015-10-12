@@ -52,8 +52,8 @@ namespace VpdbAgent
 		private readonly Logger _logger;
 
 		// props
-		public ReactiveList<Platform> Platforms { get; } = new ReactiveList<Platform>() { ChangeTrackingEnabled = true };
-		public ReactiveList<Game> Games { get; } = new ReactiveList<Game>() { ChangeTrackingEnabled = true };
+		public ReactiveList<Platform> Platforms { get; } = new ReactiveList<Platform>();
+		public ReactiveList<Game> Games { get; } = new ReactiveList<Game>();
 
 		public GameManager(IMenuManager menuManager, IVpdbClient vpdbClient, Logger logger)
 		{

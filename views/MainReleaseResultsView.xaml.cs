@@ -28,18 +28,20 @@ namespace VpdbAgent.Views
 		public MainReleaseResultsView()
 		{
 			InitializeComponent();
+			this.WhenActivated(d => {
 
-			// results
-			this.OneWayBind(ViewModel, vm => vm.IdentifiedReleases, v => v.Results.ItemsSource);
+				// results
+				d(this.OneWayBind(ViewModel, vm => vm.IdentifiedReleases, v => v.Results.ItemsSource));
 
-			// visibility
-			this.OneWayBind(ViewModel, vm => vm.HasResults, v => v.Results.Visibility);
-			this.OneWayBind(ViewModel, vm => vm.HasResults, v => v.NoResults.Visibility, null, BooleanToVisibilityHint.Inverse);
-			this.OneWayBind(ViewModel, vm => vm.HasExecuted, v => v.Panel.IsExpanded);
+				// visibility
+				d(this.OneWayBind(ViewModel, vm => vm.HasResults, v => v.Results.Visibility));
+				d(this.OneWayBind(ViewModel, vm => vm.HasResults, v => v.NoResults.Visibility, null, BooleanToVisibilityHint.Inverse));
+				d(this.OneWayBind(ViewModel, vm => vm.HasExecuted, v => v.Panel.IsExpanded));
 
-			// commands
-			this.BindCommand(ViewModel, vm => vm.CloseResults, v => v.CloseButton);
-			this.BindCommand(ViewModel, vm => vm.CloseResults, v => v.ClosePanel);
+				// commands
+				d(this.BindCommand(ViewModel, vm => vm.CloseResults, v => v.CloseButton));
+				d(this.BindCommand(ViewModel, vm => vm.CloseResults, v => v.ClosePanel));
+			});
 		}
 
 		#region ViewModel

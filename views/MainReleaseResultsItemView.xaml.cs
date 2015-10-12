@@ -25,10 +25,15 @@ namespace VpdbAgent.Views
 		public MainReleaseResultsItemView()
 		{
 			InitializeComponent();
-			this.OneWayBind(ViewModel, vm => vm.Release.Game.DisplayName, v => v.GameName.Text);
-			this.OneWayBind(ViewModel, vm => vm.Release.Name, v => v.ReleaseName.Text);
-			this.OneWayBind(ViewModel, vm => vm.Release.LatestVersion.Thumb.Image, v => v.Thumb.UrlSource);
-			this.BindCommand(ViewModel, vm => vm.SelectResult, v => v.SelectButton);
+
+			this.WhenActivated(d => {
+
+				d(this.OneWayBind(ViewModel, vm => vm.Release.Game.DisplayName, v => v.GameName.Text));
+				d(this.OneWayBind(ViewModel, vm => vm.Release.Name, v => v.ReleaseName.Text));
+				d(this.OneWayBind(ViewModel, vm => vm.Release.LatestVersion.Thumb.Image, v => v.Thumb.UrlSource));
+				d(this.BindCommand(ViewModel, vm => vm.SelectResult, v => v.SelectButton));
+			});
+			
 		}
 
 		#region ViewModel

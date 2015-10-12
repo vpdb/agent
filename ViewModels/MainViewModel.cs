@@ -26,7 +26,7 @@ namespace VpdbAgent.ViewModels
 
 		// data
 		public IReactiveDerivedList<Platform> Platforms { get; private set; }
-		public ReactiveList<MainGameViewModel> Games { get; } = new ReactiveList<MainGameViewModel>() { ChangeTrackingEnabled = true };
+		public ReactiveList<MainGameViewModel> Games { get; } = new ReactiveList<MainGameViewModel>();
 
 		// commands
 		public ReactiveCommand<object> FilterPlatforms { get; protected set; } = ReactiveCommand.Create();

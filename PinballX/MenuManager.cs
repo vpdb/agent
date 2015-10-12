@@ -40,9 +40,7 @@ namespace VpdbAgent.PinballX
 		/// <summary>
 		/// Systems parsed from PinballX.ini.
 		/// </summary>
-		public ReactiveList<PinballXSystem> Systems { get; } = new ReactiveList<PinballXSystem>() {
-			ChangeTrackingEnabled = true,
-		};
+		public ReactiveList<PinballXSystem> Systems { get; } = new ReactiveList<PinballXSystem>();
 
 		// game change handlers
 		private readonly Subject<PinballXSystem> _gamesChanged = new Subject<PinballXSystem>();

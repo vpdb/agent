@@ -27,7 +27,7 @@ namespace VpdbAgent.Views
 		{
 			InitializeComponent();
 
-			this.WhenAnyValue(x => x.ViewModel).BindTo(this, x => x.DataContext);
+			//this.WhenAnyValue(x => x.ViewModel).BindTo(this, x => x.DataContext);
 			this.WhenActivated(d =>
 			{
 				d(this.OneWayBind(ViewModel, vm => vm.Platforms, v => v.PlatformList.ItemsSource));

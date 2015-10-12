@@ -30,11 +30,14 @@ namespace VpdbAgent.Views
 			InitializeComponent();
 			UpdateAdvancedOptions();
 
-			// model
-			this.WhenAnyValue(x => x.ViewModel).BindTo(this, x => x.DataContext);
+			this.WhenActivated(d => {
 
-			this.WhenActivated(ApplyBindings);
+				// model
+				d(this.WhenAnyValue(x => x.ViewModel).BindTo(this, x => x.DataContext));
 
+				d(this.WhenActivated(ApplyBindings));
+			});
+		
 			//CancelButton.Visibility = NavigationService.CanGoBack ? Visibility.Visible : Visibility.Hidden;
 		}
 
