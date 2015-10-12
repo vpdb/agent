@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Windows.Controls;
 using NLog;
@@ -44,7 +45,7 @@ namespace VpdbAgent.ViewModels
 			_gameManager = gameManager.Initialize();
 			vpdbClient.Initialize();
 
-			// create platforms
+			// create platforms, filtered and sorted
 			Platforms = _gameManager.Platforms.CreateDerivedCollection(
 				platform => platform,
 				platform => platform.IsEnabled,
@@ -62,31 +63,55 @@ namespace VpdbAgent.ViewModels
 			// push filtered game view models into Games
 			Games = AllGames.CreateDerivedCollection(gameViewModel => gameViewModel, gameViewModel => gameViewModel.IsVisible);
 
-			_platformFilter.Changed.Subscribe(_ => {
+			// update games view models when platform filter changes
+			_platformFilter.Changed.Subscribe(UpdatePlatformFilter);
 
-				Logger.Info("Updating IsVisible status on games...");
-				using (AllGames.SuppressChangeNotifications()) {
-					foreach (var gameViewModel in AllGames) {
-						gameViewModel.IsVisible =
-						gameViewModel.Game.Platform.IsEnabled &&
-						_platformFilter.Contains(gameViewModel.Game.Platform.Name);
-					}
-				}
-				Logger.Info("Done ({0} updated).", AllGames.Count);
-			});
+			// update platform filter when platforms change
+			Platforms.Changed.Subscribe(UpdatePlatforms);
 
-			Platforms.Changed.Subscribe(_ => {
-				// populate filter
-				using (_platformFilter.SuppressChangeNotifications()) {
-					_platformFilter.AddRange(Platforms.Select(p => p.Name));
-				};
-				Logger.Info("We've got {0} platforms, {2} visible, {1} in total.", Platforms.Count, _gameManager.Platforms.Count, _platformFilter.Count);
-			});
-			AllGames.Changed.Subscribe(_ => {
-				Logger.Info("We've got {0} games, {1} in total.", Games.Count, AllGames.Count);
-			});
+			// just print that we're happy
+			AllGames.Changed.Subscribe(_ => { Logger.Info("We've got {0} games, {1} in total.", Games.Count, AllGames.Count); });
 		}
 
+
+		/// <summary>
+		/// Updates the IsVisible flag on all games in order to filter
+		/// depending on the selected platforms.
+		/// </summary>
+		/// <param name="args">Change arguments from ReactiveList</param>
+		private void UpdatePlatformFilter(NotifyCollectionChangedEventArgs args)
+		{
+			using (AllGames.SuppressChangeNotifications()) {
+				foreach (var gameViewModel in AllGames) {
+					gameViewModel.IsVisible =
+						gameViewModel.Game.Platform.IsEnabled &&
+						_platformFilter.Contains(gameViewModel.Game.Platform.Name);
+				}
+			}
+		}
+
+
+		/// <summary>
+		/// Updates the platform filter when platforms change.
+		/// </summary>
+		/// <param name="args">Change arguments from ReactiveList</param>
+		private void UpdatePlatforms(NotifyCollectionChangedEventArgs args)
+		{
+			// populate filter
+			using (_platformFilter.SuppressChangeNotifications()) {
+				_platformFilter.Clear();
+				_platformFilter.AddRange(Platforms.Select(p => p.Name));
+			};
+			Logger.Info("We've got {0} platforms, {2} visible, {1} in total.", Platforms.Count, _gameManager.Platforms.Count, _platformFilter.Count);
+
+		}
+
+
+		/// <summary>
+		/// The click event from the view that toggles a given platform filter.
+		/// </summary>
+		/// <param name="sender">View of the checkbox</param>
+		/// <param name="e"></param>
 		public void OnPlatformFilterChanged(object sender, object e)
 		{
 			var checkbox = (sender as CheckBox);
