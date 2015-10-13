@@ -146,6 +146,13 @@
     <Compile Include="Common\TransitioningContentControl.cs" />
     <Compile Include="Controls\IconControl.cs" />
     <Compile Include="Controls\IndeterminateProgress.cs" />
+    <Compile Include="SmoothPanel\DataBindHelper.cs" />
+    <Compile Include="SmoothPanel\IHeightMeasurer.cs" />
+    <Compile Include="SmoothPanel\SmoothPanel.cs" />
+    <Compile Include="SmoothPanel\SmoothPanelChildren.cs" />
+    <Compile Include="SmoothPanel\SmoothPanelMeasurer.cs" />
+    <Compile Include="SmoothPanel\SmoothPanelTemplate.cs" />
+    <Compile Include="SmoothPanel\SmoothPanelViewCache.cs" />
     <Compile Include="ViewModels\MainReleaseResultsItemViewModel.cs" />
     <Compile Include="ViewModels\MainReleaseResultsViewModel.cs" />
     <Compile Include="Views\MainReleaseResultsItemView.xaml.cs">

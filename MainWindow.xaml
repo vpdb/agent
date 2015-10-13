@@ -32,7 +32,7 @@
 
     <DockPanel LastChildFill="True">
         <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal">
-            <Label Content="Status info. All green." />
+            <TextBlock x:Name="Status" Text="Status info. All green." />
         </StackPanel>
         <DockPanel Margin="7" >
             <DockPanel Margin="7" DockPanel.Dock="Top" LastChildFill="False">

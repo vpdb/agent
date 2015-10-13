@@ -13,6 +13,7 @@ using ReactiveUI;
 using VpdbAgent.ViewModels;
 using Splat;
 using System.Reactive.Linq;
+using ListBox = System.Windows.Forms.ListBox;
 
 namespace VpdbAgent.Views
 {

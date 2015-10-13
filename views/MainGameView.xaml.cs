@@ -16,6 +16,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using Devart.Controls;
 using NLog;
 using ReactiveUI;
 using Splat;
@@ -32,7 +33,7 @@ namespace VpdbAgent.Views
 	/// <summary>
 	/// Interaction logic for GameTemplate.xaml
 	/// </summary>
-	public partial class MainGameView : UserControl, IViewFor<MainGameViewModel>
+	public partial class MainGameView : UserControl, IViewFor<MainGameViewModel>, IHeightMeasurer
 	{
 		public MainGameView()
 		{
@@ -40,6 +41,7 @@ namespace VpdbAgent.Views
 
 			this.WhenActivated(d =>
 			{
+				
 				// game data from .xml
 				d(this.OneWayBind(ViewModel, vm => vm.Game.Id, v => v.Title.Text));
 				d(this.OneWayBind(ViewModel, vm => vm.Game.Filename, v => v.Filename.Text));
@@ -64,11 +66,9 @@ namespace VpdbAgent.Views
 				d(this.BindCommand(ViewModel, vm => vm.IdentifyRelease, v => v.IdentifyButton));
 
 				// inner views
-				d(this.OneWayBind(ViewModel, vm => vm.ReleaseResults, v => v.ReleaseResultView.ViewModel));
-				d(this.OneWayBind(ViewModel, vm => vm.HasExecuted, v => v.ReleaseResultView.Visibility));
+				//d(this.OneWayBind(ViewModel, vm => vm.ReleaseResults, v => v.ReleaseResultView.ViewModel));
+				//d(this.OneWayBind(ViewModel, vm => vm.HasExecuted, v => v.ReleaseResultView.Visibility));
 			});
-
-		
 		}
 
 		#region ViewModel
@@ -87,5 +87,10 @@ namespace VpdbAgent.Views
 			set { ViewModel = (MainGameViewModel)value; }
 		}
 		#endregion
+
+		public double GetEstimatedHeight(double availableWidth)
+		{
+			return 200;
+		}
 	}
 }

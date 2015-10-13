@@ -83,7 +83,7 @@ namespace VpdbAgent
 					// TODO better logic
 					using (Games.SuppressChangeNotifications())
 					{
-						Games.Clear();
+						Games.RemoveRange(0, Games.Count);
 						Games.AddRange(games);
 					}
 					_logger.Info("Set {0} games.", games.Count);
