@@ -40,6 +40,7 @@ namespace VpdbAgent.Views
 
 			this.WhenActivated(d =>
 			{
+				/*
 				// game data from .xml
 				d(this.OneWayBind(ViewModel, vm => vm.Game.Id, v => v.Title.Text));
 				d(this.OneWayBind(ViewModel, vm => vm.Game.Filename, v => v.Filename.Text));
@@ -62,13 +63,12 @@ namespace VpdbAgent.Views
 
 				// commands
 				d(this.BindCommand(ViewModel, vm => vm.IdentifyRelease, v => v.IdentifyButton));
+				*/
 
 				// inner views
-				d(this.OneWayBind(ViewModel, vm => vm.ReleaseResults, v => v.ReleaseResultView.ViewModel));
-				d(this.OneWayBind(ViewModel, vm => vm.HasExecuted, v => v.ReleaseResultView.Visibility));
+				//d(this.OneWayBind(ViewModel, vm => vm.ReleaseResults, v => v.ReleaseResultView.ViewModel));
+				//d(this.OneWayBind(ViewModel, vm => vm.HasExecuted, v => v.ReleaseResultView.Visibility));
 			});
-
-		
 		}
 
 		#region ViewModel

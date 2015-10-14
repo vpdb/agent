@@ -35,9 +35,9 @@ namespace VpdbAgent.ViewModels
 		public bool IsVisible { get { return _isVisible; } set { this.RaiseAndSetIfChanged(ref _isVisible, value); } }
 
 		// statuses
-		readonly ObservableAsPropertyHelper<bool> _isExecuting;
+		private readonly ObservableAsPropertyHelper<bool> _isExecuting;
+		private readonly ObservableAsPropertyHelper<bool> _hasExecuted;
 		public bool IsExecuting => _isExecuting.Value;
-		readonly ObservableAsPropertyHelper<bool> _hasExecuted;
 		public bool HasExecuted => _hasExecuted.Value;
 
 		public MainGameViewModel(Game game)
