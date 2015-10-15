@@ -101,11 +101,6 @@ namespace VpdbAgent.ViewModels
 			), typeof(IGameManager));
 
 
-			// converters
-			locator.RegisterConstant(new BooleanToBrushTypeConverter(), typeof(IBindingTypeConverter));
-			locator.RegisterConstant(new ImageToUrlTypeConverter(), typeof(IBindingTypeConverter));
-
-
 			// view models
 			locator.RegisterLazySingleton(() => new MainView(), typeof(IViewFor<MainViewModel>));
 			locator.Register(() => new MainGameView(), typeof(IViewFor<MainGameViewModel>));

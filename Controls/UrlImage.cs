@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -32,7 +33,7 @@ namespace VpdbAgent.Controls
 		{
 			if (e.Property.Equals(UrlSourceProperty)) {
 				var image = d as UrlImage;
-				image.LoadImage();
+				image?.LoadImage();
 			}
 		}
 
@@ -58,6 +59,12 @@ namespace VpdbAgent.Controls
 				Logger.Warn("Ignoring null-image.");
 				return;
 			}
+
+			// in design mode, ignore
+			if (LicenseManager.UsageMode == LicenseUsageMode.Designtime) {
+				return;
+			}
+
 
 			// if cached, set from cache
 			if (IsCached(UrlSource)) {

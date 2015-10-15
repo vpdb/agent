@@ -155,6 +155,9 @@
     <Compile Include="SmoothPanel\SmoothPanelViewCache.cs" />
     <Compile Include="ViewModels\MainReleaseResultsItemViewModel.cs" />
     <Compile Include="ViewModels\MainReleaseResultsViewModel.cs" />
+    <Compile Include="ViewModels\TypeConverters\BooleanConverter.cs" />
+    <Compile Include="ViewModels\TypeConverters\BooleanToBrushConverter.cs" />
+    <Compile Include="ViewModels\TypeConverters\BooleanToVisibilityConverter.cs" />
     <Compile Include="Views\MainReleaseResultsItemView.xaml.cs">
       <DependentUpon>MainReleaseResultsItemView.xaml</DependentUpon>
     </Compile>

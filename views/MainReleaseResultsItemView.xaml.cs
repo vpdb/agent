@@ -33,7 +33,6 @@ namespace VpdbAgent.Views
 				d(this.OneWayBind(ViewModel, vm => vm.Release.LatestVersion.Thumb.Image, v => v.Thumb.UrlSource));
 				d(this.BindCommand(ViewModel, vm => vm.SelectResult, v => v.SelectButton));
 			});
-			
 		}
 
 		#region ViewModel

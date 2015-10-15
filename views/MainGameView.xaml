@@ -4,18 +4,28 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:c="clr-namespace:VpdbAgent.Controls"
+             xmlns:tc="clr-namespace:VpdbAgent.ViewModels.TypeConverters"
              xmlns:v="clr-namespace:VpdbAgent.Views"
+             xmlns:vm="clr-namespace:VpdbAgent.ViewModels"
              xmlns:rx="clr-namespace:ReactiveUI;assembly=ReactiveUI"
              mc:Ignorable="d" 
              d:DesignWidth="800"
-             Padding="20,0,0,0">
+             Padding="20,0,0,0" d:DataContext="{d:DesignInstance Type=vm:MainGameViewModel}">
+
+	<UserControl.Resources>
+        <tc:BooleanToVisibilityConverter x:Key="TrueToVisible" True="Visible" False="Collapsed" />
+        <tc:BooleanToVisibilityConverter x:Key="TrueToCollapsed" True="Collapsed" False="Visible" />
+        <tc:BooleanToBrushConverter x:Key="FalseToRed" True="Transparent" False="DarkRed" />
+        <tc:BooleanToBrushConverter x:Key="TrueToPrimary" True="{StaticResource PrimaryColorBrush}" False="{StaticResource LabelTextBrush}" />
+    </UserControl.Resources>
+	
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="80" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
-    
-        <c:UrlImage x:Name="Thumb" Grid.Column="0" Margin="0,10,0,0" Width="70" Height="70" VerticalAlignment="Top" HorizontalAlignment="Left"/>
+
+        <c:UrlImage UrlSource="{Binding Game.Release.LatestVersion.Thumb.Image.Url}" Grid.Column="0" Margin="0,10,0,0" Width="70" Height="70" VerticalAlignment="Top" HorizontalAlignment="Left"/>
 
         <StackPanel Grid.Column="1" Orientation="Vertical">
 
@@ -28,20 +38,20 @@
 
                 <!-- title -->
                 <Label Grid.Column="0" Margin="0,0,0,-10">
-                    <TextBlock x:Name="Title" TextTrimming="CharacterEllipsis" FontSize="22" FontWeight="Bold" Text="Medieval Madness (Williams 1997)" />
+                    <TextBlock Text="{Binding Game.Id}" TextTrimming="CharacterEllipsis" FontSize="22" FontWeight="Bold" />
                 </Label>
 
                 <!-- controls -->
-                <StackPanel x:Name="Toggles" Grid.Column="1" Orientation="Horizontal" Margin="0,5,0,0">
-                    <c:IconControl x:Name="Star"  Height="18" Width="18" Foreground="#80ffffff" Data="{StaticResource IconStar}" Margin="10,-2,12,0" />
+                <StackPanel Visibility="{Binding Path=Game.HasRelease, Converter={StaticResource TrueToVisible}}" Grid.Column="1" Orientation="Horizontal" Margin="0,5,0,0">
+                    <c:IconControl Foreground="{Binding Path=Game.Release.Starred, Converter={StaticResource TrueToPrimary}}" Data="{StaticResource IconStar}" Margin="10,-2,12,0"  Height="18" Width="18" />
                     <ToggleButton Height="20" Margin="5,0,20,0"/>
                     <Label Content="SYNC" FontSize="15"/>
                 </StackPanel>
             </Grid>
 
             <!-- second row -->
-            <Label x:Name="ReleaseNameWrapper" Margin="0,0,0,-10">
-                <TextBlock x:Name="ReleaseName" TextTrimming="CharacterEllipsis" Text="Castle Crusher Edition 1.2"/>
+            <Label Visibility="{Binding Path=Game.HasRelease, Converter={StaticResource TrueToVisible}}" Margin="0,0,0,-10">
+                <TextBlock Text="{Binding Game.Release.Name}" TextTrimming="CharacterEllipsis"/>
             </Label>
 
             <!-- third row -->
@@ -53,12 +63,12 @@
 
                 <!-- filename -->
                 <Label Grid.Column="0">
-                    <TextBlock x:Name="Filename" TextTrimming="CharacterEllipsis" Text="Some_weird_filename.vpt"/>
+                    <TextBlock Text="{Binding Game.Filename}" Background="{Binding Path=Game.Exists, Converter={StaticResource FalseToRed}}" TextTrimming="CharacterEllipsis"/>
                 </Label>
 
                 <!-- identify button -->
-                <Button x:Name="IdentifyButton" Style="{StaticResource TertiaryButton}" Grid.Column="1" Content="IDENTIFY" HorizontalAlignment="Right" Margin="0,0,10,0"/>
-                <c:IndeterminateProgress x:Name="Spinner" Grid.Column="1" Height="22" Width="22" Visibility="Collapsed" HorizontalAlignment="Right" Margin="0,0,10,0"/>
+                <Button IsEnabled="{Binding Game.Exists}" Command="{Binding IdentifyRelease}" Visibility="{Binding Path=Game.HasRelease, Converter={StaticResource TrueToCollapsed}}" Style="{StaticResource TertiaryButton}" Grid.Column="1" Content="IDENTIFY" HorizontalAlignment="Right" Margin="0,0,10,0"/>
+                <c:IndeterminateProgress Visibility="{Binding Path=IsExecuting, Converter={StaticResource TrueToVisible}}" x:Name="Spinner" Grid.Column="1" Height="22" Width="22" HorizontalAlignment="Right" Margin="0,0,10,0"/>
             </Grid>
 
             <!-- release results -->
