@@ -31,7 +31,7 @@ namespace VpdbAgent.ViewModels
 				GameManager.LinkRelease(Game, release);
 				Game.Release = release;
 				closeCommand.Execute(null);
-            });
+			});
 		}
 	}
 }

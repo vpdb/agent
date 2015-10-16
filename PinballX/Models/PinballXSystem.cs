@@ -1,7 +1,5 @@
 ﻿using IniParser.Model;
 using System;
-using System.Collections.Generic;
-using System.Xml.Serialization;
 using ReactiveUI;
 using VpdbAgent.Models;
 using Splat;

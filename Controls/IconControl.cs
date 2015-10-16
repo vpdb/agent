@@ -15,11 +15,11 @@ namespace VpdbAgent.Controls
 			DependencyProperty.Register("DataGeometry", typeof(PathGeometry), typeof(IconControl), new PropertyMetadata(null));
 
 		public static readonly DependencyProperty DataProperty =
-			DependencyProperty.Register("Data", typeof(string), typeof(IconControl), new PropertyMetadata(null, new PropertyChangedCallback(OnDataChanged)));
+			DependencyProperty.Register("Data", typeof(string), typeof(IconControl), new PropertyMetadata(null, OnDataChanged));
 
 		public IconControl()
 		{
-			this.DefaultStyleKey = typeof(IconControl);
+			DefaultStyleKey = typeof(IconControl);
 		}
 
 		// Write-only to be used in a binding.

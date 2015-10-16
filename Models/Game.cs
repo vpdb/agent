@@ -1,11 +1,6 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.IO;
-using System.Linq;
 using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
 using ReactiveUI;
 using static System.String;
 using System.Reactive.Linq;
@@ -14,28 +9,22 @@ namespace VpdbAgent.Models
 {
 	public class Game : ReactiveObject, IComparable<Game>
 	{
-		#region Read/Write Fields
+		// read/write fields
 		private Vpdb.Models.Release _release;
 		readonly ObservableAsPropertyHelper<bool> _hasRelease;
 		private bool _exists;
-		#endregion
 
-		[DataMember]
-		public string Id { get; set; }
-		[DataMember]
-		public string Filename { get; set; }
-		[DataMember]
-		public bool Enabled { get; set; } = true;
-
-		[DataMember]
-		public Vpdb.Models.Release Release
-		{
+		// serialized properties
+		[DataMember] public string Id { get; set; }
+		[DataMember] public string Filename { get; set; }
+		[DataMember] public bool Enabled { get; set; } = true;
+		[DataMember] public Vpdb.Models.Release Release {
 			get { return _release; }
 			set { this.RaiseAndSetIfChanged(ref _release, value); }
 		}
 
-		public bool Exists
-		{
+		// internal fields
+		public bool Exists {
 			get { return _exists; }
 			set { this.RaiseAndSetIfChanged(ref _exists, value); }
 		}

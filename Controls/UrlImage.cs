@@ -42,7 +42,7 @@ namespace VpdbAgent.Controls
 			get { return (string)GetValue(UrlSourceProperty); }
 			set
 			{
-				Console.WriteLine("Loading image {0}...", value);
+				Logger.Info("Loading image {0}...", value);
 				SetValue(UrlSourceProperty, value);
 				LoadImage();
 			}
@@ -65,20 +65,19 @@ namespace VpdbAgent.Controls
 				return;
 			}
 
-
 			// if cached, set from cache
 			if (IsCached(UrlSource)) {
-				this.Source = new BitmapImage(new Uri(GetLocalPath(UrlSource)));
+				Source = new BitmapImage(new Uri(GetLocalPath(UrlSource)));
 				return;
 			}
 
 			// remote, so make it transparent for fading animation
-			this.Opacity = 0;
-			this.Source = null;
+			Opacity = 0;
+			Source = null;
 
 			// download
 			var webRequest = VpdbClient.GetWebRequest(UrlSource);
-			webRequest.BeginGetResponse((ar) =>
+			webRequest.BeginGetResponse(ar =>
 			{
 				try {
 					var response = webRequest.EndGetResponse(ar);
@@ -87,7 +86,7 @@ namespace VpdbAgent.Controls
 						return;
 					}
 					var buffer = new byte[response.ContentLength];
-					stream?.BeginRead(buffer, 0, buffer.Length, (aResult) =>
+					stream?.BeginRead(buffer, 0, buffer.Length, aResult =>
 					{
 						stream.EndRead(aResult);
 						var image = new BitmapImage();
@@ -102,8 +101,8 @@ namespace VpdbAgent.Controls
 								To = 1,
 								Duration = new Duration(TimeSpan.FromMilliseconds(200))
 							};
-							this.Source = image;
-							this.BeginAnimation(UIElement.OpacityProperty, da);
+							Source = image;
+							BeginAnimation(OpacityProperty, da);
 						}));
 					}, null);
 
@@ -147,8 +146,9 @@ namespace VpdbAgent.Controls
 		private static void Cache(string path, byte[] bytes)
 		{
 			var localPath = GetLocalPath(path);
-			if (!Directory.Exists(Path.GetDirectoryName(localPath))) {
-				Directory.CreateDirectory(Path.GetDirectoryName(localPath));
+			var localDir = Path.GetDirectoryName(localPath);
+			if (localDir != null && !Directory.Exists(localDir)) {
+				Directory.CreateDirectory(localDir);
 			}
 			File.WriteAllBytes(localPath, bytes);
 		}

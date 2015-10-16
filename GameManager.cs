@@ -89,9 +89,8 @@ namespace VpdbAgent
 					_logger.Info("Set {0} games.", games.Count);
 				});
 
-			// subscribe to game changes and pusher stuff
-			//_menuManager.GamesChanged.Subscribe(OnGamesChanged);
-			//_vpdbClient.UserChannel.Subscribe(OnChannelJoined);
+			// subscribe to pusher
+			_vpdbClient.UserChannel.Subscribe(OnChannelJoined);
 		}
 
 		private void UpdatePlatforms(NotifyCollectionChangedEventArgs args)
@@ -134,24 +133,6 @@ namespace VpdbAgent
 		public IEnumerable<Game> GetGames(Platform platform)
 		{
 			return Games.Where(game => game.Platform.Name.Equals(platform.Name));
-		}
-
-		
-
-		private void UpdateGames(PinballXSystem system, IReadOnlyCollection<Game> games)
-		{
-			Application.Current.Dispatcher.Invoke(delegate {
-				using (Games.SuppressChangeNotifications()) {
-
-					var itemsToRemove = Games.Where(game => game.Platform.Name.Equals(system.Name)).ToArray();
-					foreach (var item in itemsToRemove) {
-						Games.Remove(item);
-					}
-					Games.AddRange(games);
-					Games.Sort();
-				};
-				_logger.Trace("Merged {0} games.", games.Count);
-			});
 		}
 
 		/// <summary>

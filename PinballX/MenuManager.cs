@@ -1,24 +1,17 @@
 ﻿using IniParser;
-using IniParser.Model;
 using NLog;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
-using System.Reactive;
-using System.Text;
-using System.Threading.Tasks;
 using System.Xml.Serialization;
 using ReactiveUI;
 using VpdbAgent.PinballX.Models;
 using System.Reactive.Linq;
 using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
 using System.Reactive.Subjects;
-using System.Threading;
 using System.Windows;
-using Splat;
 
 namespace VpdbAgent.PinballX
 {

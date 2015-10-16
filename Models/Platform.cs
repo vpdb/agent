@@ -15,6 +15,10 @@ using VpdbAgent.Vpdb.Network;
 
 namespace VpdbAgent.Models
 {
+	/// <summary>
+	/// PinballX's "system". Note that this entity is never serialized
+	/// and resides only in memory.
+	/// </summary>
 	public class Platform : ReactiveObject
 	{
 

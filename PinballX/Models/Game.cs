@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Serialization;
+﻿using System.Xml.Serialization;
 
 namespace VpdbAgent.PinballX.Models
 {
@@ -14,40 +9,40 @@ namespace VpdbAgent.PinballX.Models
 		// "official hyperpin" fields
 		// ----------------------------------
 		[XmlAttribute("name")]
-		public String Filename { get; set; }
+		public string Filename { get; set; }
 
 		[XmlElement("description")]
-		public String Description { get; set; }
+		public string Description { get; set; }
 
 		[XmlElement("manufacturer")]
-		public String Manufacturer { get; set; }
+		public string Manufacturer { get; set; }
 
 		[XmlElement("year")]
-		public String Year { get; set; }
+		public string Year { get; set; }
 
 		[XmlElement("type")]
-		public String Type { get; set; }
+		public string Type { get; set; }
 
 
 		// pinballx fields
 		// ----------------------------------
 		[XmlElement("hidedmd")]
-		public String HideDmd { get; set; }
+		public string HideDmd { get; set; }
 
 		[XmlElement("hidebackglass")]
-		public String HideBackglass { get; set; }
+		public string HideBackglass { get; set; }
 
 		[XmlElement("enabled")]
-		public String Enabled { get; set; }
+		public string Enabled { get; set; }
 
 		[XmlElement("rating")]
-		public Double Rating { get; set; }
+		public double Rating { get; set; }
 
 		[XmlElement("AlternateExe")]
-		public String AlternateExe { get; set; }
+		public string AlternateExe { get; set; }
 
 		[XmlElement("SendKeysOnStart")]
-		public String SendKeysOnStart { get; set; }
+		public string SendKeysOnStart { get; set; }
 
 	}
 }

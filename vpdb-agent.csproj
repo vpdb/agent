@@ -142,8 +142,6 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Common\FilesystemWatchCache.cs" />
-    <Compile Include="Common\LazyObservableList.cs" />
-    <Compile Include="Common\TransitioningContentControl.cs" />
     <Compile Include="Controls\IconControl.cs" />
     <Compile Include="Controls\IndeterminateProgress.cs" />
     <Compile Include="SmoothPanel\DataBindHelper.cs" />
