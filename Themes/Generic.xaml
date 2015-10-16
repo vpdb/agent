@@ -3,37 +3,6 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:VpdbAgent.Controls">
 
-    <Style TargetType="{x:Type controls:IndeterminateProgress}">
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="{x:Type controls:IndeterminateProgress}">
-                    <Border Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}">
-                        <Viewbox Height="{TemplateBinding Height}" Width="{TemplateBinding Width}">
-                            <Grid x:Name="LayoutRoot" Background="Transparent" ToolTip="Searching...." HorizontalAlignment="Center" VerticalAlignment="Center">
-                                <Canvas RenderTransformOrigin="0.5,0.5" HorizontalAlignment="Center" VerticalAlignment="Center" Width="120" Height="120">
-                                    <Ellipse x:Name="C0" Width="25" Height="25" Canvas.Left="0" Canvas.Top="0" Stretch="Fill" Fill="White" Opacity="0.5" />
-                                    <Ellipse x:Name="C1" Width="25" Height="25" Canvas.Left="0" Canvas.Top="0" Stretch="Fill" Fill="White" Opacity="0.45" />
-                                    <Ellipse x:Name="C2" Width="25" Height="25" Canvas.Left="0" Canvas.Top="0" Stretch="Fill" Fill="White" Opacity="0.4" />
-                                    <Ellipse x:Name="C3" Width="25" Height="25" Canvas.Left="0" Canvas.Top="0" Stretch="Fill" Fill="White" Opacity="0.35" />
-                                    <Ellipse x:Name="C4" Width="25" Height="25" Canvas.Left="0" Canvas.Top="0" Stretch="Fill" Fill="White" Opacity="0.3" />
-                                    <Ellipse x:Name="C5" Width="25" Height="25" Canvas.Left="0" Canvas.Top="0" Stretch="Fill" Fill="White" Opacity="0.25" />
-                                    <Ellipse x:Name="C6" Width="25" Height="25" Canvas.Left="0" Canvas.Top="0" Stretch="Fill" Fill="White" Opacity="0.2" />
-                                    <Ellipse x:Name="C7" Width="25" Height="25" Canvas.Left="0" Canvas.Top="0" Stretch="Fill" Fill="White" Opacity="0.15" />
-                                    <Ellipse x:Name="C8" Width="25" Height="25" Canvas.Left="0" Canvas.Top="0" Stretch="Fill" Fill="White" Opacity="0.1" />
-                                    <Canvas.RenderTransform>
-                                        <RotateTransform x:Name="SpinnerRotate" Angle="0" />
-                                    </Canvas.RenderTransform>
-                                </Canvas>
-                            </Grid>
-                        </Viewbox>
-                    </Border>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-    </Style>
-
     <Style TargetType="controls:IconControl">
         <Setter Property="Padding"
                 Value="0" />

@@ -5,20 +5,21 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:c="clr-namespace:VpdbAgent.Controls"
              xmlns:tc="clr-namespace:VpdbAgent.ViewModels.TypeConverters"
-             xmlns:v="clr-namespace:VpdbAgent.Views"
              xmlns:vm="clr-namespace:VpdbAgent.ViewModels"
              xmlns:rx="clr-namespace:ReactiveUI;assembly=ReactiveUI"
+             xmlns:loadin="clr-namespace:LoadingIndicators.WPF;assembly=LoadingIndicators.WPF"
              mc:Ignorable="d" 
+             Padding="20,0,0,0"
              d:DesignWidth="800"
-             Padding="20,0,0,0" d:DataContext="{d:DesignInstance Type=vm:MainGameViewModel}">
+             d:DataContext="{d:DesignInstance Type=vm:MainGameViewModel}">
 
-	<UserControl.Resources>
+    <UserControl.Resources>
         <tc:BooleanToVisibilityConverter x:Key="TrueToVisible" True="Visible" False="Collapsed" />
         <tc:BooleanToVisibilityConverter x:Key="TrueToCollapsed" True="Collapsed" False="Visible" />
         <tc:BooleanToBrushConverter x:Key="FalseToRed" True="Transparent" False="DarkRed" />
         <tc:BooleanToBrushConverter x:Key="TrueToPrimary" True="{StaticResource PrimaryColorBrush}" False="{StaticResource LabelTextBrush}" />
     </UserControl.Resources>
-	
+
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="80" />
@@ -32,17 +33,18 @@
             <!-- first row -->
             <Grid Width="Auto">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="49*" />
+                    <ColumnDefinition Width="93*"/>
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
                 <!-- title -->
-                <Label Grid.Column="0" Margin="0,0,0,-10">
+                <Label Grid.Column="0" Margin="0,0,0,-10" Grid.ColumnSpan="2">
                     <TextBlock Text="{Binding Game.Id}" TextTrimming="CharacterEllipsis" FontSize="22" FontWeight="Bold" />
                 </Label>
 
                 <!-- controls -->
-                <StackPanel Visibility="{Binding Path=Game.HasRelease, Converter={StaticResource TrueToVisible}}" Grid.Column="1" Orientation="Horizontal" Margin="0,5,0,0">
+                <StackPanel Visibility="{Binding Path=Game.HasRelease, Converter={StaticResource TrueToVisible}}" Grid.Column="2" Orientation="Horizontal" Margin="0,5,0,0">
                     <c:IconControl Foreground="{Binding Path=Game.Release.Starred, Converter={StaticResource TrueToPrimary}}" Data="{StaticResource IconStar}" Margin="10,-2,12,0"  Height="18" Width="18" />
                     <ToggleButton Height="20" Margin="5,0,20,0"/>
                     <Label Content="SYNC" FontSize="15"/>
@@ -68,7 +70,9 @@
 
                 <!-- identify button -->
                 <Button IsEnabled="{Binding Game.Exists}" Command="{Binding IdentifyRelease}" Visibility="{Binding Path=Game.HasRelease, Converter={StaticResource TrueToCollapsed}}" Style="{StaticResource TertiaryButton}" Grid.Column="1" Content="IDENTIFY" HorizontalAlignment="Right" Margin="0,0,10,0"/>
-                <c:IndeterminateProgress Visibility="{Binding Path=IsExecuting, Converter={StaticResource TrueToVisible}}" x:Name="Spinner" Grid.Column="1" Height="22" Width="22" HorizontalAlignment="Right" Margin="0,0,10,0"/>
+                <Viewbox Grid.Column="1" StretchDirection="Both" Stretch="Uniform" Height="20" Width="20" HorizontalAlignment="Right" Margin="0,0,10,0">
+                    <loadin:LoadingIndicator Foreground="{StaticResource PrimaryColorBrush}" SpeedRatio="1" IsActive="{Binding IsExecuting}"  Style="{DynamicResource LoadingIndicatorArcsStyle}"/>
+                </Viewbox>
             </Grid>
 
             <!-- release results -->
