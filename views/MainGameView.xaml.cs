@@ -38,12 +38,6 @@ namespace VpdbAgent.Views
 		public MainGameView()
 		{
 			InitializeComponent();
-
-			// inner views
-			//d(this.OneWayBind(ViewModel, vm => vm.ReleaseResults, v => v.ReleaseResultView.ViewModel));
-			//d(this.OneWayBind(ViewModel, vm => vm.HasExecuted, v => v.ReleaseResultView.Visibility));
-
-			
 		}
 
 		public double GetEstimatedHeight(double availableWidth)

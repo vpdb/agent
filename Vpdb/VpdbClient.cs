@@ -82,6 +82,7 @@ namespace VpdbAgent.Vpdb
 		public WebRequest GetWebRequest(string path)
 		{
 			var endPoint = _settingsManager.Endpoint;
+			_logger.Info("Creating new web client for {0}{1}", endPoint, path);
 			var request = WebRequest.Create(endPoint + path);
 			if (_settingsManager.IsInitialized()) {
 				if (!string.IsNullOrEmpty(_settingsManager.AuthUser)) {

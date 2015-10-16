@@ -22,7 +22,7 @@ namespace VpdbAgent.ViewModels
 		private static readonly IVpdbClient VpdbClient = Locator.CurrentMutable.GetService<IVpdbClient>();
 
 		// children
-		public MainReleaseResultsViewModel ReleaseResults;
+		public MainReleaseResultsViewModel ReleaseResults { get; }
 
 		// commands
 		public ReactiveCommand<List<Release>> IdentifyRelease { get; protected set; }

@@ -172,7 +172,6 @@
     <Compile Include="ViewModels\MainGameViewModel.cs" />
     <Compile Include="ViewModels\SettingsViewModel.cs" />
     <Compile Include="ViewModels\TypeConverters\ImageToUrlTypeConverter.cs" />
-    <Compile Include="ViewModels\TypeConverters\BooleanToBrushTypeConverter.cs" />
     <Compile Include="Views\SettingsView.xaml.cs">
       <DependentUpon>SettingsView.xaml</DependentUpon>
     </Compile>

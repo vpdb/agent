@@ -72,7 +72,7 @@
             </Grid>
 
             <!-- release results -->
-            <!--rx:ViewModelViewHost x:Name="ReleaseResultView" HorizontalContentAlignment="Stretch" /-->
+            <rx:ViewModelViewHost ViewModel="{Binding ReleaseResults}" Visibility="{Binding Path=HasExecuted, Converter={StaticResource TrueToVisible}}" HorizontalContentAlignment="Stretch" />
 
             <!-- separator -->
             <Border BorderBrush="#40ffffff" BorderThickness="0 0 0 1" Margin="5,0,0,0"/>
