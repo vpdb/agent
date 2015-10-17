@@ -9,6 +9,7 @@ using System.Windows.Media;
 using NLog;
 using ReactiveUI;
 using Splat;
+using VpdbAgent.Common;
 using VpdbAgent.Vpdb;
 using VpdbAgent.Vpdb.Models;
 using Game = VpdbAgent.Models.Game;
@@ -21,11 +22,9 @@ namespace VpdbAgent.ViewModels
 		private static readonly Logger Logger = Locator.CurrentMutable.GetService<Logger>();
 		private static readonly IVpdbClient VpdbClient = Locator.CurrentMutable.GetService<IVpdbClient>();
 
-		// children
-		public MainReleaseResultsViewModel ReleaseResults { get; }
-
 		// commands
 		public ReactiveCommand<List<Release>> IdentifyRelease { get; protected set; }
+		public ReactiveCommand<object> CloseResults { get; protected set; } = ReactiveCommand.Create();
 
 		// data
 		public Game Game { get; private set; }
@@ -34,11 +33,29 @@ namespace VpdbAgent.ViewModels
 		private bool _isVisible = true;
 		public bool IsVisible { get { return _isVisible; } set { this.RaiseAndSetIfChanged(ref _isVisible, value); } }
 
+		// release search results
+		private IEnumerable<MainReleaseResultsItemViewModel> _identifiedReleases;
+		public IEnumerable<MainReleaseResultsItemViewModel> IdentifiedReleases
+		{
+			get { return _identifiedReleases; }
+			set { this.RaiseAndSetIfChanged(ref _identifiedReleases, value); }
+		}
+
 		// statuses
 		private readonly ObservableAsPropertyHelper<bool> _isExecuting;
-		private readonly ObservableAsPropertyHelper<bool> _hasExecuted;
 		public bool IsExecuting => _isExecuting.Value;
-		public bool HasExecuted => _hasExecuted.Value;
+		private bool _hasExecuted;
+		public bool HasExecuted
+		{
+			get { return _hasExecuted; }
+			set { this.RaiseAndSetIfChanged(ref _hasExecuted, value); }
+		}
+		private bool _hasResults;
+		public bool HasResults
+		{
+			get { return _hasResults; }
+			set { this.RaiseAndSetIfChanged(ref _hasResults, value); }
+		}
 
 		public MainGameViewModel(Game game)
 		{
@@ -46,19 +63,29 @@ namespace VpdbAgent.ViewModels
 
 			// release identify
 			IdentifyRelease = ReactiveCommand.CreateAsyncObservable(_ => VpdbClient.Api.GetReleasesBySize(game.FileSize, 512));
+			IdentifyRelease
+				.Trace("IdentifiedReleases")
+				.Select(releases => releases.Select(release => new MainReleaseResultsItemViewModel(game, release, CloseResults)))
+				.Subscribe(releases =>
+				{
+					IdentifiedReleases = releases;
+				});
+
+			// handle errors
+			IdentifyRelease.ThrownExceptions.Subscribe(e => { Logger.Error(e, "Error matching game."); });
 
 			// spinner
 			IdentifyRelease.IsExecuting.ToProperty(this, vm => vm.IsExecuting, out _isExecuting);
 
-			// inner views
 			IdentifyRelease.IsExecuting
 				.Skip(1)             // skip initial false value
 				.Where(x => !x)      // then trigger when false again
-				.Select(_ => true)   // return true for HasExecuted
-				.ToProperty(this, vm => vm.HasExecuted, out _hasExecuted);
+				.Subscribe(_ => { HasExecuted = true; });
 
-			// children
-			ReleaseResults = new MainReleaseResultsViewModel(game, IdentifyRelease);
+			IdentifyRelease.Select(r => r.Count > 0).Subscribe(hasResults => { HasResults = hasResults; });
+
+			// close button
+			CloseResults.Subscribe(_ => { HasExecuted = false; });
 		}
 
 		public override string ToString()

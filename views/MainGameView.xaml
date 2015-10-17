@@ -74,9 +74,49 @@
                     <loadin:LoadingIndicator Foreground="{StaticResource PrimaryColorBrush}" SpeedRatio="1" IsActive="{Binding IsExecuting}"  Style="{DynamicResource LoadingIndicatorArcsStyle}"/>
                 </Viewbox>
             </Grid>
-
+			
             <!-- release results -->
-            <rx:ViewModelViewHost ViewModel="{Binding ReleaseResults}" Visibility="{Binding Path=HasExecuted, Converter={StaticResource TrueToVisible}}" HorizontalContentAlignment="Stretch" />
+            <Expander IsExpanded="{Binding HasExecuted}" Style="{StaticResource AnimatedExpander}">
+                <Grid Margin="-105,0,-10,0">
+                    <Grid.Background>
+                        <SolidColorBrush Color="Black" Opacity="0.35" />
+                    </Grid.Background>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="110" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- close button -->
+                    <Button Command="{Binding CloseResults}" Style="{StaticResource IconButton}" Grid.Column="0" Width="40" Height="40" VerticalAlignment="Top" HorizontalAlignment="Left">
+                        <c:IconControl Height="12" Width="12" Foreground="#40ffffff" Data="{StaticResource IconClose}" />
+                    </Button>
+
+                    <StackPanel Grid.Column="1" Orientation="Vertical" Margin="0,5,10,5">
+
+                        <!-- no match found -->
+                        <Grid Visibility="{Binding Path=HasResults, Converter={StaticResource TrueToCollapsed}}" Margin="0,5,10,5">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <Label Grid.Column="0" Content="No match found."/>
+                            <Button Command="{Binding CloseResults}" Grid.Column="1" Style="{StaticResource TertiaryButton}" Content="CLOSE" HorizontalAlignment="Right"/>
+                        </Grid>
+
+                        <!-- result list -->
+                        <ItemsControl ItemsSource="{Binding IdentifiedReleases}" Visibility="{Binding Path=HasResults, Converter={StaticResource TrueToVisible}}" Margin="0,10,0,10">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <rx:ViewModelViewHost ViewModel="{Binding}" HorizontalContentAlignment="Stretch"/>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                    </StackPanel>
+                </Grid>
+            </Expander>
+            <!--rx:ViewModelViewHost ViewModel="{Binding ReleaseResults}" Visibility="{Binding Path=HasExecuted, Converter={StaticResource TrueToVisible}}" HorizontalContentAlignment="Stretch" /-->
 
             <!-- separator -->
             <Border BorderBrush="#40ffffff" BorderThickness="0 0 0 1" Margin="5,0,0,0"/>

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using ReactiveUI;
 using Splat;
 using VpdbAgent.Vpdb.Models;
@@ -21,7 +22,7 @@ namespace VpdbAgent.ViewModels
 		// commands
 		public ReactiveCommand<object> SelectResult { get; protected set; } = ReactiveCommand.Create();
 
-		public MainReleaseResultsItemViewModel(Game game, Release release, ReactiveCommand<object> closeCommand)
+		public MainReleaseResultsItemViewModel(Game game, Release release, ICommand closeCommand)
 		{
 			Game = game;
 			Release = release;

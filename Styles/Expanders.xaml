@@ -16,7 +16,6 @@
 
                     <ControlTemplate.Resources>
                         <ResourceDictionary>
-                            
                             <Storyboard x:Key="scaleYUp">
                                 <DoubleAnimation From="0" To="1" Duration="0:0:0.1" Storyboard.TargetName="ExpandSite" Storyboard.TargetProperty="(FrameworkElement.LayoutTransform).(ScaleTransform.ScaleY)" />
                             </Storyboard>
