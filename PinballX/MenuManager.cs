@@ -58,8 +58,7 @@ namespace VpdbAgent.PinballX
 		/// <returns></returns>
 		public IMenuManager Initialize()
 		{
-			if (!_settingsManager.IsInitialized())
-			{
+			if (!_settingsManager.IsInitialized()) {
 				return this;
 			}
 

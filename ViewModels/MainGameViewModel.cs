@@ -45,11 +45,10 @@ namespace VpdbAgent.ViewModels
 			Game = game;
 
 			// release identify
-			IdentifyRelease = ReactiveCommand.CreateAsyncTask(async _ => 
-				await VpdbClient.Api.GetReleasesBySize(game.FileSize, 512));
+			IdentifyRelease = ReactiveCommand.CreateAsyncObservable(_ => VpdbClient.Api.GetReleasesBySize(game.FileSize, 512));
 
 			// spinner
-			_isExecuting = IdentifyRelease.IsExecuting.ToProperty(this, vm => vm.IsExecuting, out _isExecuting);
+			IdentifyRelease.IsExecuting.ToProperty(this, vm => vm.IsExecuting, out _isExecuting);
 
 			// inner views
 			IdentifyRelease.IsExecuting
@@ -60,6 +59,11 @@ namespace VpdbAgent.ViewModels
 
 			// children
 			ReleaseResults = new MainReleaseResultsViewModel(game, IdentifyRelease);
+		}
+
+		public override string ToString()
+		{
+			return $"[GameViewModel] {Game}";
 		}
 	}
 }

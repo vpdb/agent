@@ -146,6 +146,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Common\FilesystemWatchCache.cs" />
+    <Compile Include="Common\ObservableTrace.cs" />
     <Compile Include="Controls\IconControl.cs" />
     <Compile Include="SmoothPanel\DataBindHelper.cs" />
     <Compile Include="SmoothPanel\IHeightMeasurer.cs" />

@@ -9,6 +9,7 @@ using System.Windows.Media;
 using NLog;
 using ReactiveUI;
 using Splat;
+using VpdbAgent.Common;
 using VpdbAgent.Vpdb;
 using VpdbAgent.Vpdb.Models;
 using Game = VpdbAgent.Models.Game;
@@ -45,6 +46,7 @@ namespace VpdbAgent.ViewModels
 
 			// link results to property
 			identifyRelease
+				.Trace("IdentifiedReleases")
 				.Select(releases => releases.Select(release => new MainReleaseResultsItemViewModel(game, release, CloseResults)))
 				.ToProperty(this, vm => vm.IdentifiedReleases, out _identifiedReleases);
 
@@ -52,9 +54,10 @@ namespace VpdbAgent.ViewModels
 			identifyRelease.ThrownExceptions.Subscribe(e => { Logger.Error(e, "Error matching game."); });
 
 			// handle visibility & expansion status
-			identifyRelease.Select(releases => releases.Count > 0).ToProperty(this, vm => vm.HasResults, out _hasResults);
+			identifyRelease.Trace("HasResults").Select(releases => releases.Count > 0).ToProperty(this, vm => vm.HasResults, out _hasResults);
 			identifyRelease.IsExecuting
 				.Skip(1) // skip initial false value
+				.Trace("IsExecuting" + GetHashCode())
 				.Where(x => !x) // then trigger when false again
 				.Subscribe(_ => { HasExecuted = true; });
 

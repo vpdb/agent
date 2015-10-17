@@ -10,12 +10,10 @@
         mc:Ignorable="d"
         ResizeMode="CanResizeWithGrip"
         WindowTitleBrush="{DynamicResource TransparentBrush}"
+        Style="{DynamicResource CleanWindowStyleKey}"
         Title="VPDB Agent"
-        Height="700" Width="900"
         TitleCaps="False"
         RenderOptions.ClearTypeHint="Enabled"
-        Style="{DynamicResource CleanWindowStyleKey}"
-        WindowStartupLocation="CenterScreen"
         Icon="vpdb-agent.ico">
 
     <Controls:MetroWindow.Resources>

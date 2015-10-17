@@ -78,5 +78,10 @@ namespace VpdbAgent.Models
 		{
 			return other == null ? 1 : Compare(Id, other.Id, StringComparison.Ordinal);
 		}
+
+		public override string ToString()
+		{
+			return Id;
+		}
 	}
 }

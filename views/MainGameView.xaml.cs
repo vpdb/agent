@@ -49,7 +49,7 @@ namespace VpdbAgent.Views
 		public MainGameViewModel ViewModel
 		{
 			get { return (MainGameViewModel)this.GetValue(ViewModelProperty); }
-			set { this.SetValue(ViewModelProperty, value); }
+			set { SetValue(ViewModelProperty, value); }
 		}
 
 		public static readonly DependencyProperty ViewModelProperty =
@@ -62,5 +62,9 @@ namespace VpdbAgent.Views
 		}
 		#endregion
 
+		public override string ToString()
+		{
+			return $"[GameView] {(DataContext as MainGameViewModel)?.Game}";
+		}
 	}
 }

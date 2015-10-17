@@ -1,7 +1,10 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Forms;
+using System.Windows.Interop;
 using System.Windows.Media;
 using PusherClient;
 using ReactiveUI;
@@ -20,6 +23,7 @@ namespace VpdbAgent
 
 		public MainWindow()
 		{
+			RestoreWindowPlacement();
 			InitializeComponent();
 
 			AppViewModel = new AppViewModel();
@@ -34,6 +38,42 @@ namespace VpdbAgent
 		{
 			AppViewModel.GotoSettings.Execute(null);
 		}
+
+		private void RestoreWindowPlacement()
+		{
+			Height = Properties.Settings.Default.WindowHeight;
+			Width = Properties.Settings.Default.WindowWidth;
+			double top, left;
+			var screen = Screen.FromHandle(new WindowInteropHelper(this).Handle);
+			if (Properties.Settings.Default.WindowMax) {
+				WindowState = WindowState.Maximized;
+			}
+			if (Properties.Settings.Default.WindowTop > 0) {
+				top = Properties.Settings.Default.WindowTop;
+				left = Properties.Settings.Default.WindowLeft;
+			} else {
+				top = (screen.Bounds.Height - Height) / 2;
+				left = (screen.Bounds.Width - Width) / 2;
+			}
+
+			// don't clip
+			Top = Math.Max(0, top);
+			Left = Math.Max(0, left);
+
+			// add save handler
+			Closing += Window_Closing;
+		}
+
+		public void Window_Closing(object sender, CancelEventArgs e)
+		{
+			Properties.Settings.Default.WindowTop = Top;
+			Properties.Settings.Default.WindowLeft = Left;
+			Properties.Settings.Default.WindowHeight = Height;
+			Properties.Settings.Default.WindowWidth = Width;
+			Properties.Settings.Default.WindowMax = WindowState == WindowState.Maximized;
+			Properties.Settings.Default.Save();
+		}
+
 
 		#region Performance Measurements
 
