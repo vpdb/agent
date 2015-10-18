@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using VpdbAgent.Vpdb.Models;
 
 namespace VpdbAgent.Models
 {
@@ -9,6 +10,7 @@ namespace VpdbAgent.Models
 	public class Database
 	{
 		public IEnumerable<Game> Games { set; get; } = new List<Game>();
+//		public IEnumerable<Release> Releases { set; get; } = new List<Release>();
 
 		public Database() { }
 

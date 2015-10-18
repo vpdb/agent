@@ -44,10 +44,47 @@ namespace VpdbAgent
 	/// Everything is event- or subscription based, since we want to automatically
 	/// repeat the process when relevant files change. 
 	/// </summary>
+	public interface IGameManager
+	{
+		/// <summary>
+		/// Platforms are 1-way mapped to <see cref="IMenuManager.Systems"/>,
+		/// meaning that if systems change (e.g. <c>PinballX.ini</c> is 
+		/// manually updated), they are updated but not vice versa.
+		/// </summary>
+		ReactiveList<Platform> Platforms { get; }
+
+		/// <summary>
+		/// Games are 2-way mapped to <see cref="Game"/>, where downstream 
+		/// changes (e.g. XMLs in PinballX's database folder change) come from
+		/// <see cref="PinballX.Models.Game"/> and upstream changes are written
+		/// to the .json file sitting in the system's database folder.
+		/// </summary>
+		ReactiveList<Game> Games { get; }
+
+		/// <summary>
+		/// Initializes the menu manager, which basically starts watching
+		/// relevant files.
+		/// </summary>
+		/// <returns>This instance</returns>
+		IGameManager Initialize();
+
+		/// <summary>
+		/// Links a release from VPDB to a game.
+		/// </summary>
+		/// <param name="game">Local game to link to</param>
+		/// <param name="release">Release from VPDB</param>
+		/// <returns>This instance</returns>
+		IGameManager LinkRelease(Game game, Release release);
+	}
+
+	/// <summary>
+	/// Application logic for <see cref="IGameManager"/>.
+	/// </summary>
 	public class GameManager : IGameManager
 	{
 		// deps
 		private readonly IMenuManager _menuManager;
+		private readonly IVpdbClient _vpdbClient;
 		private readonly Logger _logger;
 
 		// props
@@ -57,6 +94,7 @@ namespace VpdbAgent
 		public GameManager(IMenuManager menuManager, IVpdbClient vpdbClient, Logger logger)
 		{
 			_menuManager = menuManager;
+			_vpdbClient = vpdbClient;
 			_logger = logger;
 
 			var systems = _menuManager.Systems;
@@ -93,10 +131,37 @@ namespace VpdbAgent
 					_logger.Info("Set {0} games.", games.Count);
 				});
 
+			// update releases from VPDB on the first run, but delay it a bit so it 
+			// doesn't do all that shit at the same time!
+			Games.Changed.Take(1).Delay(TimeSpan.FromSeconds(2)).Subscribe(_ => UpdateReleases());
+
 			// subscribe to pusher
 			vpdbClient.UserChannel.Subscribe(OnChannelJoined);
 		}
 
+		public IGameManager Initialize()
+		{
+			_menuManager.Initialize();
+			return this;
+		}
+
+		public IGameManager LinkRelease(Game game, Release release)
+		{
+			game.Release = release;
+			game.Platform.Save();
+			return this;
+		}
+
+		/// <summary>
+		/// Updates platform and games for a given system. <br/>
+		/// 
+		/// This takes changed data from a system, updates platform and
+		/// games, and writes back the result to the json file.
+		/// </summary>
+		/// <remarks>
+		/// Triggered by changes of any of the system's games.
+		/// </remarks>
+		/// <param name="system"></param>
 		private void UpdatePlatform(PinballXSystem system)
 		{
 			_logger.Info("Updating games for {0}", system);
@@ -119,6 +184,16 @@ namespace VpdbAgent
 			});
 		}
 
+		/// <summary>
+		/// Updates all platforms and games. <br/>
+		/// 
+		/// This takes all available systems, re-creates platforms
+		/// and games, and writes back the results to the json files.
+		/// </summary>
+		/// <remarks>
+		/// Triggered by any system changes.
+		/// </remarks>
+		/// <param name="args"></param>
 		private void UpdatePlatforms(NotifyCollectionChangedEventArgs args)
 		{
 			_logger.Info("Updating all games for all platforms");
@@ -140,25 +215,23 @@ namespace VpdbAgent
 		}
 
 		/// <summary>
-		/// Triggers data update
+		/// Retrieves all known releases from VPDB and updates them locally.
 		/// </summary>
-		/// <returns>This instance</returns>
-		public IGameManager Initialize()
+		private void UpdateReleases()
 		{
-			_menuManager.Initialize();
-			return this;
-		}
-
-		/// <summary>
-		/// Links a game to a release at VPDB and saves the database.
-		/// </summary>
-		/// <param name="game">Local game to link</param>
-		/// <param name="release">Release at VPDB</param>
-		public IGameManager LinkRelease(Game game, Release release)
-		{
-			game.Release = release;
-			game.Platform.Save();
-			return this;
+			var releaseIds = string.Join(",", Games.Where(g => g.HasRelease).Select(g => g.Release.Id).ToList());
+			_vpdbClient.Api.GetReleasesByIds(releaseIds)
+				.SubscribeOn(Scheduler.Default)
+				.Subscribe(releases => {
+					// update releases
+					foreach (var release in releases) {
+						Games.Where(g => g.HasRelease).ToList().ForEach(game => { game.Release = release; });
+					}
+					// save platforms
+					foreach (var platform in Platforms) {
+						platform.Save();
+					}
+				});
 		}
 
 		/// <summary>
@@ -182,10 +255,11 @@ namespace VpdbAgent
 			star.ObserveOn(RxApp.MainThreadScheduler).Subscribe(data =>
 			{
 				if ("release".Equals((string)data.type)) {
-					var release = FindRelease((string)data.id);
-					if (release != null) {
-						release.Starred = true;
-						_logger.Info("Toggled star on release {0} [on]", release.Name);
+					var game = FindGame((string)data.id);
+					if (game != null) {
+						game.Release.Starred = true;
+						game.Platform.Save();
+						_logger.Info("Toggled star on release {0} [on]", game.Release.Name);
 					} else {
 						_logger.Info("Ignoring star for id {0}", data.id);
 					}
@@ -196,10 +270,11 @@ namespace VpdbAgent
 			unstar.ObserveOn(RxApp.MainThreadScheduler).Subscribe(data =>
 			{
 				if ("release".Equals((string)data.type)) {
-					var release = FindRelease((string)data.id);
-					if (release != null) {
-						release.Starred = false;
-						_logger.Info("Toggled star on release {0} [off]", release.Name);
+					var game = FindGame((string)data.id);
+					if (game != null) {
+						game.Release.Starred = false;
+						game.Platform.Save();
+						_logger.Info("Toggled star on release {0} [off]", game.Release.Name);
 					} else {
 						_logger.Info("Ignoring star for id {0}", data.id);
 					}
@@ -212,21 +287,9 @@ namespace VpdbAgent
 		/// </summary>
 		/// <param name="releaseId">Release ID</param>
 		/// <returns></returns>
-		private Release FindRelease(string releaseId)
+		private Game FindGame(string releaseId)
 		{
-			return Games
-				.Where(game => game.HasRelease && game.Release.Id.Equals(releaseId))
-				.Select(game => game.Release)
-				.FirstOrDefault();
+			return Games.FirstOrDefault(game => game.HasRelease && game.Release.Id.Equals(releaseId));
 		}
-	}
-
-	public interface IGameManager
-	{
-		ReactiveList<Platform> Platforms { get; }
-		ReactiveList<Game> Games { get; }
-
-		IGameManager Initialize();
-		IGameManager LinkRelease(Game game, Release release);
 	}
 }

@@ -106,6 +106,7 @@ namespace VpdbAgent.Models
 		/// <returns></returns>
 		public Platform Save()
 		{
+			_database.Games = Games;
 			MarshallDatabase();
 			return this;
 		}
@@ -211,12 +212,6 @@ namespace VpdbAgent.Models
 		/// </summary>
 		private void MarshallDatabase()
 		{
-			// don't do anything if no db
-			if (_database == null) {
-				_logger.Warn("Nothing to marshall, not writing vpdb.json.");
-				return;
-			}
-
 			// don't do anything for non-existent folder
 			var dbFolder = Path.GetDirectoryName(DatabaseFile);
 			if (dbFolder != null && DatabaseFile != null && !Directory.Exists(dbFolder)) {

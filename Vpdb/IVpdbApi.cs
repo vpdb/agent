@@ -16,5 +16,8 @@ namespace VpdbAgent.Vpdb
 
 		[Get("/api/v1/releases?thumb_format=square")]
 		IObservable<List<Release>> GetReleasesBySize([AliasAs("filesize")] long filesize, [AliasAs("threshold")] long threshold);
+
+		[Get("/api/v1/releases?thumb_format=square")]
+		IObservable<List<Release>> GetReleasesByIds([AliasAs("ids")] string releases);
 	}
 }
