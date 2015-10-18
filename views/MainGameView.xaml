@@ -74,7 +74,7 @@
                     <loadin:LoadingIndicator Foreground="{StaticResource PrimaryColorBrush}" SpeedRatio="1" IsActive="{Binding IsExecuting}"  Style="{DynamicResource LoadingIndicatorArcsStyle}"/>
                 </Viewbox>
             </Grid>
-			
+
             <!-- release results -->
             <Expander IsExpanded="{Binding HasExecuted}" Style="{StaticResource AnimatedExpander}">
                 <Grid Margin="-105,0,-10,0">

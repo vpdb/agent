@@ -1,6 +1,5 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:local="clr-namespace:VpdbAgent">
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <Style x:Key="AnimatedExpander" TargetType="{x:Type Expander}">
         <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
@@ -16,17 +15,29 @@
 
                     <ControlTemplate.Resources>
                         <ResourceDictionary>
-                            <Storyboard x:Key="scaleYUp">
+                            <Storyboard x:Key="ScaleYUp">
+                                <ObjectAnimationUsingKeyFrames BeginTime="0:0:0" Storyboard.TargetName="ExpandSite" Storyboard.TargetProperty="(FrameworkElement.Visibility)">
+                                    <DiscreteObjectKeyFrame KeyTime="0:0:0" Value="{x:Static Visibility.Visible}"/>
+                                </ObjectAnimationUsingKeyFrames>
                                 <DoubleAnimation From="0" To="1" Duration="0:0:0.1" Storyboard.TargetName="ExpandSite" Storyboard.TargetProperty="(FrameworkElement.LayoutTransform).(ScaleTransform.ScaleY)" />
                             </Storyboard>
-                            <Storyboard x:Key="scaleYDown">
+                            <Storyboard x:Key="ScaleYDown">
                                 <DoubleAnimation From="1" To="0" Duration="0:0:0.1" Storyboard.TargetName="ExpandSite" Storyboard.TargetProperty="(FrameworkElement.LayoutTransform).(ScaleTransform.ScaleY)" />
+                                <ObjectAnimationUsingKeyFrames BeginTime="0:0:0.1" Storyboard.TargetName="ExpandSite" Storyboard.TargetProperty="(FrameworkElement.Visibility)">
+                                    <DiscreteObjectKeyFrame KeyTime="0:0:0" Value="{x:Static Visibility.Collapsed}"/>
+                                </ObjectAnimationUsingKeyFrames>
                             </Storyboard>
-                            <Storyboard x:Key="scaleXUp">
+                            <Storyboard x:Key="ScaleXUp">
+                                <ObjectAnimationUsingKeyFrames BeginTime="0:0:0" Storyboard.TargetName="ExpandSite" Storyboard.TargetProperty="(FrameworkElement.Visibility)">
+                                    <DiscreteObjectKeyFrame KeyTime="0:0:0" Value="{x:Static Visibility.Visible}"/>
+                                </ObjectAnimationUsingKeyFrames>
                                 <DoubleAnimation From="0" To="1" Duration="0:0:0.1" Storyboard.TargetName="ExpandSite" Storyboard.TargetProperty="(FrameworkElement.LayoutTransform).(ScaleTransform.ScaleX)" />
                             </Storyboard>
-                            <Storyboard x:Key="scaleXDown">
+                            <Storyboard x:Key="ScaleXDown">
                                 <DoubleAnimation From="1" To="0" Duration="0:0:0.1" Storyboard.TargetName="ExpandSite" Storyboard.TargetProperty="(FrameworkElement.LayoutTransform).(ScaleTransform.ScaleX)" />
+                                <ObjectAnimationUsingKeyFrames BeginTime="0:0:0.1" Storyboard.TargetName="ExpandSite" Storyboard.TargetProperty="(FrameworkElement.Visibility)">
+                                    <DiscreteObjectKeyFrame KeyTime="0:0:0" Value="{x:Static Visibility.Collapsed}"/>
+                                </ObjectAnimationUsingKeyFrames>
                             </Storyboard>
                         </ResourceDictionary>
                     </ControlTemplate.Resources>
@@ -37,7 +48,7 @@
                                 <ContentPresenter Content="{TemplateBinding Header}" ContentTemplate="{TemplateBinding HeaderTemplate}" ContentTemplateSelector="{TemplateBinding HeaderTemplateSelector}" Margin="1" Focusable="false" />
                             </ToggleButton>
 
-                            <ContentPresenter x:Name="ExpandSite" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" Margin="{TemplateBinding Padding}" Focusable="false">
+                            <ContentPresenter x:Name="ExpandSite" Visibility="Collapsed" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" Margin="{TemplateBinding Padding}" Focusable="false">
                                 <ContentPresenter.LayoutTransform>
                                     <ScaleTransform x:Name="scaleTransform" ScaleX="1" ScaleY="1" />
                                 </ContentPresenter.LayoutTransform>
@@ -50,12 +61,8 @@
                                 <Condition Property="IsExpanded" Value="True" />
                                 <Condition Property="ExpandDirection" Value="Up" />
                             </MultiTrigger.Conditions>
-                            <MultiTrigger.EnterActions>
-                                <BeginStoryboard Storyboard="{StaticResource scaleYUp}" />
-                            </MultiTrigger.EnterActions>
-                            <MultiTrigger.ExitActions>
-                                <BeginStoryboard Storyboard="{StaticResource scaleYDown}" />
-                            </MultiTrigger.ExitActions>
+                            <MultiTrigger.EnterActions><BeginStoryboard Storyboard="{StaticResource ScaleYUp}" /></MultiTrigger.EnterActions>
+                            <MultiTrigger.ExitActions><BeginStoryboard Storyboard="{StaticResource ScaleYDown}" /></MultiTrigger.ExitActions>
                         </MultiTrigger>
 
                         <MultiTrigger>
@@ -63,12 +70,8 @@
                                 <Condition Property="IsExpanded" Value="True" />
                                 <Condition Property="ExpandDirection" Value="Down" />
                             </MultiTrigger.Conditions>
-                            <MultiTrigger.EnterActions>
-                                <BeginStoryboard Storyboard="{StaticResource scaleYUp}" />
-                            </MultiTrigger.EnterActions>
-                            <MultiTrigger.ExitActions>
-                                <BeginStoryboard Storyboard="{StaticResource scaleYDown}" />
-                            </MultiTrigger.ExitActions>
+                            <MultiTrigger.EnterActions><BeginStoryboard Storyboard="{StaticResource ScaleYUp}" /></MultiTrigger.EnterActions>
+                            <MultiTrigger.ExitActions><BeginStoryboard Storyboard="{StaticResource ScaleYDown}" /></MultiTrigger.ExitActions>
                         </MultiTrigger>
 
                         <MultiTrigger>
@@ -76,42 +79,33 @@
                                 <Condition Property="IsExpanded" Value="True" />
                                 <Condition Property="ExpandDirection" Value="Left" />
                             </MultiTrigger.Conditions>
-                            <MultiTrigger.EnterActions>
-                                <BeginStoryboard Storyboard="{StaticResource scaleXUp}" />
-                            </MultiTrigger.EnterActions>
-                            <MultiTrigger.ExitActions>
-                                <BeginStoryboard Storyboard="{StaticResource scaleXDown}" />
-                            </MultiTrigger.ExitActions>
+                            <MultiTrigger.EnterActions><BeginStoryboard Storyboard="{StaticResource ScaleXUp}" /></MultiTrigger.EnterActions>
+                            <MultiTrigger.ExitActions><BeginStoryboard Storyboard="{StaticResource ScaleXDown}" /></MultiTrigger.ExitActions>
                         </MultiTrigger>
                         <MultiTrigger>
                             <MultiTrigger.Conditions>
                                 <Condition Property="IsExpanded" Value="True" />
                                 <Condition Property="ExpandDirection" Value="Right" />
                             </MultiTrigger.Conditions>
-                            <MultiTrigger.EnterActions>
-                                <BeginStoryboard Storyboard="{StaticResource scaleXUp}" />
-                            </MultiTrigger.EnterActions>
-                            <MultiTrigger.ExitActions>
-                                <BeginStoryboard Storyboard="{StaticResource scaleXDown}" />
-                            </MultiTrigger.ExitActions>
+                            <MultiTrigger.EnterActions><BeginStoryboard Storyboard="{StaticResource ScaleXUp}" /></MultiTrigger.EnterActions>
+                            <MultiTrigger.ExitActions><BeginStoryboard Storyboard="{StaticResource ScaleXDown}" /></MultiTrigger.ExitActions>
                         </MultiTrigger>
 
                         <Trigger Property="ExpandDirection" Value="Down">
                             <Setter Property="DockPanel.Dock" TargetName="ExpandSite" Value="Bottom" />
                             <Setter Property="DockPanel.Dock" TargetName="HeaderSite" Value="Top" />
-
                         </Trigger>
+						
                         <Trigger Property="ExpandDirection" Value="Up">
                             <Setter Property="DockPanel.Dock" TargetName="ExpandSite" Value="Top" />
                             <Setter Property="DockPanel.Dock" TargetName="HeaderSite" Value="Bottom" />
                             <Setter Property="Style" TargetName="HeaderSite" Value="{DynamicResource ExpanderUpHeaderStyle}" />
-
                         </Trigger>
+						
                         <Trigger Property="ExpandDirection" Value="Right">
                             <Setter Property="DockPanel.Dock" TargetName="ExpandSite" Value="Right" />
                             <Setter Property="DockPanel.Dock" TargetName="HeaderSite" Value="Left" />
                             <Setter Property="Style" TargetName="HeaderSite" Value="{DynamicResource ExpanderRightHeaderStyle}" />
-
                         </Trigger>
 
                         <Trigger Property="ExpandDirection" Value="Left">
