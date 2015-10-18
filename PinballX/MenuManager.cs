@@ -12,6 +12,7 @@ using System.Reactive.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Subjects;
 using System.Windows;
+using VpdbAgent.Common;
 
 namespace VpdbAgent.PinballX
 {
@@ -76,35 +77,16 @@ namespace VpdbAgent.PinballX
 				.ObserveOn(Scheduler.Default)
 				.Subscribe(UpdateGames);
 
-			Systems.ItemsAdded
-				.ObserveOn(Scheduler.Default)
-				.Subscribe(observer => {
-					_logger.Info("Systems added: {0}", observer);
-				});
-
-
-			/*
-			ParseSystemsObs(iniPath)
-				.SubscribeOn(Scheduler.Default)
-				.Subscribe(systems =>
-				{
-					// setup watchers
-					// todo DISPOSE!
-					_watcher.DatabaseWatcher(dbPath, systems)
-						.Select(Path.GetDirectoryName)
-						.Select(path => systems.FirstOrDefault(s => s.DatabasePath.Equals(path)))
-						.Subscribe(UpdateGames);
-
-					// parse all games when systems change
-					systems.Changed
-						.Subscribe(_ => UpdateGames());
-
-					// kick off initially parse
-					foreach (var system in Systems) {
-						UpdateGames(system);
-					}
-				}); */
-
+			// parse games when .xmls change
+			IDisposable xmlWatcher = null;
+			Systems.Changed.Subscribe(systems => {
+				xmlWatcher?.Dispose();
+				xmlWatcher = _watcher.DatabaseWatcher(dbPath, Systems)
+					.ObserveOn(Scheduler.Default)
+					.Select(Path.GetDirectoryName)
+					.Select(path => Systems.FirstOrDefault(s => s.DatabasePath.Equals(path)))
+					.Subscribe(UpdateGames);
+			});
 
 			return this;
 		}
@@ -129,15 +111,20 @@ namespace VpdbAgent.PinballX
 		{
 			_logger.Info("Parsing all games for all systems...");
 			foreach (var system in Systems) {
-
-				var games = ParseGames(system);
-				using (system.Games.SuppressChangeNotifications()) {
-					// todo make this more intelligent by diff'ing and changing instead of drop-and-create
-					system.Games.Clear();
-					system.Games.AddRange(games);
-				}
+				UpdateGames(system);
 			}
 			_logger.Info("All games parsed.");
+		}
+
+		private void UpdateGames(PinballXSystem system)
+		{
+			_logger.Info("Parsing all games for {0}...", system);
+			var games = ParseGames(system);
+			using (system.Games.SuppressChangeNotifications()) {
+				// todo make this more intelligent by diff'ing and changing instead of drop-and-create
+				system.Games.Clear();
+				system.Games.AddRange(games);
+			}
 		}
 
 		/// <summary>

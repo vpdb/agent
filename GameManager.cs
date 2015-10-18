@@ -66,13 +66,13 @@ namespace VpdbAgent
 				.ObserveOn(Scheduler.Default)
 				.Subscribe(UpdatePlatforms);
 
-			// here we push all games in all platforms into the Games list.
-			// see http://stackoverflow.com/questions/15254708/
+			// here we push all games in all platforms into the Games list. See http://stackoverflow.com/questions/15254708/
 			var whenPlatformsOrGamesInThosePlatformsChange = Observable.Merge(
 				Platforms.Changed                                                      // one of the games changes
 					.SelectMany(_ => Platforms.Select(x => x.Games.Changed).Merge())
 					.Select(_ => Unit.Default),
 				Platforms.Changed.Select(_ => Unit.Default));                          // one of the platforms changes
+
 			whenPlatformsOrGamesInThosePlatformsChange.StartWith(Unit.Default)
 				.Select(_ => Platforms.SelectMany(x => x.Games).ToList())
 				.Where(games => games.Count > 0)

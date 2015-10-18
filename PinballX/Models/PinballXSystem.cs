@@ -72,5 +72,10 @@ namespace VpdbAgent.PinballX.Models
 			DatabasePath = settingsManager.PbxFolder + @"\Databases\" + Name;
 			MediaPath = settingsManager.PbxFolder + @"\Media\" + Name;
 		}
+
+		public override string ToString()
+		{
+			return $"[System] {Name}";
+		}
 	}
 }

@@ -39,7 +39,7 @@ namespace VpdbAgent.PinballX
 
 		/// <summary>
 		/// Returns an observable that will receive events when XML files within
-		/// the database folder(s) change.
+		/// any of the provided systems' database folders change.
 		/// </summary>
 		/// 
 		/// <remarks>
@@ -51,10 +51,11 @@ namespace VpdbAgent.PinballX
 		/// <returns></returns>
 		public IObservable<string> DatabaseWatcher(string dbPath, IList<PinballXSystem> systems)
 		{
+			const string filter = "*.xml";
 			IObservable<string> result = null;
 			foreach (var sysPath in systems.Select(system => dbPath + system.Name + @"\").Where(Directory.Exists)) {
-				_logger.Info("Watching {0}", sysPath);
-				var watcher = (new FilesystemWatchCache()).Register(sysPath, "*.xml");
+				_logger.Info("Watching {0}{1}", sysPath, filter);
+				var watcher = (new FilesystemWatchCache()).Register(sysPath, filter);
 				result = result == null ? watcher : result.Merge(watcher);
 			}
 			return result;
