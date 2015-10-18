@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -27,7 +28,7 @@ namespace VpdbAgent.ViewModels
 		public ReactiveCommand<object> CloseResults { get; protected set; } = ReactiveCommand.Create();
 
 		// data
-		public Game Game { get; private set; }
+		public Game Game { get; }
 
 		// needed for filters
 		private bool _isVisible = true;
@@ -62,7 +63,7 @@ namespace VpdbAgent.ViewModels
 			Game = game;
 
 			// release identify
-			IdentifyRelease = ReactiveCommand.CreateAsyncObservable(_ => VpdbClient.Api.GetReleasesBySize(game.FileSize, 512));
+			IdentifyRelease = ReactiveCommand.CreateAsyncObservable(_ => VpdbClient.Api.GetReleasesBySize(game.FileSize, 512).SubscribeOn(Scheduler.Default));
 			IdentifyRelease
 				.Select(releases => releases.Select(release => new MainReleaseResultsItemViewModel(game, release, CloseResults)))
 				.Subscribe(releases =>

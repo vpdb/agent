@@ -54,6 +54,9 @@ namespace VpdbAgent.Controls
 		/// </summary>
 		private void LoadImage()
 		{
+			// reset image
+			Source = null;
+
 			// if not set, ignore
 			if (string.IsNullOrEmpty(UrlSource)) {
 				Logger.Warn("Ignoring null-image.");
@@ -73,7 +76,6 @@ namespace VpdbAgent.Controls
 
 			// remote, so make it transparent for fading animation
 			Opacity = 0;
-			Source = null;
 
 			// download
 			var webRequest = VpdbClient.GetWebRequest(UrlSource);

@@ -66,6 +66,14 @@ namespace VpdbAgent
 				.ObserveOn(Scheduler.Default)
 				.Subscribe(UpdatePlatforms);
 
+			// populate platform when games change
+			systems.Changed
+				.ObserveOn(Scheduler.Default)
+				.SelectMany(_ => systems
+					.Select(parent => parent.Games.Changed.Skip(1).Select(__ => parent))
+				.Merge())
+			.Subscribe(UpdatePlatform);
+
 			// here we push all games in all platforms into the Games list. See http://stackoverflow.com/questions/15254708/
 			var whenPlatformsOrGamesInThosePlatformsChange = Observable.Merge(
 				Platforms.Changed                                                      // one of the games changes
@@ -89,10 +97,37 @@ namespace VpdbAgent
 			vpdbClient.UserChannel.Subscribe(OnChannelJoined);
 		}
 
+		private void UpdatePlatform(PinballXSystem system)
+		{
+			_logger.Info("Updating games for {0}", system);
+
+			// create new platform and find old
+			var newPlatform = new Platform(system);
+			var oldPlatform = Platforms.FirstOrDefault(p => p.Name.Equals(system.Name));
+
+			// save vpdb.json for updated platform
+			newPlatform.Save();
+			
+			// update platforms back on main thread
+			Application.Current.Dispatcher.Invoke(delegate {
+				using (Platforms.SuppressChangeNotifications()) {
+					if (oldPlatform != null) {
+						Platforms.Remove(oldPlatform);
+					}
+					Platforms.Add(newPlatform);
+				}
+			});
+		}
+
 		private void UpdatePlatforms(NotifyCollectionChangedEventArgs args)
 		{
-			// this will also update vpdb.json for every platform
+			_logger.Info("Updating all games for all platforms");
+
+			// create platforms from games
 			var platforms = _menuManager.Systems.Select(system => new Platform(system)).ToList();
+
+			// write vpdb.json
+			platforms.ForEach(p => p.Save());
 
 			// update platforms back on main thread
 			Application.Current.Dispatcher.Invoke(delegate {

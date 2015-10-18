@@ -5,6 +5,7 @@ using System;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
@@ -60,8 +61,7 @@ namespace VpdbAgent.Vpdb
 			Api = RestService.For<IVpdbApi>(client, settings);
 
 			// retrieve user profile
-			Api.GetProfile().Subscribe(user =>
-			{
+			Api.GetProfile().SubscribeOn(Scheduler.Default).Subscribe(user => {
 				_user = user;
 				_logger.Info("Logged as <{0}>", user.Email);
 				if (user.Permissions.Messages?.Contains("receive") == true) {

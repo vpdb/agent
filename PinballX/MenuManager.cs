@@ -10,9 +10,7 @@ using ReactiveUI;
 using VpdbAgent.PinballX.Models;
 using System.Reactive.Linq;
 using System.Reactive.Concurrency;
-using System.Reactive.Subjects;
 using System.Windows;
-using VpdbAgent.Common;
 
 namespace VpdbAgent.PinballX
 {
@@ -25,20 +23,30 @@ namespace VpdbAgent.PinballX
 	/// 
 	/// <remarks>
 	/// Games are stored in the systems objects. This class really only does
-	/// read-only maintenance of the user's configuration. See GameManager for
+	/// read-only maintenance of the user's configuration. See <see cref="GameManager"/> for
 	/// data structures that are actually used in the application.
 	/// </remarks>
+	public interface IMenuManager
+	{
+		/// <summary>
+		/// Starts watching file system for configuration changes and triggers an
+		/// initial update.
+		/// </summary>
+		/// <returns></returns>
+		IMenuManager Initialize();
+
+		/// <summary>
+		/// Systems parsed from <c>PinballX.ini</c>.
+		/// </summary>
+		ReactiveList<PinballXSystem> Systems { get; }
+	}
+
+	/// <summary>
+	/// Application logic for <see cref="IMenuManager"/>.
+	/// </summary>
 	public class MenuManager : IMenuManager
 	{
-	
-		/// <summary>
-		/// Systems parsed from PinballX.ini.
-		/// </summary>
 		public ReactiveList<PinballXSystem> Systems { get; } = new ReactiveList<PinballXSystem>();
-
-		// game change handlers
-		private readonly Subject<PinballXSystem> _gamesChanged = new Subject<PinballXSystem>();
-		public IObservable<PinballXSystem> GamesChanged => _gamesChanged.AsObservable();
 
 		// dependencies
 		private readonly IFileSystemWatcher _watcher;
@@ -51,14 +59,10 @@ namespace VpdbAgent.PinballX
 			_settingsManager = settingsManager;
 			_logger = logger;
 		}
-
-		/// <summary>
-		/// Starts watching file system for configuration changes and triggers an
-		/// initial update.
-		/// </summary>
-		/// <returns></returns>
+	
 		public IMenuManager Initialize()
 		{
+			// settings must be initialized before doing this.
 			if (!_settingsManager.IsInitialized()) {
 				return this;
 			}
@@ -66,7 +70,7 @@ namespace VpdbAgent.PinballX
 			var iniPath = _settingsManager.PbxFolder + @"\Config\PinballX.ini";
 			var dbPath = _settingsManager.PbxFolder + @"\Databases\";
 
-			// update systems when ini changes (or now)
+			// update systems when ini changes (also, kick it off now)
 			_watcher.FileWatcher(iniPath)
 				.StartWith(iniPath)                // kick-off without waiting for first file change
 				.SubscribeOn(Scheduler.Default)    // do work on background thread
@@ -91,13 +95,18 @@ namespace VpdbAgent.PinballX
 			return this;
 		}
 
+		/// <summary>
+		/// Updates all systems.
+		/// </summary>
+		/// <remarks>Triggered at startup and when <c>PinballX.ini</c> changes.</remarks>
+		/// <param name="iniPath">Path to PinballX.ini</param>
 		private void UpdateSystems(string iniPath)
 		{
 			// here, we're on a worker thread.
 			var systems = ParseSystems(iniPath);
 
 			// treat result back on main thread
-			Application.Current.Dispatcher.Invoke((Action)delegate
+			Application.Current.Dispatcher.Invoke(delegate
 			{
 				using (Systems.SuppressChangeNotifications()) {
 					// todo make this more intelligent by diff'ing and changing instead of drop-and-create
@@ -107,6 +116,11 @@ namespace VpdbAgent.PinballX
 			});
 		}
 
+		/// <summary>
+		/// Updates all games of all systems.
+		/// </summary>
+		/// <remarks>Triggered when systems change</remarks>
+		/// <param name="args">Useless changed event args from ReactiveList</param>
 		private void UpdateGames(NotifyCollectionChangedEventArgs args)
 		{
 			_logger.Info("Parsing all games for all systems...");
@@ -116,6 +130,19 @@ namespace VpdbAgent.PinballX
 			_logger.Info("All games parsed.");
 		}
 
+		/// <summary>
+		/// Updates all games of a given system.
+		/// </summary>
+		/// <remarks>
+		/// Triggered by XML changes. Updating means:
+		/// 
+		/// <list type="number">
+		///		<item><term> Parsing all XML files of the system </term></item>
+		///		<item><term> Reading all games in the XML files </term></item>
+		///		<item><term> Setting <see cref="PinballXSystem.Games">Games</see> of the system </term></item>
+		/// </list>
+		/// </remarks>
+		/// <param name="system">System to update</param>
 		private void UpdateGames(PinballXSystem system)
 		{
 			_logger.Info("Parsing all games for {0}...", system);
@@ -130,6 +157,7 @@ namespace VpdbAgent.PinballX
 		/// <summary>
 		/// Parses PinballX.ini and reads all systems from it.
 		/// </summary>
+		/// <returns>Parsed systems</returns>
 		private IEnumerable<PinballXSystem> ParseSystems(string iniPath)
 		{
 			var systems = new List<PinballXSystem>();
@@ -155,9 +183,14 @@ namespace VpdbAgent.PinballX
 		}
 
 		/// <summary>
-		/// Parses all games at a given path.
+		/// Parses all games for a given system.
 		/// </summary>
+		/// <remarks>
+		/// "Parsing" means reading and unmarshalling all XML files in the 
+		/// system's database folder.
+		/// </remarks>
 		/// <param name="system">System to parse games for</param>
+		/// <returns>Parsed games</returns>
 		private IEnumerable<Game> ParseGames(PinballXSystem system)
 		{
 			if (system == null) {
@@ -169,17 +202,14 @@ namespace VpdbAgent.PinballX
 			var games = new List<Game>();
 			var fileCount = 0;
 			if (Directory.Exists(system.DatabasePath)) {
-				foreach (var filePath in Directory.GetFiles(system.DatabasePath)
-					.Where(filePath => ".xml".Equals(Path.GetExtension(filePath), StringComparison.InvariantCultureIgnoreCase))) {
-					games.AddRange(UnmarshalXml(filePath).Games);
+				foreach (var filePath in Directory.GetFiles(system.DatabasePath).Where(filePath => ".xml".Equals(Path.GetExtension(filePath), StringComparison.InvariantCultureIgnoreCase))) {
+					games.AddRange(UnmarshallXml(filePath).Games);
 					fileCount++;
 				}
 			}
 			_logger.Debug("Parsed {0} games from {1} XML files at {2}.", games.Count, fileCount, system.DatabasePath);
 
 			return games;
-			// announce to subscribers
-			//_gamesChanged.OnNext(system);
 		}
 
 		/// <summary>
@@ -187,7 +217,7 @@ namespace VpdbAgent.PinballX
 		/// </summary>
 		/// <param name="filepath">Absolute path to the .XML file</param>
 		/// <returns></returns>
-		private Menu UnmarshalXml(string filepath)
+		private Menu UnmarshallXml(string filepath)
 		{
 			var menu = new Menu();
 			Stream reader = null;
@@ -204,12 +234,5 @@ namespace VpdbAgent.PinballX
 			}
 			return menu;
 		}
-	}
-
-	public interface IMenuManager
-	{
-		ReactiveList<PinballXSystem> Systems { get; }
-		IObservable<PinballXSystem> GamesChanged { get; }
-		IMenuManager Initialize();
 	}
 }

@@ -2,14 +2,11 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using Newtonsoft.Json;
 using NLog;
 using ReactiveUI;
 using Splat;
-using VpdbAgent.PinballX;
 using VpdbAgent.PinballX.Models;
 using VpdbAgent.Vpdb.Network;
 
@@ -21,8 +18,6 @@ namespace VpdbAgent.Models
 	/// </summary>
 	public class Platform : ReactiveObject
 	{
-		private readonly Logger _logger = Locator.CurrentMutable.GetService<Logger>();
-
 		#region Properties
 		/// <summary>
 		/// Name of the platform. Serves as ID.
@@ -85,7 +80,8 @@ namespace VpdbAgent.Models
 
 		public readonly ReactiveList<Game> Games = new ReactiveList<Game>();
 
-		private Database _database;
+		private readonly Database _database;
+		private readonly Logger _logger = Locator.CurrentMutable.GetService<Logger>();
 
 		public Platform(PinballXSystem system)
 		{
@@ -120,12 +116,12 @@ namespace VpdbAgent.Models
 		/// <param name="system">System with games attached</param>
 		private void UpdateGames(PinballXSystem system)
 		{
-			var games = MergeGames(system);
+			_database.Games = MergeGames(system);
 			Application.Current.Dispatcher.Invoke(delegate {
 				using (Games.SuppressChangeNotifications()) {
 					// todo make this more intelligent by diff'ing and changing instead of drop-and-create
 					Games.Clear();
-					Games.AddRange(games);
+					Games.AddRange(_database.Games);
 				}
 			});
 		}
@@ -147,7 +143,6 @@ namespace VpdbAgent.Models
 				_logger.Info("Found and parsed vpdb.json at {0}", DatabaseFile);
 				mergedGames = MergeGames(xmlGames, _database.Games, TablePath);
 			}
-			SaveGames(mergedGames);
 
 			return mergedGames;
 		}
@@ -175,28 +170,14 @@ namespace VpdbAgent.Models
 		}
 
 		/// <summary>
-		/// Updates the database with new games and saves them.
-		/// </summary>
-		/// <param name="games">New games to save</param>
-		private void SaveGames(IEnumerable<Game> games)
-		{
-			if (_database == null) {
-				_database = new Database(games);
-			} else {
-				_database.Games = games;
-			}
-			MarshallDatabase();
-		}
-
-		/// <summary>
 		/// Reads the internal .json file of a given platform and returns the 
 		/// unmarshaled menu object.
 		/// </summary>
-		/// <returns>Deserialized object</returns>
+		/// <returns>Deserialized object or empty database if no file exists or parsing error</returns>
 		private Database UnmarshalDatabase()
 		{
 			if (!File.Exists(DatabaseFile)) {
-				return null;
+				return new Database();
 			}
 
 			var serializer = new JsonSerializer {
@@ -205,18 +186,23 @@ namespace VpdbAgent.Models
 				Formatting = Formatting.Indented
 			};
 
-			using (var sr = new StreamReader(DatabaseFile))
-			using (JsonReader reader = new JsonTextReader(sr)) {
-				try {
-					var db = serializer.Deserialize<Database>(reader);
-					reader.Close();
-					return db;
-				} catch (Exception e) {
-					_logger.Error(e, "Error parsing vpdb.json, deleting and ignoring.");
-					reader.Close();
-					File.Delete(DatabaseFile);
-					return null;
+			try {
+				using (var sr = new StreamReader(DatabaseFile))
+				using (JsonReader reader = new JsonTextReader(sr)) {
+					try {
+						var db = serializer.Deserialize<Database>(reader);
+						reader.Close();
+						return db ?? new Database();
+					} catch (Exception e) {
+						_logger.Error(e, "Error parsing vpdb.json, deleting and ignoring.");
+						reader.Close();
+						File.Delete(DatabaseFile);
+						return new Database();
+					}
 				}
+			} catch (Exception e) {
+				_logger.Error(e, "Error reading vpdb.json, deleting and ignoring.");
+				return new Database();
 			}
 		}
 
