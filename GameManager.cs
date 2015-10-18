@@ -48,7 +48,6 @@ namespace VpdbAgent
 	{
 		// deps
 		private readonly IMenuManager _menuManager;
-		private readonly IVpdbClient _vpdbClient;
 		private readonly Logger _logger;
 
 		// props
@@ -58,7 +57,6 @@ namespace VpdbAgent
 		public GameManager(IMenuManager menuManager, IVpdbClient vpdbClient, Logger logger)
 		{
 			_menuManager = menuManager;
-			_vpdbClient = vpdbClient;
 			_logger = logger;
 
 			var systems = _menuManager.Systems;
@@ -80,8 +78,7 @@ namespace VpdbAgent
 				.Where(games => games.Count > 0)
 				.Subscribe(games => {
 					// TODO better logic
-					using (Games.SuppressChangeNotifications())
-					{
+					using (Games.SuppressChangeNotifications()) {
 						Games.RemoveRange(0, Games.Count);
 						Games.AddRange(games);
 					}
@@ -89,7 +86,7 @@ namespace VpdbAgent
 				});
 
 			// subscribe to pusher
-			_vpdbClient.UserChannel.Subscribe(OnChannelJoined);
+			vpdbClient.UserChannel.Subscribe(OnChannelJoined);
 		}
 
 		private void UpdatePlatforms(NotifyCollectionChangedEventArgs args)

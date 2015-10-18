@@ -64,7 +64,6 @@ namespace VpdbAgent.ViewModels
 			// release identify
 			IdentifyRelease = ReactiveCommand.CreateAsyncObservable(_ => VpdbClient.Api.GetReleasesBySize(game.FileSize, 512));
 			IdentifyRelease
-				.Trace("IdentifiedReleases")
 				.Select(releases => releases.Select(release => new MainReleaseResultsItemViewModel(game, release, CloseResults)))
 				.Subscribe(releases =>
 				{

@@ -55,7 +55,7 @@ namespace VpdbAgent.Controls
 		private void LoadImage()
 		{
 			// if not set, ignore
-			if (UrlSource == null) {
+			if (string.IsNullOrEmpty(UrlSource)) {
 				Logger.Warn("Ignoring null-image.");
 				return;
 			}

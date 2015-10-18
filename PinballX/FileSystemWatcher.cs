@@ -51,7 +51,6 @@ namespace VpdbAgent.PinballX
 		/// <returns></returns>
 		public IObservable<string> DatabaseWatcher(string dbPath, IList<PinballXSystem> systems)
 		{
-
 			IObservable<string> result = null;
 			foreach (var sysPath in systems.Select(system => dbPath + system.Name + @"\").Where(Directory.Exists)) {
 				_logger.Info("Watching {0}", sysPath);
