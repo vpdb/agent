@@ -148,14 +148,6 @@
     <Compile Include="Common\FilesystemWatchCache.cs" />
     <Compile Include="Common\ObservableTrace.cs" />
     <Compile Include="Controls\IconControl.cs" />
-    <Compile Include="Libs\DelayBinding\BindingBaseExtensionBase.cs" />
-    <Compile Include="Libs\DelayBinding\BindingExtensionBase.cs" />
-    <Compile Include="Libs\DelayBinding\DelayBinding\DelayBindingController.cs" />
-    <Compile Include="Libs\DelayBinding\DelayBinding\DelayBindingExtension.cs" />
-    <Compile Include="Libs\DelayBinding\DelayBinding\DelayBindingManager.cs" />
-    <Compile Include="Libs\DelayBinding\DelayBinding\DelayBindingOperations.cs" />
-    <Compile Include="Libs\DelayBinding\DelayBinding\DelayMultiBindingExtension.cs" />
-    <Compile Include="Libs\DelayBinding\MultiBindingExtensionBase.cs" />
     <Compile Include="Libs\SmoothPanel\DataBindHelper.cs" />
     <Compile Include="Libs\SmoothPanel\IHeightMeasurer.cs" />
     <Compile Include="Libs\SmoothPanel\SmoothPanel.cs" />

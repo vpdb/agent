@@ -21,9 +21,9 @@ namespace VpdbAgent.Models
 	/// </summary>
 	public class Platform : ReactiveObject
 	{
-
 		private readonly Logger _logger = Locator.CurrentMutable.GetService<Logger>();
 
+		#region Properties
 		/// <summary>
 		/// Name of the platform. Serves as ID.
 		/// </summary>
@@ -32,7 +32,7 @@ namespace VpdbAgent.Models
 		/// <summary>
 		/// True if enabled in PinballX.ini, False otherwise.
 		/// </summary>
-		public bool IsEnabled { get; set; } = true;
+		public bool IsEnabled { get; set; }
 
 		/// <summary>
 		/// True if selected in UI, False otherwise.
@@ -81,8 +81,11 @@ namespace VpdbAgent.Models
 		/// Absolute path to our internal database JSON file.
 		/// </summary>
 		public string DatabaseFile => DatabasePath + @"\vpdb.json";
+		#endregion
 
 		public readonly ReactiveList<Game> Games = new ReactiveList<Game>();
+
+		private Database _database;
 
 		public Platform(PinballXSystem system)
 		{
@@ -96,13 +99,29 @@ namespace VpdbAgent.Models
 			DatabasePath = system.DatabasePath;
 			MediaPath = system.MediaPath;
 
+			_database = UnmarshalDatabase();
+
 			UpdateGames(system);
 		}
 
+		/// <summary>
+		/// Saves the current database to json.
+		/// </summary>
+		/// <returns></returns>
+		public Platform Save()
+		{
+			MarshallDatabase();
+			return this;
+		}
+
+		/// <summary>
+		/// Updates the games coming from XML files of PinballX.ini
+		/// </summary>
+		/// <param name="system">System with games attached</param>
 		private void UpdateGames(PinballXSystem system)
 		{
 			var games = MergeGames(system);
-			Application.Current.Dispatcher.Invoke((Action)delegate {
+			Application.Current.Dispatcher.Invoke(delegate {
 				using (Games.SuppressChangeNotifications()) {
 					// todo make this more intelligent by diff'ing and changing instead of drop-and-create
 					Games.Clear();
@@ -119,18 +138,16 @@ namespace VpdbAgent.Models
 		/// <param name="system">System in which the game changed</param>
 		private IEnumerable<Game> MergeGames(PinballXSystem system)
 		{
-			var db = UnmarshalDatabase();
 			var xmlGames = system.Games;
 			List<Game> mergedGames;
-			if (db == null) {
+			if (_database == null) {
 				_logger.Warn("No vpdb.json at {0}", DatabaseFile);
 				mergedGames = MergeGames(xmlGames, null, TablePath);
 			} else {
 				_logger.Info("Found and parsed vpdb.json at {0}", DatabaseFile);
-				mergedGames = MergeGames(xmlGames, db.Games, TablePath);
+				mergedGames = MergeGames(xmlGames, _database.Games, TablePath);
 			}
-			// TODO don't recreate the database, because at some point it'll contain more than just the games.
-			MarshallDatabase(new Database(mergedGames));
+			SaveGames(mergedGames);
 
 			return mergedGames;
 		}
@@ -158,13 +175,27 @@ namespace VpdbAgent.Models
 		}
 
 		/// <summary>
+		/// Updates the database with new games and saves them.
+		/// </summary>
+		/// <param name="games">New games to save</param>
+		private void SaveGames(IEnumerable<Game> games)
+		{
+			if (_database == null) {
+				_database = new Database(games);
+			} else {
+				_database.Games = games;
+			}
+			MarshallDatabase();
+		}
+
+		/// <summary>
 		/// Reads the internal .json file of a given platform and returns the 
 		/// unmarshaled menu object.
 		/// </summary>
 		/// <returns>Deserialized object</returns>
 		private Database UnmarshalDatabase()
 		{
-			if (!System.IO.File.Exists(DatabaseFile)) {
+			if (!File.Exists(DatabaseFile)) {
 				return null;
 			}
 
@@ -183,7 +214,7 @@ namespace VpdbAgent.Models
 				} catch (Exception e) {
 					_logger.Error(e, "Error parsing vpdb.json, deleting and ignoring.");
 					reader.Close();
-					System.IO.File.Delete(DatabaseFile);
+					File.Delete(DatabaseFile);
 					return null;
 				}
 			}
@@ -192,10 +223,17 @@ namespace VpdbAgent.Models
 		/// <summary>
 		/// Writes the database to the internal .json file for a given platform.
 		/// </summary>
-		/// <param name="database">Database to marshal</param>
-		private void MarshallDatabase(Database database)
+		private void MarshallDatabase()
 		{
-			if (DatabaseFile != null && !Directory.Exists(Path.GetDirectoryName(DatabaseFile))) {
+			// don't do anything if no db
+			if (_database == null) {
+				_logger.Warn("Nothing to marshall, not writing vpdb.json.");
+				return;
+			}
+
+			// don't do anything for non-existent folder
+			var dbFolder = Path.GetDirectoryName(DatabaseFile);
+			if (dbFolder != null && DatabaseFile != null && !Directory.Exists(dbFolder)) {
 				_logger.Warn("Directory {0} does not exist, not writing vpdb.json.", Path.GetDirectoryName(DatabaseFile));
 				return;
 			}
@@ -208,15 +246,30 @@ namespace VpdbAgent.Models
 
 			using (var sw = new StreamWriter(DatabaseFile))
 			using (JsonWriter writer = new JsonTextWriter(sw)) {
-				serializer.Serialize(writer, database);
+				serializer.Serialize(writer, _database);
 			}
 			_logger.Debug("Wrote vpdb.json back to {0}", DatabaseFile);
 		}
 
-
+		/// <summary>
+		/// Different types of platforms ("systems")
+		/// </summary>
 		public enum PlatformType
 		{
-			VP, FP, Custom
+			/// <summary>
+			/// Visual Pinball
+			/// </summary>
+			VP,
+
+			/// <summary>
+			/// Future Pinball
+			/// </summary>
+			FP,
+
+			/// <summary>
+			/// Anything else
+			/// </summary>
+			Custom
 		}
 	}
 }

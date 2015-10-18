@@ -78,8 +78,7 @@ namespace VpdbAgent
 			whenPlatformsOrGamesInThosePlatformsChange.StartWith(Unit.Default)
 				.Select(_ => Platforms.SelectMany(x => x.Games).ToList())
 				.Where(games => games.Count > 0)
-				.Subscribe(games =>
-				{
+				.Subscribe(games => {
 					// TODO better logic
 					using (Games.SuppressChangeNotifications())
 					{
@@ -126,13 +125,8 @@ namespace VpdbAgent
 		public IGameManager LinkRelease(Game game, Release release)
 		{
 			game.Release = release;
-			//MarshallDatabase(new Database(GetGames(game.Platform)), game.Platform);
+			game.Platform.Save();
 			return this;
-		}
-
-		public IEnumerable<Game> GetGames(Platform platform)
-		{
-			return Games.Where(game => game.Platform.Name.Equals(platform.Name));
 		}
 
 		/// <summary>
@@ -202,6 +196,5 @@ namespace VpdbAgent
 
 		IGameManager Initialize();
 		IGameManager LinkRelease(Game game, Release release);
-		IEnumerable<Game> GetGames(Platform platform);
 	}
 }
