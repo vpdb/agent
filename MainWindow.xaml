@@ -13,6 +13,7 @@
         Style="{DynamicResource CleanWindowStyleKey}"
         Title="VPDB Agent"
         TitleCaps="False"
+        GlowBrush="#40000000"
         RenderOptions.ClearTypeHint="Enabled"
         Icon="vpdb-agent.ico">
 
