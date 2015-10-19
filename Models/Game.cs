@@ -69,7 +69,7 @@ namespace VpdbAgent.Models
 		private void Update(Platform platform, GlobalDatabase db)
 		{
 			Platform = platform;
-			if (ReleaseId != null) {
+			if (ReleaseId != null && db.Releases.ContainsKey(ReleaseId)) {
 				Release = db.Releases[ReleaseId];
 			}
 		}

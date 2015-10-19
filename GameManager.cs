@@ -270,6 +270,9 @@ namespace VpdbAgent
 						foreach (var release in releases) {
 							if (!_database.Releases.ContainsKey(release.Id)) {
 								_database.Releases.Add(release.Id, release);
+								// so we had a ref we didn't have in the global db. 
+								// now we got it, so link it back to game.
+								Games.First(g => release.Id.Equals(g.ReleaseId)).Release = release;
 							} else {
 								_database.Releases[release.Id].Update(release);
 							}
