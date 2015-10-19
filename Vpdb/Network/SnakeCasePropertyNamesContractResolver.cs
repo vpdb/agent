@@ -10,8 +10,15 @@ namespace VpdbAgent.Vpdb.Network
 {
 	public class SnakeCasePropertyNamesContractResolver : DefaultContractResolver
 	{
+
+		protected override string ResolveDictionaryKey(string dictionaryKey)
+		{
+			return dictionaryKey;
+		}
+
 		protected override string ResolvePropertyName(string propertyName)
 		{
+			
 			return Regex.Replace(propertyName, "([a-z])([A-Z])", "$1_$2").ToLower();
 		}
 	}

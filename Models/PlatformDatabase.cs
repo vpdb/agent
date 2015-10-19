@@ -1,22 +1,26 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using VpdbAgent.Vpdb.Models;
 
 namespace VpdbAgent.Models
 {
-
 	/// <summary>
 	/// The data structure that is saved as a .json file for each platform.
 	/// </summary>
-	public class Database
+	public class PlatformDatabase
 	{
 		public IEnumerable<Game> Games { set; get; } = new List<Game>();
-//		public IEnumerable<Release> Releases { set; get; } = new List<Release>();
 
-		public Database() { }
+		public PlatformDatabase() { }
 
-		public Database(IEnumerable<Game> games)
+		public PlatformDatabase(IEnumerable<Game> games)
 		{
 			Games = games;
+		}
+
+		public override string ToString()
+		{
+			return $"[PlatformDB] {Games.Count()} game(s)";
 		}
 	}
 }

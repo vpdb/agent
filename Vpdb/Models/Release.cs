@@ -49,5 +49,20 @@ namespace VpdbAgent.Vpdb.Models
 			public int Stars { get; set; }
 			public int Downloads { get; set; }
 		}
+
+		/// <summary>
+		/// Updates a release from the backend.
+		/// </summary>
+		/// <param name="release"></param>
+		public void Update(Release release)
+		{
+			Name = release.Name;
+			CreatedAt = release.CreatedAt;
+			Authors = release.Authors;
+			Counter = release.Counter;
+			Game = release.Game;
+			LatestVersion = release.LatestVersion;
+			Starred = release.Starred;
+		}
 	}
 }

@@ -30,7 +30,6 @@ namespace VpdbAgent.ViewModels
 			SelectResult.Subscribe(_ =>
 			{
 				GameManager.LinkRelease(Game, release);
-				Game.Release = release;
 				closeCommand.Execute(null);
 			});
 		}

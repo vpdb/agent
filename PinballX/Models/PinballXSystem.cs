@@ -75,7 +75,7 @@ namespace VpdbAgent.PinballX.Models
 
 		public override string ToString()
 		{
-			return $"[System] {Name}";
+			return $"[System] {Name} ({Games.Count})";
 		}
 	}
 }

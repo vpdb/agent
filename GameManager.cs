@@ -7,6 +7,7 @@ using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Threading;
 using System.Windows;
 using Newtonsoft.Json;
 using NLog;
@@ -16,9 +17,11 @@ using VpdbAgent.Common;
 using VpdbAgent.Models;
 using VpdbAgent.PinballX;
 using VpdbAgent.PinballX.Models;
+using VpdbAgent.Views;
 using VpdbAgent.Vpdb;
 using VpdbAgent.Vpdb.Models;
 using VpdbAgent.Vpdb.Network;
+using File = System.IO.File;
 using Game = VpdbAgent.Models.Game;
 
 namespace VpdbAgent
@@ -85,22 +88,35 @@ namespace VpdbAgent
 		// deps
 		private readonly IMenuManager _menuManager;
 		private readonly IVpdbClient _vpdbClient;
+		private readonly ISettingsManager _settingsManager;
 		private readonly Logger _logger;
 
 		// props
 		public ReactiveList<Platform> Platforms { get; } = new ReactiveList<Platform>();
 		public ReactiveList<Game> Games { get; } = new ReactiveList<Game>();
 
-		public GameManager(IMenuManager menuManager, IVpdbClient vpdbClient, Logger logger)
+		private string _dbPath;
+		private GlobalDatabase _database;
+
+		// final
+		private readonly JsonSerializer _serializer = new JsonSerializer {
+			NullValueHandling = NullValueHandling.Ignore,
+			ContractResolver = new SnakeCasePropertyNamesContractResolver(),
+			Formatting = Formatting.Indented
+		};
+
+		public GameManager(IMenuManager menuManager, IVpdbClient vpdbClient, ISettingsManager settingsManager, Logger logger)
 		{
 			_menuManager = menuManager;
 			_vpdbClient = vpdbClient;
+			_settingsManager = settingsManager;
 			_logger = logger;
 
 			var systems = _menuManager.Systems;
 
 			// populate platforms when system change
 			systems.Changed
+				.Skip(1)
 				.ObserveOn(Scheduler.Default)
 				.Subscribe(UpdatePlatforms);
 
@@ -108,9 +124,18 @@ namespace VpdbAgent
 			systems.Changed
 				.ObserveOn(Scheduler.Default)
 				.SelectMany(_ => systems
-					.Select(parent => parent.Games.Changed.Skip(1).Select(__ => parent))
+					.Select(system => system.Games.Changed.Select(__ => system))
 				.Merge())
 			.Subscribe(UpdatePlatform);
+
+			systems.Changed
+				.SelectMany(_ => systems
+					.Select(system => system.Games.Changed.Select(__ => system))
+				.Merge())
+			.Subscribe(x =>
+			{
+				Console.WriteLine(systems);
+			});
 
 			// here we push all games in all platforms into the Games list. See http://stackoverflow.com/questions/15254708/
 			var whenPlatformsOrGamesInThosePlatformsChange = Observable.Merge(
@@ -141,15 +166,35 @@ namespace VpdbAgent
 
 		public IGameManager Initialize()
 		{
+			// settings must be initialized before doing this.
+			if (!_settingsManager.IsInitialized()) {
+				throw new InvalidOperationException("Must initialize settings before game manager.");
+			}
+			_dbPath = Path.Combine(_settingsManager.PbxFolder, @"Databases\vpdb.json");
+			_database = UnmarshallDatabase();
+			_logger.Info("Global database with {0} release(s) loaded.", _database.Releases.Count);
+
 			_menuManager.Initialize();
 			return this;
 		}
 
 		public IGameManager LinkRelease(Game game, Release release)
 		{
+			AddRelease(release);
+			game.ReleaseId = release.Id;
 			game.Release = release;
 			game.Platform.Save();
 			return this;
+		}
+
+		private void AddRelease(Release release)
+		{
+			if (!_database.Releases.ContainsKey(release.Id)) {
+				_database.Releases.Add(release.Id, release);
+			} else {
+				_database.Releases[release.Id] = release;
+			}
+			MarshallDatabase();
 		}
 
 		/// <summary>
@@ -167,7 +212,7 @@ namespace VpdbAgent
 			_logger.Info("Updating games for {0}", system);
 
 			// create new platform and find old
-			var newPlatform = new Platform(system);
+			var newPlatform = new Platform(system, _database);
 			var oldPlatform = Platforms.FirstOrDefault(p => p.Name.Equals(system.Name));
 
 			// save vpdb.json for updated platform
@@ -199,7 +244,7 @@ namespace VpdbAgent
 			_logger.Info("Updating all games for all platforms");
 
 			// create platforms from games
-			var platforms = _menuManager.Systems.Select(system => new Platform(system)).ToList();
+			var platforms = _menuManager.Systems.Select(system => new Platform(system, _database)).ToList();
 
 			// write vpdb.json
 			platforms.ForEach(p => p.Save());
@@ -219,19 +264,26 @@ namespace VpdbAgent
 		/// </summary>
 		private void UpdateReleases()
 		{
-			var releaseIds = string.Join(",", Games.Where(g => g.HasRelease).Select(g => g.Release.Id).ToList());
-			_vpdbClient.Api.GetReleasesByIds(releaseIds)
-				.SubscribeOn(Scheduler.Default)
-				.Subscribe(releases => {
-					// update releases
-					foreach (var release in releases) {
-						Games.Where(g => g.HasRelease).ToList().ForEach(game => { game.Release = release; });
-					}
-					// save platforms
-					foreach (var platform in Platforms) {
-						platform.Save();
-					}
-				});
+			var releaseIds = Games.Where(g => g.HasRelease).Select(g => g.ReleaseId).ToList();
+			if (releaseIds.Count > 0) {
+				_logger.Info("Updating {0} release(s)", releaseIds.Count);
+				_vpdbClient.Api.GetReleasesByIds(string.Join(",", releaseIds))
+					.SubscribeOn(Scheduler.Default)
+					.Subscribe(releases => {
+						// update releases
+						foreach (var release in releases) {
+							if (!_database.Releases.ContainsKey(release.Id)) {
+								_database.Releases.Add(release.Id, release);
+							} else {
+								_database.Releases[release.Id].Update(release);
+							}
+						}
+						// save
+						MarshallDatabase();
+					});
+			} else {
+				_logger.Info("Skipping release update, no linked releases found.");
+			}
 		}
 
 		/// <summary>
@@ -255,11 +307,11 @@ namespace VpdbAgent
 			star.ObserveOn(RxApp.MainThreadScheduler).Subscribe(data =>
 			{
 				if ("release".Equals((string)data.type)) {
-					var game = FindGame((string)data.id);
-					if (game != null) {
-						game.Release.Starred = true;
-						game.Platform.Save();
-						_logger.Info("Toggled star on release {0} [on]", game.Release.Name);
+					var release = _database.Releases[(string)data.id];
+					if (release != null) {
+						release.Starred = true;
+						MarshallDatabase();
+						_logger.Info("Toggled star on release {0} [on]", release.Name);
 					} else {
 						_logger.Info("Ignoring star for id {0}", data.id);
 					}
@@ -270,11 +322,11 @@ namespace VpdbAgent
 			unstar.ObserveOn(RxApp.MainThreadScheduler).Subscribe(data =>
 			{
 				if ("release".Equals((string)data.type)) {
-					var game = FindGame((string)data.id);
-					if (game != null) {
-						game.Release.Starred = false;
-						game.Platform.Save();
-						_logger.Info("Toggled star on release {0} [off]", game.Release.Name);
+					var release = _database.Releases[(string)data.id];
+					if (release != null) {
+						release.Starred = false;
+						MarshallDatabase();
+						_logger.Info("Toggled star on release {0} [off]", release.Name);
 					} else {
 						_logger.Info("Ignoring star for id {0}", data.id);
 					}
@@ -282,14 +334,49 @@ namespace VpdbAgent
 			});
 		}
 
-		/// <summary>
-		/// Returns a release based on release ID or null if not locally found.
-		/// </summary>
-		/// <param name="releaseId">Release ID</param>
-		/// <returns></returns>
-		private Game FindGame(string releaseId)
+		private GlobalDatabase UnmarshallDatabase()
 		{
-			return Games.FirstOrDefault(game => game.HasRelease && game.Release.Id.Equals(releaseId));
+			if (!File.Exists(_dbPath)) {
+				_logger.Info("Creating new global database, {0} not found.", _dbPath);
+				return new GlobalDatabase();
+			}
+			try {
+				using (var sr = new StreamReader(_dbPath))
+				using (JsonReader reader = new JsonTextReader(sr)) {
+					try {
+						var db = _serializer.Deserialize<GlobalDatabase>(reader);
+						reader.Close();
+						return db ?? new GlobalDatabase();
+					} catch (Exception e) {
+						_logger.Error(e, "Error parsing {0}, deleting and ignoring.", _dbPath);
+						reader.Close();
+						File.Delete(_dbPath);
+						return new GlobalDatabase();
+					}
+				}
+			} catch (Exception e) {
+				_logger.Error(e, "Error reading {0}, deleting and ignoring.", _dbPath);
+				return new GlobalDatabase();
+			}
+		}
+
+		private void MarshallDatabase()
+		{
+			var dbFolder = Path.GetDirectoryName(_dbPath);
+			if (dbFolder != null && !Directory.Exists(dbFolder)) {
+				_logger.Warn("Directory {0} does not exist, not writing vpdb.json.", dbFolder);
+				return;
+			}
+
+			try {
+				using (var sw = new StreamWriter(_dbPath))
+				using (JsonWriter writer = new JsonTextWriter(sw)) {
+					_serializer.Serialize(writer, _database);
+				}
+				_logger.Debug("Wrote vpdb.json back to {0}", _dbPath);
+			} catch (Exception e) {
+				_logger.Error(e, "Error writing database to {0}", _dbPath);
+			}
 		}
 	}
 }

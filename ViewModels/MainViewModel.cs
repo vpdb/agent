@@ -70,7 +70,10 @@ namespace VpdbAgent.ViewModels
 			Platforms.Changed.Subscribe(UpdatePlatforms);
 
 			// just print that we're happy
-			AllGames.Changed.Subscribe(_ => { Logger.Info("We've got {0} games, {1} in total.", Games.Count, AllGames.Count); });
+			AllGames.Changed.Subscribe(_ =>
+			{
+				Logger.Info("We've got {0} games, {1} in total.", Games.Count, AllGames.Count);
+			});
 		}
 
 

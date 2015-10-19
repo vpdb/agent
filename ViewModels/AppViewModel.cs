@@ -97,6 +97,7 @@ namespace VpdbAgent.ViewModels
 			locator.RegisterLazySingleton(() => new GameManager(
 				locator.GetService<IMenuManager>(),
 				locator.GetService<IVpdbClient>(),
+				locator.GetService<ISettingsManager>(),
 				locator.GetService<NLog.Logger>()
 			), typeof(IGameManager));
 
