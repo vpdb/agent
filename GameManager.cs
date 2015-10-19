@@ -128,15 +128,6 @@ namespace VpdbAgent
 				.Merge())
 			.Subscribe(UpdatePlatform);
 
-			systems.Changed
-				.SelectMany(_ => systems
-					.Select(system => system.Games.Changed.Select(__ => system))
-				.Merge())
-			.Subscribe(x =>
-			{
-				Console.WriteLine(systems);
-			});
-
 			// here we push all games in all platforms into the Games list. See http://stackoverflow.com/questions/15254708/
 			var whenPlatformsOrGamesInThosePlatformsChange = Observable.Merge(
 				Platforms.Changed                                                      // one of the games changes
@@ -187,12 +178,17 @@ namespace VpdbAgent
 			return this;
 		}
 
+		/// <summary>
+		/// Adds a release to the global database. If already added, the release
+		/// is updated.
+		/// </summary>
+		/// <param name="release">Release to add or update</param>
 		private void AddRelease(Release release)
 		{
 			if (!_database.Releases.ContainsKey(release.Id)) {
 				_database.Releases.Add(release.Id, release);
 			} else {
-				_database.Releases[release.Id] = release;
+				_database.Releases[release.Id].Update(release);
 			}
 			MarshallDatabase();
 		}
@@ -334,6 +330,11 @@ namespace VpdbAgent
 			});
 		}
 
+		/// <summary>
+		/// Reads the internal global .json file of a given platform and 
+		/// returns the unmarshalled database object.
+		/// </summary>
+		/// <returns>Deserialized object or empty database if no file exists or parsing error</returns>
 		private GlobalDatabase UnmarshallDatabase()
 		{
 			if (!File.Exists(_dbPath)) {
@@ -360,6 +361,9 @@ namespace VpdbAgent
 			}
 		}
 
+		/// <summary>
+		/// Writes the database to the internal .json file for the global database.
+		/// </summary>
 		private void MarshallDatabase()
 		{
 			var dbFolder = Path.GetDirectoryName(_dbPath);

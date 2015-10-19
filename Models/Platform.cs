@@ -175,7 +175,7 @@ namespace VpdbAgent.Models
 
 		/// <summary>
 		/// Reads the internal .json file of a given platform and returns the 
-		/// unmarshaled menu object.
+		/// unmarshalled database object.
 		/// </summary>
 		/// <returns>Deserialized object or empty database if no file exists or parsing error</returns>
 		private PlatformDatabase UnmarshallDatabase()
