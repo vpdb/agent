@@ -5,6 +5,7 @@
                     mc:Ignorable="options"
                     xmlns:local="clr-namespace:VpdbAgent">
 
+    <Color x:Key="InputTextColor">#80ffffff</Color>
     <Color x:Key="LabelTextColor">#40ffffff</Color>
     <Color x:Key="PrimaryColor">#ffec843d</Color>
     <Color x:Key="PrimaryColor75">#c0ec843d</Color>
@@ -15,6 +16,7 @@
     <SolidColorBrush x:Key="PrimaryColorBrush" Color="{StaticResource PrimaryColor}" options:Freeze="True" />
     <SolidColorBrush x:Key="PrimaryColor85Brush" Color="{StaticResource PrimaryColor85}" options:Freeze="True" />
     <SolidColorBrush x:Key="PrimaryColor75Brush" Color="{StaticResource PrimaryColor75}" options:Freeze="True" />
+    <SolidColorBrush x:Key="InputTextColorBrush" Color="{StaticResource InputTextColor}" options:Freeze="True" />
     <SolidColorBrush x:Key="LabelTextBrush" Color="{StaticResource LabelTextColor}" options:Freeze="True" />
     <SolidColorBrush x:Key="WhiteBrush" Color="{StaticResource WhiteColor}" options:Freeze="True" />
     <SolidColorBrush x:Key="WhiterBrush" Color="{StaticResource WhiterColor}" options:Freeze="True" />
