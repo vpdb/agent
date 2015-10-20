@@ -27,7 +27,7 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 <Label x:Name="PbxFolder" Grid.Column="0"/>
-                <Button x:Name="PinballXFolderButton" Content="CHOOSE FOLDER" Grid.Column="2" Click="PinballXFolderButton_Click" Style="{StaticResource ButtonLine}" />
+                <Button x:Name="PinballXFolderButton" Content="CHOOSE FOLDER" Grid.Column="2" Click="PinballXFolderButton_Click" Style="{StaticResource ButtonSolidLarge}" />
             </Grid>
 
             <!-- [X] Advanced Options -->
@@ -51,8 +51,8 @@
 
         </StackPanel>
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button x:Name="CancelButton" Content="CANCEL" Margin="0,0,10,0" Style="{StaticResource ButtonLine}"/>
-            <Button x:Name="SaveButton" Content="SAVE" Style="{StaticResource ButtonLine}"/>
+            <Button x:Name="CancelButton" Content="CANCEL" Margin="0,0,10,0" Style="{StaticResource ButtonLineLarge}"/>
+            <Button x:Name="SaveButton" Content="SAVE" Style="{StaticResource ButtonSolidPrimaryLarge}"/>
         </StackPanel>
     </Grid>
 </UserControl>

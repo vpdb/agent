@@ -2,8 +2,122 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:local="clr-namespace:VpdbAgent">
 
+    <!-- dimensions: solid -->
+    <ControlTemplate x:Key="SolidDimensions" TargetType="Button">
+        <Border Background="{Binding Background, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}}" 
+                CornerRadius="12" Padding="20,2,20,0" Height="24">
+            <ContentPresenter TextBlock.FontSize="14" 
+                              TextBlock.FontWeight="{Binding FontWeight, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}}"
+                              TextBlock.Foreground="{Binding Foreground, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}}"/>
+        </Border>
+    </ControlTemplate>
+	
+    <!-- dimensions: line -->
+    <ControlTemplate x:Key="LineDimensions" TargetType="Button">
+        <Border BorderThickness="1" BorderBrush="{Binding Background, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}}" 
+                CornerRadius="12" Padding="15,2,15,0" Height="24">
+            <ContentPresenter TextBlock.FontSize="13" 
+                              TextBlock.Foreground="{Binding Background, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}}" />
+        </Border>
+    </ControlTemplate>
+
+    <!-- dimensions: solid, small -->
+    <ControlTemplate x:Key="SolidSmallDimensions" TargetType="Button">
+        <Border Background="{Binding Background, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}}" 
+                CornerRadius="12" Padding="15,3,15,2" Height="24">
+            <ContentPresenter TextBlock.FontSize="13" 
+                              TextBlock.Foreground="{Binding Foreground, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}}"/>
+        </Border>
+    </ControlTemplate>
+
+    <!-- dimensions: line, small -->
+    <ControlTemplate x:Key="LineSmallDimensions" TargetType="Button">
+        <Border BorderThickness="1" 
+                BorderBrush="{Binding Background, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}}" CornerRadius="12" Padding="12,1,12,1" Height="24">
+            <ContentPresenter TextBlock.FontSize="15" 
+                              TextBlock.Foreground="{Binding Background, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}}" />
+        </Border>
+    </ControlTemplate>
+
+    <!-- dimensions: solid, large -->
+    <ControlTemplate x:Key="SolidLargeDimensions" TargetType="Button">
+        <Border Background="{Binding Background, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}}" 
+                CornerRadius="15" Padding="25,4,25,0" Height="30">
+            <ContentPresenter TextBlock.FontSize="16" 
+                              TextBlock.FontWeight="{Binding FontWeight, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}}"
+                              TextBlock.Foreground="{Binding Foreground, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}}"/>
+        </Border>
+    </ControlTemplate>
+
+    <!-- dimensions: line -->
+    <ControlTemplate x:Key="LineLargeDimensions" TargetType="Button">
+        <Border BorderThickness="1" BorderBrush="{Binding Background, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}}" 
+                CornerRadius="15" Padding="25,3,25,0" Height="30">
+            <ContentPresenter TextBlock.FontSize="16" 
+                              TextBlock.Foreground="{Binding Background, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}}" />
+        </Border>
+    </ControlTemplate>
+
+
     <!-- rounded, solid -->
     <Style x:Key="ButtonSolid" TargetType="Button">
+        <Style.Triggers>
+            <Trigger Property="IsEnabled" Value="False">
+                <Setter Property="Background" Value="#08ffffff" />
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="True">
+                <Setter Property="Background" Value="#12ffffff" />
+            </Trigger>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="#28ffffff" />
+            </Trigger>
+            <Trigger Property="IsPressed" Value="True">
+                <Setter Property="Background" Value="#18ffffff" />
+            </Trigger>
+        </Style.Triggers>
+        <Setter Property="FontWeight" Value="Normal"/>
+        <Setter Property="Foreground" Value="#60ffffff"/>
+        <Setter Property="Template" Value="{StaticResource SolidDimensions}"/>
+    </Style>
+
+    <!-- rounded, solid, orange -->
+    <Style x:Key="ButtonSolidPrimary" TargetType="Button" BasedOn="{StaticResource ButtonSolid}">
+        <Style.Triggers>
+            <Trigger Property="IsEnabled" Value="False">
+                <Setter Property="Background" Value="#08ffffff" />
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="True">
+                <Setter Property="Background" Value="{StaticResource PrimaryColor75Brush}" />
+            </Trigger>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="{StaticResource PrimaryColor85Brush}" />
+            </Trigger>
+            <Trigger Property="IsPressed" Value="True">
+                <Setter Property="Background" Value="{StaticResource PrimaryColor75Brush}" />
+            </Trigger>
+        </Style.Triggers>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+    </Style>
+
+    <!-- rounded, solid,  large -->
+    <Style x:Key="ButtonSolidLarge" TargetType="Button" BasedOn="{StaticResource ButtonSolid}">
+        <Setter Property="Template" Value="{StaticResource SolidLargeDimensions}"/>
+    </Style>
+	
+    <!-- rounded, solid, orange, large -->
+    <Style x:Key="ButtonSolidPrimaryLarge" TargetType="Button" BasedOn="{StaticResource ButtonSolidPrimary}">
+        <Setter Property="Template" Value="{StaticResource SolidLargeDimensions}"/>
+        <Setter Property="Foreground" Value="#ff282828"/>
+    </Style>
+
+    <!-- rounded, solid, small -->
+    <Style x:Key="ButtonSolidSmall" TargetType="Button" BasedOn="{StaticResource ButtonSolid}">
+        <Setter Property="Template" Value="{StaticResource SolidSmallDimensions}"/>
+    </Style>
+
+    <!-- rounded, line -->
+    <Style x:Key="ButtonLine" TargetType="Button">
         <Style.Triggers>
             <Trigger Property="IsEnabled" Value="False">
                 <Setter Property="Background" Value="#20ffffff" />
@@ -12,46 +126,23 @@
                 <Setter Property="Background" Value="#60ffffff" />
             </Trigger>
             <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="Background" Value="#80ffffff" />
-            </Trigger>
-            <Trigger Property="IsPressed" Value="True">
                 <Setter Property="Background" Value="#a0ffffff" />
             </Trigger>
+            <Trigger Property="IsPressed" Value="True">
+                <Setter Property="Background" Value="#60ffffff" />
+            </Trigger>
         </Style.Triggers>
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="Button">
-                    <Border Background="{Binding Background, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}}" CornerRadius="14" Padding="15,2,15,2" Height="28">
-                        <ContentPresenter TextBlock.FontSize="16"/>
-                    </Border>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
+        <Setter Property="Template" Value="{StaticResource LineDimensions}"/>
     </Style>
 
-    <!-- rounded, line -->
-    <Style x:Key="ButtonLine" TargetType="Button" BasedOn="{StaticResource ButtonSolid}">
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="Button">
-                    <Border BorderThickness="1" BorderBrush="{Binding Background, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}}" CornerRadius="14" Padding="15,2,15,2" Height="28">
-                        <ContentPresenter TextBlock.FontSize="16" TextBlock.Foreground="{Binding Background, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}}" />
-                    </Border>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
+    <!-- rounded, line, small -->
+    <Style x:Key="ButtonLineSmall" TargetType="Button" BasedOn="{StaticResource ButtonLine}">
+        <Setter Property="Template" Value="{StaticResource LineSmallDimensions}"/>
     </Style>
 
-    <Style x:Key="ButtonLineSmall" TargetType="Button" BasedOn="{StaticResource ButtonSolid}">
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="Button">
-                    <Border BorderThickness="1" BorderBrush="{Binding Background, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}}" CornerRadius="11" Padding="12,1,12,1" Height="22">
-                        <ContentPresenter TextBlock.FontSize="14" TextBlock.Foreground="{Binding Background, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}}" />
-                    </Border>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
+    <!-- rounded, line, large -->
+    <Style x:Key="ButtonLineLarge" TargetType="Button" BasedOn="{StaticResource ButtonLine}">
+        <Setter Property="Template" Value="{StaticResource LineLargeDimensions}"/>
     </Style>
 
     <Style x:Key="NavigationButton" TargetType="Button">

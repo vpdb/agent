@@ -20,7 +20,7 @@
 
         <!-- LEFT PANEL -->
         <StackPanel Grid.Column="0" Orientation="Vertical">
-            <Label Content="Systems"/>
+            <Label Content="Systems" />
             <ItemsControl x:Name="PlatformList">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>

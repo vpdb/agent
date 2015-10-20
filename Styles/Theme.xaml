@@ -2,6 +2,8 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:local="clr-namespace:VpdbAgent">
 
+    <!--FontFamily x:Key="Black">/Resources/Fonts/#Montserrat Black</-->
+	
     <Style TargetType="{x:Type Label}">
         <Setter Property="FontSize" Value="18" />
         <Setter Property="Foreground" Value="{DynamicResource LabelTextBrush}" />
