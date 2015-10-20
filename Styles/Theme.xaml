@@ -4,14 +4,76 @@
                     xmlns:controls="http://metro.mahapps.com/winfx/xaml/controls">
 
     <!--FontFamily x:Key="Black">/Resources/Fonts/#Montserrat Black</-->
-	
+
     <Style TargetType="{x:Type Label}">
         <Setter Property="FontSize" Value="18" />
         <Setter Property="Foreground" Value="{DynamicResource LabelTextBrush}" />
     </Style>
+    <Style x:Key="Label" TargetType="{x:Type TextBlock}">
+        <Setter Property="FontSize" Value="18" />
+        <Setter Property="Foreground" Value="{DynamicResource LabelTextBrush}" />
+    </Style>
+
+    <!-- H1 -->
+    <Style x:Key="Header1" TargetType="{x:Type Label}">
+        <Setter Property="FontSize" Value="24" />
+        <Setter Property="FontWeight" Value="Light" />
+        <Setter Property="Foreground" Value="{DynamicResource LightBrush}" />
+    </Style>
+
+    <!-- SEPARATOR -->
+    <Style TargetType="{x:Type Separator}">
+        <Setter Property="Margin" Value="5,0,0,20" />
+        <Setter Property="Background" Value="{StaticResource DarkBrush}" />
+    </Style>
+
+    <!-- RESIZE GRIP -->
+    <Style TargetType="{x:Type ResizeGrip}">
+        <Setter Property="OverridesDefaultStyle" Value="True" />
+        <Setter Property="Foreground" Value="{StaticResource DarkBrush}"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type ResizeGrip}">
+                    <Border Background="{TemplateBinding Background}"
+                    SnapsToDevicePixels="True"
+                    Width="10"
+                    Height="10">
+                        <Path Data="M7.677,7.5300003 L9.677,7.5300003 9.677,9.5300002 7.677,9.5300002 z M3.786,7.5300003 L5.7859998,7.5300003 5.7859998,9.5300002 3.786,9.5300002 z M0,7.5300003 L2,7.5300003 2,9.5300002 0,9.5300002 z M3.786,3.8280003 L5.7859998,3.8280003 5.7859998,5.8280003 3.786,5.8280003 z M7.677,3.7660003 L9.677,3.7660003 9.677,5.7659999 7.677,5.7659999 z M7.677,0 L9.677,0 9.677,2 7.677,2 z" Fill="{TemplateBinding Foreground}" Height="9.53" Stretch="Fill" VerticalAlignment="Top" Width="9.677"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
 
     <!-- TEXT BOX (INPUT) -->
     <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource MetroTextBox}">
+        <Style.Triggers>
+            <Trigger Property="IsEnabled" Value="False">
+                <Setter Property="Background" Value="#08ffffff" />
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="True">
+                <Setter Property="Background" Value="#12ffffff" />
+            </Trigger>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="#18ffffff" />
+            </Trigger>
+            <Trigger Property="IsFocused" Value="True">
+                <Setter Property="Background" Value="#28ffffff" />
+            </Trigger>
+
+        </Style.Triggers>
+        <Setter Property="Foreground" Value="{StaticResource InputTextColorBrush}" />
+        <Setter Property="MinHeight" Value="42" />
+        <Setter Property="FontSize" Value="18" />
+        <Setter Property="Padding" Value="10,5,10,5" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="controls:ControlsHelper.FocusBorderBrush" Value="Transparent" />
+        <Setter Property="controls:ControlsHelper.MouseOverBorderBrush" Value="Transparent" />
+    </Style>
+
+    <!-- PASSWORD BOX -->
+    <Style TargetType="{x:Type PasswordBox}" BasedOn="{StaticResource MetroPasswordBox}">
         <Style.Triggers>
             <Trigger Property="IsEnabled" Value="False">
                 <Setter Property="Background" Value="#08ffffff" />
@@ -52,7 +114,6 @@
                 <Setter Property="Foreground" Value="{StaticResource PrimaryColorBrush}" />
             </Trigger>
         </Style.Triggers>
-        <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisual}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="Template">
             <Setter.Value>
@@ -74,7 +135,6 @@
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="HasContent" Value="true">
-                            <Setter Property="FocusVisualStyle" Value="{StaticResource OptionMarkFocusVisual}"/>
                             <Setter Property="Padding" Value="4,2,0,0"/>
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="false">
@@ -155,5 +215,7 @@
             </Setter.Value>
         </Setter>
     </Style>
+
+    <Style TargetType="{x:Type ScrollBar}" BasedOn="{StaticResource VpdbScrollBar}"/>
 
 </ResourceDictionary>

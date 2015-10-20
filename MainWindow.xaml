@@ -30,9 +30,10 @@
     </Controls:MetroWindow.IconTemplate>
 
     <DockPanel LastChildFill="True">
-        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal">
-            <TextBlock x:Name="Status" Text="Status info. All green." />
-        </StackPanel>
+        <DockPanel DockPanel.Dock="Bottom" Margin="7,0,15,7">
+            <TextBlock DockPanel.Dock="Left" Style="{StaticResource Label}" FontSize="12" x:Name="Status" Text="Status info. All green." />
+            <TextBlock DockPanel.Dock="Right" Style="{StaticResource Label}" TextAlignment="Right" FontSize="12" x:Name="LoginStatus" Text="Not logged." />
+        </DockPanel>
         <DockPanel Margin="7" >
             <DockPanel Margin="7" DockPanel.Dock="Top" LastChildFill="False">
                 <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Click="SettingsButton_Click" Height="30">

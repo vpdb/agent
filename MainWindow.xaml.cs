@@ -119,7 +119,7 @@ namespace VpdbAgent
 			}
 
 			Timer.Stop();
-			_currentOutput.Text = "Rendered in " + msec + "ms.";
+			_currentOutput.Text = "Loaded in " + msec + "ms.";
 			_currentOutput = _pendingOutput = null;
 		}
 

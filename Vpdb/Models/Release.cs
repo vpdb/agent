@@ -64,5 +64,10 @@ namespace VpdbAgent.Vpdb.Models
 			LatestVersion = release.LatestVersion;
 			Starred = release.Starred;
 		}
+
+		public override string ToString()
+		{
+			return $"[release] {Id} {Game.DisplayName} - {Name}";
+		}
 	}
 }

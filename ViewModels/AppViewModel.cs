@@ -26,7 +26,7 @@ namespace VpdbAgent.ViewModels
      * but there isn't much benefit to split those up unless you've got multiple
      * windows.
      * 
-     * AppBootstrapper is a good place to implement a lot of the "global 
+     * AppViewModel is a good place to implement a lot of the "global 
      * variable" type things in your application. It's also the place where
      * you should configure your IoC container. And finally, it's the place 
      * which decides which View to Navigate to when the application starts.

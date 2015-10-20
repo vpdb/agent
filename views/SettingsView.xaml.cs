@@ -32,43 +32,23 @@ namespace VpdbAgent.Views
 
 			this.WhenActivated(d => {
 
-				// model
-				d(this.WhenAnyValue(x => x.ViewModel).BindTo(this, x => x.DataContext));
+				// fields
+				d(this.OneWayBind(ViewModel, vm => vm.ApiKey, v => v.ApiKey.Text));
+				d(this.OneWayBind(ViewModel, vm => vm.Endpoint, v => v.Endpoint.Text));
+				d(this.OneWayBind(ViewModel, vm => vm.PbxFolder, v => v.PbxFolder.Text));
+				d(this.OneWayBind(ViewModel, vm => vm.PbxFolderLabel, v => v.PbxFolderLabel.Text));
+				d(this.OneWayBind(ViewModel, vm => vm.AuthUser, v => v.AuthUser.Text));
+				d(this.OneWayBind(ViewModel, vm => vm.AuthPass, v => v.AuthPass.Password));
 
-				d(this.WhenActivated(ApplyBindings));
+				// commands
+				d(this.BindCommand(ViewModel, vm => vm.ChooseFolder, v => v.PinballXFolderButton));
+				d(this.BindCommand(ViewModel, vm => vm.CloseSettings, v => v.CancelButton));
+				d(this.BindCommand(ViewModel, vm => vm.SaveSettings, v => v.SaveButton));
 			});
 		
 			//CancelButton.Visibility = NavigationService.CanGoBack ? Visibility.Visible : Visibility.Hidden;
 		}
 
-		private IEnumerable<IDisposable> ApplyBindings()
-		{
-			// fields
-			yield return this.Bind(ViewModel, vm => vm.ApiKey, v => v.ApiKey.Text);
-			yield return this.Bind(ViewModel, vm => vm.Endpoint, v => v.Endpoint.Text);
-			yield return this.Bind(ViewModel, vm => vm.PbxFolder, v => v.PbxFolder.Content);
-			yield return this.Bind(ViewModel, vm => vm.AuthUser, v => v.AuthUser.Text);
-			yield return this.Bind(ViewModel, vm => vm.AuthPass, v => v.AuthPass.Password);
-
-			// commands
-			yield return this.BindCommand(ViewModel, vm => vm.CloseSettings, v => v.CancelButton);
-			yield return this.BindCommand(ViewModel, vm => vm.SaveSettings, v => v.SaveButton);
-		}
-
-
-		private void PinballXFolderButton_Click(object sender, RoutedEventArgs e)
-		{
-			var dialog = new FolderBrowserDialog {
-				ShowNewFolderButton = false
-			};
-
-			if (PbxFolder.Content.ToString().Length > 0) {
-				dialog.SelectedPath = PbxFolder.Content.ToString();
-			}
-
-			var result = dialog.ShowDialog();
-			PbxFolder.Content = result == DialogResult.OK ? dialog.SelectedPath : string.Empty;
-		}
 
 		private void ShowAdvancedOptions_Checked(object sender, RoutedEventArgs e)
 		{
@@ -77,11 +57,11 @@ namespace VpdbAgent.Views
 
 		private void UpdateAdvancedOptions()
 		{
-			if (!(bool)ShowAdvancedOptions.IsChecked) {
-				ApiEndpointLabel.Visibility = Visibility.Hidden;
-				Endpoint.Visibility = Visibility.Hidden;
-				BasicAuthLabel.Visibility = Visibility.Hidden;
-				BasicAuth.Visibility = Visibility.Hidden;
+			if (ShowAdvancedOptions.IsChecked != null && !(bool)ShowAdvancedOptions.IsChecked) {
+				ApiEndpointLabel.Visibility = Visibility.Collapsed;
+				Endpoint.Visibility = Visibility.Collapsed;
+				BasicAuthLabel.Visibility = Visibility.Collapsed;
+				BasicAuth.Visibility = Visibility.Collapsed;
 			} else {
 				ApiEndpointLabel.Visibility = Visibility.Visible;
 				Endpoint.Visibility = Visibility.Visible;

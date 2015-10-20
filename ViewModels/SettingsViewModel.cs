@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using NLog;
 using ReactiveUI;
 
@@ -21,8 +22,9 @@ namespace VpdbAgent.ViewModels
 		private readonly ISettingsManager _settingsManager;
 
 		// commands
-		public ReactiveCommand<object> SaveSettings { get; protected set; }
-		public ReactiveCommand<object> CloseSettings { get; protected set; } = ReactiveCommand.Create();
+		public ReactiveCommand<object> ChooseFolder { get; } = ReactiveCommand.Create();
+		public ReactiveCommand<object> SaveSettings { get; } = ReactiveCommand.Create();
+		public ReactiveCommand<object> CloseSettings { get; } = ReactiveCommand.Create();
 
 		private string _apiKey;
 		private string _pbxFolder;
@@ -41,10 +43,24 @@ namespace VpdbAgent.ViewModels
 			Endpoint = _settingsManager.Endpoint;
 			PbxFolder = _settingsManager.PbxFolder;
 
-			SaveSettings = ReactiveCommand.Create();
+			ChooseFolder.Subscribe(_ => OpenFolderDialog());
 			SaveSettings.Subscribe(_ => Save());
 
 			CloseSettings.InvokeCommand(HostScreen.Router, r => r.NavigateBack);
+		}
+
+		private void OpenFolderDialog()
+		{
+			var dialog = new FolderBrowserDialog {
+				ShowNewFolderButton = false
+			};
+
+			if (!string.IsNullOrWhiteSpace(PbxFolder)) {
+				dialog.SelectedPath = PbxFolder;
+			}
+			var result = dialog.ShowDialog();
+			PbxFolder = result == DialogResult.OK ? dialog.SelectedPath : string.Empty;
+			Logger.Info("PinballX folder set to {0}.", PbxFolder);
 		}
 
 		private void Save()
@@ -94,5 +110,7 @@ namespace VpdbAgent.ViewModels
 			get { return this._pbxFolder; }
 			set { this.RaiseAndSetIfChanged(ref this._pbxFolder, value); }
 		}
+
+		public string PbxFolderLabel => string.IsNullOrEmpty(_pbxFolder) ? "No folder set." : "Location:";
 	}
 }

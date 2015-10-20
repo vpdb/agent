@@ -272,7 +272,10 @@ namespace VpdbAgent
 								_database.Releases.Add(release.Id, release);
 								// so we had a ref we didn't have in the global db. 
 								// now we got it, so link it back to game.
-								Games.First(g => release.Id.Equals(g.ReleaseId)).Release = release;
+								var game = Games.FirstOrDefault(g => release.Id.Equals(g.ReleaseId));
+								if (game != null) {
+									game.Release = release;
+								}
 							} else {
 								_database.Releases[release.Id].Update(release);
 							}
