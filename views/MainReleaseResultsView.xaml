@@ -36,7 +36,7 @@
                     </Grid.ColumnDefinitions>
 
                     <Label Grid.Column="0" Content="No match found."/>
-                    <Button x:Name="CloseButton" Grid.Column="1" Style="{StaticResource TertiaryButton}" Content="CLOSE" HorizontalAlignment="Right"/>
+                    <Button x:Name="CloseButton" Grid.Column="1" Style="{StaticResource ButtonLine}" Content="CLOSE" HorizontalAlignment="Right"/>
                 </Grid>
 
                 <!-- result list -->
