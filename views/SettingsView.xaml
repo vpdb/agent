@@ -57,7 +57,7 @@
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
                     <TextBox x:Name="AuthUser" Height="23" Grid.Column="0"/>
-                    <PasswordBox x:Name="AuthPass"  Height="23" Grid.Column="2"/>
+                    <TextBox x:Name="AuthPass" Height="23" Grid.Column="2"/>
                 </Grid>
 
             </StackPanel>

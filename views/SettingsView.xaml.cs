@@ -33,12 +33,12 @@ namespace VpdbAgent.Views
 			this.WhenActivated(d => {
 
 				// fields
-				d(this.OneWayBind(ViewModel, vm => vm.ApiKey, v => v.ApiKey.Text));
-				d(this.OneWayBind(ViewModel, vm => vm.Endpoint, v => v.Endpoint.Text));
+				d(this.Bind(ViewModel, vm => vm.ApiKey, v => v.ApiKey.Text));
+				d(this.Bind(ViewModel, vm => vm.Endpoint, v => v.Endpoint.Text));
+				d(this.Bind(ViewModel, vm => vm.AuthUser, v => v.AuthUser.Text));
+				d(this.Bind(ViewModel, vm => vm.AuthPass, v => v.AuthPass.Text));
 				d(this.OneWayBind(ViewModel, vm => vm.PbxFolder, v => v.PbxFolder.Text));
 				d(this.OneWayBind(ViewModel, vm => vm.PbxFolderLabel, v => v.PbxFolderLabel.Text));
-				d(this.OneWayBind(ViewModel, vm => vm.AuthUser, v => v.AuthUser.Text));
-				d(this.OneWayBind(ViewModel, vm => vm.AuthPass, v => v.AuthPass.Password));
 
 				// commands
 				d(this.BindCommand(ViewModel, vm => vm.ChooseFolder, v => v.PinballXFolderButton));
@@ -87,5 +87,10 @@ namespace VpdbAgent.Views
 		}
 		#endregion
 
+		private void PasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
+		{
+			//ViewModel.SecurePassword = 
+			//if (this.DataContext != null) { ((dynamic)this.DataContext).SecurePassword = ((PasswordBox)sender).SecurePassword; }
+		}
 	}
 }

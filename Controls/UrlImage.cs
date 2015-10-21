@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.IO;
+using System.Linq.Expressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Animation;
@@ -148,11 +149,17 @@ namespace VpdbAgent.Controls
 		private static void Cache(string path, byte[] bytes)
 		{
 			var localPath = GetLocalPath(path);
-			var localDir = Path.GetDirectoryName(localPath);
-			if (localDir != null && !Directory.Exists(localDir)) {
-				Directory.CreateDirectory(localDir);
+			try {
+				
+				var localDir = Path.GetDirectoryName(localPath);
+				if (localDir != null && !Directory.Exists(localDir)) {
+					Directory.CreateDirectory(localDir);
+				}
+				File.WriteAllBytes(localPath, bytes);
+
+			} catch (Exception e) {
+				Logger.Error(e, "Error writing cache image to {0}", localPath);
 			}
-			File.WriteAllBytes(localPath, bytes);
 		}
 	}
 }

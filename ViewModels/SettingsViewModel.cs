@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -87,28 +88,28 @@ namespace VpdbAgent.ViewModels
 
 		public string ApiKey
 		{
-			get { return this._apiKey; }
-			set { this.RaiseAndSetIfChanged(ref this._apiKey, value); }
+			get { return _apiKey; }
+			set { this.RaiseAndSetIfChanged(ref _apiKey, value); }
 		}
 		public string AuthUser
 		{
-			get { return this._authUser; }
-			set { this.RaiseAndSetIfChanged(ref this._authUser, value); }
+			get { return _authUser; }
+			set { this.RaiseAndSetIfChanged(ref _authUser, value); }
 		}
 		public string AuthPass
 		{
-			get { return this._authPass; }
-			set { this.RaiseAndSetIfChanged(ref this._authPass, value); }
+			get { return _authPass; }
+			set { this.RaiseAndSetIfChanged(ref _authPass, value); }
 		}
 		public string Endpoint
 		{
-			get { return this._endpoint; }
-			set { this.RaiseAndSetIfChanged(ref this._endpoint, value); }
+			get { return _endpoint; }
+			set { this.RaiseAndSetIfChanged(ref _endpoint, value); }
 		}
 		public string PbxFolder
 		{
 			get { return this._pbxFolder; }
-			set { this.RaiseAndSetIfChanged(ref this._pbxFolder, value); }
+			set { this.RaiseAndSetIfChanged(ref _pbxFolder, value); }
 		}
 
 		public string PbxFolderLabel => string.IsNullOrEmpty(_pbxFolder) ? "No folder set." : "Location:";
