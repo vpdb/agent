@@ -11,16 +11,30 @@ namespace VpdbAgent.Vpdb.Models
 	{
 		public DateTime ReleasedAt { get; set; }
 		public Flavor Flavor { get; set; }
-		public List<string> Compatibility;
+		public Dictionary<string, FileReference> Media { get; set; }
+		public List<FileCompatibility> Compatibility;
 		[JsonProperty(PropertyName = "file")]
 		public FileReference Reference { get; set; }
 
-		public class FileReference
+		public override string ToString()
+		{
+			return $"{Flavor.Lighting}/{Flavor.Orientation} ({string.Join(",", Compatibility.Select(c => c.Label))})";
+		}
+
+		public class FileCompatibility
 		{
 			public string Id { get; set; }
-			public string Name { get; set; }
-			public long Bytes { get; set; }
-			public string MimeType { get; set; }
+			public string Label { get; set; }
+			public string Platform { get; set; }
+			public string MajorVersion { get; set; }
+			public string DownloadUrl { get; set; }
+			public DateTime BuiltAt { get; set; }
+			public bool IsRange { get; set; }
+
+			public override string ToString()
+			{
+				return Label;
+			}
 		}
 	}
 }

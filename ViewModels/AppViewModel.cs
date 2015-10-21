@@ -94,10 +94,16 @@ namespace VpdbAgent.ViewModels
 				locator.GetService<NLog.Logger>()
 			), typeof(IVpdbClient));
 
+			locator.RegisterLazySingleton(() => new DownloadManager(
+				locator.GetService<IVpdbClient>(),
+				locator.GetService<NLog.Logger>()
+			), typeof(IDownloadManager));
+
 			locator.RegisterLazySingleton(() => new GameManager(
 				locator.GetService<IMenuManager>(),
 				locator.GetService<IVpdbClient>(),
 				locator.GetService<ISettingsManager>(),
+				locator.GetService<IDownloadManager>(),
 				locator.GetService<NLog.Logger>()
 			), typeof(IGameManager));
 

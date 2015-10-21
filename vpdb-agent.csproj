@@ -193,8 +193,10 @@
     <Compile Include="Views\MainGameView.xaml.cs">
       <DependentUpon>MainGameView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Vpdb\DownloadManager.cs" />
     <Compile Include="Vpdb\Models\Author.cs" />
     <Compile Include="Vpdb\Models\File.cs" />
+    <Compile Include="Vpdb\Models\FileReference.cs" />
     <Compile Include="Vpdb\Models\Flavor.cs" />
     <Compile Include="Vpdb\Models\Game.cs" />
     <Compile Include="Vpdb\Models\Image.cs" />

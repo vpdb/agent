@@ -10,6 +10,7 @@ using System.Reactive.Subjects;
 using System.Threading;
 using System.Windows;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using NLog;
 using PusherClient;
 using ReactiveUI;
@@ -89,6 +90,7 @@ namespace VpdbAgent
 		private readonly IMenuManager _menuManager;
 		private readonly IVpdbClient _vpdbClient;
 		private readonly ISettingsManager _settingsManager;
+		private readonly IDownloadManager _downloadManager;
 		private readonly Logger _logger;
 
 		// props
@@ -105,11 +107,13 @@ namespace VpdbAgent
 			Formatting = Formatting.Indented
 		};
 
-		public GameManager(IMenuManager menuManager, IVpdbClient vpdbClient, ISettingsManager settingsManager, Logger logger)
+		public GameManager(IMenuManager menuManager, IVpdbClient vpdbClient, ISettingsManager 
+			settingsManager, IDownloadManager downloadManager, Logger logger)
 		{
 			_menuManager = menuManager;
 			_vpdbClient = vpdbClient;
 			_settingsManager = settingsManager;
+			_downloadManager = downloadManager;
 			_logger = logger;
 
 			var systems = _menuManager.Systems;
@@ -300,22 +304,29 @@ namespace VpdbAgent
 			}
 
 			// subscribe through a subject so we can do more fun stuff with it
-			var star = new Subject<dynamic>();
-			var unstar = new Subject<dynamic>();
-			userChannel.Bind("star", data => star.OnNext(data));
-			userChannel.Bind("unstar", data => unstar.OnNext(data));
+			var star = new Subject<JObject>();
+			var unstar = new Subject<JObject>();
+			userChannel.Bind("star", (dynamic data) =>
+			{
+				star.OnNext(data as JObject);
+			});
+			userChannel.Bind("unstar", (dynamic data) =>
+			{
+				unstar.OnNext(data as JObject);
+			});
 
 			// star
 			star.ObserveOn(RxApp.MainThreadScheduler).Subscribe(data =>
 			{
-				if ("release".Equals((string)data.type)) {
-					var release = _database.Releases[(string)data.id];
-					if (release != null) {
+				if ("release".Equals(data.GetValue("type").Value<string>())) {
+					var id = data.GetValue("id").Value<string>();
+					if (_database.Releases.ContainsKey(id)) {
+						var release = _database.Releases[id];
 						release.Starred = true;
 						MarshallDatabase();
 						_logger.Info("Toggled star on release {0} [on]", release.Name);
 					} else {
-						_logger.Info("Ignoring star for id {0}", data.id);
+						_downloadManager.DownloadRelease(id);
 					}
 				}
 			});
@@ -323,14 +334,15 @@ namespace VpdbAgent
 			// unstar
 			unstar.ObserveOn(RxApp.MainThreadScheduler).Subscribe(data =>
 			{
-				if ("release".Equals((string)data.type)) {
-					var release = _database.Releases[(string)data.id];
-					if (release != null) {
+				if ("release".Equals(data.GetValue("type").Value<string>())) {
+					var id = data.GetValue("id").Value<string>();
+					if (_database.Releases.ContainsKey(id)) {
+						var release = _database.Releases[id];
 						release.Starred = false;
 						MarshallDatabase();
 						_logger.Info("Toggled star on release {0} [off]", release.Name);
 					} else {
-						_logger.Info("Ignoring star for id {0}", data.id);
+						_logger.Info("Ignoring star for id {0}", id);
 					}
 				}
 			});

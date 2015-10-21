@@ -10,5 +10,10 @@ namespace VpdbAgent.Vpdb.Models
 	{
 		public string Lighting { get; set; }
 		public string Orientation { get; set; }
+
+		public override string ToString()
+		{
+			return $"{Lighting}/{Orientation}";
+		}
 	}
 }
