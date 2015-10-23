@@ -3,10 +3,18 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:VpdbAgent.Views"
+             xmlns:rx="clr-namespace:ReactiveUI;assembly=ReactiveUI"
+             xmlns:vm="clr-namespace:VpdbAgent.ViewModels"
              mc:Ignorable="d" 
-             d:DesignHeight="300" d:DesignWidth="300">
+             d:DesignHeight="300" 
+             d:DesignWidth="900" 
+             d:DataContext="{d:DesignInstance Type=vm:MainViewModel}">
     <Grid>
-            
+        <TabControl>
+            <TabItem Header="Games">
+                <rx:ViewModelViewHost x:Name="GamesContent"/>
+            </TabItem>
+            <TabItem Header="Downloads" />
+        </TabControl>
     </Grid>
 </UserControl>

@@ -4,15 +4,14 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:c="clr-namespace:VpdbAgent.Controls"
-             xmlns:vm="clr-namespace:VpdbAgent.ViewModels"
              xmlns:rx="clr-namespace:ReactiveUI;assembly=ReactiveUI"
              xmlns:loadin="clr-namespace:LoadingIndicators.WPF;assembly=LoadingIndicators.WPF"
              xmlns:typeConverters="clr-namespace:VpdbAgent.Common.TypeConverters"
-             xmlns:games="clr-namespace:VpdbAgent.ViewModels.Games"
+             xmlns:vm="clr-namespace:VpdbAgent.ViewModels.Games"
              mc:Ignorable="d" 
              Padding="20,0,0,0"
              d:DesignWidth="800"
-             d:DataContext="{d:DesignInstance Type=games:GameItemViewModel}">
+             d:DataContext="{d:DesignInstance Type=vm:GameItemViewModel}">
 
     <UserControl.Resources>
         <typeConverters:BooleanToVisibilityConverter x:Key="TrueToVisible" True="Visible" False="Collapsed" />

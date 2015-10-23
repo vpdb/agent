@@ -25,6 +25,11 @@ namespace VpdbAgent.Views
 		public MainView()
 		{
 			InitializeComponent();
+
+			this.WhenActivated(d =>
+			{
+				d(this.OneWayBind(ViewModel, vm => vm.Games, v => v.GamesContent.ViewModel));
+			});
 		}
 
 		#region ViewModel

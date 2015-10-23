@@ -59,11 +59,7 @@ namespace VpdbAgent.ViewModels
 
 			// Navigate to the opening page of the application
 			if (settingsManager.IsInitialized()) {
-				Router.Navigate.Execute(new GamesViewModel(
-					this,
-					Locator.Current.GetService<IGameManager>(),
-					Locator.Current.GetService<IVpdbClient>())
-				);
+				Router.Navigate.Execute(new MainViewModel(this));
 			} else {
 				Router.Navigate.Execute(new SettingsViewModel(
 					this, 
@@ -110,12 +106,11 @@ namespace VpdbAgent.ViewModels
 				locator.GetService<NLog.Logger>()
 			), typeof(IGameManager));
 
-
 			// converters
 			locator.RegisterConstant(new ImageToUrlTypeConverter(), typeof(IBindingTypeConverter));
 
-
 			// view models
+			locator.RegisterLazySingleton(() => new MainView(), typeof(IViewFor<MainViewModel>));
 			locator.RegisterLazySingleton(() => new GamesView(), typeof(IViewFor<GamesViewModel>));
 			locator.Register(() => new GameItemView(), typeof(IViewFor<GameItemViewModel>));
 			locator.Register(() => new GameItemResultsView(), typeof(IViewFor<GameItemResultsViewModel>));
