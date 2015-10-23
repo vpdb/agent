@@ -197,6 +197,7 @@
     <Compile Include="Views\Games\GameItemView.xaml.cs">
       <DependentUpon>GameItemView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Vpdb\DownloadJob.cs" />
     <Compile Include="Vpdb\DownloadManager.cs" />
     <Compile Include="Vpdb\Models\Author.cs" />
     <Compile Include="Vpdb\Models\File.cs" />

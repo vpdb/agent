@@ -82,20 +82,39 @@ namespace VpdbAgent.Vpdb
 		public WebRequest GetWebRequest(string path)
 		{
 			var endPoint = _settingsManager.Endpoint;
-			_logger.Info("Creating new web client for {0}{1}", endPoint, path);
+			_logger.Info("Creating new web request for {0}{1}", endPoint, path);
 			var request = WebRequest.Create(endPoint + path);
+			addHeaders(request.Headers);
+			return request;
+		}
+
+		public WebClient GetWebClient()
+		{
+			var client = new WebClient();
+			addHeaders(client.Headers);
+			return client;
+		}
+
+		public Uri GetUri(string path)
+		{
+			return new Uri(_settingsManager.Endpoint + path);
+		}
+
+		private void addHeaders(WebHeaderCollection headers)
+		{
 			if (_settingsManager.IsInitialized()) {
 				if (!string.IsNullOrEmpty(_settingsManager.AuthUser)) {
-					request.Headers.Add("Authorization", "Basic " + Convert.ToBase64String(_authHeader));
-					request.Headers.Add("X-Authorization", "Bearer " + _settingsManager.ApiKey.Trim());
+					headers.Add("Authorization", "Basic " + Convert.ToBase64String(_authHeader));
+					headers.Add("X-Authorization", "Bearer " + _settingsManager.ApiKey.Trim());
 				} else {
-					request.Headers.Add("Authorization", "Bearer " + _settingsManager.ApiKey.Trim());
+					headers.Add("Authorization", "Bearer " + _settingsManager.ApiKey.Trim());
 				}
 			} else {
 				_logger.Warn("You probably shouldn't do requests if settings are not initialized.");
 			}
-			return request;
 		}
+
+
 
 		#region Pusher
 		private void SetupPusher(User user)
@@ -140,5 +159,7 @@ namespace VpdbAgent.Vpdb
 
 		IVpdbClient Initialize();
 		WebRequest GetWebRequest(string path);
+		WebClient GetWebClient();
+		Uri GetUri(string path);
 	}
 }

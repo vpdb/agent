@@ -5,11 +5,13 @@ using System.Linq;
 using System.Net;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using NLog;
+using ReactiveUI;
 
 namespace VpdbAgent.Vpdb
 {
@@ -24,15 +26,32 @@ namespace VpdbAgent.Vpdb
 		private readonly IVpdbClient _vpdbClient;
 		private readonly Logger _logger;
 
+		// props
+		public ReactiveList<DownloadJob> CurrentJobs = new ReactiveList<DownloadJob>();
+
+		// members
+		private readonly Subject<DownloadJob> _jobs = new Subject<DownloadJob>();
+		private readonly IDisposable _queue;
+
 		public DownloadManager(IVpdbClient vpdbClient, Logger logger)
 		{
 			_vpdbClient = vpdbClient;
 			_logger = logger;
+
+			_queue = _jobs
+				.ObserveOn(Scheduler.Default)
+				.Select(job => Observable.DeferAsync(async token => Observable.Return(await ProcessDownload(job, token))))
+				.Merge(3)
+				.Subscribe(job => {
+					CurrentJobs.Remove(job);
+					Console.WriteLine("Job {0} completed.", job);
+				}, error => {
+					Console.WriteLine("Error: {0}", error);
+				});
 		}
 
 		public IDownloadManager DownloadRelease(string id)
 		{
-
 			// retrieve release details
 			_logger.Info("Retrieving details for release {0}...", id);
 			_vpdbClient.Api.GetRelease(id)
@@ -49,20 +68,27 @@ namespace VpdbAgent.Vpdb
 						return;
 					}
 
-					var req = _vpdbClient.GetWebRequest(file.Reference.Url);
-					_logger.Info("Downloading: {0}", req.RequestUri);
-
-					// convert to observable
-					var task = Task<WebResponse>.Factory.FromAsync(req.BeginGetResponse, req.EndGetResponse, req);
-					Observable.FromAsync(ct => task).Subscribe(response => {
-						_logger.Info("Got a stream!");
-					});
+					// queue for download
+					_jobs.OnNext(new DownloadJob(release, file, _vpdbClient));
 
 				}, error => {
 					_logger.Error(error, "Error retrieving release data.");
 				});
 
 			return this;
+		}
+
+		private async Task<DownloadJob> ProcessDownload(DownloadJob job, CancellationToken token)
+		{
+			_logger.Info("Starting downloading of {0}", job.Uri);
+			CurrentJobs.Add(job);
+
+			token.Register(job.Client.CancelAsync); // setup cancelation
+
+			await job.Client.DownloadFileTaskAsync(job.Uri, "some-file.dat");
+
+			_logger.Info("Finished downloading of {0}", job.Uri);
+			return job;
 		}
 	}
 }
