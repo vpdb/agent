@@ -157,8 +157,7 @@
     <Compile Include="Libs\SmoothPanel\SmoothPanelViewCache.cs" />
     <Compile Include="Models\GlobalDatabase.cs" />
     <Compile Include="ViewModels\Downloads\DownloadsViewModel.cs" />
-    <Compile Include="ViewModels\Games\GameItemResultsItemViewModel.cs" />
-    <Compile Include="ViewModels\Games\GameItemResultsViewModel.cs" />
+    <Compile Include="ViewModels\Games\GameResultItemViewModel.cs" />
     <Compile Include="Common\TypeConverters\BooleanConverter.cs" />
     <Compile Include="Common\TypeConverters\BooleanToBrushConverter.cs" />
     <Compile Include="Common\TypeConverters\BooleanToVisibilityConverter.cs" />
@@ -166,11 +165,8 @@
     <Compile Include="Views\Downloads\DownloadsView.xaml.cs">
       <DependentUpon>DownloadsView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\Games\GameItemResultsItemView.xaml.cs">
-      <DependentUpon>GameItemResultsItemView.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Views\Games\GameItemResultsView.xaml.cs">
-      <DependentUpon>GameItemResultsView.xaml</DependentUpon>
+    <Compile Include="Views\Games\GameResultItemView.xaml.cs">
+      <DependentUpon>GameResultItemView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\UrlImage.cs" />
     <Compile Include="GameManager.cs" />
@@ -226,11 +222,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\Games\GameItemResultsItemView.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Views\Games\GameItemResultsView.xaml">
+    <Page Include="Views\Games\GameResultItemView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

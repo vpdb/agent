@@ -30,8 +30,8 @@ namespace VpdbAgent.ViewModels.Games
 		public bool IsVisible { get { return _isVisible; } set { this.RaiseAndSetIfChanged(ref _isVisible, value); } }
 
 		// release search results
-		private IEnumerable<GameItemResultsItemViewModel> _identifiedReleases;
-		public IEnumerable<GameItemResultsItemViewModel> IdentifiedReleases
+		private IEnumerable<GameResultItemViewModel> _identifiedReleases;
+		public IEnumerable<GameResultItemViewModel> IdentifiedReleases
 		{
 			get { return _identifiedReleases; }
 			set { this.RaiseAndSetIfChanged(ref _identifiedReleases, value); }
@@ -60,7 +60,7 @@ namespace VpdbAgent.ViewModels.Games
 			// release identify
 			IdentifyRelease = ReactiveCommand.CreateAsyncObservable(_ => VpdbClient.Api.GetReleasesBySize(game.FileSize, 512).SubscribeOn(Scheduler.Default));
 			IdentifyRelease
-				.Select(releases => releases.Select(release => new GameItemResultsItemViewModel(game, release, CloseResults)))
+				.Select(releases => releases.Select(release => new GameResultItemViewModel(game, release, CloseResults)))
 				.Subscribe(releases =>
 				{
 					IdentifiedReleases = releases;
