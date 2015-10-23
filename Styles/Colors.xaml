@@ -26,5 +26,9 @@
     
 	<SolidColorBrush x:Key="DarkBrush" Color="#40ffffff" options:Freeze="True" />
     <SolidColorBrush x:Key="LightBrush" Color="#80ffffff" options:Freeze="True" />
+	
+	<!-- mah.apps overrides -->
+    <SolidColorBrush x:Key="AccentColorBrush" Color="{StaticResource PrimaryColor}" options:Freeze="True" />
+    <SolidColorBrush x:Key="HighlightBrush" Color="{StaticResource PrimaryColor}" options:Freeze="True" />
 
 </ResourceDictionary>
