@@ -13,7 +13,6 @@ using VpdbAgent.ViewModels.Settings;
 using VpdbAgent.Views;
 using VpdbAgent.Views.Games;
 using VpdbAgent.Vpdb;
-using MainView = VpdbAgent.Views.Games.MainView;
 
 namespace VpdbAgent.ViewModels
 {
@@ -60,7 +59,7 @@ namespace VpdbAgent.ViewModels
 
 			// Navigate to the opening page of the application
 			if (settingsManager.IsInitialized()) {
-				Router.Navigate.Execute(new MainViewModel(
+				Router.Navigate.Execute(new GamesViewModel(
 					this,
 					Locator.Current.GetService<IGameManager>(),
 					Locator.Current.GetService<IVpdbClient>())
@@ -117,7 +116,7 @@ namespace VpdbAgent.ViewModels
 
 
 			// view models
-			locator.RegisterLazySingleton(() => new MainView(), typeof(IViewFor<MainViewModel>));
+			locator.RegisterLazySingleton(() => new GamesView(), typeof(IViewFor<GamesViewModel>));
 			locator.Register(() => new GameItemView(), typeof(IViewFor<GameItemViewModel>));
 			locator.Register(() => new GameItemResultsView(), typeof(IViewFor<GameItemResultsViewModel>));
 			locator.Register(() => new GameItemResultsItemView(), typeof(IViewFor<GameItemResultsItemViewModel>));

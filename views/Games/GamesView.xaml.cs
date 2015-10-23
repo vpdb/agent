@@ -9,11 +9,11 @@ namespace VpdbAgent.Views.Games
 	/// <summary>
 	/// Interaction logic for MainPage.xaml
 	/// </summary>
-	public partial class MainView : UserControl, IViewFor<MainViewModel>
+	public partial class GamesView : UserControl, IViewFor<GamesViewModel>
 	{
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		public MainView()
+		public GamesView()
 		{
 			InitializeComponent();
 
@@ -31,19 +31,19 @@ namespace VpdbAgent.Views.Games
 		}
 
 		#region ViewModel
-		public MainViewModel ViewModel
+		public GamesViewModel ViewModel
 		{
-			get { return (MainViewModel)this.GetValue(ViewModelProperty); }
+			get { return (GamesViewModel)this.GetValue(ViewModelProperty); }
 			set { this.SetValue(ViewModelProperty, value); }
 		}
 
 		public static readonly DependencyProperty ViewModelProperty =
-		   DependencyProperty.Register("ViewModel", typeof(MainViewModel), typeof(MainView), new PropertyMetadata(null));
+		   DependencyProperty.Register("ViewModel", typeof(GamesViewModel), typeof(GamesView), new PropertyMetadata(null));
 
 		object IViewFor.ViewModel
 		{
 			get { return ViewModel; }
-			set { ViewModel = (MainViewModel)value; }
+			set { ViewModel = (GamesViewModel)value; }
 		}
 		#endregion
 	}

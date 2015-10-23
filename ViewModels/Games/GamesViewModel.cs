@@ -9,13 +9,13 @@ using VpdbAgent.Vpdb;
 
 namespace VpdbAgent.ViewModels.Games
 {
-	public class MainViewModel : ReactiveObject, IRoutableViewModel
+	public class GamesViewModel : ReactiveObject, IRoutableViewModel
 	{
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		// screen
 		public IScreen HostScreen { get; protected set; }
-		public string UrlPathSegment => "main";
+		public string UrlPathSegment => "games";
 
 		// dependencies
 		private readonly IGameManager _gameManager;
@@ -31,7 +31,7 @@ namespace VpdbAgent.ViewModels.Games
 		// privates
 		private readonly ReactiveList<string> _platformFilter = new ReactiveList<string>();
 
-		public MainViewModel(IScreen screen, IGameManager gameManager, IVpdbClient vpdbClient)
+		public GamesViewModel(IScreen screen, IGameManager gameManager, IVpdbClient vpdbClient)
 		{
 			HostScreen = screen;
 

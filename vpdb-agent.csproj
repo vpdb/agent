@@ -161,6 +161,7 @@
     <Compile Include="Common\TypeConverters\BooleanConverter.cs" />
     <Compile Include="Common\TypeConverters\BooleanToBrushConverter.cs" />
     <Compile Include="Common\TypeConverters\BooleanToVisibilityConverter.cs" />
+    <Compile Include="ViewModels\MainViewModel.cs" />
     <Compile Include="Views\Games\GameItemResultsItemView.xaml.cs">
       <DependentUpon>GameItemResultsItemView.xaml</DependentUpon>
     </Compile>
@@ -178,7 +179,7 @@
     <Compile Include="Views\Settings\SettingsView.xaml.cs">
       <DependentUpon>SettingsView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ViewModels\Games\MainViewModel.cs" />
+    <Compile Include="ViewModels\Games\GamesViewModel.cs" />
     <Compile Include="PinballX\FileSystemWatcher.cs" />
     <Compile Include="PinballX\MenuManager.cs" />
     <Compile Include="Models\PlatformDatabase.cs" />
@@ -186,8 +187,8 @@
     <Compile Include="PinballX\Models\Menu.cs" />
     <Compile Include="PinballX\Models\PinballXSystem.cs" />
     <Compile Include="RefitStubs.cs" />
-    <Compile Include="Views\Games\MainView.xaml.cs">
-      <DependentUpon>MainView.xaml</DependentUpon>
+    <Compile Include="Views\Games\GamesView.xaml.cs">
+      <DependentUpon>GamesView.xaml</DependentUpon>
     </Compile>
     <Compile Include="SettingsManager.cs" />
     <Compile Include="Views\Games\GameItemView.xaml.cs">
@@ -238,7 +239,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\Games\MainView.xaml">
+    <Page Include="Views\Games\GamesView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

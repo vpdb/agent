@@ -5,7 +5,7 @@ using Splat;
 using VpdbAgent.ViewModels;
 using VpdbAgent.ViewModels.Games;
 using VpdbAgent.Views;
-using MainView = VpdbAgent.Views.Games.MainView;
+using VpdbAgent.Views.Games;
 
 namespace VpdbAgent
 {
@@ -19,7 +19,7 @@ namespace VpdbAgent
 		public App()
 		{
 			_logger.Info("Starting application.");
-			Locator.CurrentMutable.Register(() => new MainView(), typeof(IViewFor<MainViewModel>));
+			Locator.CurrentMutable.Register(() => new GamesView(), typeof(IViewFor<GamesViewModel>));
 		}
 	}
 }
