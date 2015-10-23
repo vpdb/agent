@@ -2,6 +2,8 @@
 using NLog;
 using Refit;
 using System;
+using System.Collections.Specialized;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -83,15 +85,16 @@ namespace VpdbAgent.Vpdb
 		{
 			var endPoint = _settingsManager.Endpoint;
 			_logger.Info("Creating new web request for {0}{1}", endPoint, path);
-			var request = WebRequest.Create(endPoint + path);
-			addHeaders(request.Headers);
+			var request = (HttpWebRequest)WebRequest.Create(endPoint + path);
+			AddHeaders(request.Headers);
+			request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
 			return request;
 		}
 
 		public WebClient GetWebClient()
 		{
-			var client = new WebClient();
-			addHeaders(client.Headers);
+			var client = new TunedWebClient();
+			AddHeaders(client.Headers);
 			return client;
 		}
 
@@ -100,7 +103,7 @@ namespace VpdbAgent.Vpdb
 			return new Uri(_settingsManager.Endpoint + path);
 		}
 
-		private void addHeaders(WebHeaderCollection headers)
+		private void AddHeaders(NameValueCollection headers)
 		{
 			if (_settingsManager.IsInitialized()) {
 				if (!string.IsNullOrEmpty(_settingsManager.AuthUser)) {
@@ -112,9 +115,19 @@ namespace VpdbAgent.Vpdb
 			} else {
 				_logger.Warn("You probably shouldn't do requests if settings are not initialized.");
 			}
+			headers.Add("Accept-Encoding", "gzip,deflate");
 		}
 
-
+		public class TunedWebClient : WebClient
+		{
+			protected override WebRequest GetWebRequest(Uri address)
+			{
+				var request = (HttpWebRequest)base.GetWebRequest(address);
+				Debug.Assert(request != null, "request != null");
+				request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
+				return request;
+			}
+		}
 
 		#region Pusher
 		private void SetupPusher(User user)
