@@ -156,23 +156,23 @@
     <Compile Include="Libs\SmoothPanel\SmoothPanelTemplate.cs" />
     <Compile Include="Libs\SmoothPanel\SmoothPanelViewCache.cs" />
     <Compile Include="Models\GlobalDatabase.cs" />
-    <Compile Include="ViewModels\Games\MainReleaseResultsItemViewModel.cs" />
-    <Compile Include="ViewModels\Games\MainReleaseResultsViewModel.cs" />
+    <Compile Include="ViewModels\Games\GameItemResultsItemViewModel.cs" />
+    <Compile Include="ViewModels\Games\GameItemResultsViewModel.cs" />
     <Compile Include="Common\TypeConverters\BooleanConverter.cs" />
     <Compile Include="Common\TypeConverters\BooleanToBrushConverter.cs" />
     <Compile Include="Common\TypeConverters\BooleanToVisibilityConverter.cs" />
-    <Compile Include="Views\Games\MainReleaseResultsItemView.xaml.cs">
-      <DependentUpon>MainReleaseResultsItemView.xaml</DependentUpon>
+    <Compile Include="Views\Games\GameItemResultsItemView.xaml.cs">
+      <DependentUpon>GameItemResultsItemView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\Games\MainReleaseResultsView.xaml.cs">
-      <DependentUpon>MainReleaseResultsView.xaml</DependentUpon>
+    <Compile Include="Views\Games\GameItemResultsView.xaml.cs">
+      <DependentUpon>GameItemResultsView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\UrlImage.cs" />
     <Compile Include="GameManager.cs" />
     <Compile Include="Models\Game.cs" />
     <Compile Include="Models\Platform.cs" />
     <Compile Include="ViewModels\AppViewModel.cs" />
-    <Compile Include="ViewModels\Games\MainGameViewModel.cs" />
+    <Compile Include="ViewModels\Games\GameItemViewModel.cs" />
     <Compile Include="ViewModels\Settings\SettingsViewModel.cs" />
     <Compile Include="Common\TypeConverters\ImageToUrlTypeConverter.cs" />
     <Compile Include="Views\Settings\SettingsView.xaml.cs">
@@ -190,8 +190,8 @@
       <DependentUpon>MainView.xaml</DependentUpon>
     </Compile>
     <Compile Include="SettingsManager.cs" />
-    <Compile Include="Views\Games\MainGameView.xaml.cs">
-      <DependentUpon>MainGameView.xaml</DependentUpon>
+    <Compile Include="Views\Games\GameItemView.xaml.cs">
+      <DependentUpon>GameItemView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Vpdb\DownloadManager.cs" />
     <Compile Include="Vpdb\Models\Author.cs" />
@@ -214,11 +214,11 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Views\Games\MainReleaseResultsItemView.xaml">
+    <Page Include="Views\Games\GameItemResultsItemView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\Games\MainReleaseResultsView.xaml">
+    <Page Include="Views\Games\GameItemResultsView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -282,7 +282,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\Games\MainGameView.xaml">
+    <Page Include="Views\Games\GameItemView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

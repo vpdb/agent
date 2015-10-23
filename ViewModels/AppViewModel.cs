@@ -11,10 +11,8 @@ using VpdbAgent.PinballX;
 using VpdbAgent.ViewModels.Games;
 using VpdbAgent.ViewModels.Settings;
 using VpdbAgent.Views;
+using VpdbAgent.Views.Games;
 using VpdbAgent.Vpdb;
-using MainGameView = VpdbAgent.Views.Games.MainGameView;
-using MainReleaseResultsItemView = VpdbAgent.Views.Games.MainReleaseResultsItemView;
-using MainReleaseResultsView = VpdbAgent.Views.Games.MainReleaseResultsView;
 using MainView = VpdbAgent.Views.Games.MainView;
 
 namespace VpdbAgent.ViewModels
@@ -120,9 +118,9 @@ namespace VpdbAgent.ViewModels
 
 			// view models
 			locator.RegisterLazySingleton(() => new MainView(), typeof(IViewFor<MainViewModel>));
-			locator.Register(() => new MainGameView(), typeof(IViewFor<MainGameViewModel>));
-			locator.Register(() => new MainReleaseResultsView(), typeof(IViewFor<MainReleaseResultsViewModel>));
-			locator.Register(() => new MainReleaseResultsItemView(), typeof(IViewFor<MainReleaseResultsItemViewModel>));
+			locator.Register(() => new GameItemView(), typeof(IViewFor<GameItemViewModel>));
+			locator.Register(() => new GameItemResultsView(), typeof(IViewFor<GameItemResultsViewModel>));
+			locator.Register(() => new GameItemResultsItemView(), typeof(IViewFor<GameItemResultsItemViewModel>));
 			locator.RegisterLazySingleton(() => new SettingsView(), typeof(IViewFor<SettingsViewModel>));
 		}
 	}

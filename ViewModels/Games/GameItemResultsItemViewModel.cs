@@ -7,7 +7,7 @@ using Game = VpdbAgent.Models.Game;
 
 namespace VpdbAgent.ViewModels.Games
 {
-	public class MainReleaseResultsItemViewModel : ReactiveObject
+	public class GameItemResultsItemViewModel : ReactiveObject
 	{
 		private static readonly IGameManager GameManager = Locator.CurrentMutable.GetService<IGameManager>();
 
@@ -18,7 +18,7 @@ namespace VpdbAgent.ViewModels.Games
 		// commands
 		public ReactiveCommand<object> SelectResult { get; protected set; } = ReactiveCommand.Create();
 
-		public MainReleaseResultsItemViewModel(Game game, Release release, ICommand closeCommand)
+		public GameItemResultsItemViewModel(Game game, Release release, ICommand closeCommand)
 		{
 			Game = game;
 			Release = release;

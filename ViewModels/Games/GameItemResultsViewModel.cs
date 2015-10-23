@@ -10,7 +10,7 @@ using Game = VpdbAgent.Models.Game;
 
 namespace VpdbAgent.ViewModels.Games
 {
-	public class MainReleaseResultsViewModel : ReactiveObject
+	public class GameItemResultsViewModel : ReactiveObject
 	{
 		// deps
 		private static readonly Logger Logger = Locator.CurrentMutable.GetService<Logger>();
@@ -19,8 +19,8 @@ namespace VpdbAgent.ViewModels.Games
 		public Game Game { get; set; }
 
 		// release search results
-		private readonly ObservableAsPropertyHelper<IEnumerable<MainReleaseResultsItemViewModel>> _identifiedReleases;
-		public IEnumerable<MainReleaseResultsItemViewModel> IdentifiedReleases => _identifiedReleases.Value;
+		private readonly ObservableAsPropertyHelper<IEnumerable<GameItemResultsItemViewModel>> _identifiedReleases;
+		public IEnumerable<GameItemResultsItemViewModel> IdentifiedReleases => _identifiedReleases.Value;
 
 		// visibility
 		private readonly ObservableAsPropertyHelper<bool> _hasResults;
@@ -35,12 +35,12 @@ namespace VpdbAgent.ViewModels.Games
 		// commands
 		public ReactiveCommand<object> CloseResults { get; protected set; } = ReactiveCommand.Create();
 
-		public MainReleaseResultsViewModel(Game game, IReactiveCommand<List<Release>> identifyRelease) {
+		public GameItemResultsViewModel(Game game, IReactiveCommand<List<Release>> identifyRelease) {
 			Game = game;
 
 			// link results to property
 			identifyRelease
-				.Select(releases => releases.Select(release => new MainReleaseResultsItemViewModel(game, release, CloseResults)))
+				.Select(releases => releases.Select(release => new GameItemResultsItemViewModel(game, release, CloseResults)))
 				.ToProperty(this, vm => vm.IdentifiedReleases, out _identifiedReleases);
 
 			// handle errors

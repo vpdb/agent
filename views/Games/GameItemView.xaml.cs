@@ -9,9 +9,9 @@ namespace VpdbAgent.Views.Games
 	/// <summary>
 	/// Interaction logic for GameTemplate.xaml
 	/// </summary>
-	public partial class MainGameView : UserControl, IViewFor<MainGameViewModel>, IHeightMeasurer
+	public partial class GameItemView : UserControl, IViewFor<GameItemViewModel>, IHeightMeasurer
 	{
-		public MainGameView()
+		public GameItemView()
 		{
 			InitializeComponent();
 		}
@@ -22,25 +22,25 @@ namespace VpdbAgent.Views.Games
 		}
 
 		#region ViewModel
-		public MainGameViewModel ViewModel
+		public GameItemViewModel ViewModel
 		{
-			get { return (MainGameViewModel)this.GetValue(ViewModelProperty); }
+			get { return (GameItemViewModel)this.GetValue(ViewModelProperty); }
 			set { SetValue(ViewModelProperty, value); }
 		}
 
 		public static readonly DependencyProperty ViewModelProperty =
-		   DependencyProperty.Register("ViewModel", typeof(MainGameViewModel), typeof(MainGameView), new PropertyMetadata(null));
+		   DependencyProperty.Register("ViewModel", typeof(GameItemViewModel), typeof(GameItemView), new PropertyMetadata(null));
 
 		object IViewFor.ViewModel
 		{
 			get { return ViewModel; }
-			set { ViewModel = (MainGameViewModel)value; }
+			set { ViewModel = (GameItemViewModel)value; }
 		}
 		#endregion
 
 		public override string ToString()
 		{
-			return $"[GameView] {(DataContext as MainGameViewModel)?.Game}";
+			return $"[GameView] {(DataContext as GameItemViewModel)?.Game}";
 		}
 	}
 }

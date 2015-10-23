@@ -12,7 +12,7 @@ using Game = VpdbAgent.Models.Game;
 
 namespace VpdbAgent.ViewModels.Games
 {
-	public class MainGameViewModel : ReactiveObject
+	public class GameItemViewModel : ReactiveObject
 	{
 		// deps
 		private static readonly Logger Logger = Locator.CurrentMutable.GetService<Logger>();
@@ -30,8 +30,8 @@ namespace VpdbAgent.ViewModels.Games
 		public bool IsVisible { get { return _isVisible; } set { this.RaiseAndSetIfChanged(ref _isVisible, value); } }
 
 		// release search results
-		private IEnumerable<MainReleaseResultsItemViewModel> _identifiedReleases;
-		public IEnumerable<MainReleaseResultsItemViewModel> IdentifiedReleases
+		private IEnumerable<GameItemResultsItemViewModel> _identifiedReleases;
+		public IEnumerable<GameItemResultsItemViewModel> IdentifiedReleases
 		{
 			get { return _identifiedReleases; }
 			set { this.RaiseAndSetIfChanged(ref _identifiedReleases, value); }
@@ -53,14 +53,14 @@ namespace VpdbAgent.ViewModels.Games
 			set { this.RaiseAndSetIfChanged(ref _hasResults, value); }
 		}
 
-		public MainGameViewModel(Game game)
+		public GameItemViewModel(Game game)
 		{
 			Game = game;
 
 			// release identify
 			IdentifyRelease = ReactiveCommand.CreateAsyncObservable(_ => VpdbClient.Api.GetReleasesBySize(game.FileSize, 512).SubscribeOn(Scheduler.Default));
 			IdentifyRelease
-				.Select(releases => releases.Select(release => new MainReleaseResultsItemViewModel(game, release, CloseResults)))
+				.Select(releases => releases.Select(release => new GameItemResultsItemViewModel(game, release, CloseResults)))
 				.Subscribe(releases =>
 				{
 					IdentifiedReleases = releases;

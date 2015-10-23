@@ -8,9 +8,9 @@ namespace VpdbAgent.Views.Games
 	/// <summary>
 	/// An item in the search result in the identify release panel
 	/// </summary>
-	public partial class MainReleaseResultsItemView : UserControl, IViewFor<MainReleaseResultsItemViewModel>
+	public partial class GameItemResultsItemView : UserControl, IViewFor<GameItemResultsItemViewModel>
 	{
-		public MainReleaseResultsItemView()
+		public GameItemResultsItemView()
 		{
 			InitializeComponent();
 
@@ -24,19 +24,19 @@ namespace VpdbAgent.Views.Games
 		}
 
 		#region ViewModel
-		public MainReleaseResultsItemViewModel ViewModel
+		public GameItemResultsItemViewModel ViewModel
 		{
-			get { return (MainReleaseResultsItemViewModel)this.GetValue(ViewModelProperty); }
+			get { return (GameItemResultsItemViewModel)this.GetValue(ViewModelProperty); }
 			set { this.SetValue(ViewModelProperty, value); }
 		}
 
 		public static readonly DependencyProperty ViewModelProperty =
-		   DependencyProperty.Register("ViewModel", typeof(MainReleaseResultsItemViewModel), typeof(MainReleaseResultsItemView), new PropertyMetadata(null));
+		   DependencyProperty.Register("ViewModel", typeof(GameItemResultsItemViewModel), typeof(GameItemResultsItemView), new PropertyMetadata(null));
 
 		object IViewFor.ViewModel
 		{
 			get { return ViewModel; }
-			set { ViewModel = (MainReleaseResultsItemViewModel)value; }
+			set { ViewModel = (GameItemResultsItemViewModel)value; }
 		}
 		#endregion
 	}

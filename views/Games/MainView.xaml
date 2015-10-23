@@ -54,7 +54,7 @@
                     <ItemsPanelTemplate>
                         <dc:SmoothPanel>
                             <dc:SmoothPanel.Templates>
-                                <dc:SmoothPanelTemplate ViewModel="{x:Type games:MainGameViewModel}" View="{x:Type v1:MainGameView}" />
+                                <dc:SmoothPanelTemplate ViewModel="{x:Type games:GameItemViewModel}" View="{x:Type v1:GameItemView}" />
                             </dc:SmoothPanel.Templates>
                         </dc:SmoothPanel>
                     </ItemsPanelTemplate>

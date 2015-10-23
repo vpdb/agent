@@ -22,8 +22,8 @@ namespace VpdbAgent.ViewModels.Games
 
 		// data
 		public IReactiveDerivedList<Platform> Platforms { get; }
-		public IReactiveDerivedList<MainGameViewModel> Games { get; }
-		private IReactiveDerivedList<MainGameViewModel> AllGames { get; }
+		public IReactiveDerivedList<GameItemViewModel> Games { get; }
+		private IReactiveDerivedList<GameItemViewModel> AllGames { get; }
 
 		// commands
 		public ReactiveCommand<object> FilterPlatforms { get; protected set; } = ReactiveCommand.Create();
@@ -48,7 +48,7 @@ namespace VpdbAgent.ViewModels.Games
 
 			// push all games into AllGames as view models and sorted
 			AllGames = _gameManager.Games.CreateDerivedCollection(
-				game => new MainGameViewModel(game),
+				game => new GameItemViewModel(game),
 				gameViewModel => true,
 				(x, y) => string.Compare(x.Game.Id, y.Game.Id, StringComparison.Ordinal)
 			);
