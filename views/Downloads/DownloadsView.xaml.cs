@@ -13,40 +13,34 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using ReactiveUI;
-using VpdbAgent.ViewModels;
+using VpdbAgent.ViewModels.Downloads;
 
-namespace VpdbAgent.Views
+namespace VpdbAgent.Views.Downloads
 {
 	/// <summary>
-	/// Interaction logic for MainView.xaml
+	/// Interaction logic for DownloadsView.xaml
 	/// </summary>
-	public partial class MainView : UserControl, IViewFor<MainViewModel>
+	public partial class DownloadsView : UserControl, IViewFor<DownloadsViewModel>
 	{
-		public MainView()
+		public DownloadsView()
 		{
 			InitializeComponent();
-
-			this.WhenActivated(d =>
-			{
-				d(this.OneWayBind(ViewModel, vm => vm.Games, v => v.GamesContent.ViewModel));
-				d(this.OneWayBind(ViewModel, vm => vm.Downloads, v => v.DownloadsContent.ViewModel));
-			});
 		}
 
 		#region ViewModel
-		public MainViewModel ViewModel
+		public DownloadsViewModel ViewModel
 		{
-			get { return (MainViewModel)this.GetValue(ViewModelProperty); }
+			get { return (DownloadsViewModel)this.GetValue(ViewModelProperty); }
 			set { this.SetValue(ViewModelProperty, value); }
 		}
 
 		public static readonly DependencyProperty ViewModelProperty =
-		   DependencyProperty.Register("ViewModel", typeof(MainViewModel), typeof(MainView), new PropertyMetadata(null));
+		   DependencyProperty.Register("ViewModel", typeof(DownloadsViewModel), typeof(DownloadsView), new PropertyMetadata(null));
 
 		object IViewFor.ViewModel
 		{
 			get { return ViewModel; }
-			set { ViewModel = (MainViewModel)value; }
+			set { ViewModel = (DownloadsViewModel)value; }
 		}
 		#endregion
 	}

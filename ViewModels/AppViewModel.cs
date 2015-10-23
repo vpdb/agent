@@ -8,9 +8,11 @@ using ReactiveUI;
 using Splat;
 using VpdbAgent.Common.TypeConverters;
 using VpdbAgent.PinballX;
+using VpdbAgent.ViewModels.Downloads;
 using VpdbAgent.ViewModels.Games;
 using VpdbAgent.ViewModels.Settings;
 using VpdbAgent.Views;
+using VpdbAgent.Views.Downloads;
 using VpdbAgent.Views.Games;
 using VpdbAgent.Vpdb;
 
@@ -112,6 +114,7 @@ namespace VpdbAgent.ViewModels
 			// view models
 			locator.RegisterLazySingleton(() => new MainView(), typeof(IViewFor<MainViewModel>));
 			locator.RegisterLazySingleton(() => new GamesView(), typeof(IViewFor<GamesViewModel>));
+			locator.RegisterLazySingleton(() => new DownloadsView(), typeof(IViewFor<DownloadsViewModel>));
 			locator.Register(() => new GameItemView(), typeof(IViewFor<GameItemViewModel>));
 			locator.Register(() => new GameItemResultsView(), typeof(IViewFor<GameItemResultsViewModel>));
 			locator.Register(() => new GameItemResultsItemView(), typeof(IViewFor<GameItemResultsItemViewModel>));

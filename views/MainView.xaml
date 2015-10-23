@@ -14,7 +14,9 @@
             <TabItem Header="Games">
                 <rx:ViewModelViewHost x:Name="GamesContent"/>
             </TabItem>
-            <TabItem Header="Downloads" />
+            <TabItem Header="Downloads">
+                <rx:ViewModelViewHost x:Name="DownloadsContent"/>
+            </TabItem>
         </TabControl>
     </Grid>
 </UserControl>

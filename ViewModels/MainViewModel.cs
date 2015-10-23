@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ReactiveUI;
 using Splat;
+using VpdbAgent.ViewModels.Downloads;
 using VpdbAgent.ViewModels.Games;
 using VpdbAgent.Vpdb;
 
@@ -18,6 +19,7 @@ namespace VpdbAgent.ViewModels
 
 		// tabs
 		public GamesViewModel Games { get; }
+		public DownloadsViewModel Downloads { get; }
 
 		public MainViewModel(IScreen screen)
 		{
@@ -26,6 +28,7 @@ namespace VpdbAgent.ViewModels
 			Games = new GamesViewModel(
 				Locator.Current.GetService<IGameManager>(),
 				Locator.Current.GetService<IVpdbClient>());
+			Downloads = new DownloadsViewModel();
 		}
 	}
 }
