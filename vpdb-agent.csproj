@@ -148,7 +148,6 @@
     <Compile Include="Common\FilesystemWatchCache.cs" />
     <Compile Include="Common\ObservableTrace.cs" />
     <Compile Include="Controls\IconControl.cs" />
-    <Compile Include="Libs\JobQueue.cs" />
     <Compile Include="Libs\SmoothPanel\DataBindHelper.cs" />
     <Compile Include="Libs\SmoothPanel\IHeightMeasurer.cs" />
     <Compile Include="Libs\SmoothPanel\SmoothPanel.cs" />

@@ -10,7 +10,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using NLog;
-using VpdbAgent.Libs;
 
 namespace VpdbAgent.Vpdb
 {
@@ -57,37 +56,6 @@ namespace VpdbAgent.Vpdb
 					var task = Task<WebResponse>.Factory.FromAsync(req.BeginGetResponse, req.EndGetResponse, req);
 					Observable.FromAsync(ct => task).Subscribe(response => {
 						_logger.Info("Got a stream!");
-					});
-
-
-
-
-					var jobQueue = new ParallelJobQueue(5);
-
-					// subscribe to failures
-					jobQueue.InnerQueue.WhenJobFails.Subscribe(e => Console.WriteLine("Job failed: {0}", e.Message));
-
-					// subscribe to empty queue notification
-					jobQueue.InnerQueue.WhenQueueEmpty.Subscribe(n => Console.WriteLine("Empty!"));
-
-					int completed1 = 0, completed2 = 0, errors = 0;     // test counters
-					foreach (var i in Enumerable.Range(0, 100)) {
-						var x = i;
-						jobQueue.Add(() => {
-
-							Console.WriteLine("Thread {0}: {1}", Thread.CurrentThread.ManagedThreadId, x);
-
-							if ((Interlocked.Increment(ref completed1) % 10) == 0) {
-								// generate test exceptions
-								throw new Exception("Text exception " + completed1);
-							}
-
-						}).Subscribe(n => Interlocked.Increment(ref completed2), e => Interlocked.Increment(ref errors));
-					}
-
-					jobQueue.InnerQueue.WhenQueueEmpty.Subscribe(_ =>
-					{
-						Console.WriteLine("DONE! Received 1: {0}, 2: {1}, errors: {2}", completed1, completed2, errors);
 					});
 
 				}, error => {

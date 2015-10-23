@@ -14,8 +14,7 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="200" />
             <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="21*" />
-            <ColumnDefinition Width="20*"/>
+            <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
         <!-- LEFT PANEL -->
