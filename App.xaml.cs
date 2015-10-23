@@ -3,7 +3,9 @@ using NLog;
 using ReactiveUI;
 using Splat;
 using VpdbAgent.ViewModels;
+using VpdbAgent.ViewModels.Games;
 using VpdbAgent.Views;
+using MainView = VpdbAgent.Views.Games.MainView;
 
 namespace VpdbAgent
 {

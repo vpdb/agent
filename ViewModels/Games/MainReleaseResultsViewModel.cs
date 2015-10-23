@@ -2,19 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Media;
 using NLog;
 using ReactiveUI;
 using Splat;
-using VpdbAgent.Common;
-using VpdbAgent.Vpdb;
 using VpdbAgent.Vpdb.Models;
 using Game = VpdbAgent.Models.Game;
 
-namespace VpdbAgent.ViewModels
+namespace VpdbAgent.ViewModels.Games
 {
 	public class MainReleaseResultsViewModel : ReactiveObject
 	{

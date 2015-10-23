@@ -6,10 +6,16 @@ using System.Text;
 using System.Threading.Tasks;
 using ReactiveUI;
 using Splat;
+using VpdbAgent.Common.TypeConverters;
 using VpdbAgent.PinballX;
-using VpdbAgent.ViewModels.TypeConverters;
+using VpdbAgent.ViewModels.Games;
+using VpdbAgent.ViewModels.Settings;
 using VpdbAgent.Views;
 using VpdbAgent.Vpdb;
+using MainGameView = VpdbAgent.Views.Games.MainGameView;
+using MainReleaseResultsItemView = VpdbAgent.Views.Games.MainReleaseResultsItemView;
+using MainReleaseResultsView = VpdbAgent.Views.Games.MainReleaseResultsView;
+using MainView = VpdbAgent.Views.Games.MainView;
 
 namespace VpdbAgent.ViewModels
 {

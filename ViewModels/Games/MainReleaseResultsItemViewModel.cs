@@ -1,15 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Input;
 using ReactiveUI;
 using Splat;
 using VpdbAgent.Vpdb.Models;
 using Game = VpdbAgent.Models.Game;
 
-namespace VpdbAgent.ViewModels
+namespace VpdbAgent.ViewModels.Games
 {
 	public class MainReleaseResultsItemViewModel : ReactiveObject
 	{

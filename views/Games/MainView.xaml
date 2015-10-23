@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="VpdbAgent.Views.MainView"
+﻿<UserControl x:Class="VpdbAgent.Views.Games.MainView"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -7,6 +7,8 @@
       xmlns:vm="clr-namespace:VpdbAgent.ViewModels"
       xmlns:rx="clr-namespace:ReactiveUI;assembly=ReactiveUI"
       xmlns:dc="clr-namespace:Devart.Controls"
+      xmlns:games="clr-namespace:VpdbAgent.ViewModels.Games"
+      xmlns:v1="clr-namespace:VpdbAgent.Views.Games"
       mc:Ignorable="d" 
       d:DesignHeight="300" d:DesignWidth="900">
 
@@ -52,7 +54,7 @@
                     <ItemsPanelTemplate>
                         <dc:SmoothPanel>
                             <dc:SmoothPanel.Templates>
-                                <dc:SmoothPanelTemplate ViewModel="{x:Type vm:MainGameViewModel}" View="{x:Type v:MainGameView}" />
+                                <dc:SmoothPanelTemplate ViewModel="{x:Type games:MainGameViewModel}" View="{x:Type v1:MainGameView}" />
                             </dc:SmoothPanel.Templates>
                         </dc:SmoothPanel>
                     </ItemsPanelTemplate>

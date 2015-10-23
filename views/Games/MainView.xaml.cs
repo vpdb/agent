@@ -1,21 +1,10 @@
-﻿using NLog;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Linq;
+﻿using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using VpdbAgent.Vpdb;
-using PusherClient;
-using System;
-using System.Windows;
-using System.Collections.Generic;
+using NLog;
 using ReactiveUI;
-using VpdbAgent.ViewModels;
-using Splat;
-using System.Reactive.Linq;
-using ListBox = System.Windows.Forms.ListBox;
+using VpdbAgent.ViewModels.Games;
 
-namespace VpdbAgent.Views
+namespace VpdbAgent.Views.Games
 {
 	/// <summary>
 	/// Interaction logic for MainPage.xaml

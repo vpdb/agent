@@ -1,13 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Media;
 using ReactiveUI;
 using VpdbAgent.Vpdb.Models;
 
-namespace VpdbAgent.ViewModels.TypeConverters
+namespace VpdbAgent.Common.TypeConverters
 {
 
 	public class ImageToUrlTypeConverter : IBindingTypeConverter

@@ -156,15 +156,15 @@
     <Compile Include="Libs\SmoothPanel\SmoothPanelTemplate.cs" />
     <Compile Include="Libs\SmoothPanel\SmoothPanelViewCache.cs" />
     <Compile Include="Models\GlobalDatabase.cs" />
-    <Compile Include="ViewModels\MainReleaseResultsItemViewModel.cs" />
-    <Compile Include="ViewModels\MainReleaseResultsViewModel.cs" />
-    <Compile Include="ViewModels\TypeConverters\BooleanConverter.cs" />
-    <Compile Include="ViewModels\TypeConverters\BooleanToBrushConverter.cs" />
-    <Compile Include="ViewModels\TypeConverters\BooleanToVisibilityConverter.cs" />
-    <Compile Include="Views\MainReleaseResultsItemView.xaml.cs">
+    <Compile Include="ViewModels\Games\MainReleaseResultsItemViewModel.cs" />
+    <Compile Include="ViewModels\Games\MainReleaseResultsViewModel.cs" />
+    <Compile Include="Common\TypeConverters\BooleanConverter.cs" />
+    <Compile Include="Common\TypeConverters\BooleanToBrushConverter.cs" />
+    <Compile Include="Common\TypeConverters\BooleanToVisibilityConverter.cs" />
+    <Compile Include="Views\Games\MainReleaseResultsItemView.xaml.cs">
       <DependentUpon>MainReleaseResultsItemView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\MainReleaseResultsView.xaml.cs">
+    <Compile Include="Views\Games\MainReleaseResultsView.xaml.cs">
       <DependentUpon>MainReleaseResultsView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\UrlImage.cs" />
@@ -172,13 +172,13 @@
     <Compile Include="Models\Game.cs" />
     <Compile Include="Models\Platform.cs" />
     <Compile Include="ViewModels\AppViewModel.cs" />
-    <Compile Include="ViewModels\MainGameViewModel.cs" />
-    <Compile Include="ViewModels\SettingsViewModel.cs" />
-    <Compile Include="ViewModels\TypeConverters\ImageToUrlTypeConverter.cs" />
-    <Compile Include="Views\SettingsView.xaml.cs">
+    <Compile Include="ViewModels\Games\MainGameViewModel.cs" />
+    <Compile Include="ViewModels\Settings\SettingsViewModel.cs" />
+    <Compile Include="Common\TypeConverters\ImageToUrlTypeConverter.cs" />
+    <Compile Include="Views\Settings\SettingsView.xaml.cs">
       <DependentUpon>SettingsView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ViewModels\MainViewModel.cs" />
+    <Compile Include="ViewModels\Games\MainViewModel.cs" />
     <Compile Include="PinballX\FileSystemWatcher.cs" />
     <Compile Include="PinballX\MenuManager.cs" />
     <Compile Include="Models\PlatformDatabase.cs" />
@@ -186,11 +186,11 @@
     <Compile Include="PinballX\Models\Menu.cs" />
     <Compile Include="PinballX\Models\PinballXSystem.cs" />
     <Compile Include="RefitStubs.cs" />
-    <Compile Include="Views\MainView.xaml.cs">
+    <Compile Include="Views\Games\MainView.xaml.cs">
       <DependentUpon>MainView.xaml</DependentUpon>
     </Compile>
     <Compile Include="SettingsManager.cs" />
-    <Compile Include="Views\MainGameView.xaml.cs">
+    <Compile Include="Views\Games\MainGameView.xaml.cs">
       <DependentUpon>MainGameView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Vpdb\DownloadManager.cs" />
@@ -214,11 +214,11 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Views\MainReleaseResultsItemView.xaml">
+    <Page Include="Views\Games\MainReleaseResultsItemView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\MainReleaseResultsView.xaml">
+    <Page Include="Views\Games\MainReleaseResultsView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -234,11 +234,11 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Page Include="Views\SettingsView.xaml">
+    <Page Include="Views\Settings\SettingsView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\MainView.xaml">
+    <Page Include="Views\Games\MainView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -282,7 +282,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\MainGameView.xaml">
+    <Page Include="Views\Games\MainGameView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -345,6 +345,8 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Resources\Fonts\" />
+    <Folder Include="ViewModels\Downloads\" />
+    <Folder Include="Views\Downloads\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="packages\refit.2.3.0\build\refit.targets" Condition="Exists('packages\refit.2.3.0\build\refit.targets')" />

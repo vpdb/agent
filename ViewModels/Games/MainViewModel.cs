@@ -1,19 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Windows.Controls;
 using NLog;
 using ReactiveUI;
 using VpdbAgent.Models;
-using System.Reactive.Disposables;
-using Splat;
-using System.Reactive.Linq;
-using System.Reactive;
 using VpdbAgent.Vpdb;
-using static System.String;
 
-namespace VpdbAgent.ViewModels
+namespace VpdbAgent.ViewModels.Games
 {
 	public class MainViewModel : ReactiveObject, IRoutableViewModel
 	{
@@ -49,14 +43,14 @@ namespace VpdbAgent.ViewModels
 			Platforms = _gameManager.Platforms.CreateDerivedCollection(
 				platform => platform,
 				platform => platform.IsEnabled,
-				(x, y) => Compare(x.Name, y.Name, StringComparison.Ordinal)
+				(x, y) => string.Compare(x.Name, y.Name, StringComparison.Ordinal)
 			);
 
 			// push all games into AllGames as view models and sorted
 			AllGames = _gameManager.Games.CreateDerivedCollection(
 				game => new MainGameViewModel(game),
 				gameViewModel => true,
-				(x, y) => Compare(x.Game.Id, y.Game.Id, StringComparison.Ordinal)
+				(x, y) => string.Compare(x.Game.Id, y.Game.Id, StringComparison.Ordinal)
 			);
 			AllGames.ChangeTrackingEnabled = true;
 

@@ -15,6 +15,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using ReactiveUI;
 using VpdbAgent.ViewModels;
+using VpdbAgent.ViewModels.Settings;
 using UserControl = System.Windows.Controls.UserControl;
 
 namespace VpdbAgent.Views
