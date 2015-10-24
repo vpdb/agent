@@ -12,10 +12,10 @@
     <Grid>
         <TabControl>
             <TabItem Header="Games">
-                <rx:ViewModelViewHost x:Name="GamesContent"/>
+                <rx:ViewModelViewHost x:Name="GamesContent" VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch"/>
             </TabItem>
             <TabItem Header="Downloads">
-                <rx:ViewModelViewHost x:Name="DownloadsContent"/>
+                <rx:ViewModelViewHost x:Name="DownloadsContent" VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch"/>
             </TabItem>
         </TabControl>
     </Grid>

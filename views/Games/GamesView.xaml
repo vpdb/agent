@@ -3,12 +3,10 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-      xmlns:v="clr-namespace:VpdbAgent.Views"
-      xmlns:vm="clr-namespace:VpdbAgent.ViewModels"
       xmlns:rx="clr-namespace:ReactiveUI;assembly=ReactiveUI"
       xmlns:dc="clr-namespace:Devart.Controls"
-      xmlns:games="clr-namespace:VpdbAgent.ViewModels.Games"
-      xmlns:v1="clr-namespace:VpdbAgent.Views.Games"
+      xmlns:vm="clr-namespace:VpdbAgent.ViewModels.Games"
+      xmlns:v="clr-namespace:VpdbAgent.Views.Games"
       mc:Ignorable="d" 
       d:DesignHeight="300" d:DesignWidth="900">
 
@@ -54,7 +52,7 @@
                     <ItemsPanelTemplate>
                         <dc:SmoothPanel>
                             <dc:SmoothPanel.Templates>
-                                <dc:SmoothPanelTemplate ViewModel="{x:Type games:GameItemViewModel}" View="{x:Type v1:GameItemView}" />
+                                <dc:SmoothPanelTemplate ViewModel="{x:Type vm:GameItemViewModel}" View="{x:Type v:GameItemView}" />
                             </dc:SmoothPanel.Templates>
                         </dc:SmoothPanel>
                     </ItemsPanelTemplate>
