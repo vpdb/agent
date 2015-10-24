@@ -28,6 +28,7 @@
                 <ResourceDictionary Source="Styles/Icons.xaml" />
                 <ResourceDictionary Source="Styles/Expanders.xaml" />
                 <ResourceDictionary Source="Styles/Scrollbars.xaml" />
+                <ResourceDictionary Source="Styles/ProgressBars.xaml" />
                 <ResourceDictionary Source="Styles/Theme.xaml" />
 
             </ResourceDictionary.MergedDictionaries>

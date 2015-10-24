@@ -21,24 +21,12 @@
         <Setter Property="Foreground" Value="{DynamicResource LightBrush}" />
     </Style>
 
-
     <!-- SEPARATOR -->
     <Style TargetType="{x:Type Separator}">
         <Setter Property="Margin" Value="5,0,0,20" />
         <Setter Property="Background" Value="{StaticResource DarkBrush}" />
     </Style>
 
-
-    <Color x:Key="ProgressIndeterminateColor1">Aqua</Color>
-    <Color x:Key="ProgressIndeterminateColor2">Aqua</Color>
-    <Color x:Key="ProgressIndeterminateColor3">Coral</Color>
-    <Color x:Key="ProgressIndeterminateColor4">Red</Color>
-    <SolidColorBrush x:Key="ProgressBrush" Color="{StaticResource PrimaryColor}" />
-
-    <Style TargetType="{x:Type ProgressBar}" >
-        <Setter Property="Background" Value="{StaticResource DarkBackgroundBrush}" />
-    </Style>
-	
     <!-- TAB ITEM -->
     <Style TargetType="{x:Type TabItem}" BasedOn="{StaticResource MetroTabItem}">
         <Setter Property="controls:ControlsHelper.HeaderFontSize" Value="32" />

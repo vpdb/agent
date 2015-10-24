@@ -44,7 +44,7 @@
             </TextBlock>
         </StackPanel>
 
-        <ProgressBar Grid.ColumnSpan="3" Grid.Row="1" Grid.Column="0" Margin="0,10,0,10" Value="1"/>
+        <ProgressBar Style="{StaticResource BlehProgressBar}" Grid.ColumnSpan="3" Grid.Row="1" Grid.Column="0" Margin="0,10,0,10" IsIndeterminate="False" Value="10"/>
         <Separator Grid.ColumnSpan="3" Grid.Row="2" Grid.Column="0"/>
 
     </Grid>

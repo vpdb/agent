@@ -219,6 +219,10 @@
     <Compile Include="Vpdb\IVpdbApi.cs" />
     <Compile Include="Vpdb\Models\Release.cs" />
     <Compile Include="Vpdb\VpdbClient.cs" />
+    <Page Include="Styles\ProgressBars.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="Styles\Scrollbars.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
