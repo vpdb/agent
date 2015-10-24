@@ -27,7 +27,16 @@ namespace VpdbAgent.Views.Downloads
 			InitializeComponent();
 
 			this.WhenActivated(d => {
+				d(this.OneWayBind(ViewModel, vm => vm.Job.Release.Game.DisplayName, v => v.GameName.Text));
+				d(this.OneWayBind(ViewModel, vm => vm.Job.Release.Name, v => v.ReleaseName.Text));
+				d(this.OneWayBind(ViewModel, vm => vm.Job.Version.Name, v => v.ReleaseVersion.Text));
 				d(this.OneWayBind(ViewModel, vm => vm.Job.Filename, v => v.FileName.Text));
+				d(this.OneWayBind(ViewModel, vm => vm.Job.File.Media["playfield_image"].Variations["square"].Url, v => v.Thumb.UrlSource));
+
+				d(this.OneWayBind(ViewModel, vm => vm.Job.DownloadSpeedFormatted, v => v.DownloadSpeed.Content));
+				d(this.OneWayBind(ViewModel, vm => vm.Job.DownloadSizeFormatted, v => v.DownloadSize.Text));
+				d(this.OneWayBind(ViewModel, vm => vm.Job.DownloadPercentFormatted, v => v.DownloadPercent.Text));
+				d(this.OneWayBind(ViewModel, vm => vm.Job.DownloadPercent, v => v.ProgressBar.Value));
 			});
 		}
 

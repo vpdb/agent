@@ -45,7 +45,8 @@ namespace VpdbAgent.Vpdb
 				.Select(job => Observable.DeferAsync(async token => Observable.Return(await ProcessDownload(job, token))))
 				.Merge(3)
 				.Subscribe(job => {
-					CurrentJobs.Remove(job);
+					job.Done();
+					RemoveFromCurrentJobs(job);
 					Console.WriteLine("Job {0} completed.", job);
 				}, error => {
 					Console.WriteLine("Error: {0}", error);
@@ -94,9 +95,16 @@ namespace VpdbAgent.Vpdb
 
 			// setup cancelation
 			token.Register(job.Client.CancelAsync);
+			try {
+				//await Task.Delay(10000, token);
+				await job.Client.DownloadFileTaskAsync(job.Uri, dest);
 
-			await Task.Delay(10000, token);
-			//await job.Client.DownloadFileTaskAsync(job.Uri, dest);
+			} catch (WebException e) {
+				Console.WriteLine("Error downloading file (server error): {0}", e.Message);
+
+			} catch (Exception e) {
+				Console.WriteLine("Error downloading file: {0}", e.Message);
+			}
 
 			_logger.Info("Finished downloading of {0}", job.Uri);
 			return job;
@@ -107,6 +115,15 @@ namespace VpdbAgent.Vpdb
 			// update jobs back on main thread
 			Application.Current.Dispatcher.Invoke(delegate {
 				CurrentJobs.Add(job);
+				CurrentJobs.Add(job);
+			});
+		}
+
+		private void RemoveFromCurrentJobs(DownloadJob job)
+		{
+			// update jobs back on main thread
+			Application.Current.Dispatcher.Invoke(delegate {
+				CurrentJobs.Remove(job);
 			});
 		}
 	}

@@ -7,8 +7,8 @@
              xmlns:c="clr-namespace:VpdbAgent.Controls"
              mc:Ignorable="d" 
              d:DesignHeight="150" d:DesignWidth="900">
-    <Grid Margin="0,5,10,5">
-
+	
+    <Grid Margin="10,10,20,0">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="60" />
             <ColumnDefinition Width="48*" />
@@ -26,9 +26,14 @@
 
         <!-- data -->
         <StackPanel Grid.Column="1" Grid.Row="0" Orientation="Vertical" Grid.ColumnSpan="2">
-            <Label Padding="0">
-                <TextBlock x:Name="GameName" Text="Medieval Madness (Williams 1997)" TextTrimming="CharacterEllipsis" />
-            </Label>
+            <TextBlock Style="{StaticResource Label}" TextTrimming="CharacterEllipsis">
+                <TextBlock.Inlines>
+                    <Run x:Name="GameName" Text="Medieval Madness (Williams 1997)" FontWeight="Bold"/>
+                    <Run Text=" – "/>
+                    <Run x:Name="ReleaseName" Text="Castle Crusher Edition"/>
+                    <Run x:Name="ReleaseVersion" Text="1.0"/>
+                </TextBlock.Inlines>
+            </TextBlock>
             <Label Padding="0">
                 <TextBlock x:Name="FileName" Text="Castle Crusher Edition 1.2" TextTrimming="CharacterEllipsis" />
             </Label>
@@ -36,17 +41,17 @@
 
         <!-- right side stats -->
         <StackPanel Grid.Column="3" Grid.Row="0" Orientation="Vertical">
-            <Label Padding="0" x:Name="Speed" HorizontalAlignment="Right" Content="1.43 MB/s" />
+            <Label Padding="0" x:Name="DownloadSpeed" HorizontalAlignment="Right" Content="1.43 MB/s" />
             <TextBlock Style="{StaticResource Label}" HorizontalAlignment="Right">
                 <TextBlock.Inlines>
-                    <Run x:Name="PbxFolderLabel" Text="8.9 MB" />
-                    <Run x:Name="PbxFolder" Text="9%" Foreground="{StaticResource PrimaryColorBrush}"/>
+                    <Run x:Name="DownloadSize" Text="8.9 MB" />
+                    <Run x:Name="DownloadPercent" Text="9%" Foreground="{StaticResource PrimaryColorBrush}"/>
                 </TextBlock.Inlines>
             </TextBlock>
         </StackPanel>
 
-        <ProgressBar Style="{StaticResource BlehProgressBar}" Grid.ColumnSpan="4" Grid.Row="1" Grid.Column="0" Margin="0,11,0,10" IsIndeterminate="False" Value="10"/>
-        <Separator Grid.ColumnSpan="4" Grid.Row="2" Grid.Column="0"/>
+        <ProgressBar x:Name="ProgressBar" Style="{StaticResource BlehProgressBar}" Grid.ColumnSpan="4" Grid.Row="1" Grid.Column="0" Margin="0,15,0,10" IsIndeterminate="False" Value="10"/>
+        <Separator Grid.ColumnSpan="4" Grid.Row="2" Grid.Column="0" Margin="0,5,0,5"/>
 
     </Grid>
 </UserControl>

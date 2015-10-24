@@ -3,13 +3,18 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
+using NLog;
 using ReactiveUI;
+using Splat;
 using VpdbAgent.Vpdb.Models;
 using File = VpdbAgent.Vpdb.Models.File;
+using Version = VpdbAgent.Vpdb.Models.Version;
 
 namespace VpdbAgent.Vpdb
 {
@@ -18,24 +23,74 @@ namespace VpdbAgent.Vpdb
 		public readonly Uri Uri;
 		public readonly string Filename;
 		public readonly WebClient Client;
+		public readonly Release Release;
+		public readonly File File;
+		public readonly Version Version;
+		public string DownloadSizeFormatted { get { return _downloadSizeFormatted; } set { this.RaiseAndSetIfChanged(ref _downloadSizeFormatted, value); } }
+		public string DownloadPercentFormatted { get { return _downloadPercentFormatted; } set { this.RaiseAndSetIfChanged(ref _downloadPercentFormatted, value); } }
+		public string DownloadSpeedFormatted { get { return _downloadSpeedFormatted; } set { this.RaiseAndSetIfChanged(ref _downloadSpeedFormatted, value); } }
+		public double DownloadPercent { get { return _downloadPercent; } set { this.RaiseAndSetIfChanged(ref _downloadPercent, value); } }
+
 		public IObservable<DownloadProgressChangedEventArgs> WhenDownloadProgresses => _progress;
 
+		private string _downloadSizeFormatted;
+		private string _downloadPercentFormatted;
+		private string _downloadSpeedFormatted;
+		private double _downloadPercent;
 		private readonly Subject<DownloadProgressChangedEventArgs> _progress = new Subject<DownloadProgressChangedEventArgs>();
+
+		private static readonly Logger Logger = Locator.CurrentMutable.GetService<Logger>();
 
 		public DownloadJob(Release release, File file, IVpdbClient client)
 		{
+			
 			Uri = client.GetUri(file.Reference.Url);
 			Client = client.GetWebClient();
+			File = file;
 			Filename = file.Reference.Name;
+			Release = release;
+			Version = release.Versions.FirstOrDefault(version => version.Files.Contains(file));
 
-			var progress = Observable.FromEvent<DownloadProgressChangedEventHandler, DownloadProgressChangedEventArgs>(
-				handler => Client.DownloadProgressChanged += handler,
-				handler => Client.DownloadProgressChanged -= handler);
-			/*
-			progress.Subscribe(p =>
-			{
-				Console.WriteLine("Progress: {0}", p.BytesReceived);
-			});*/
+			Logger.Info("Creating new download job for {0}.", Uri.AbsoluteUri);
+
+			Client.DownloadProgressChanged += ProgressChanged;
+
+			WhenDownloadProgresses
+				.Sample(TimeSpan.FromMilliseconds(500))
+				.ObserveOn(Scheduler.CurrentThread)
+				.Subscribe(progress => {
+					Logger.Info("Progress: {0}%", progress.ProgressPercentage);
+//					DownloadPercent = progress.ProgressPercentage;
+//					DownloadPercentFormatted = $"{Math.Round(DownloadPercent)}%";
+				});
+
+/*			WhenDownloadProgresses
+				.Take(1)
+				.Subscribe(progress => {
+					DownloadSizeFormatted = BytesToString(progress.TotalBytesToReceive);
+				});*/
+		}
+
+		public void Done()
+		{
+			Client.DownloadProgressChanged -= ProgressChanged;
+		}
+
+		private void ProgressChanged(object sender, DownloadProgressChangedEventArgs p)
+		{
+			_progress.OnNext(p);
+		}
+
+		static string BytesToString(long byteCount)
+		{
+			string[] suf = { "B", "KB", "MB", "GB", "TB", "PB", "EB" }; //Longs run out around EB
+			if (byteCount == 0) { 
+				return "0 " + suf[0];
+			}
+			var bytes = Math.Abs(byteCount);
+			var place = Convert.ToInt32(Math.Floor(Math.Log(bytes, 1024)));
+			var num = Math.Round(bytes / Math.Pow(1024, place), 1);
+			return (Math.Sign(byteCount) * num) + " " + suf[place];
 		}
 	}
 }
