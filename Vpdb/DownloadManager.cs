@@ -32,6 +32,7 @@ namespace VpdbAgent.Vpdb
 		// members
 		private readonly Subject<DownloadJob> _jobs = new Subject<DownloadJob>();
 		private readonly IDisposable _queue;
+		private readonly string _downloadPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "VpdbAgent", "Download");
 
 		public DownloadManager(IVpdbClient vpdbClient, Logger logger)
 		{
@@ -48,6 +49,11 @@ namespace VpdbAgent.Vpdb
 				}, error => {
 					Console.WriteLine("Error: {0}", error);
 				});
+
+			if (!Directory.Exists(_downloadPath)) {
+				_logger.Info("Creating non-existing download folder at {0}.", _downloadPath);
+				Directory.CreateDirectory(_downloadPath);
+			}
 		}
 
 		public IDownloadManager DownloadRelease(string id)
@@ -80,12 +86,15 @@ namespace VpdbAgent.Vpdb
 
 		private async Task<DownloadJob> ProcessDownload(DownloadJob job, CancellationToken token)
 		{
-			_logger.Info("Starting downloading of {0}", job.Uri);
+			var dest = Path.Combine(_downloadPath, job.Filename);
+
+			_logger.Info("Starting downloading of {0} to {1}", job.Uri, dest);
 			CurrentJobs.Add(job);
 
-			token.Register(job.Client.CancelAsync); // setup cancelation
+			// setup cancelation
+			token.Register(job.Client.CancelAsync); 
 
-			await job.Client.DownloadFileTaskAsync(job.Uri, "some-file.dat");
+			await job.Client.DownloadFileTaskAsync(job.Uri, dest);
 
 			_logger.Info("Finished downloading of {0}", job.Uri);
 			return job;
