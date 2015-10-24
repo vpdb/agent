@@ -117,6 +117,7 @@ namespace VpdbAgent.ViewModels
 			locator.RegisterLazySingleton(() => new DownloadsView(), typeof(IViewFor<DownloadsViewModel>));
 			locator.Register(() => new GameItemView(), typeof(IViewFor<GameItemViewModel>));
 			locator.Register(() => new GameResultItemView(), typeof(IViewFor<GameResultItemViewModel>));
+			locator.Register(() => new DownloadItemView(), typeof(IViewFor<DownloadItemViewModel>));
 			locator.RegisterLazySingleton(() => new SettingsView(), typeof(IViewFor<SettingsViewModel>));
 		}
 	}

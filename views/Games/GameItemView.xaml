@@ -77,10 +77,7 @@
 
             <!-- release results -->
             <Expander IsExpanded="{Binding HasExecuted}" Style="{StaticResource AnimatedExpander}">
-                <Grid Margin="-105,0,-10,0">
-                    <Grid.Background>
-                        <SolidColorBrush Color="Black" Opacity="0.35" />
-                    </Grid.Background>
+                <Grid Margin="-105,0,-10,0" Background="{StaticResource DarkBackgroundBrush}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="110" />
                         <ColumnDefinition Width="*" />

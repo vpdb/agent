@@ -7,12 +7,13 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
 using System.Threading.Tasks;
+using ReactiveUI;
 using VpdbAgent.Vpdb.Models;
 using File = VpdbAgent.Vpdb.Models.File;
 
 namespace VpdbAgent.Vpdb
 {
-	public class DownloadJob
+	public class DownloadJob : ReactiveObject
 	{
 		public readonly Uri Uri;
 		public readonly string Filename;

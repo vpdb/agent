@@ -24,7 +24,7 @@
 
         <!-- RIGHT PANEL -->
         <Grid Grid.Column="2" Background="{StaticResource WhiterBrush}" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
-            <Label Content="Data" />
+            <ItemsControl x:Name="Downloads"/>
         </Grid>
     </Grid>
 </UserControl>

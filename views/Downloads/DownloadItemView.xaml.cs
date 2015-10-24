@@ -18,33 +18,33 @@ using VpdbAgent.ViewModels.Downloads;
 namespace VpdbAgent.Views.Downloads
 {
 	/// <summary>
-	/// Interaction logic for DownloadsView.xaml
+	/// Interaction logic for DownloadItemView.xaml
 	/// </summary>
-	public partial class DownloadsView : UserControl, IViewFor<DownloadsViewModel>
+	public partial class DownloadItemView : UserControl, IViewFor<DownloadItemViewModel>
 	{
-		public DownloadsView()
+		public DownloadItemView()
 		{
 			InitializeComponent();
 
 			this.WhenActivated(d => {
-				d(this.OneWayBind(ViewModel, vm => vm.Jobs, v => v.Downloads.ItemsSource));
+				d(this.OneWayBind(ViewModel, vm => vm.Job.Filename, v => v.FileName.Text));
 			});
 		}
 
 		#region ViewModel
-		public DownloadsViewModel ViewModel
+		public DownloadItemViewModel ViewModel
 		{
-			get { return (DownloadsViewModel)this.GetValue(ViewModelProperty); }
+			get { return (DownloadItemViewModel)this.GetValue(ViewModelProperty); }
 			set { this.SetValue(ViewModelProperty, value); }
 		}
 
 		public static readonly DependencyProperty ViewModelProperty =
-		   DependencyProperty.Register("ViewModel", typeof(DownloadsViewModel), typeof(DownloadsView), new PropertyMetadata(null));
+		   DependencyProperty.Register("ViewModel", typeof(DownloadItemViewModel), typeof(DownloadItemView), new PropertyMetadata(null));
 
 		object IViewFor.ViewModel
 		{
 			get { return ViewModel; }
-			set { ViewModel = (DownloadsViewModel)value; }
+			set { ViewModel = (DownloadItemViewModel)value; }
 		}
 		#endregion
 	}

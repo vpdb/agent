@@ -156,12 +156,16 @@
     <Compile Include="Libs\SmoothPanel\SmoothPanelTemplate.cs" />
     <Compile Include="Libs\SmoothPanel\SmoothPanelViewCache.cs" />
     <Compile Include="Models\GlobalDatabase.cs" />
+    <Compile Include="ViewModels\Downloads\DownloadItemViewModel.cs" />
     <Compile Include="ViewModels\Downloads\DownloadsViewModel.cs" />
     <Compile Include="ViewModels\Games\GameResultItemViewModel.cs" />
     <Compile Include="Common\TypeConverters\BooleanConverter.cs" />
     <Compile Include="Common\TypeConverters\BooleanToBrushConverter.cs" />
     <Compile Include="Common\TypeConverters\BooleanToVisibilityConverter.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
+    <Compile Include="Views\Downloads\DownloadItemView.xaml.cs">
+      <DependentUpon>DownloadItemView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\Downloads\DownloadsView.xaml.cs">
       <DependentUpon>DownloadsView.xaml</DependentUpon>
     </Compile>
@@ -218,6 +222,10 @@
     <Page Include="Styles\Scrollbars.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\Downloads\DownloadItemView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\Downloads\DownloadsView.xaml">
       <SubType>Designer</SubType>

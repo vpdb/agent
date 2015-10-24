@@ -18,8 +18,9 @@ namespace VpdbAgent.Vpdb
 	public interface IDownloadManager
 	{
 		IDownloadManager DownloadRelease(string id);
+		ReactiveList<DownloadJob> CurrentJobs { get; }
 	}
-	
+
 	public class DownloadManager : IDownloadManager
 	{
 		// dependencies
@@ -27,7 +28,7 @@ namespace VpdbAgent.Vpdb
 		private readonly Logger _logger;
 
 		// props
-		public ReactiveList<DownloadJob> CurrentJobs = new ReactiveList<DownloadJob>();
+		public ReactiveList<DownloadJob> CurrentJobs { get; } = new ReactiveList<DownloadJob>();
 
 		// members
 		private readonly Subject<DownloadJob> _jobs = new Subject<DownloadJob>();
@@ -89,15 +90,24 @@ namespace VpdbAgent.Vpdb
 			var dest = Path.Combine(_downloadPath, job.Filename);
 
 			_logger.Info("Starting downloading of {0} to {1}", job.Uri, dest);
-			CurrentJobs.Add(job);
+			AddToCurrentJobs(job);
 
 			// setup cancelation
-			token.Register(job.Client.CancelAsync); 
+			token.Register(job.Client.CancelAsync);
 
-			await job.Client.DownloadFileTaskAsync(job.Uri, dest);
+			await Task.Delay(10000, token);
+			//await job.Client.DownloadFileTaskAsync(job.Uri, dest);
 
 			_logger.Info("Finished downloading of {0}", job.Uri);
 			return job;
+		}
+
+		private void AddToCurrentJobs(DownloadJob job)
+		{
+			// update jobs back on main thread
+			Application.Current.Dispatcher.Invoke(delegate {
+				CurrentJobs.Add(job);
+			});
 		}
 	}
 }

@@ -23,8 +23,9 @@
     <SolidColorBrush x:Key="WhiterBrush" Color="{StaticResource WhiterColor}" options:Freeze="True" />
     <SolidColorBrush x:Key="ScrollbarBrush" Color="#40ffffff" options:Freeze="True" />
     <SolidColorBrush x:Key="ScrollbarHoverBrush" Color="#60ffffff" options:Freeze="True" />
-    
-	<SolidColorBrush x:Key="DarkBrush" Color="#40ffffff" options:Freeze="True" />
+    <SolidColorBrush x:Key="DarkBackgroundBrush" Color="Black" Opacity="0.35" options:Freeze="True" />
+
+    <SolidColorBrush x:Key="DarkBrush" Color="#40ffffff" options:Freeze="True" />
     <SolidColorBrush x:Key="LightBrush" Color="#80ffffff" options:Freeze="True" />
 	
 	<!-- mah.apps overrides -->
