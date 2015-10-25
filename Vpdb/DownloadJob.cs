@@ -55,20 +55,47 @@ namespace VpdbAgent.Vpdb
 
 			Client.DownloadProgressChanged += ProgressChanged;
 
+			// update progress every 300ms
 			WhenDownloadProgresses
-				.Sample(TimeSpan.FromMilliseconds(500))
-				.ObserveOn(Scheduler.CurrentThread)
+				.Sample(TimeSpan.FromMilliseconds(300))
 				.Subscribe(progress => {
-					Logger.Info("Progress: {0}%", progress.ProgressPercentage);
-//					DownloadPercent = progress.ProgressPercentage;
-//					DownloadPercentFormatted = $"{Math.Round(DownloadPercent)}%";
+					// on main thread
+					Application.Current.Dispatcher.Invoke(delegate
+					{
+						DownloadPercent = progress.ProgressPercentage;
+						DownloadPercentFormatted = $"{Math.Round(DownloadPercent)}%";
+					});
 				});
 
-/*			WhenDownloadProgresses
+			// update download speed every 1.5 second
+			var lastUpdatedProgress = DateTime.Now;
+			long bytesReceived = 0;
+			WhenDownloadProgresses
+				.Sample(TimeSpan.FromMilliseconds(1500))
+				.Subscribe(progress => {
+					// on main thread
+					Application.Current.Dispatcher.Invoke(delegate
+					{
+						var timespan = DateTime.Now - lastUpdatedProgress;
+						var bytespan = progress.BytesReceived - bytesReceived;
+						var downloadSpeed = bytespan / timespan.Seconds;
+
+						DownloadSpeedFormatted = $"{BytesToString(downloadSpeed)}/s";
+
+						bytesReceived = progress.BytesReceived;
+						lastUpdatedProgress = DateTime.Now;
+					});
+				});
+
+			// update initial size only once
+			WhenDownloadProgresses
 				.Take(1)
 				.Subscribe(progress => {
-					DownloadSizeFormatted = BytesToString(progress.TotalBytesToReceive);
-				});*/
+					// on main thread
+					Application.Current.Dispatcher.Invoke(delegate {
+						DownloadSizeFormatted = BytesToString(progress.TotalBytesToReceive);
+					});
+				});
 		}
 
 		public void Done()
