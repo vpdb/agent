@@ -27,7 +27,7 @@ namespace VpdbAgent.Views.Downloads
 			InitializeComponent();
 
 			this.WhenActivated(d => {
-				d(this.OneWayBind(ViewModel, vm => vm.Job.Release.Game.DisplayName, v => v.GameName.Text));
+				d(this.OneWayBind(ViewModel, vm => vm.Job.Release.Game.Title, v => v.GameName.Text));
 				d(this.OneWayBind(ViewModel, vm => vm.Job.Release.Name, v => v.ReleaseName.Text));
 				d(this.OneWayBind(ViewModel, vm => vm.Job.Version.Name, v => v.ReleaseVersion.Text));
 				d(this.OneWayBind(ViewModel, vm => vm.Job.Filename, v => v.FileName.Text));

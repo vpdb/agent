@@ -58,6 +58,10 @@
     <ApplicationIcon>vpdb-agent.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Humanizer, Version=1.37.7.0, Culture=neutral, PublicKeyToken=979442b78dfc278e, processorArchitecture=MSIL">
+      <HintPath>packages\Humanizer.1.37.7\lib\portable-win+net40+sl50+wp8+wpa81+MonoAndroid10+MonoTouch10+Xamarin.iOS10\Humanizer.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="INIFileParser, Version=2.2.2.0, Culture=neutral, PublicKeyToken=79af7b307b65cf3c, processorArchitecture=MSIL">
       <HintPath>packages\ini-parser.2.2.2\lib\net20\INIFileParser.dll</HintPath>
       <Private>True</Private>
@@ -148,6 +152,7 @@
     <Compile Include="Common\FilesystemWatchCache.cs" />
     <Compile Include="Common\ObservableTrace.cs" />
     <Compile Include="Controls\IconControl.cs" />
+    <Compile Include="Controls\LabelFor.cs" />
     <Compile Include="Libs\SmoothPanel\DataBindHelper.cs" />
     <Compile Include="Libs\SmoothPanel\IHeightMeasurer.cs" />
     <Compile Include="Libs\SmoothPanel\SmoothPanel.cs" />
@@ -343,6 +348,7 @@
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
     <AppDesigner Include="Properties\" />
+    <None Include="README.md" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config">

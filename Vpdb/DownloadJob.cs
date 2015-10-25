@@ -9,6 +9,7 @@ using System.Reactive.Subjects;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using Humanizer;
 using NLog;
 using ReactiveUI;
 using Splat;
@@ -26,10 +27,12 @@ namespace VpdbAgent.Vpdb
 		public readonly Release Release;
 		public readonly File File;
 		public readonly Version Version;
+
 		public string DownloadSizeFormatted { get { return _downloadSizeFormatted; } set { this.RaiseAndSetIfChanged(ref _downloadSizeFormatted, value); } }
 		public string DownloadPercentFormatted { get { return _downloadPercentFormatted; } set { this.RaiseAndSetIfChanged(ref _downloadPercentFormatted, value); } }
 		public string DownloadSpeedFormatted { get { return _downloadSpeedFormatted; } set { this.RaiseAndSetIfChanged(ref _downloadSpeedFormatted, value); } }
 		public double DownloadPercent { get { return _downloadPercent; } set { this.RaiseAndSetIfChanged(ref _downloadPercent, value); } }
+		public JobStatus Status { get { return _status; } set { this.RaiseAndSetIfChanged(ref _status, value); } }
 
 		public IObservable<DownloadProgressChangedEventArgs> WhenDownloadProgresses => _progress;
 
@@ -37,13 +40,13 @@ namespace VpdbAgent.Vpdb
 		private string _downloadPercentFormatted;
 		private string _downloadSpeedFormatted;
 		private double _downloadPercent;
+		private JobStatus _status = JobStatus.Queued;
 		private readonly Subject<DownloadProgressChangedEventArgs> _progress = new Subject<DownloadProgressChangedEventArgs>();
 
 		private static readonly Logger Logger = Locator.CurrentMutable.GetService<Logger>();
 
 		public DownloadJob(Release release, File file, IVpdbClient client)
 		{
-			
 			Uri = client.GetUri(file.Reference.Url);
 			Client = client.GetWebClient();
 			File = file;
@@ -52,7 +55,11 @@ namespace VpdbAgent.Vpdb
 			Version = release.Versions.FirstOrDefault(version => version.Files.Contains(file));
 
 			Logger.Info("Creating new download job for {0}.", Uri.AbsoluteUri);
+		}
 
+		public void OnStart()
+		{
+			Status = JobStatus.Transferring;
 			Client.DownloadProgressChanged += ProgressChanged;
 
 			// update progress every 300ms
@@ -60,27 +67,25 @@ namespace VpdbAgent.Vpdb
 				.Sample(TimeSpan.FromMilliseconds(300))
 				.Subscribe(progress => {
 					// on main thread
-					Application.Current.Dispatcher.Invoke(delegate
-					{
+					Application.Current.Dispatcher.Invoke(delegate {
 						DownloadPercent = (double)progress.BytesReceived / File.Reference.Bytes * 100;
 						DownloadPercentFormatted = $"{Math.Round(DownloadPercent)}%";
 					});
 				});
 
-			// update download speed every 1.5 second
+			// update download speed every 1.5 seconds
 			var lastUpdatedProgress = DateTime.Now;
 			long bytesReceived = 0;
 			WhenDownloadProgresses
 				.Sample(TimeSpan.FromMilliseconds(1500))
 				.Subscribe(progress => {
 					// on main thread
-					Application.Current.Dispatcher.Invoke(delegate
-					{
+					Application.Current.Dispatcher.Invoke(delegate {
 						var timespan = DateTime.Now - lastUpdatedProgress;
 						var bytespan = progress.BytesReceived - bytesReceived;
 						var downloadSpeed = bytespan / timespan.Seconds;
 
-						DownloadSpeedFormatted = $"{BytesToString(downloadSpeed)}/s";
+						DownloadSpeedFormatted = $"{downloadSpeed.Bytes().ToString("#.#")}/s";
 
 						bytesReceived = progress.BytesReceived;
 						lastUpdatedProgress = DateTime.Now;
@@ -93,13 +98,25 @@ namespace VpdbAgent.Vpdb
 				.Subscribe(progress => {
 					// on main thread
 					Application.Current.Dispatcher.Invoke(delegate {
-						DownloadSizeFormatted = BytesToString(progress.TotalBytesToReceive > 0 ? progress.TotalBytesToReceive : File.Reference.Bytes);
+						DownloadSizeFormatted = (progress.TotalBytesToReceive > 0 ? progress.TotalBytesToReceive : File.Reference.Bytes).Bytes().ToString("#.#");
 					});
 				});
 		}
 
-		public void Done()
+		public void OnSuccess()
 		{
+			// on main thread
+			Application.Current.Dispatcher.Invoke(delegate {
+				Status = JobStatus.Completed;
+			});
+			Client.DownloadProgressChanged -= ProgressChanged;
+		}
+
+		public void OnFailure(Exception e)
+		{
+			Application.Current.Dispatcher.Invoke(delegate {
+				Status = JobStatus.Failed;
+			});
 			Client.DownloadProgressChanged -= ProgressChanged;
 		}
 
@@ -108,16 +125,35 @@ namespace VpdbAgent.Vpdb
 			_progress.OnNext(p);
 		}
 
-		private static string BytesToString(long byteCount)
+		/// <summary>
+		/// Statuses of a download job
+		/// </summary>
+		public enum JobStatus
 		{
-			string[] suf = { "B", "KB", "MB", "GB", "TB", "PB", "EB" }; // Longs run out around EB
-			if (byteCount == 0) { 
-				return "0 " + suf[0];
-			}
-			var bytes = Math.Abs(byteCount);
-			var place = Convert.ToInt32(Math.Floor(Math.Log(bytes, 1024)));
-			var num = Math.Round(bytes / Math.Pow(1024, place), 1);
-			return (Math.Sign(byteCount) * num) + " " + suf[place];
+			/// <summary>
+			/// Job is about to be transferred but still waiting for a slot to be freed
+			/// </summary>
+			Queued, 
+			
+			/// <summary>
+			/// Job is currently transferring
+			/// </summary>
+			Transferring, 
+			
+			/// <summary>
+			/// Job has successfully terminated
+			/// </summary>
+			Completed, 
+			
+			/// <summary>
+			/// Job terminated but failed
+			/// </summary>
+			Failed, 
+			
+			/// <summary>
+			/// Job was aborted
+			/// </summary>
+			Aborted
 		}
 	}
 }

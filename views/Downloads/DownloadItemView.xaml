@@ -7,12 +7,11 @@
              xmlns:c="clr-namespace:VpdbAgent.Controls"
              mc:Ignorable="d" 
              d:DesignHeight="150" d:DesignWidth="900">
-	
+
     <Grid Margin="10,10,20,0">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="60" />
-            <ColumnDefinition Width="48*" />
-            <ColumnDefinition Width="325*"/>
+            <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
@@ -40,18 +39,27 @@
         </StackPanel>
 
         <!-- right side stats -->
-        <StackPanel Grid.Column="3" Grid.Row="0" Orientation="Vertical">
+        <StackPanel Grid.Column="2" Grid.Row="0" Orientation="Vertical">
             <Label Padding="0" x:Name="DownloadSpeed" HorizontalAlignment="Right" Content="1.43 MB/s" />
             <TextBlock Style="{StaticResource Label}" HorizontalAlignment="Right">
                 <TextBlock.Inlines>
                     <Run x:Name="DownloadSize" Text="8.9 MB" />
-                    <Run x:Name="DownloadPercent" Text="9%" Foreground="{StaticResource PrimaryColorBrush}"/>
+                    <Run x:Name="DownloadPercent" Text="9%" FontWeight="Bold" Foreground="{StaticResource PrimaryColorBrush}"/>
                 </TextBlock.Inlines>
             </TextBlock>
         </StackPanel>
 
+        <!-- progress bar -->
         <ProgressBar x:Name="ProgressBar" Style="{StaticResource BlehProgressBar}" Grid.ColumnSpan="4" Grid.Row="1" Grid.Column="0" Margin="0,15,0,10" IsIndeterminate="False" Value="10"/>
-        <Separator Grid.ColumnSpan="4" Grid.Row="2" Grid.Column="0" Margin="0,5,0,5"/>
+
+        <!-- success message -->
+        <StackPanel x:Name="StatusSuccess"  Grid.ColumnSpan="3" Grid.Row="2" Grid.Column="0" Orientation="Horizontal" Background="{StaticResource DarkGreenBrush}" Margin="-7,0,0,0">
+            <c:IconControl Margin="60,0,5,0" Height="18" Width="18" Foreground="{StaticResource LabelTextBrush}" Data="{StaticResource IconStar}" />
+			<Label Content="Successfully downloaded 5min ago."/>
+        </StackPanel>
+
+
+        <Separator Grid.ColumnSpan="3" Grid.Row="2" Grid.Column="0" Margin="0,5,0,5"/>
 
     </Grid>
 </UserControl>

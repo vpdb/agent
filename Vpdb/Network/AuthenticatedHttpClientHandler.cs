@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -20,20 +21,20 @@ namespace VpdbAgent.Vpdb.Network
 
 		public AuthenticatedHttpClientHandler(string apiKey)
 		{
-			this._apiKey = apiKey;
+			_apiKey = apiKey;
 		}
 
 		public AuthenticatedHttpClientHandler(string authUser, string authPass)
 		{
-			this._authUser = authUser;
-			this._authPass = authPass;
+			_authUser = authUser;
+			_authPass = authPass;
 		}
 
 		public AuthenticatedHttpClientHandler(string apiKey, string authUser, string authPass)
 		{
-			this._apiKey = apiKey;
-			this._authUser = authUser;
-			this._authPass = authPass;
+			_apiKey = apiKey;
+			_authUser = authUser;
+			_authPass = authPass;
 		}
 
 		protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
@@ -45,6 +46,8 @@ namespace VpdbAgent.Vpdb.Network
 			} else {
 				request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey.Trim());
 			}
+//			request.Headers.Add("Accept-Encoding", "gzip,deflate");
+
 			Logger.Debug("=> {0} {1}", request.Method, request.RequestUri);
 
 			return await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
