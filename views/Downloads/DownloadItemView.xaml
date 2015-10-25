@@ -3,10 +3,12 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:VpdbAgent.Views.Downloads"
              xmlns:c="clr-namespace:VpdbAgent.Controls"
+             xmlns:vm="clr-namespace:VpdbAgent.ViewModels.Downloads"
              mc:Ignorable="d" 
-             d:DesignHeight="150" d:DesignWidth="900">
+             d:DesignHeight="150"
+             d:DesignWidth="900"
+             d:DataContext="{d:DesignInstance Type=vm:DownloadItemViewModel}">
 
     <Grid Margin="10,10,20,0">
         <Grid.ColumnDefinitions>
@@ -21,36 +23,36 @@
         </Grid.RowDefinitions>
 
         <!-- image -->
-        <c:UrlImage x:Name="Thumb" Grid.Column="0" Grid.Row="0" Width="50" Height="50" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+        <c:UrlImage UrlSource="{Binding Job.File.Media[playfield_image].Variations[square].Url}" Grid.Column="0" Grid.Row="0" Width="50" Height="50" HorizontalAlignment="Left" VerticalAlignment="Top"/>
 
         <!-- data -->
         <StackPanel Grid.Column="1" Grid.Row="0" Orientation="Vertical" Grid.ColumnSpan="2">
             <TextBlock Style="{StaticResource Label}" TextTrimming="CharacterEllipsis">
                 <TextBlock.Inlines>
-                    <Run x:Name="GameName" Text="Medieval Madness (Williams 1997)" FontWeight="Bold"/>
+                    <Run Text="{Binding Job.Release.Game.Title}" FontWeight="Bold"/>
                     <Run Text=" – "/>
-                    <Run x:Name="ReleaseName" Text="Castle Crusher Edition"/>
-                    <Run x:Name="ReleaseVersion" Text="1.0"/>
+                    <Run Text="{Binding Job.Release.Name}"/>
+                    <Run Text="{Binding Job.Version.Name}"/>
                 </TextBlock.Inlines>
             </TextBlock>
             <Label Padding="0">
-                <TextBlock x:Name="FileName" Text="Castle Crusher Edition 1.2" TextTrimming="CharacterEllipsis" />
+                <TextBlock Text="{Binding Job.Filename}" TextTrimming="CharacterEllipsis" />
             </Label>
         </StackPanel>
 
         <!-- right side stats -->
         <StackPanel Grid.Column="2" Grid.Row="0" Orientation="Vertical">
-            <Label Padding="0" x:Name="DownloadSpeed" HorizontalAlignment="Right" Content="1.43 MB/s" />
+            <Label Content="{Binding Job.DownloadSpeedFormatted}" Padding="0" HorizontalAlignment="Right" />
             <TextBlock Style="{StaticResource Label}" HorizontalAlignment="Right">
                 <TextBlock.Inlines>
-                    <Run x:Name="DownloadSize" Text="8.9 MB" />
-                    <Run x:Name="DownloadPercent" Text="9%" FontWeight="Bold" Foreground="{StaticResource PrimaryColorBrush}"/>
+                    <Run Text="{Binding Job.DownloadSizeFormatted}" />
+                    <Run Text="{Binding Job.DownloadPercentFormatted}" FontWeight="Bold" Foreground="{StaticResource PrimaryColorBrush}"/>
                 </TextBlock.Inlines>
             </TextBlock>
         </StackPanel>
 
         <!-- progress bar -->
-        <ProgressBar x:Name="ProgressBar" Style="{StaticResource BlehProgressBar}" Grid.ColumnSpan="4" Grid.Row="1" Grid.Column="0" Margin="0,15,0,10" IsIndeterminate="False" Value="10"/>
+        <ProgressBar Value="{Binding Job.DownloadPercent}" Style="{StaticResource BlehProgressBar}" Grid.ColumnSpan="3" Grid.Row="1" Grid.Column="0" Margin="0,15,0,10" IsIndeterminate="False"/>
 
         <!-- success message -->
         <StackPanel x:Name="StatusSuccess"  Grid.ColumnSpan="3" Grid.Row="2" Grid.Column="0" Orientation="Horizontal" Background="{StaticResource DarkGreenBrush}" Margin="-7,0,0,0">

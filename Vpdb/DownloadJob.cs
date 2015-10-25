@@ -21,18 +21,20 @@ namespace VpdbAgent.Vpdb
 {
 	public class DownloadJob : ReactiveObject
 	{
-		public readonly Uri Uri;
-		public readonly string Filename;
-		public readonly WebClient Client;
-		public readonly Release Release;
-		public readonly File File;
-		public readonly Version Version;
+		// props	
+		public Release Release { get; }
+		public Version Version { get; }
+		public File File { get; }
+		public string Filename { get; } = "Super Duper Table_FS VP99 YesIamTheAuthor-DOF Nightmod v1.22.vpt";
 
 		public string DownloadSizeFormatted { get { return _downloadSizeFormatted; } set { this.RaiseAndSetIfChanged(ref _downloadSizeFormatted, value); } }
 		public string DownloadPercentFormatted { get { return _downloadPercentFormatted; } set { this.RaiseAndSetIfChanged(ref _downloadPercentFormatted, value); } }
 		public string DownloadSpeedFormatted { get { return _downloadSpeedFormatted; } set { this.RaiseAndSetIfChanged(ref _downloadSpeedFormatted, value); } }
 		public double DownloadPercent { get { return _downloadPercent; } set { this.RaiseAndSetIfChanged(ref _downloadPercent, value); } }
 		public JobStatus Status { get { return _status; } set { this.RaiseAndSetIfChanged(ref _status, value); } }
+
+		public readonly Uri Uri;
+		public readonly WebClient Client;
 
 		public IObservable<DownloadProgressChangedEventArgs> WhenDownloadProgresses => _progress;
 
@@ -44,6 +46,11 @@ namespace VpdbAgent.Vpdb
 		private readonly Subject<DownloadProgressChangedEventArgs> _progress = new Subject<DownloadProgressChangedEventArgs>();
 
 		private static readonly Logger Logger = Locator.CurrentMutable.GetService<Logger>();
+
+		public DownloadJob()
+		{
+			
+		}
 
 		public DownloadJob(Release release, File file, IVpdbClient client)
 		{

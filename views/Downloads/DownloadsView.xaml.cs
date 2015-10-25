@@ -27,7 +27,7 @@ namespace VpdbAgent.Views.Downloads
 			InitializeComponent();
 
 			this.WhenActivated(d => {
-				d(this.OneWayBind(ViewModel, vm => vm.Jobs, v => v.Downloads.ItemsSource));
+				d(this.OneWayBind(ViewModel, vm => vm.Jobs, v => v.DownloadList.ItemsSource));
 			});
 		}
 

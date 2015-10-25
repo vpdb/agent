@@ -1,9 +1,16 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:local="clr-namespace:VpdbAgent"
-                    xmlns:controls="http://metro.mahapps.com/winfx/xaml/controls">
+                    xmlns:controls="http://metro.mahapps.com/winfx/xaml/controls"
+                    xmlns:dc="clr-namespace:Devart.Controls"
+                    xmlns:vmgame="clr-namespace:VpdbAgent.ViewModels.Games"
+                    xmlns:vgame="clr-namespace:VpdbAgent.Views.Games"
+                    xmlns:vmdl="clr-namespace:VpdbAgent.ViewModels.Downloads"
+                    xmlns:vdl="clr-namespace:VpdbAgent.Views.Downloads">
 
     <!--FontFamily x:Key="Black">/Resources/Fonts/#Montserrat Black</-->
+
+    <Style TargetType="{x:Type ScrollBar}" BasedOn="{StaticResource VpdbScrollBar}"/>
 
     <Style TargetType="{x:Type Label}">
         <Setter Property="FontSize" Value="18" />
@@ -159,7 +166,7 @@
             </Setter.Value>
         </Setter>
     </Style>
-
+    
     <!-- TOGGLE BUTTON -->
     <Style TargetType="{x:Type ToggleButton}">
         <Setter Property="Foreground" Value="{StaticResource PrimaryColorBrush}" />
@@ -222,6 +229,31 @@
         </Setter>
     </Style>
 
-    <Style TargetType="{x:Type ScrollBar}" BasedOn="{StaticResource VpdbScrollBar}"/>
+    <!-- SMOOTH PANEL ITEMSCONTROL -->
+    <Style x:Key="SmoothPanel" TargetType="{x:Type ItemsControl}">
+        <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
+        <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate>
+                    <ScrollViewer KeyboardNavigation.IsTabStop="True" CanContentScroll="True">
+                        <ItemsPresenter />
+                    </ScrollViewer>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="ItemsPanel">
+            <Setter.Value>
+                <ItemsPanelTemplate>
+                    <dc:SmoothPanel Background="{StaticResource WhiterBrush}">
+                        <dc:SmoothPanel.Templates>
+                            <dc:SmoothPanelTemplate ViewModel="{x:Type vmgame:GameItemViewModel}" View="{x:Type vgame:GameItemView}" />
+                            <dc:SmoothPanelTemplate ViewModel="{x:Type vmdl:DownloadItemViewModel}" View="{x:Type vdl:DownloadItemView}" />
+                        </dc:SmoothPanel.Templates>
+                    </dc:SmoothPanel>
+                </ItemsPanelTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
 
 </ResourceDictionary>
