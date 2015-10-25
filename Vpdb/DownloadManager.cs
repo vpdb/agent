@@ -115,7 +115,7 @@ namespace VpdbAgent.Vpdb
 		private void AddToCurrentJobs(DownloadJob job)
 		{
 			// update jobs back on main thread
-			Application.Current.Dispatcher.Invoke(delegate {
+			System.Windows.Application.Current.Dispatcher.Invoke(delegate {
 				CurrentJobs.Add(job);
 				CurrentJobs.Add(job);
 			});

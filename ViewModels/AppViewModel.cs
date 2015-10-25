@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ReactiveUI;
 using Splat;
+using VpdbAgent.Application;
 using VpdbAgent.Common.TypeConverters;
 using VpdbAgent.PinballX;
 using VpdbAgent.ViewModels.Downloads;
@@ -78,11 +79,16 @@ namespace VpdbAgent.ViewModels
 
 
 			// services
-			locator.RegisterLazySingleton(() => NLog.LogManager.GetCurrentClassLogger(), typeof(NLog.Logger));
+			locator.RegisterLazySingleton(NLog.LogManager.GetCurrentClassLogger, typeof(NLog.Logger));
 			locator.RegisterLazySingleton(() => new SettingsManager(), typeof(ISettingsManager));
 			locator.RegisterLazySingleton(() => new FileSystemWatcher(
 				locator.GetService<NLog.Logger>()
 			), typeof(IFileSystemWatcher));
+
+			locator.RegisterLazySingleton(() => new DatabaseManager(
+				locator.GetService<ISettingsManager>(),
+				locator.GetService<NLog.Logger>()
+			), typeof(IDatabaseManager));
 
 			locator.RegisterLazySingleton(() => new MenuManager(
 				locator.GetService<IFileSystemWatcher>(),
@@ -105,6 +111,7 @@ namespace VpdbAgent.ViewModels
 				locator.GetService<IVpdbClient>(),
 				locator.GetService<ISettingsManager>(),
 				locator.GetService<IDownloadManager>(),
+				locator.GetService<IDatabaseManager>(),
 				locator.GetService<NLog.Logger>()
 			), typeof(IGameManager));
 

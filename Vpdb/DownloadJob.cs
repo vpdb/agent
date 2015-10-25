@@ -67,7 +67,7 @@ namespace VpdbAgent.Vpdb
 				.Sample(TimeSpan.FromMilliseconds(300))
 				.Subscribe(progress => {
 					// on main thread
-					Application.Current.Dispatcher.Invoke(delegate {
+					System.Windows.Application.Current.Dispatcher.Invoke(delegate {
 						DownloadPercent = (double)progress.BytesReceived / File.Reference.Bytes * 100;
 						DownloadPercentFormatted = $"{Math.Round(DownloadPercent)}%";
 					});
@@ -80,7 +80,7 @@ namespace VpdbAgent.Vpdb
 				.Sample(TimeSpan.FromMilliseconds(1500))
 				.Subscribe(progress => {
 					// on main thread
-					Application.Current.Dispatcher.Invoke(delegate {
+					System.Windows.Application.Current.Dispatcher.Invoke(delegate {
 						var timespan = DateTime.Now - lastUpdatedProgress;
 						var bytespan = progress.BytesReceived - bytesReceived;
 						var downloadSpeed = bytespan / timespan.Seconds;
@@ -97,7 +97,7 @@ namespace VpdbAgent.Vpdb
 				.Take(1)
 				.Subscribe(progress => {
 					// on main thread
-					Application.Current.Dispatcher.Invoke(delegate {
+					System.Windows.Application.Current.Dispatcher.Invoke(delegate {
 						DownloadSizeFormatted = (progress.TotalBytesToReceive > 0 ? progress.TotalBytesToReceive : File.Reference.Bytes).Bytes().ToString("#.#");
 					});
 				});
@@ -106,7 +106,7 @@ namespace VpdbAgent.Vpdb
 		public void OnSuccess()
 		{
 			// on main thread
-			Application.Current.Dispatcher.Invoke(delegate {
+			System.Windows.Application.Current.Dispatcher.Invoke(delegate {
 				Status = JobStatus.Completed;
 			});
 			Client.DownloadProgressChanged -= ProgressChanged;
@@ -114,7 +114,7 @@ namespace VpdbAgent.Vpdb
 
 		public void OnFailure(Exception e)
 		{
-			Application.Current.Dispatcher.Invoke(delegate {
+			System.Windows.Application.Current.Dispatcher.Invoke(delegate {
 				Status = JobStatus.Failed;
 			});
 			Client.DownloadProgressChanged -= ProgressChanged;

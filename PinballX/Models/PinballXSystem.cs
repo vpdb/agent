@@ -3,6 +3,7 @@ using System;
 using ReactiveUI;
 using VpdbAgent.Models;
 using Splat;
+using VpdbAgent.Application;
 
 namespace VpdbAgent.PinballX.Models
 {

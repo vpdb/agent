@@ -11,6 +11,7 @@ using VpdbAgent.PinballX.Models;
 using System.Reactive.Linq;
 using System.Reactive.Concurrency;
 using System.Windows;
+using VpdbAgent.Application;
 
 namespace VpdbAgent.PinballX
 {
@@ -106,7 +107,7 @@ namespace VpdbAgent.PinballX
 			var systems = ParseSystems(iniPath);
 
 			// treat result back on main thread
-			Application.Current.Dispatcher.Invoke(delegate
+			System.Windows.Application.Current.Dispatcher.Invoke(delegate
 			{
 				using (Systems.SuppressChangeNotifications()) {
 					// todo make this more intelligent by diff'ing and changing instead of drop-and-create

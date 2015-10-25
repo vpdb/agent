@@ -1,18 +1,11 @@
-﻿using NLog;
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using NLog;
 
-namespace VpdbAgent
+namespace VpdbAgent.Application
 {
 	public class SettingsManager : ISettingsManager
 	{
-
-		private static readonly Logger logger = LogManager.GetCurrentClassLogger();
-
 		public string ApiKey { get; set; }
 		public string AuthUser { get; set; }
 		public string AuthPass { get; set; }
@@ -35,7 +28,7 @@ namespace VpdbAgent
 
 		public Dictionary<string, string> Validate()
 		{
-			Dictionary<string, string> errors = new Dictionary<string, string>();
+			var errors = new Dictionary<string, string>();
 			if (!Directory.Exists(PbxFolder) || !Directory.Exists(PbxFolder + @"\Config")) {
 				errors.Add("PbxFolder", "Folder \"" + PbxFolder + "\" is not a valid PinballX folder.");
 			}

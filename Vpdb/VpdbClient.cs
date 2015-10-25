@@ -11,6 +11,7 @@ using System.Reactive.Subjects;
 using System.Text;
 using VpdbAgent.Vpdb.Network;
 using PusherClient;
+using VpdbAgent.Application;
 using VpdbAgent.Vpdb.Models;
 
 namespace VpdbAgent.Vpdb

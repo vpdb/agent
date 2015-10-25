@@ -2,6 +2,7 @@
 using System.Windows.Forms;
 using NLog;
 using ReactiveUI;
+using VpdbAgent.Application;
 
 namespace VpdbAgent.ViewModels.Settings
 {

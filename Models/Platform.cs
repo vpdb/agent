@@ -119,7 +119,7 @@ namespace VpdbAgent.Models
 		private void UpdateGames(PinballXSystem system, GlobalDatabase db)
 		{
 			_database.Games = MergeGames(system, db);
-			Application.Current.Dispatcher.Invoke(delegate {
+			System.Windows.Application.Current.Dispatcher.Invoke(delegate {
 				using (Games.SuppressChangeNotifications()) {
 					// todo make this more intelligent by diff'ing and changing instead of drop-and-create
 					Games.Clear();

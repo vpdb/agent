@@ -2,6 +2,7 @@
 using System.Windows.Input;
 using ReactiveUI;
 using Splat;
+using VpdbAgent.Application;
 using VpdbAgent.Vpdb.Models;
 using Game = VpdbAgent.Models.Game;
 

@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ReactiveUI;
 using Splat;
+using VpdbAgent.Application;
 using VpdbAgent.ViewModels.Downloads;
 using VpdbAgent.ViewModels.Games;
 using VpdbAgent.Vpdb;

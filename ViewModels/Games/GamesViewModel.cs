@@ -4,6 +4,7 @@ using System.Linq;
 using System.Windows.Controls;
 using NLog;
 using ReactiveUI;
+using VpdbAgent.Application;
 using VpdbAgent.Models;
 using VpdbAgent.Vpdb;
 
