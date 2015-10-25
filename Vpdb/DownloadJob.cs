@@ -62,7 +62,7 @@ namespace VpdbAgent.Vpdb
 					// on main thread
 					Application.Current.Dispatcher.Invoke(delegate
 					{
-						DownloadPercent = progress.ProgressPercentage;
+						DownloadPercent = (double)progress.BytesReceived / File.Reference.Bytes * 100;
 						DownloadPercentFormatted = $"{Math.Round(DownloadPercent)}%";
 					});
 				});
@@ -93,7 +93,7 @@ namespace VpdbAgent.Vpdb
 				.Subscribe(progress => {
 					// on main thread
 					Application.Current.Dispatcher.Invoke(delegate {
-						DownloadSizeFormatted = BytesToString(progress.TotalBytesToReceive);
+						DownloadSizeFormatted = BytesToString(progress.TotalBytesToReceive > 0 ? progress.TotalBytesToReceive : File.Reference.Bytes);
 					});
 				});
 		}
@@ -108,9 +108,9 @@ namespace VpdbAgent.Vpdb
 			_progress.OnNext(p);
 		}
 
-		static string BytesToString(long byteCount)
+		private static string BytesToString(long byteCount)
 		{
-			string[] suf = { "B", "KB", "MB", "GB", "TB", "PB", "EB" }; //Longs run out around EB
+			string[] suf = { "B", "KB", "MB", "GB", "TB", "PB", "EB" }; // Longs run out around EB
 			if (byteCount == 0) { 
 				return "0 " + suf[0];
 			}
