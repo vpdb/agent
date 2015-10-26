@@ -48,6 +48,7 @@ namespace VpdbAgent.ViewModels.Downloads
 			// update progress every 300ms
 			Job.WhenDownloadProgresses
 				.Sample(TimeSpan.FromMilliseconds(300))
+				.Where(x => !job.IsFinished)
 				.Subscribe(progress => {
 					// on main thread
 					System.Windows.Application.Current.Dispatcher.Invoke(delegate {
@@ -61,6 +62,7 @@ namespace VpdbAgent.ViewModels.Downloads
 			long bytesReceived = 0;
 			Job.WhenDownloadProgresses
 				.Sample(TimeSpan.FromMilliseconds(1500))
+				.Where(x => !job.IsFinished)
 				.Subscribe(progress => {
 					// on main thread
 					System.Windows.Application.Current.Dispatcher.Invoke(delegate {
@@ -143,6 +145,7 @@ namespace VpdbAgent.ViewModels.Downloads
 			DownloadPercentFormatted = null;
 			DownloadSpeedFormatted = null;
 			DownloadSizeFormatted = null;
+			Job.RaisePropertyChanged();
 		}
 
 	}

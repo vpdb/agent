@@ -28,7 +28,7 @@ namespace VpdbAgent.Vpdb
 	/// Jobs are saved in the global database. In the future, the user might be
 	/// able to clean up finished jobs, but currently they are kept indefinitely.
 	/// </summary>
-	public class DownloadJob : ReactiveObject
+	public class DownloadJob : ReactiveObject, IComparable<DownloadJob>
 	{
 		// persisted properties
 		[DataMember]
@@ -51,7 +51,8 @@ namespace VpdbAgent.Vpdb
 					Version = _release.Versions.FirstOrDefault(version => version.Files.Contains(_file));
 				}
 		} }
-		[DataMember] [JsonConverter(typeof(StringEnumConverter))] 
+
+		[DataMember] [JsonConverter(typeof(StringEnumConverter))]
 		public JobStatus Status { get; private set; } = JobStatus.Queued;
 		[DataMember] public DateTime QueuedAt { get; } = DateTime.Now;
 		[DataMember] public DateTime StartedAt { get; private set; }
@@ -66,18 +67,19 @@ namespace VpdbAgent.Vpdb
 		// convenience props
 		public string Filename { get; private set; }
 		public Version Version { get; private set; }
+		public bool IsFinished => Status != JobStatus.Transferring && Status != JobStatus.Queued;
 		public TimeSpan DownloadTime => FinishedAt - StartedAt;
 		public double DownloadBytesPerSecond => 1000d * TransferredBytes / DownloadTime.TotalMilliseconds;
 
 		// streams
-		public IObservable<JobStatus> WhenStatusChanges => _status;
-		public IObservable<DownloadProgressChangedEventArgs> WhenDownloadProgresses => _progress;
+		public IObservable<JobStatus> WhenStatusChanges => _whenStatusChanges;
+		public IObservable<DownloadProgressChangedEventArgs> WhenDownloadProgresses => _whenDownloadProgresses;
 
 		// fields
 		private File _file;
 		private Release _release;
-		private readonly Subject<JobStatus> _status = new Subject<JobStatus>();
-		private readonly Subject<DownloadProgressChangedEventArgs> _progress = new Subject<DownloadProgressChangedEventArgs>();
+		private readonly Subject<JobStatus> _whenStatusChanges = new Subject<JobStatus>();
+		private readonly Subject<DownloadProgressChangedEventArgs> _whenDownloadProgresses = new Subject<DownloadProgressChangedEventArgs>();
 
 		// dependencies
 		private static readonly IVpdbClient VpdbClient = Locator.CurrentMutable.GetService<IVpdbClient>();
@@ -88,7 +90,7 @@ namespace VpdbAgent.Vpdb
 		/// </summary>
 		public DownloadJob()
 		{
-			_status.Subscribe(status => {
+			_whenStatusChanges.Subscribe(status => {
 				Status = status;
 			});
 			Client = VpdbClient.GetWebClient();
@@ -116,8 +118,12 @@ namespace VpdbAgent.Vpdb
 			}
 
 			StartedAt = DateTime.Now;
-			_status.OnNext(JobStatus.Transferring);
 			Client.DownloadProgressChanged += OnProgressChanged;
+
+			// on main thread
+			System.Windows.Application.Current.Dispatcher.Invoke(delegate {
+				_whenStatusChanges.OnNext(JobStatus.Transferring);
+			});
 
 			// update transfer size
 			WhenDownloadProgresses
@@ -129,6 +135,7 @@ namespace VpdbAgent.Vpdb
 					//});
 				});
 		}
+
 
 		/// <summary>
 		/// Transfer has finished (succeeded or failed)
@@ -146,7 +153,7 @@ namespace VpdbAgent.Vpdb
 			// on main thread
 			System.Windows.Application.Current.Dispatcher.Invoke(delegate {
 				OnFinished();
-				_status.OnNext(JobStatus.Completed);
+				_whenStatusChanges.OnNext(JobStatus.Completed);
 			});
 			Client.DownloadProgressChanged -= OnProgressChanged;
 		}
@@ -161,7 +168,7 @@ namespace VpdbAgent.Vpdb
 			{
 				ErrorMessage = e.Message;
 				OnFinished();
-				_status.OnNext(JobStatus.Failed);
+				_whenStatusChanges.OnNext(JobStatus.Failed);
 			});
 			Client.DownloadProgressChanged -= OnProgressChanged;
 		}
@@ -171,8 +178,30 @@ namespace VpdbAgent.Vpdb
 		/// </summary>
 		private void OnProgressChanged(object sender, DownloadProgressChangedEventArgs p)
 		{
-			_progress.OnNext(p);
+			_whenDownloadProgresses.OnNext(p);
 		}
+
+		/// <summary>
+		/// Sorts first by status, then by queued at.
+		/// </summary>
+		/// <param name="other"></param>
+		/// <returns></returns>
+		public int CompareTo(DownloadJob other)
+		{
+			var byStatus = Array.IndexOf(StatusOrder, this.Status) - Array.IndexOf(StatusOrder, other.Status);
+			return byStatus != 0 ? byStatus : ((other.QueuedAt - QueuedAt).TotalMilliseconds > 0 ? 1 : -1);
+		}
+
+		/// <summary>
+		/// Defines the order in which statuses are sorted by.
+		/// </summary>
+		private static readonly JobStatus[] StatusOrder = {
+			JobStatus.Transferring,
+			JobStatus.Failed,
+			JobStatus.Aborted,
+			JobStatus.Queued,
+			JobStatus.Completed
+		};
 
 		/// <summary>
 		/// Statuses of a download job
@@ -204,5 +233,6 @@ namespace VpdbAgent.Vpdb
 			/// </summary>
 			Aborted
 		}
+
 	}
 }

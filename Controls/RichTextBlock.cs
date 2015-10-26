@@ -25,6 +25,7 @@ namespace VpdbAgent.Controls
 		{
 			if (sender != null && e.NewValue != null) {
 				var textBlock = (RichTextBlock)sender;
+				textBlock.Inlines.Clear();
 				textBlock.Inlines.AddRange((ObservableCollection<Inline>)e.NewValue);
 			}
 		}

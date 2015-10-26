@@ -57,10 +57,10 @@ namespace VpdbAgent.Controls
 		{
 			// reset image
 			Source = null;
+			var urlSource = UrlSource;
 
 			// if not set, ignore
-			if (string.IsNullOrEmpty(UrlSource)) {
-				Logger.Warn("Ignoring null-image.");
+			if (string.IsNullOrEmpty(urlSource)) {
 				return;
 			}
 
@@ -70,8 +70,8 @@ namespace VpdbAgent.Controls
 			}
 
 			// if cached, set from cache
-			if (IsCached(UrlSource)) {
-				Source = new BitmapImage(new Uri(GetLocalPath(UrlSource)));
+			if (IsCached(urlSource)) {
+				Source = new BitmapImage(new Uri(GetLocalPath(urlSource)));
 				return;
 			}
 
@@ -79,7 +79,7 @@ namespace VpdbAgent.Controls
 			Opacity = 0;
 
 			// download
-			var webRequest = VpdbClient.GetWebRequest(UrlSource);
+			var webRequest = VpdbClient.GetWebRequest(urlSource);
 			webRequest.BeginGetResponse(ar =>
 			{
 				try {
@@ -98,7 +98,7 @@ namespace VpdbAgent.Controls
 						image.EndInit();
 						image.Freeze();
 						Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(delegate {
-							Cache(UrlSource, buffer);
+							Cache(urlSource, buffer);
 							var da = new DoubleAnimation {
 								From = 0,
 								To = 1,

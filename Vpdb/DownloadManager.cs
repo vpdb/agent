@@ -25,6 +25,7 @@ namespace VpdbAgent.Vpdb
 	{
 		IDownloadManager DownloadRelease(string id);
 		ReactiveList<DownloadJob> CurrentJobs { get; }
+		IObservable<DownloadJob.JobStatus> StatusChanged { get; }
 	}
 
 	public class DownloadManager : IDownloadManager
@@ -39,9 +40,11 @@ namespace VpdbAgent.Vpdb
 
 		// props
 		public ReactiveList<DownloadJob> CurrentJobs { get; }
+		public IObservable<DownloadJob.JobStatus> StatusChanged => _statusChanged;
 
 		// members
 		private readonly Subject<DownloadJob> _jobs = new Subject<DownloadJob>();
+		private readonly Subject<DownloadJob.JobStatus> _statusChanged = new Subject<DownloadJob.JobStatus>();
 		private readonly IDisposable _queue;
 		private readonly string _downloadPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "VpdbAgent", "Download");
 
@@ -104,6 +107,11 @@ namespace VpdbAgent.Vpdb
 			return this;
 		}
 
+		public void CancelAll()
+		{
+			_queue.Dispose();
+		}
+
 		private async Task<DownloadJob> ProcessDownload(DownloadJob job, CancellationToken token)
 		{
 			var dest = Path.Combine(_downloadPath, job.Filename);
@@ -137,6 +145,8 @@ namespace VpdbAgent.Vpdb
 		{
 			// update jobs back on main thread
 			System.Windows.Application.Current.Dispatcher.Invoke(delegate {
+				
+				job.WhenStatusChanges.Subscribe(status => _statusChanged.OnNext(status));
 				_databaseManager.Database.DownloadJobs.Add(job);
 				_databaseManager.Save();
 			});
