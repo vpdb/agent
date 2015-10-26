@@ -14,6 +14,7 @@
     <Color x:Key="WhiteColor">#ff282828</Color>
     <Color x:Key="WhiterColor">#ff181818</Color>
     <Color x:Key="Green">#007F0E</Color>
+    <Color x:Key="Orange">#997132</Color>
 
     <SolidColorBrush x:Key="PrimaryColorBrush" Color="{StaticResource PrimaryColor}" options:Freeze="True" />
     <SolidColorBrush x:Key="PrimaryColor85Brush" Color="{StaticResource PrimaryColor85}" options:Freeze="True" />
@@ -26,6 +27,8 @@
     <SolidColorBrush x:Key="ScrollbarHoverBrush" Color="#60ffffff" options:Freeze="True" />
     <SolidColorBrush x:Key="DarkBackgroundBrush" Color="Black" Opacity="0.35" options:Freeze="True" />
     <SolidColorBrush x:Key="DarkGreenBrush" Color="{StaticResource Green}" Opacity="0.3" options:Freeze="True" />
+    <SolidColorBrush x:Key="DarkRedBrush" Color="DarkRed" Opacity="0.3" options:Freeze="True" />
+    <SolidColorBrush x:Key="DarkOrangeBrush" Color="{StaticResource Orange}" Opacity="0.3" options:Freeze="True" />
 
     <SolidColorBrush x:Key="DarkBrush" Color="#40ffffff" options:Freeze="True" />
     <SolidColorBrush x:Key="LightBrush" Color="#80ffffff" options:Freeze="True" />

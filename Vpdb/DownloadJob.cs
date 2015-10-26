@@ -9,7 +9,9 @@ using System.Reactive.Subjects;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Media;
 using Humanizer;
+using Humanizer.Localisation;
 using NLog;
 using ReactiveUI;
 using Splat;
@@ -25,34 +27,40 @@ namespace VpdbAgent.Vpdb
 		public Release Release { get; }
 		public Version Version { get; }
 		public File File { get; }
-		public string Filename { get; } = "Super Duper Table_FS VP99 YesIamTheAuthor-DOF Nightmod v1.22.vpt";
+		public string Filename { get; }
+		public JobStatus Status { get; private set; }
 
 		public string DownloadSizeFormatted { get { return _downloadSizeFormatted; } set { this.RaiseAndSetIfChanged(ref _downloadSizeFormatted, value); } }
 		public string DownloadPercentFormatted { get { return _downloadPercentFormatted; } set { this.RaiseAndSetIfChanged(ref _downloadPercentFormatted, value); } }
 		public string DownloadSpeedFormatted { get { return _downloadSpeedFormatted; } set { this.RaiseAndSetIfChanged(ref _downloadSpeedFormatted, value); } }
 		public double DownloadPercent { get { return _downloadPercent; } set { this.RaiseAndSetIfChanged(ref _downloadPercent, value); } }
-		public JobStatus Status { get { return _status; } set { this.RaiseAndSetIfChanged(ref _status, value); } }
+
+		private static readonly Brush GreenBrush = (Brush)System.Windows.Application.Current.FindResource("DarkGreenBrush");
+		private static readonly Brush RedBrush = (Brush)System.Windows.Application.Current.FindResource("DarkRedBrush");
 
 		public readonly Uri Uri;
 		public readonly WebClient Client;
 
+		public IObservable<JobStatus> WhenStatusChanges => _status;
 		public IObservable<DownloadProgressChangedEventArgs> WhenDownloadProgresses => _progress;
 
 		private string _downloadSizeFormatted;
 		private string _downloadPercentFormatted;
 		private string _downloadSpeedFormatted;
 		private double _downloadPercent;
-		private JobStatus _status = JobStatus.Queued;
+		private readonly Subject<JobStatus> _status = new Subject<JobStatus>();
 		private readonly Subject<DownloadProgressChangedEventArgs> _progress = new Subject<DownloadProgressChangedEventArgs>();
 
 		private static readonly Logger Logger = Locator.CurrentMutable.GetService<Logger>();
 
 		public DownloadJob()
 		{
-			
+			_status.Subscribe(status => {
+				Status = status;
+			});
 		}
 
-		public DownloadJob(Release release, File file, IVpdbClient client)
+		public DownloadJob(Release release, File file, IVpdbClient client) : this()
 		{
 			Uri = client.GetUri(file.Reference.Url);
 			Client = client.GetWebClient();
@@ -66,8 +74,8 @@ namespace VpdbAgent.Vpdb
 
 		public void OnStart()
 		{
-			Status = JobStatus.Transferring;
-			Client.DownloadProgressChanged += ProgressChanged;
+			_status.OnNext(JobStatus.Transferring);
+			Client.DownloadProgressChanged += OnProgressChanged;
 
 			// update progress every 300ms
 			WhenDownloadProgresses
@@ -114,20 +122,20 @@ namespace VpdbAgent.Vpdb
 		{
 			// on main thread
 			System.Windows.Application.Current.Dispatcher.Invoke(delegate {
-				Status = JobStatus.Completed;
+				_status.OnNext(JobStatus.Completed);
 			});
-			Client.DownloadProgressChanged -= ProgressChanged;
+			Client.DownloadProgressChanged -= OnProgressChanged;
 		}
 
 		public void OnFailure(Exception e)
 		{
 			System.Windows.Application.Current.Dispatcher.Invoke(delegate {
-				Status = JobStatus.Failed;
+				_status.OnNext(JobStatus.Failed);
 			});
-			Client.DownloadProgressChanged -= ProgressChanged;
+			Client.DownloadProgressChanged -= OnProgressChanged;
 		}
 
-		private void ProgressChanged(object sender, DownloadProgressChangedEventArgs p)
+		private void OnProgressChanged(object sender, DownloadProgressChangedEventArgs p)
 		{
 			_progress.OnNext(p);
 		}

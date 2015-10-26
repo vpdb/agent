@@ -52,14 +52,23 @@
         </StackPanel>
 
         <!-- progress bar -->
-        <ProgressBar Value="{Binding Job.DownloadPercent}" Style="{StaticResource BlehProgressBar}" Grid.ColumnSpan="3" Grid.Row="1" Grid.Column="0" Margin="0,15,0,10" IsIndeterminate="False"/>
+        <ProgressBar Value="{Binding Job.DownloadPercent}" Style="{StaticResource BlehProgressBar}" 
+                Grid.ColumnSpan="3" Grid.Row="1" Grid.Column="0" Margin="0,15,0,10" IsIndeterminate="False"/>
 
         <!-- success message -->
-        <StackPanel x:Name="StatusSuccess"  Grid.ColumnSpan="3" Grid.Row="2" Grid.Column="0" Orientation="Horizontal" Background="{StaticResource DarkGreenBrush}" Margin="-7,0,0,0">
-            <c:IconControl Margin="60,0,5,0" Height="18" Width="18" Foreground="{StaticResource LabelTextBrush}" Data="{StaticResource IconStar}" />
-			<Label Content="Successfully downloaded 5min ago."/>
+        <StackPanel x:Name="StatusSuccess" Background="{Binding StatusPanelBackground}" Visibility="{Binding StatusPanelVisible}"
+                Grid.ColumnSpan="3" Grid.Row="1" Grid.Column="0" Margin="0,0,0,0" Orientation="Horizontal" >
+            <c:IconControl Margin="60,0,13,0" Height="18" Width="18" Foreground="{StaticResource LabelTextBrush}" Data="{StaticResource IconCheckCircle}" />
+            <TextBlock Style="{StaticResource Label}" Margin="0,5,0,0">
+                <TextBlock.Inlines>
+                    <Run Text="Successfully downloaded"/>
+                    <Run Text="74.3 MB" FontWeight="Bold"/>
+                    <Run Text="5 minutes ago"/>
+                    <Run Text="at"/>
+                    <Run Text="6.4 MB/s" FontWeight="Bold"/>
+                </TextBlock.Inlines>
+            </TextBlock>
         </StackPanel>
-
 
         <Separator Grid.ColumnSpan="3" Grid.Row="2" Grid.Column="0" Margin="0,5,0,5"/>
 
