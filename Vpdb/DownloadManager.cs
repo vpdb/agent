@@ -115,7 +115,6 @@ namespace VpdbAgent.Vpdb
 
 			// update statuses
 			job.OnStart();
-			
 
 			// do the grunt work
 			try {

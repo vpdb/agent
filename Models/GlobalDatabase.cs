@@ -32,6 +32,11 @@ namespace VpdbAgent.Models
 		/// </summary>
 		public ReactiveList<DownloadJob> DownloadJobs = new ReactiveList<DownloadJob>();
 
+		public GlobalDatabase()
+		{
+			DownloadJobs.Changed.Subscribe(_ => { _downloadJobs = DownloadJobs.ToList(); });
+		}
+
 		public GlobalDatabase Update(GlobalDatabase db)
 		{
 			// ignore if null
@@ -43,7 +48,6 @@ namespace VpdbAgent.Models
 				DownloadJobs.RemoveRange(0, DownloadJobs.Count);
 				DownloadJobs.AddRange(db._downloadJobs);
 			}
-			DownloadJobs.Changed.Subscribe(_ => { _downloadJobs = DownloadJobs.ToList(); });
 			return this;
 		}
 

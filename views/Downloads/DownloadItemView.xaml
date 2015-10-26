@@ -5,10 +5,17 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:c="clr-namespace:VpdbAgent.Controls"
              xmlns:vm="clr-namespace:VpdbAgent.ViewModels.Downloads"
+			 xmlns:typeConverters="clr-namespace:VpdbAgent.Common.TypeConverters"
              mc:Ignorable="d" 
              d:DesignHeight="150"
              d:DesignWidth="900"
              d:DataContext="{d:DesignInstance Type=vm:DownloadItemViewModel}">
+
+    <UserControl.Resources>
+        <typeConverters:BooleanToVisibilityConverter x:Key="TrueToVisible" True="Visible" False="Collapsed" />
+        <typeConverters:BooleanToVisibilityConverter x:Key="TrueToCollapsed" True="Collapsed" False="Visible" />
+    </UserControl.Resources>
+
 
     <Grid Margin="10,10,20,0">
         <Grid.ColumnDefinitions>
@@ -35,9 +42,7 @@
                     <Run Text="{Binding Job.Version.Name}"/>
                 </TextBlock.Inlines>
             </TextBlock>
-            <Label Padding="0">
-                <TextBlock Text="{Binding Job.Filename}" TextTrimming="CharacterEllipsis" />
-            </Label>
+            <TextBlock Text="{Binding Job.Filename}" Style="{StaticResource Label}" TextTrimming="CharacterEllipsis" />
         </StackPanel>
 
         <!-- right side stats -->
@@ -53,13 +58,22 @@
 
         <!-- progress bar -->
         <ProgressBar Value="{Binding Job.DownloadPercent}" Style="{StaticResource BlehProgressBar}" 
+                Visibility="{Binding Path=StatusPanelVisible, Converter={StaticResource TrueToCollapsed}}"
                 Grid.ColumnSpan="3" Grid.Row="1" Grid.Column="0" Margin="0,15,0,10" IsIndeterminate="False"/>
 
-        <!-- success message -->
-        <StackPanel x:Name="StatusSuccess" Background="{Binding StatusPanelBackground}" Visibility="{Binding StatusPanelVisible}"
-                Grid.ColumnSpan="3" Grid.Row="1" Grid.Column="0" Margin="0,0,0,0" Orientation="Horizontal" >
-            <c:IconControl Margin="60,0,13,0" Height="18" Width="18" Foreground="{StaticResource LabelTextBrush}" Data="{StaticResource IconCheckCircle}" />
-            <TextBlock Style="{StaticResource Label}" Margin="0,5,0,0">
+        <!-- status message -->
+        <Grid x:Name="StatusSuccess" Background="{Binding Path=StatusPanelBackground, Mode=OneWay}" 
+                Visibility="{Binding Path=StatusPanelVisible, Converter={StaticResource TrueToVisible}}"
+                Grid.ColumnSpan="3" Grid.Row="1" Grid.Column="0" Margin="-10,10,-20,0" >
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="70" />
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <c:IconControl Margin="0,4,15,0" Height="18" Width="18" Grid.Column="0"
+                HorizontalAlignment="Right" VerticalAlignment="Top"
+                Foreground="{StaticResource LabelTextBrush}" Data="{StaticResource IconCheckCircle}" />
+            <TextBlock Style="{StaticResource Label}" Grid.Column="1" TextWrapping="Wrap" Margin="0,0,10,3">
                 <TextBlock.Inlines>
                     <Run Text="Successfully downloaded"/>
                     <Run Text="74.3 MB" FontWeight="Bold"/>
@@ -68,9 +82,14 @@
                     <Run Text="6.4 MB/s" FontWeight="Bold"/>
                 </TextBlock.Inlines>
             </TextBlock>
-        </StackPanel>
+        </Grid>
 
-        <Separator Grid.ColumnSpan="3" Grid.Row="2" Grid.Column="0" Margin="0,5,0,5"/>
+        <Separator 
+            Visibility="{Binding Path=StatusPanelVisible, Converter={StaticResource TrueToCollapsed}}"
+            Grid.ColumnSpan="3" Grid.Row="2" Grid.Column="0" Margin="0,5,0,5"/>
+        <Separator 
+            Visibility="{Binding Path=StatusPanelVisible, Converter={StaticResource TrueToVisible}}"
+            Grid.ColumnSpan="3" Grid.Row="2" Grid.Column="0" Margin="-10,0,-20,5"/>
 
     </Grid>
 </UserControl>
