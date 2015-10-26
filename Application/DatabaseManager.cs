@@ -11,11 +11,30 @@ using VpdbAgent.Vpdb.Network;
 
 namespace VpdbAgent.Application
 {
-
+	/// <summary>
+	/// Manages the global stuff we're saving to disk.
+	/// 
+	/// Currently, it's serialized as a .json file in PinballX's database root
+	/// folder. Might be switching it out for something more efficient.
+	/// </summary>
+	/// <see cref="GlobalDatabase"/>
 	public interface IDatabaseManager
 	{
+		/// <summary>
+		/// Retrieve the global database
+		/// </summary>
 		GlobalDatabase Database { get; }
+
+		/// <summary>
+		/// Read data, run when settings are initialized.
+		/// </summary>
+		/// <returns></returns>
 		IDatabaseManager Initialize();
+
+		/// <summary>
+		/// Saves data back to disk
+		/// </summary>
+		/// <returns></returns>
 		IDatabaseManager Save();
 	}
 
@@ -26,7 +45,7 @@ namespace VpdbAgent.Application
 		private readonly Logger _logger;
 
 		// props
-		public GlobalDatabase Database { get; private set; }
+		public GlobalDatabase Database { get; } = new GlobalDatabase();
 
 		private string _dbPath;
 
@@ -39,7 +58,7 @@ namespace VpdbAgent.Application
 		public IDatabaseManager Initialize()
 		{
 			_dbPath = Path.Combine(_settingsManager.PbxFolder, @"Databases\vpdb.json");
-			Database = UnmarshallDatabase();
+			Database.Update(UnmarshallDatabase());
 			_logger.Info("Global database with {0} release(s) loaded.", Database.Releases.Count);
 
 			return this;
@@ -61,7 +80,7 @@ namespace VpdbAgent.Application
 		{
 			if (!File.Exists(_dbPath)) {
 				_logger.Info("Creating new global database, {0} not found.", _dbPath);
-				return new GlobalDatabase();
+				return null;
 			}
 			try {
 				using (var sr = new StreamReader(_dbPath))
@@ -69,17 +88,17 @@ namespace VpdbAgent.Application
 					try {
 						var db = _serializer.Deserialize<GlobalDatabase>(reader);
 						reader.Close();
-						return db ?? new GlobalDatabase();
+						return db;
 					} catch (Exception e) {
 						_logger.Error(e, "Error parsing {0}, deleting and ignoring.", _dbPath);
 						reader.Close();
 						File.Delete(_dbPath);
-						return new GlobalDatabase();
+						return null;
 					}
 				}
 			} catch (Exception e) {
 				_logger.Error(e, "Error reading {0}, deleting and ignoring.", _dbPath);
-				return new GlobalDatabase();
+				return null;
 			}
 		}
 
@@ -105,8 +124,9 @@ namespace VpdbAgent.Application
 			}
 		}
 
-
-		// final
+		/// <summary>
+		/// JSON serialization rules
+		/// </summary>
 		private readonly JsonSerializer _serializer = new JsonSerializer {
 			NullValueHandling = NullValueHandling.Ignore,
 			ContractResolver = new SnakeCasePropertyNamesContractResolver(),

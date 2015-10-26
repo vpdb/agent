@@ -12,9 +12,15 @@ using System.Threading.Tasks;
 using System.Windows;
 using NLog;
 using ReactiveUI;
+using VpdbAgent.Application;
 
 namespace VpdbAgent.Vpdb
 {
+
+	/// <summary>
+	/// Manages a download queue supporting parallel processing of downloads
+	/// on multiple worker threads.
+	/// </summary>
 	public interface IDownloadManager
 	{
 		IDownloadManager DownloadRelease(string id);
@@ -23,30 +29,42 @@ namespace VpdbAgent.Vpdb
 
 	public class DownloadManager : IDownloadManager
 	{
+		// increase this on demand...
+		public static readonly int MaximalSimultaneousDownloads = 2;
+
 		// dependencies
 		private readonly IVpdbClient _vpdbClient;
+		private readonly IDatabaseManager _databaseManager;
 		private readonly Logger _logger;
 
 		// props
-		public ReactiveList<DownloadJob> CurrentJobs { get; } = new ReactiveList<DownloadJob>();
+		public ReactiveList<DownloadJob> CurrentJobs { get; }
 
 		// members
 		private readonly Subject<DownloadJob> _jobs = new Subject<DownloadJob>();
 		private readonly IDisposable _queue;
 		private readonly string _downloadPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "VpdbAgent", "Download");
 
-		public DownloadManager(IVpdbClient vpdbClient, Logger logger)
+		/// <summary>
+		/// Constructor sets up queue and creates download folder if non-existing.
+		/// </summary>
+		public DownloadManager(IVpdbClient vpdbClient, IDatabaseManager databaseManager, Logger logger)
 		{
+			CurrentJobs = databaseManager.Database.DownloadJobs;
+
 			_vpdbClient = vpdbClient;
+			_databaseManager = databaseManager;
 			_logger = logger;
 
 			_queue = _jobs
 				.ObserveOn(Scheduler.Default)
 				.Select(job => Observable.DeferAsync(async token => Observable.Return(await ProcessDownload(job, token))))
-				.Merge(3)
+				.Merge(MaximalSimultaneousDownloads)
 				.Subscribe(job => {
+					_databaseManager.Save();
 					Console.WriteLine("Job {0} completed.", job);
 				}, error => {
+					_databaseManager.Save();
 					Console.WriteLine("Error: {0}", error);
 				});
 
@@ -75,7 +93,9 @@ namespace VpdbAgent.Vpdb
 					}
 
 					// queue for download
-					_jobs.OnNext(new DownloadJob(release, file, _vpdbClient));
+					var job = new DownloadJob(release, file);
+					AddToCurrentJobs(job);
+					_jobs.OnNext(job);
 
 				}, error => {
 					_logger.Error(error, "Error retrieving release data.");
@@ -90,15 +110,17 @@ namespace VpdbAgent.Vpdb
 
 			_logger.Info("Starting downloading of {0} to {1}", job.Uri, dest);
 
-			job.OnStart();
-			AddToCurrentJobs(job);
-
 			// setup cancelation
 			token.Register(job.Client.CancelAsync);
+
+			// update statuses
+			job.OnStart();
+			
+
+			// do the grunt work
 			try {
 				await job.Client.DownloadFileTaskAsync(job.Uri, dest);
 				job.OnSuccess();
-
 				_logger.Info("Finished downloading of {0}", job.Uri);
 
 			} catch (WebException e) {
@@ -116,8 +138,8 @@ namespace VpdbAgent.Vpdb
 		{
 			// update jobs back on main thread
 			System.Windows.Application.Current.Dispatcher.Invoke(delegate {
-				CurrentJobs.Add(job);
-				CurrentJobs.Add(job);
+				_databaseManager.Database.DownloadJobs.Add(job);
+				_databaseManager.Save();
 			});
 		}
 	}

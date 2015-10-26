@@ -6,10 +6,12 @@ using System.Net;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
+using System.Windows.Navigation;
 using Humanizer;
 using Humanizer.Localisation;
 using NLog;
@@ -23,27 +25,48 @@ namespace VpdbAgent.Vpdb
 {
 	public class DownloadJob : ReactiveObject
 	{
-		// props	
-		public Release Release { get; }
-		public Version Version { get; }
-		public File File { get; }
-		public string Filename { get; }
-		public JobStatus Status { get; private set; }
+		// persisted properties
+		[DataMember]
+		public Release Release {
+			get { return _release; }
+			set {
+				_release = value;
+				if (_file != null) {
+					Version = _release.Versions.FirstOrDefault(version => version.Files.Contains(_file));
+				}
+		} }
+		[DataMember]
+		public File File {
+			get { return _file; }
+			set {
+				_file = value;
+				Uri = VpdbClient.GetUri(value.Reference.Url);
+				Filename = value.Reference.Name;
+				if (_release != null) {
+					Version = _release.Versions.FirstOrDefault(version => version.Files.Contains(_file));
+				}
+		} }
+		[DataMember] public JobStatus Status { get; private set; } = JobStatus.Queued;
 
+		// convenient props
+		public string Filename { get; private set; }
+		public Version Version { get; private set; }
+		public Uri Uri { get; private set; }
+		public readonly WebClient Client;
+
+		// labels
 		public string DownloadSizeFormatted { get { return _downloadSizeFormatted; } set { this.RaiseAndSetIfChanged(ref _downloadSizeFormatted, value); } }
 		public string DownloadPercentFormatted { get { return _downloadPercentFormatted; } set { this.RaiseAndSetIfChanged(ref _downloadPercentFormatted, value); } }
 		public string DownloadSpeedFormatted { get { return _downloadSpeedFormatted; } set { this.RaiseAndSetIfChanged(ref _downloadSpeedFormatted, value); } }
 		public double DownloadPercent { get { return _downloadPercent; } set { this.RaiseAndSetIfChanged(ref _downloadPercent, value); } }
 
-		private static readonly Brush GreenBrush = (Brush)System.Windows.Application.Current.FindResource("DarkGreenBrush");
-		private static readonly Brush RedBrush = (Brush)System.Windows.Application.Current.FindResource("DarkRedBrush");
-
-		public readonly Uri Uri;
-		public readonly WebClient Client;
-
+		// streams
 		public IObservable<JobStatus> WhenStatusChanges => _status;
 		public IObservable<DownloadProgressChangedEventArgs> WhenDownloadProgresses => _progress;
 
+		// fields
+		private File _file;
+		private Release _release;
 		private string _downloadSizeFormatted;
 		private string _downloadPercentFormatted;
 		private string _downloadSpeedFormatted;
@@ -51,6 +74,8 @@ namespace VpdbAgent.Vpdb
 		private readonly Subject<JobStatus> _status = new Subject<JobStatus>();
 		private readonly Subject<DownloadProgressChangedEventArgs> _progress = new Subject<DownloadProgressChangedEventArgs>();
 
+		// dependencies
+		private static readonly IVpdbClient VpdbClient = Locator.CurrentMutable.GetService<IVpdbClient>();
 		private static readonly Logger Logger = Locator.CurrentMutable.GetService<Logger>();
 
 		public DownloadJob()
@@ -58,22 +83,22 @@ namespace VpdbAgent.Vpdb
 			_status.Subscribe(status => {
 				Status = status;
 			});
+			Client = VpdbClient.GetWebClient();
 		}
 
-		public DownloadJob(Release release, File file, IVpdbClient client) : this()
+		public DownloadJob(Release release, File file) : this()
 		{
-			Uri = client.GetUri(file.Reference.Url);
-			Client = client.GetWebClient();
 			File = file;
-			Filename = file.Reference.Name;
 			Release = release;
-			Version = release.Versions.FirstOrDefault(version => version.Files.Contains(file));
-
 			Logger.Info("Creating new download job for {0}.", Uri.AbsoluteUri);
 		}
 
 		public void OnStart()
 		{
+			if (Status == JobStatus.Completed || Status == JobStatus.Transferring) {
+				throw new InvalidOperationException("Cannot start a job that is " + Status + ".");
+			}
+
 			_status.OnNext(JobStatus.Transferring);
 			Client.DownloadProgressChanged += OnProgressChanged;
 
