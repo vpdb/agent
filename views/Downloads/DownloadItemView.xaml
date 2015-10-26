@@ -47,23 +47,23 @@
 
         <!-- right side stats -->
         <StackPanel Grid.Column="2" Grid.Row="0" Orientation="Vertical">
-            <Label Content="{Binding Job.DownloadSpeedFormatted}" Padding="0" HorizontalAlignment="Right" />
+            <Label Content="{Binding Path=DownloadSpeedFormatted}" Padding="0" HorizontalAlignment="Right" />
             <TextBlock Style="{StaticResource Label}" HorizontalAlignment="Right">
                 <TextBlock.Inlines>
-                    <Run Text="{Binding Job.DownloadSizeFormatted}" />
-                    <Run Text="{Binding Job.DownloadPercentFormatted}" FontWeight="Bold" Foreground="{StaticResource PrimaryColorBrush}"/>
+                    <Run Text="{Binding Path=DownloadSizeFormatted, Mode=OneWay}" />
+                    <Run Text="{Binding Path=DownloadPercentFormatted, Mode=OneWay}" FontWeight="Bold" Foreground="{StaticResource PrimaryColorBrush}"/>
                 </TextBlock.Inlines>
             </TextBlock>
         </StackPanel>
 
         <!-- progress bar -->
-        <ProgressBar Value="{Binding Job.DownloadPercent}" Style="{StaticResource BlehProgressBar}" 
-                Visibility="{Binding Path=StatusPanelVisible, Converter={StaticResource TrueToCollapsed}}"
+        <ProgressBar Value="{Binding Path=DownloadPercent, Mode=OneWay}" Style="{StaticResource BlehProgressBar}" 
+                Visibility="{Binding Path=Transferring, Converter={StaticResource TrueToVisible}}"
                 Grid.ColumnSpan="3" Grid.Row="1" Grid.Column="0" Margin="0,15,0,10" IsIndeterminate="False"/>
 
         <!-- status message -->
         <Grid x:Name="StatusSuccess" Background="{Binding Path=StatusPanelBackground, Mode=OneWay}" 
-                Visibility="{Binding Path=StatusPanelVisible, Converter={StaticResource TrueToVisible}}"
+                Visibility="{Binding Path=Transferring, Converter={StaticResource TrueToCollapsed}}"
                 Grid.ColumnSpan="3" Grid.Row="1" Grid.Column="0" Margin="-10,10,-20,0" >
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="70" />
@@ -85,10 +85,10 @@
         </Grid>
 
         <Separator 
-            Visibility="{Binding Path=StatusPanelVisible, Converter={StaticResource TrueToCollapsed}}"
+            Visibility="{Binding Path=Transferring, Converter={StaticResource TrueToVisible}}"
             Grid.ColumnSpan="3" Grid.Row="2" Grid.Column="0" Margin="0,5,0,5"/>
         <Separator 
-            Visibility="{Binding Path=StatusPanelVisible, Converter={StaticResource TrueToVisible}}"
+            Visibility="{Binding Path=Transferring, Converter={StaticResource TrueToCollapsed}}"
             Grid.ColumnSpan="3" Grid.Row="2" Grid.Column="0" Margin="-10,0,-20,5"/>
 
     </Grid>

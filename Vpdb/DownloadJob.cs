@@ -1,19 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net;
-using System.Reactive.Concurrency;
-using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Media;
-using System.Windows.Navigation;
-using Humanizer;
-using Humanizer.Localisation;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using NLog;
 using ReactiveUI;
 using Splat;
@@ -23,6 +14,20 @@ using Version = VpdbAgent.Vpdb.Models.Version;
 
 namespace VpdbAgent.Vpdb
 {
+	/// <summary>
+	/// A transfer from Vpdb to the local disk.
+	/// 
+	/// Represents one file to be downloaded. Lifecycle is the following:
+	/// 
+	///    * Queued - The job is sent to the queue and awaits a free slot.
+	///    * Transferring - A download slot has been obtained and the file is downloading.
+	///    * Completed - The transfer has finished successfully.
+	///    * Failed - The transfer has failed.
+	///    * Aborted - The transfer has been aborted.
+	/// 
+	/// Jobs are saved in the global database. In the future, the user might be
+	/// able to clean up finished jobs, but currently they are kept indefinitely.
+	/// </summary>
 	public class DownloadJob : ReactiveObject
 	{
 		// persisted properties
@@ -46,19 +51,19 @@ namespace VpdbAgent.Vpdb
 					Version = _release.Versions.FirstOrDefault(version => version.Files.Contains(_file));
 				}
 		} }
-		[DataMember] public JobStatus Status { get; private set; } = JobStatus.Queued;
+		[DataMember] [JsonConverter(typeof(StringEnumConverter))] 
+		public JobStatus Status { get; private set; } = JobStatus.Queued;
+		[DataMember] public DateTime QueuedAt { get; } = DateTime.Now;
+		[DataMember] public DateTime StartedAt { get; private set; }
+		[DataMember] public DateTime FinishedAt { get; private set; }
+		[DataMember] public long TransferredBytes { get; private set; }
+		[DataMember] public string ErrorMessage { get; private set; }
 
 		// convenient props
 		public string Filename { get; private set; }
 		public Version Version { get; private set; }
 		public Uri Uri { get; private set; }
 		public readonly WebClient Client;
-
-		// labels
-		public string DownloadSizeFormatted { get { return _downloadSizeFormatted; } set { this.RaiseAndSetIfChanged(ref _downloadSizeFormatted, value); } }
-		public string DownloadPercentFormatted { get { return _downloadPercentFormatted; } set { this.RaiseAndSetIfChanged(ref _downloadPercentFormatted, value); } }
-		public string DownloadSpeedFormatted { get { return _downloadSpeedFormatted; } set { this.RaiseAndSetIfChanged(ref _downloadSpeedFormatted, value); } }
-		public double DownloadPercent { get { return _downloadPercent; } set { this.RaiseAndSetIfChanged(ref _downloadPercent, value); } }
 
 		// streams
 		public IObservable<JobStatus> WhenStatusChanges => _status;
@@ -67,10 +72,6 @@ namespace VpdbAgent.Vpdb
 		// fields
 		private File _file;
 		private Release _release;
-		private string _downloadSizeFormatted;
-		private string _downloadPercentFormatted;
-		private string _downloadSpeedFormatted;
-		private double _downloadPercent;
 		private readonly Subject<JobStatus> _status = new Subject<JobStatus>();
 		private readonly Subject<DownloadProgressChangedEventArgs> _progress = new Subject<DownloadProgressChangedEventArgs>();
 
@@ -78,6 +79,9 @@ namespace VpdbAgent.Vpdb
 		private static readonly IVpdbClient VpdbClient = Locator.CurrentMutable.GetService<IVpdbClient>();
 		private static readonly Logger Logger = Locator.CurrentMutable.GetService<Logger>();
 
+		/// <summary>
+		/// Constructor called when de-serializing
+		/// </summary>
 		public DownloadJob()
 		{
 			_status.Subscribe(status => {
@@ -86,6 +90,11 @@ namespace VpdbAgent.Vpdb
 			Client = VpdbClient.GetWebClient();
 		}
 
+		/// <summary>
+		/// Constructor called when creating new job through the application
+		/// </summary>
+		/// <param name="release">Release to be downloaded</param>
+		/// <param name="file">File of the release to be downloaded</param>
 		public DownloadJob(Release release, File file) : this()
 		{
 			File = file;
@@ -93,73 +102,69 @@ namespace VpdbAgent.Vpdb
 			Logger.Info("Creating new download job for {0}.", Uri.AbsoluteUri);
 		}
 
+		/// <summary>
+		/// Transfer has started
+		/// </summary>
 		public void OnStart()
 		{
 			if (Status == JobStatus.Completed || Status == JobStatus.Transferring) {
 				throw new InvalidOperationException("Cannot start a job that is " + Status + ".");
 			}
 
+			StartedAt = DateTime.Now;
 			_status.OnNext(JobStatus.Transferring);
 			Client.DownloadProgressChanged += OnProgressChanged;
 
-			// update progress every 300ms
+			// update transfer size
 			WhenDownloadProgresses
-				.Sample(TimeSpan.FromMilliseconds(300))
 				.Subscribe(progress => {
+					TransferredBytes = progress.BytesReceived;
 					// on main thread
-					System.Windows.Application.Current.Dispatcher.Invoke(delegate {
-						DownloadPercent = (double)progress.BytesReceived / File.Reference.Bytes * 100;
-						DownloadPercentFormatted = $"{Math.Round(DownloadPercent)}%";
-					});
-				});
-
-			// update download speed every 1.5 seconds
-			var lastUpdatedProgress = DateTime.Now;
-			long bytesReceived = 0;
-			WhenDownloadProgresses
-				.Sample(TimeSpan.FromMilliseconds(1500))
-				.Subscribe(progress => {
-					// on main thread
-					System.Windows.Application.Current.Dispatcher.Invoke(delegate {
-						var timespan = DateTime.Now - lastUpdatedProgress;
-						var bytespan = progress.BytesReceived - bytesReceived;
-						var downloadSpeed = bytespan / timespan.Seconds;
-
-						DownloadSpeedFormatted = $"{downloadSpeed.Bytes().ToString("#.#")}/s";
-
-						bytesReceived = progress.BytesReceived;
-						lastUpdatedProgress = DateTime.Now;
-					});
-				});
-
-			// update initial size only once
-			WhenDownloadProgresses
-				.Take(1)
-				.Subscribe(progress => {
-					// on main thread
-					System.Windows.Application.Current.Dispatcher.Invoke(delegate {
-						DownloadSizeFormatted = (progress.TotalBytesToReceive > 0 ? progress.TotalBytesToReceive : File.Reference.Bytes).Bytes().ToString("#.#");
-					});
+					//System.Windows.Application.Current.Dispatcher.Invoke(delegate {
+					//	TransferredBytes = progress.BytesReceived;
+					//});
 				});
 		}
 
+		/// <summary>
+		/// Transfer has finished (succeeded or failed)
+		/// </summary>
+		public void OnFinished()
+		{
+			FinishedAt = DateTime.Now;
+		}
+
+		/// <summary>
+		/// Transfer has succeeded
+		/// </summary>
 		public void OnSuccess()
 		{
 			// on main thread
 			System.Windows.Application.Current.Dispatcher.Invoke(delegate {
+				OnFinished();
 				_status.OnNext(JobStatus.Completed);
 			});
 			Client.DownloadProgressChanged -= OnProgressChanged;
 		}
 
+		/// <summary>
+		/// Transfer has failed
+		/// </summary>
+		/// <param name="e"></param>
 		public void OnFailure(Exception e)
 		{
-			System.Windows.Application.Current.Dispatcher.Invoke(delegate {
+			System.Windows.Application.Current.Dispatcher.Invoke(delegate
+			{
+				ErrorMessage = e.Message;
+				OnFinished();
 				_status.OnNext(JobStatus.Failed);
 			});
 			Client.DownloadProgressChanged -= OnProgressChanged;
 		}
 
+		/// <summary>
+		/// Transfer progress has changed
+		/// </summary>
 		private void OnProgressChanged(object sender, DownloadProgressChangedEventArgs p)
 		{
 			_progress.OnNext(p);

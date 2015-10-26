@@ -15,7 +15,8 @@ namespace VpdbAgent.Application
 	/// Manages the global stuff we're saving to disk.
 	/// 
 	/// Currently, it's serialized as a .json file in PinballX's database root
-	/// folder. Might be switching it out for something more efficient.
+	/// folder. Might be switching it out for something more efficient such as
+	/// protocol-buffers.
 	/// </summary>
 	/// <see cref="GlobalDatabase"/>
 	public interface IDatabaseManager

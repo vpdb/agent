@@ -1,30 +1,34 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+using System.Reactive.Linq;
 using System.Windows.Media;
+using Humanizer;
 using ReactiveUI;
 using VpdbAgent.Vpdb;
-using VpdbAgent.Vpdb.Models;
 
 namespace VpdbAgent.ViewModels.Downloads
 {
 	public class DownloadItemViewModel : ReactiveObject
 	{
+		// status props
 		public DownloadJob Job { get; }
-
-		// props
+		public bool Transferring { get { return _transferring; } set { this.RaiseAndSetIfChanged(ref _transferring, value); } }
 		public Brush StatusPanelBackground { get { return _statusPanelBackground; } set { this.RaiseAndSetIfChanged(ref _statusPanelBackground, value); } }
-		public bool StatusPanelVisible { get { return _statusPanelVisible; } set { this.RaiseAndSetIfChanged(ref _statusPanelVisible, value); } }
+		public double DownloadPercent { get { return _downloadPercent; } set { this.RaiseAndSetIfChanged(ref _downloadPercent, value); } }
+
+		// label props
+		public string DownloadSizeFormatted { get { return _downloadSizeFormatted; } set { this.RaiseAndSetIfChanged(ref _downloadSizeFormatted, value); } }
+		public string DownloadPercentFormatted { get { return _downloadPercentFormatted; } set { this.RaiseAndSetIfChanged(ref _downloadPercentFormatted, value); } }
+		public string DownloadSpeedFormatted { get { return _downloadSpeedFormatted; } set { this.RaiseAndSetIfChanged(ref _downloadSpeedFormatted, value); } }
 
 		// privates
-		private Brush _statusPanelBackground = Brushes.Transparent;
-		private bool _statusPanelVisible;
+		private bool _transferring;
+		private Brush _statusPanelBackground;
+		private double _downloadPercent;
+		private string _downloadSizeFormatted;
+		private string _downloadPercentFormatted;
+		private string _downloadSpeedFormatted;
 
-		// static stuff
+		// brushes
 		private static readonly Brush RedBrush = (Brush)System.Windows.Application.Current.FindResource("DarkRedBrush");
 		private static readonly Brush GreenBrush = (Brush)System.Windows.Application.Current.FindResource("DarkGreenBrush");
 		private static readonly Brush OrangeBrush = (Brush)System.Windows.Application.Current.FindResource("DarkOrangeBrush");
@@ -34,6 +38,55 @@ namespace VpdbAgent.ViewModels.Downloads
 			Job = job;
 			Job.WhenStatusChanges.Subscribe(status => { UpdateStatusPanel(); });
 			UpdateStatusPanel();
+
+			// update progress every 300ms
+			Job.WhenDownloadProgresses
+				.Sample(TimeSpan.FromMilliseconds(300))
+				.Subscribe(progress => {
+					// on main thread
+					System.Windows.Application.Current.Dispatcher.Invoke(delegate {
+						DownloadPercent = (double)progress.BytesReceived / Job.File.Reference.Bytes * 100;
+						DownloadPercentFormatted = $"{Math.Round(DownloadPercent)}%";
+					});
+				});
+
+			// update download speed every 1.5 seconds
+			var lastUpdatedProgress = DateTime.Now;
+			long bytesReceived = 0;
+			Job.WhenDownloadProgresses
+				.Sample(TimeSpan.FromMilliseconds(1500))
+				.Subscribe(progress => {
+					// on main thread
+					System.Windows.Application.Current.Dispatcher.Invoke(delegate {
+						var timespan = DateTime.Now - lastUpdatedProgress;
+						var bytespan = progress.BytesReceived - bytesReceived;
+						var downloadSpeed = bytespan / timespan.Seconds;
+
+						DownloadSpeedFormatted = $"{downloadSpeed.Bytes().ToString("#.0")}/s";
+
+						bytesReceived = progress.BytesReceived;
+						lastUpdatedProgress = DateTime.Now;
+					});
+				});
+
+			// update initial size only once
+			Job.WhenDownloadProgresses
+				.Take(1)
+				.Subscribe(progress => {
+					// on main thread
+					System.Windows.Application.Current.Dispatcher.Invoke(delegate {
+						DownloadSizeFormatted = (progress.TotalBytesToReceive > 0 ? progress.TotalBytesToReceive : Job.File.Reference.Bytes).Bytes().ToString("#.0");
+					});
+				});
+		}
+
+		private void OnFinished()
+		{
+			Transferring = false;
+			DownloadPercent = 0;
+			DownloadPercentFormatted = null;
+			DownloadSpeedFormatted = null;
+			DownloadSizeFormatted = null;
 		}
 
 		private void UpdateStatusPanel()
@@ -41,24 +94,31 @@ namespace VpdbAgent.ViewModels.Downloads
 			switch (Job.Status) {
 				case DownloadJob.JobStatus.Aborted:
 					StatusPanelBackground = RedBrush;
-					StatusPanelVisible = true;
+					OnFinished();
 					break;
+
 				case DownloadJob.JobStatus.Completed:
 					StatusPanelBackground = GreenBrush;
-					StatusPanelVisible = true;
+					OnFinished();
 					break;
+
 				case DownloadJob.JobStatus.Failed:
 					StatusPanelBackground = RedBrush;
-					StatusPanelVisible = true;
+					OnFinished();
 					break;
+
 				case DownloadJob.JobStatus.Queued:
 					StatusPanelBackground = OrangeBrush;
-					StatusPanelVisible = true;
+					Transferring = false;
 					break;
-				default:
+
+				case DownloadJob.JobStatus.Transferring:
 					StatusPanelBackground = Brushes.Transparent;
-					StatusPanelVisible = false;
+					Transferring = true;
 					break;
+
+				default:
+					throw new ArgumentOutOfRangeException();
 			}
 		}
 	}
