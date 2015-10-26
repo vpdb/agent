@@ -154,6 +154,7 @@
     <Compile Include="Common\ObservableTrace.cs" />
     <Compile Include="Controls\IconControl.cs" />
     <Compile Include="Controls\LabelFor.cs" />
+    <Compile Include="Controls\RichTextBlock.cs" />
     <Compile Include="Libs\SmoothPanel\DataBindHelper.cs" />
     <Compile Include="Libs\SmoothPanel\IHeightMeasurer.cs" />
     <Compile Include="Libs\SmoothPanel\SmoothPanel.cs" />

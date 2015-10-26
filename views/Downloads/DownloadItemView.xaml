@@ -73,15 +73,8 @@
             <c:IconControl Margin="0,4,15,0" Height="18" Width="18" Grid.Column="0"
                 HorizontalAlignment="Right" VerticalAlignment="Top"
                 Foreground="{StaticResource LabelTextBrush}" Data="{StaticResource IconCheckCircle}" />
-            <TextBlock Style="{StaticResource Label}" Grid.Column="1" TextWrapping="Wrap" Margin="0,0,10,3">
-                <TextBlock.Inlines>
-                    <Run Text="Successfully downloaded"/>
-                    <Run Text="74.3 MB" FontWeight="Bold"/>
-                    <Run Text="5 minutes ago"/>
-                    <Run Text="at"/>
-                    <Run Text="6.4 MB/s" FontWeight="Bold"/>
-                </TextBlock.Inlines>
-            </TextBlock>
+            <c:RichTextBlock Style="{StaticResource Label}" Grid.Column="1" TextWrapping="Wrap" Margin="0,0,10,3" InlineList="{Binding StatusPanelLabel}">
+            </c:RichTextBlock>
         </Grid>
 
         <Separator 

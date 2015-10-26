@@ -59,11 +59,15 @@ namespace VpdbAgent.Vpdb
 		[DataMember] public long TransferredBytes { get; private set; }
 		[DataMember] public string ErrorMessage { get; private set; }
 
-		// convenient props
-		public string Filename { get; private set; }
-		public Version Version { get; private set; }
+		// business props
 		public Uri Uri { get; private set; }
 		public readonly WebClient Client;
+
+		// convenience props
+		public string Filename { get; private set; }
+		public Version Version { get; private set; }
+		public TimeSpan DownloadTime => FinishedAt - StartedAt;
+		public double DownloadBytesPerSecond => 1000d * TransferredBytes / DownloadTime.TotalMilliseconds;
 
 		// streams
 		public IObservable<JobStatus> WhenStatusChanges => _status;

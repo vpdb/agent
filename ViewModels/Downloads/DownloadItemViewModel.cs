@@ -1,5 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Reactive.Linq;
+using System.Windows;
+using System.Windows.Documents;
 using System.Windows.Media;
 using Humanizer;
 using ReactiveUI;
@@ -19,6 +23,7 @@ namespace VpdbAgent.ViewModels.Downloads
 		public string DownloadSizeFormatted { get { return _downloadSizeFormatted; } set { this.RaiseAndSetIfChanged(ref _downloadSizeFormatted, value); } }
 		public string DownloadPercentFormatted { get { return _downloadPercentFormatted; } set { this.RaiseAndSetIfChanged(ref _downloadPercentFormatted, value); } }
 		public string DownloadSpeedFormatted { get { return _downloadSpeedFormatted; } set { this.RaiseAndSetIfChanged(ref _downloadSpeedFormatted, value); } }
+		public ObservableCollection<Inline> StatusPanelLabel { get { return _statusPanelLabel; } set { this.RaiseAndSetIfChanged(ref _statusPanelLabel, value); } }
 
 		// privates
 		private bool _transferring;
@@ -27,6 +32,7 @@ namespace VpdbAgent.ViewModels.Downloads
 		private string _downloadSizeFormatted;
 		private string _downloadPercentFormatted;
 		private string _downloadSpeedFormatted;
+		private ObservableCollection<Inline> _statusPanelLabel;
 
 		// brushes
 		private static readonly Brush RedBrush = (Brush)System.Windows.Application.Current.FindResource("DarkRedBrush");
@@ -36,8 +42,8 @@ namespace VpdbAgent.ViewModels.Downloads
 		public DownloadItemViewModel(DownloadJob job)
 		{
 			Job = job;
-			Job.WhenStatusChanges.Subscribe(status => { UpdateStatusPanel(); });
-			UpdateStatusPanel();
+			Job.WhenStatusChanges.Subscribe(status => { OnStatusUpdated(); });
+			OnStatusUpdated();
 
 			// update progress every 300ms
 			Job.WhenDownloadProgresses
@@ -80,16 +86,7 @@ namespace VpdbAgent.ViewModels.Downloads
 				});
 		}
 
-		private void OnFinished()
-		{
-			Transferring = false;
-			DownloadPercent = 0;
-			DownloadPercentFormatted = null;
-			DownloadSpeedFormatted = null;
-			DownloadSizeFormatted = null;
-		}
-
-		private void UpdateStatusPanel()
+		private void OnStatusUpdated()
 		{
 			switch (Job.Status) {
 				case DownloadJob.JobStatus.Aborted:
@@ -100,16 +97,33 @@ namespace VpdbAgent.ViewModels.Downloads
 				case DownloadJob.JobStatus.Completed:
 					StatusPanelBackground = GreenBrush;
 					OnFinished();
+					StatusPanelLabel = new ObservableCollection<Inline>
+					{
+						new Run("Successfully downloaded "),
+						new Run(Job.TransferredBytes.Bytes().ToString("#.0") + " ") {FontWeight = FontWeights.Bold},
+						new Run(Job.FinishedAt.Humanize()),
+						new Run(" at "),
+						new Run(Job.DownloadBytesPerSecond.Bytes().ToString("#.0") + "/s") {FontWeight = FontWeights.Bold}
+					};
 					break;
 
 				case DownloadJob.JobStatus.Failed:
 					StatusPanelBackground = RedBrush;
 					OnFinished();
+					StatusPanelLabel = new ObservableCollection<Inline>
+					{
+						new Run("Error: "),
+						new Run(Job.ErrorMessage)
+					};
 					break;
 
 				case DownloadJob.JobStatus.Queued:
 					StatusPanelBackground = OrangeBrush;
 					Transferring = false;
+					StatusPanelLabel = new ObservableCollection<Inline>
+					{
+						new Run("Transfer queued")
+					};
 					break;
 
 				case DownloadJob.JobStatus.Transferring:
@@ -121,5 +135,15 @@ namespace VpdbAgent.ViewModels.Downloads
 					throw new ArgumentOutOfRangeException();
 			}
 		}
+
+		private void OnFinished()
+		{
+			Transferring = false;
+			DownloadPercent = 0;
+			DownloadPercentFormatted = null;
+			DownloadSpeedFormatted = null;
+			DownloadSizeFormatted = null;
+		}
+
 	}
 }
