@@ -197,9 +197,9 @@ namespace VpdbAgent.Vpdb
 		/// </summary>
 		private static readonly JobStatus[] StatusOrder = {
 			JobStatus.Transferring,
+			JobStatus.Queued,
 			JobStatus.Failed,
 			JobStatus.Aborted,
-			JobStatus.Queued,
 			JobStatus.Completed
 		};
 

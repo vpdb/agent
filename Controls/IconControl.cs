@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using VpdbAgent.Common;
@@ -40,8 +41,12 @@ namespace VpdbAgent.Controls
 		{
 			var ic = d as IconControl;
 
-			if (ic != null) {
-				ic.DataGeometry = PathGeometry.CreateFromGeometry(Geometry.Parse(e.NewValue.ToString()));
+			if (ic != null && e.NewValue != null) {
+				try {
+					ic.DataGeometry = PathGeometry.CreateFromGeometry(Geometry.Parse(e.NewValue.ToString()));
+				} catch (Exception error) {
+					Console.WriteLine(error);
+				}
 			}
 		}
 	}

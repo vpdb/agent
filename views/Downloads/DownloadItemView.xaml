@@ -5,21 +5,21 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:c="clr-namespace:VpdbAgent.Controls"
              xmlns:vm="clr-namespace:VpdbAgent.ViewModels.Downloads"
-			 xmlns:typeConverters="clr-namespace:VpdbAgent.Common.TypeConverters"
+             xmlns:typeConverters="clr-namespace:VpdbAgent.Common.TypeConverters"
              mc:Ignorable="d" 
              d:DesignHeight="150"
              d:DesignWidth="900"
              d:DataContext="{d:DesignInstance Type=vm:DownloadItemViewModel}">
 
+    <!-- type converters -->
     <UserControl.Resources>
         <typeConverters:BooleanToVisibilityConverter x:Key="TrueToVisible" True="Visible" False="Collapsed" />
         <typeConverters:BooleanToVisibilityConverter x:Key="TrueToCollapsed" True="Collapsed" False="Visible" />
     </UserControl.Resources>
 
-
-    <Grid Margin="10,10,20,0">
+    <Grid Margin="20,20,20,-5">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="60" />
+            <ColumnDefinition Width="65" />
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
@@ -27,62 +27,68 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <!-- image -->
-        <c:UrlImage UrlSource="{Binding Job.File.Media[playfield_image].Variations[square].Url}" Grid.Column="0" Grid.Row="0" Width="50" Height="50" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+        <c:UrlImage UrlSource="{Binding Job.File.Media[playfield_image].Variations[square].Url}" 
+            Grid.Column="0" Grid.Row="0" Grid.RowSpan="2" Width="50" Height="50" HorizontalAlignment="Left" VerticalAlignment="Top"/>
 
         <!-- data -->
-        <StackPanel Grid.Column="1" Grid.Row="0" Orientation="Vertical" Grid.ColumnSpan="2">
-            <TextBlock Style="{StaticResource Label}" TextTrimming="CharacterEllipsis">
-                <TextBlock.Inlines>
-                    <Run Text="{Binding Job.Release.Game.Title}" FontWeight="Bold"/>
-                    <Run Text=" – "/>
-                    <Run Text="{Binding Job.Release.Name}"/>
-                    <Run Text="{Binding Job.Version.Name}"/>
-                </TextBlock.Inlines>
-            </TextBlock>
-            <TextBlock Text="{Binding Job.Filename}" Style="{StaticResource Label}" TextTrimming="CharacterEllipsis" />
-        </StackPanel>
+        <TextBlock Style="{StaticResource Label}" TextTrimming="CharacterEllipsis" 
+                    Grid.Column="1" Grid.Row="0">
+            <TextBlock.Inlines>
+                <Run Text="{Binding Job.Release.Game.Title}" FontWeight="Bold"/>
+                <Run Text=" – "/>
+                <Run Text="{Binding Job.Release.Name}"/>
+                <Run Text="{Binding Job.Version.Name}"/>
+            </TextBlock.Inlines>
+        </TextBlock>
+        <TextBlock Text="{Binding Job.Filename}" Style="{StaticResource Label}" TextTrimming="CharacterEllipsis" 
+                   Grid.Column="1" Grid.Row="1"/>
 
         <!-- right side stats -->
-        <StackPanel Grid.Column="2" Grid.Row="0" Orientation="Vertical">
-            <Label Content="{Binding Path=DownloadSpeedFormatted}" Padding="0" HorizontalAlignment="Right" />
-            <TextBlock Style="{StaticResource Label}" HorizontalAlignment="Right">
-                <TextBlock.Inlines>
-                    <Run Text="{Binding Path=DownloadSizeFormatted, Mode=OneWay}" />
-                    <Run Text="{Binding Path=DownloadPercentFormatted, Mode=OneWay}" FontWeight="Bold" Foreground="{StaticResource PrimaryColorBrush}"/>
-                </TextBlock.Inlines>
-            </TextBlock>
-        </StackPanel>
+        <Label Content="{Binding Path=DownloadSpeedFormatted}" Padding="0" HorizontalAlignment="Right" 
+                Grid.Column="2" Grid.Row="0"/>
+        <TextBlock Style="{StaticResource Label}" HorizontalAlignment="Right"
+                Grid.Column="2" Grid.Row="1">
+            <TextBlock.Inlines>
+                <Run Text="{Binding Path=DownloadSizeFormatted, Mode=OneWay}" />
+                <Run Text="{Binding Path=DownloadPercentFormatted, Mode=OneWay}" FontWeight="Bold" Foreground="{StaticResource PrimaryColorBrush}"/>
+            </TextBlock.Inlines>
+        </TextBlock>
 
         <!-- progress bar -->
-        <ProgressBar Value="{Binding Path=DownloadPercent, Mode=OneWay}" Style="{StaticResource BlehProgressBar}" 
-                Visibility="{Binding Path=Transferring, Converter={StaticResource TrueToVisible}}"
-                Grid.ColumnSpan="3" Grid.Row="1" Grid.Column="0" Margin="0,15,0,10" IsIndeterminate="False"/>
+        <Grid Visibility="{Binding Path=Transferring, Converter={StaticResource TrueToVisible}}"
+              Grid.ColumnSpan="3" Grid.Row="2" Grid.Column="0" Margin="65,15,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <ProgressBar Value="{Binding Path=DownloadPercent, Mode=OneWay}" Style="{StaticResource BlehProgressBar}" 
+                Grid.Column="0" Margin="0,0,10,0" IsIndeterminate="False"/>
+            <Button x:Name="SelectButton" Style="{StaticResource ButtonSolidSmall}" 
+                Content="CANCEL" 
+                Grid.Column="1" HorizontalAlignment="Right"/>
+        </Grid>
 
         <!-- status message -->
-        <Grid x:Name="StatusSuccess" Background="{Binding Path=StatusPanelBackground, Mode=OneWay}" 
-                Visibility="{Binding Path=Transferring, Converter={StaticResource TrueToCollapsed}}"
-                Grid.ColumnSpan="3" Grid.Row="1" Grid.Column="0" Margin="-10,10,-20,0" >
+        <Grid x:Name="StatusSuccess" Visibility="{Binding Path=Transferring, Converter={StaticResource TrueToCollapsed}}"
+              Grid.ColumnSpan="3" Grid.Row="3" Grid.Column="0" Margin="0,-10,0,0" >
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="70" />
+                <ColumnDefinition Width="65" />
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
             <c:IconControl Margin="0,4,15,0" Height="18" Width="18" Grid.Column="0"
                 HorizontalAlignment="Right" VerticalAlignment="Top"
-                Foreground="{StaticResource LabelTextBrush}" Data="{Binding StatusPanelIcon}" />
-            <c:RichTextBlock Style="{StaticResource Label}" Grid.Column="1" TextWrapping="Wrap" Margin="0,0,10,3" InlineList="{Binding StatusPanelLabel}">
+                Foreground="{Binding StatusPanelForeground}" Data="{Binding StatusPanelIcon}" />
+            <c:RichTextBlock Style="{StaticResource Label}" Grid.Column="1" TextWrapping="Wrap" Margin="0,0,10,3" 
+                Foreground="{Binding StatusPanelForeground}" InlineList="{Binding StatusPanelLabel}">
             </c:RichTextBlock>
         </Grid>
 
-        <Separator 
-            Visibility="{Binding Path=Transferring, Converter={StaticResource TrueToVisible}}"
-            Grid.ColumnSpan="3" Grid.Row="2" Grid.Column="0" Margin="0,5,0,5"/>
-        <Separator 
-            Visibility="{Binding Path=Transferring, Converter={StaticResource TrueToCollapsed}}"
-            Grid.ColumnSpan="3" Grid.Row="2" Grid.Column="0" Margin="-10,0,-20,5"/>
-
+        <Separator Grid.ColumnSpan="3" Grid.Row="4" Grid.Column="0" Margin="0,5,-20,0"/>
     </Grid>
 </UserControl>
