@@ -20,6 +20,7 @@ namespace VpdbAgent.Models
 		// serialized properties
 		[DataMember] public string Id { get; set; }
 		[DataMember] public string Filename { get; set; }
+		[DataMember] public string DatabaseFile { get; set; }
 		[DataMember] public bool Enabled { get; set; } = true;
 		[DataMember] public string ReleaseId {
 			get { return _releaseId; }
@@ -78,6 +79,7 @@ namespace VpdbAgent.Models
 		{
 			Id = xmlGame.Description;
 			Enabled = xmlGame.Enabled == null || "true".Equals(xmlGame.Enabled, StringComparison.InvariantCultureIgnoreCase);
+			DatabaseFile = xmlGame.DatabaseFile;
 
 			if (File.Exists(tablePath + @"\" + xmlGame.Filename + ".vpt")) {
 				Filename = xmlGame.Filename + ".vpt";

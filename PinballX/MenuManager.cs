@@ -88,9 +88,8 @@ namespace VpdbAgent.PinballX
 				xmlWatcher?.Dispose();
 				xmlWatcher = _watcher.DatabaseWatcher(dbPath, Systems)
 					.ObserveOn(Scheduler.Default)
-					.Select(Path.GetDirectoryName)
-					.Select(path => Systems.FirstOrDefault(s => s.DatabasePath.Equals(path)))
-					.Subscribe(UpdateGames);
+					.Select(path => new { path, system = Systems.FirstOrDefault(s => s.DatabasePath.Equals(Path.GetDirectoryName(path))) })
+					.Subscribe(x => UpdateGames(x.system, Path.GetFileName(x.path)));
 			});
 
 			return this;
@@ -136,21 +135,25 @@ namespace VpdbAgent.PinballX
 		/// </summary>
 		/// <remarks>
 		/// Triggered by XML changes. Updating means:
-		/// 
+		///  
 		/// <list type="number">
-		///		<item><term> Parsing all XML files of the system </term></item>
-		///		<item><term> Reading all games in the XML files </term></item>
-		///		<item><term> Setting <see cref="PinballXSystem.Games">Games</see> of the system </term></item>
+		/// 		<item><term> Parsing all XML files of the system </term></item>
+		/// 		<item><term> Reading all games in the XML files </term></item>
+		/// 		<item><term> Setting <see cref="PinballXSystem.Games">Games</see> of the system </term></item>
 		/// </list>
 		/// </remarks>
 		/// <param name="system">System to update</param>
-		private void UpdateGames(PinballXSystem system)
+		/// <param name="databaseFile">Filename without path. If set, only updates games for given XML file.</param>
+		private void UpdateGames(PinballXSystem system, string databaseFile = null)
 		{
-			_logger.Info("Parsing all games for {0}...", system);
-			var games = ParseGames(system);
+			_logger.Info("Parsing games for {0} - ({1})...", system, databaseFile ?? "all games");
+			var games = ParseGames(system, databaseFile);
 			using (system.Games.SuppressChangeNotifications()) {
-				// todo make this more intelligent by diff'ing and changing instead of drop-and-create
-				system.Games.Clear();
+				if (databaseFile == null) {
+					system.Games.Clear();
+				} else {
+					system.Games.RemoveAll(system.Games.Where(game => databaseFile.Equals(game.DatabaseFile)).ToList());
+				}
 				system.Games.AddRange(games);
 			}
 		}
@@ -191,8 +194,9 @@ namespace VpdbAgent.PinballX
 		/// system's database folder.
 		/// </remarks>
 		/// <param name="system">System to parse games for</param>
+		/// <param name="databaseFile">If set, only parse games for given XML file</param>
 		/// <returns>Parsed games</returns>
-		private IEnumerable<Game> ParseGames(PinballXSystem system)
+		private IEnumerable<Game> ParseGames(PinballXSystem system, string databaseFile = null)
 		{
 			if (system == null) {
 				_logger.Warn("Unknown system, not parsing games.");
@@ -203,12 +207,20 @@ namespace VpdbAgent.PinballX
 			var games = new List<Game>();
 			var fileCount = 0;
 			if (Directory.Exists(system.DatabasePath)) {
-				foreach (var filePath in Directory.GetFiles(system.DatabasePath).Where(filePath => ".xml".Equals(Path.GetExtension(filePath), StringComparison.InvariantCultureIgnoreCase))) {
-					games.AddRange(UnmarshallXml(filePath).Games);
+				foreach (var filePath in Directory.GetFiles(system.DatabasePath).Where(filePath => ".xml".Equals(Path.GetExtension(filePath), StringComparison.InvariantCultureIgnoreCase)))
+				{
+					var currentDatabaseFile = Path.GetFileName(filePath);
+					// if database file is specified, drop everything else
+					if (databaseFile != null && !databaseFile.Equals(currentDatabaseFile)) {
+						continue;
+					}
+					var menu = UnmarshallXml(filePath);
+					menu.Games.ForEach(game => game.DatabaseFile = currentDatabaseFile);
+					games.AddRange(menu.Games);
 					fileCount++;
 				}
 			}
-			_logger.Debug("Parsed {0} games from {1} XML files at {2}.", games.Count, fileCount, system.DatabasePath);
+			_logger.Debug("Parsed {0} games from {1} XML file(s) at {2}.", games.Count, fileCount, system.DatabasePath);
 
 			return games;
 		}

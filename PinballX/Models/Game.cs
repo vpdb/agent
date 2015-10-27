@@ -44,5 +44,9 @@ namespace VpdbAgent.PinballX.Models
 		[XmlElement("SendKeysOnStart")]
 		public string SendKeysOnStart { get; set; }
 
+		// vpdb fields (not serialized)
+		// ----------------------------------
+		[XmlIgnore]
+		public string DatabaseFile { get; set; }
 	}
 }
