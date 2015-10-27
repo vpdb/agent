@@ -17,6 +17,7 @@ namespace VpdbAgent.ViewModels.Downloads
 		public DownloadJob Job { get; }
 		public bool Transferring { get { return _transferring; } set { this.RaiseAndSetIfChanged(ref _transferring, value); } }
 		public Brush StatusPanelBackground { get { return _statusPanelBackground; } set { this.RaiseAndSetIfChanged(ref _statusPanelBackground, value); } }
+		public string StatusPanelIcon { get { return _statusPanelIcon; } set { this.RaiseAndSetIfChanged(ref _statusPanelIcon, value); } }
 		public double DownloadPercent { get { return _downloadPercent; } set { this.RaiseAndSetIfChanged(ref _downloadPercent, value); } }
 
 		// label props
@@ -28,6 +29,7 @@ namespace VpdbAgent.ViewModels.Downloads
 		// privates
 		private bool _transferring;
 		private Brush _statusPanelBackground;
+		private string _statusPanelIcon;
 		private double _downloadPercent;
 		private string _downloadSizeFormatted;
 		private string _downloadPercentFormatted;
@@ -38,6 +40,12 @@ namespace VpdbAgent.ViewModels.Downloads
 		private static readonly Brush RedBrush = (Brush)System.Windows.Application.Current.FindResource("DarkRedBrush");
 		private static readonly Brush GreenBrush = (Brush)System.Windows.Application.Current.FindResource("DarkGreenBrush");
 		private static readonly Brush OrangeBrush = (Brush)System.Windows.Application.Current.FindResource("DarkOrangeBrush");
+
+		// icons
+		private static readonly string WarningIcon = (string)System.Windows.Application.Current.FindResource("IconWarning");
+		private static readonly string ClockIcon = (string)System.Windows.Application.Current.FindResource("IconClock");
+		private static readonly string CheckIcon = (string)System.Windows.Application.Current.FindResource("IconCheckCircle");
+		private static readonly string CloseIcon = (string)System.Windows.Application.Current.FindResource("IconCloseCircle");
 
 		public DownloadItemViewModel(DownloadJob job)
 		{
@@ -93,11 +101,13 @@ namespace VpdbAgent.ViewModels.Downloads
 			switch (Job.Status) {
 				case DownloadJob.JobStatus.Aborted:
 					StatusPanelBackground = RedBrush;
+					StatusPanelIcon = CloseIcon;
 					OnFinished();
 					break;
 
 				case DownloadJob.JobStatus.Completed:
 					StatusPanelBackground = GreenBrush;
+					StatusPanelIcon = CheckIcon;
 					OnFinished();
 					StatusPanelLabel = new ObservableCollection<Inline>
 					{
@@ -111,6 +121,7 @@ namespace VpdbAgent.ViewModels.Downloads
 
 				case DownloadJob.JobStatus.Failed:
 					StatusPanelBackground = RedBrush;
+					StatusPanelIcon = WarningIcon;
 					OnFinished();
 					StatusPanelLabel = new ObservableCollection<Inline>
 					{
@@ -121,6 +132,7 @@ namespace VpdbAgent.ViewModels.Downloads
 
 				case DownloadJob.JobStatus.Queued:
 					StatusPanelBackground = OrangeBrush;
+					StatusPanelIcon = ClockIcon;
 					Transferring = false;
 					StatusPanelLabel = new ObservableCollection<Inline>
 					{

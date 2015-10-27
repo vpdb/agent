@@ -72,7 +72,7 @@
 
             <c:IconControl Margin="0,4,15,0" Height="18" Width="18" Grid.Column="0"
                 HorizontalAlignment="Right" VerticalAlignment="Top"
-                Foreground="{StaticResource LabelTextBrush}" Data="{StaticResource IconCheckCircle}" />
+                Foreground="{StaticResource LabelTextBrush}" Data="{Binding StatusPanelIcon}" />
             <c:RichTextBlock Style="{StaticResource Label}" Grid.Column="1" TextWrapping="Wrap" Margin="0,0,10,3" InlineList="{Binding StatusPanelLabel}">
             </c:RichTextBlock>
         </Grid>

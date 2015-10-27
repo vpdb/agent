@@ -1,0 +1,16 @@
+<!-- Created with Ai->XAML Export Plug-In Version 0.2 (PC/64) -->
+<!-- By Mike Swanson (http://blog.mikeswanson.com/)           -->
+
+<Viewbox Width="71.803" Height="71.803"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+<Canvas Width="71.803" Height="71.803">
+
+  <Canvas>
+
+  <!-- Layer 1/<Compound Path> -->
+  <Path Fill="#ff000000" Data="F1 M 29.721,54.852 L 11.770,36.901 L 16.850,31.821 L 29.721,44.692 L 56.952,17.461 L 62.032,22.541 L 29.721,54.852 Z M 35.901,0.000 C 16.066,0.000 -0.000,16.066 -0.000,35.901 C -0.000,55.719 16.066,71.803 35.901,71.803 C 55.719,71.803 71.803,55.719 71.803,35.901 C 71.803,16.066 55.719,0.000 35.901,0.000 Z"/>
+
+  </Canvas>
+</Canvas>
+</Viewbox>
