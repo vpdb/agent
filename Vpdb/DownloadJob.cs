@@ -3,6 +3,7 @@ using System.Linq;
 using System.Net;
 using System.Reactive.Subjects;
 using System.Runtime.Serialization;
+using System.Threading;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using NLog;
@@ -80,6 +81,7 @@ namespace VpdbAgent.Vpdb
 		private Release _release;
 		private readonly Subject<JobStatus> _whenStatusChanges = new Subject<JobStatus>();
 		private readonly Subject<DownloadProgressChangedEventArgs> _whenDownloadProgresses = new Subject<DownloadProgressChangedEventArgs>();
+		private CancellationToken _cancellationToken;
 
 		// dependencies
 		private static readonly IVpdbClient VpdbClient = Locator.CurrentMutable.GetService<IVpdbClient>();
@@ -111,11 +113,13 @@ namespace VpdbAgent.Vpdb
 		/// <summary>
 		/// Transfer has started
 		/// </summary>
-		public void OnStart()
+		public void OnStart(CancellationToken token)
 		{
 			if (Status == JobStatus.Completed || Status == JobStatus.Transferring) {
 				throw new InvalidOperationException("Cannot start a job that is " + Status + ".");
 			}
+
+			_cancellationToken = token;
 
 			StartedAt = DateTime.Now;
 			Client.DownloadProgressChanged += OnProgressChanged;
@@ -136,6 +140,15 @@ namespace VpdbAgent.Vpdb
 				});
 		}
 
+		public void Cancel()
+		{
+			if (_cancellationToken != null && _cancellationToken.CanBeCanceled) {
+				Client.CancelAsync();
+
+			} else {
+				Logger.Info("Transfer cannot be cancelled.");
+			}
+		}
 
 		/// <summary>
 		/// Transfer has finished (succeeded or failed)
@@ -154,6 +167,15 @@ namespace VpdbAgent.Vpdb
 			System.Windows.Application.Current.Dispatcher.Invoke(delegate {
 				OnFinished();
 				_whenStatusChanges.OnNext(JobStatus.Completed);
+			});
+			Client.DownloadProgressChanged -= OnProgressChanged;
+		}
+
+		public void OnCancelled()
+		{
+			System.Windows.Application.Current.Dispatcher.Invoke(delegate {
+				OnFinished();
+				_whenStatusChanges.OnNext(JobStatus.Aborted);
 			});
 			Client.DownloadProgressChanged -= OnProgressChanged;
 		}
@@ -198,8 +220,8 @@ namespace VpdbAgent.Vpdb
 		private static readonly JobStatus[] StatusOrder = {
 			JobStatus.Transferring,
 			JobStatus.Queued,
-			JobStatus.Failed,
 			JobStatus.Aborted,
+			JobStatus.Failed,
 			JobStatus.Completed
 		};
 
@@ -233,6 +255,5 @@ namespace VpdbAgent.Vpdb
 			/// </summary>
 			Aborted
 		}
-
 	}
 }

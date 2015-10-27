@@ -18,7 +18,11 @@ namespace VpdbAgent.ViewModels.Downloads
 		public bool Transferring { get { return _transferring; } set { this.RaiseAndSetIfChanged(ref _transferring, value); } }
 		public Brush StatusPanelForeground { get { return _statusPanelForeground; } set { this.RaiseAndSetIfChanged(ref _statusPanelForeground, value); } }
 		public string StatusPanelIcon { get { return _statusPanelIcon; } set { this.RaiseAndSetIfChanged(ref _statusPanelIcon, value); } }
+		public int StatusPanelIconSize { get { return _statusPanelIconSize; } set { this.RaiseAndSetIfChanged(ref _statusPanelIconSize, value); } }
 		public double DownloadPercent { get { return _downloadPercent; } set { this.RaiseAndSetIfChanged(ref _downloadPercent, value); } }
+
+		// commands
+		public ReactiveCommand<object> CancelDownload { get; protected set; } = ReactiveCommand.Create();
 
 		// label props
 		public string DownloadSizeFormatted { get { return _downloadSizeFormatted; } set { this.RaiseAndSetIfChanged(ref _downloadSizeFormatted, value); } }
@@ -30,6 +34,7 @@ namespace VpdbAgent.ViewModels.Downloads
 		private bool _transferring;
 		private Brush _statusPanelForeground;
 		private string _statusPanelIcon;
+		private int _statusPanelIconSize;
 		private double _downloadPercent;
 		private string _downloadSizeFormatted;
 		private string _downloadPercentFormatted;
@@ -94,6 +99,11 @@ namespace VpdbAgent.ViewModels.Downloads
 						DownloadSizeFormatted = (progress.TotalBytesToReceive > 0 ? progress.TotalBytesToReceive : Job.File.Reference.Bytes).Bytes().ToString("#.0");
 					});
 				});
+
+			// abort job on command
+			CancelDownload.Subscribe(_ => {
+				Job.Cancel();
+			});
 		}
 
 		private void OnStatusUpdated()
@@ -102,13 +112,18 @@ namespace VpdbAgent.ViewModels.Downloads
 				case DownloadJob.JobStatus.Aborted:
 					StatusPanelForeground = RedBrush;
 					StatusPanelIcon = CloseIcon;
+					StatusPanelIconSize = 14;
+					StatusPanelLabel = new ObservableCollection<Inline>
+					{
+						new Run("Cancelled"),
+					};
 					OnFinished();
 					break;
 
 				case DownloadJob.JobStatus.Completed:
 					StatusPanelForeground = GreenBrush;
 					StatusPanelIcon = CheckIcon;
-					OnFinished();
+					StatusPanelIconSize = 16;
 					StatusPanelLabel = new ObservableCollection<Inline>
 					{
 						new Run("Successfully downloaded "),
@@ -117,27 +132,30 @@ namespace VpdbAgent.ViewModels.Downloads
 						new Run(" at "),
 						new Run(Job.DownloadBytesPerSecond.Bytes().ToString("#.0") + "/s") {FontWeight = FontWeights.Bold}
 					};
+					OnFinished();
 					break;
 
 				case DownloadJob.JobStatus.Failed:
 					StatusPanelForeground = RedBrush;
 					StatusPanelIcon = WarningIcon;
-					OnFinished();
+					StatusPanelIconSize = 18;
 					StatusPanelLabel = new ObservableCollection<Inline>
 					{
 						new Run("Error: "),
 						new Run(Job.ErrorMessage)
 					};
+					OnFinished();
 					break;
 
 				case DownloadJob.JobStatus.Queued:
 					StatusPanelForeground = GreyBrush;
 					StatusPanelIcon = ClockIcon;
-					Transferring = false;
+					StatusPanelIconSize = 16;
 					StatusPanelLabel = new ObservableCollection<Inline>
 					{
 						new Run("Transfer queued")
 					};
+					Transferring = false;
 					break;
 
 				case DownloadJob.JobStatus.Transferring:

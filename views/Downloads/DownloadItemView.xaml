@@ -28,7 +28,6 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <!-- image -->
@@ -67,28 +66,28 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <ProgressBar Value="{Binding Path=DownloadPercent, Mode=OneWay}" Style="{StaticResource BlehProgressBar}" 
-                Grid.Column="0" Margin="0,0,10,0" IsIndeterminate="False"/>
+                Grid.Column="0" Margin="0,0,15,0" IsIndeterminate="False"/>
             <Button x:Name="SelectButton" Style="{StaticResource ButtonSolidSmall}" 
-                Content="CANCEL" 
+                Content="CANCEL" Command="{Binding CancelDownload}"
                 Grid.Column="1" HorizontalAlignment="Right"/>
         </Grid>
 
         <!-- status message -->
         <Grid x:Name="StatusSuccess" Visibility="{Binding Path=Transferring, Converter={StaticResource TrueToCollapsed}}"
-              Grid.ColumnSpan="3" Grid.Row="3" Grid.Column="0" Margin="0,-10,0,0" >
+              Grid.ColumnSpan="3" Grid.Row="2" Grid.Column="0" Margin="0,-10,0,0" >
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="65" />
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <c:IconControl Margin="0,4,15,0" Height="18" Width="18" Grid.Column="0"
-                HorizontalAlignment="Right" VerticalAlignment="Top"
+            <c:IconControl Margin="0,0,15,0" Height="{Binding StatusPanelIconSize}" Width="{Binding StatusPanelIconSize}" Grid.Column="0"
+                HorizontalAlignment="Right" VerticalAlignment="Center"
                 Foreground="{Binding StatusPanelForeground}" Data="{Binding StatusPanelIcon}" />
             <c:RichTextBlock Style="{StaticResource Label}" Grid.Column="1" TextWrapping="Wrap" Margin="0,0,10,3" 
                 Foreground="{Binding StatusPanelForeground}" InlineList="{Binding StatusPanelLabel}">
             </c:RichTextBlock>
         </Grid>
 
-        <Separator Grid.ColumnSpan="3" Grid.Row="4" Grid.Column="0" Margin="0,5,-20,0"/>
+        <Separator Grid.ColumnSpan="3" Grid.Row="3" Grid.Column="0" Margin="0,5,-20,0"/>
     </Grid>
 </UserControl>

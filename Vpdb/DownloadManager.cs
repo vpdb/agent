@@ -122,7 +122,7 @@ namespace VpdbAgent.Vpdb
 			token.Register(job.Client.CancelAsync);
 
 			// update statuses
-			job.OnStart();
+			job.OnStart(token);
 
 			// do the grunt work
 			try {
@@ -131,12 +131,18 @@ namespace VpdbAgent.Vpdb
 				_logger.Info("Finished downloading of {0}", job.Uri);
 
 			} catch (WebException e) {
-				job.OnFailure(e);
-				Console.WriteLine("Error downloading file (server error): {0}", e.Message);
+				
+				if (e.Status == WebExceptionStatus.RequestCanceled) {
+					job.OnCancelled();
+
+				} else {
+					job.OnFailure(e);
+					_logger.Error(e, "Error downloading file (server error): {0}", e.Message);
+				}
 
 			} catch (Exception e) {
 				job.OnFailure(e);
-				Console.WriteLine("Error downloading file: {0}", e.Message);
+				_logger.Error(e, "Error downloading file: {0}", e.Message);
 			}
 			return job;
 		}
