@@ -7,6 +7,7 @@ using System.Windows.Documents;
 using System.Windows.Media;
 using Humanizer;
 using ReactiveUI;
+using Splat;
 using VpdbAgent.Vpdb;
 
 namespace VpdbAgent.ViewModels.Downloads
@@ -16,6 +17,7 @@ namespace VpdbAgent.ViewModels.Downloads
 		// status props
 		public DownloadJob Job { get; }
 		public bool Transferring { get { return _transferring; } set { this.RaiseAndSetIfChanged(ref _transferring, value); } }
+		public bool Retryable { get { return _retryable; } set { this.RaiseAndSetIfChanged(ref _retryable, value); } }
 		public Brush StatusPanelForeground { get { return _statusPanelForeground; } set { this.RaiseAndSetIfChanged(ref _statusPanelForeground, value); } }
 		public string StatusPanelIcon { get { return _statusPanelIcon; } set { this.RaiseAndSetIfChanged(ref _statusPanelIcon, value); } }
 		public int StatusPanelIconSize { get { return _statusPanelIconSize; } set { this.RaiseAndSetIfChanged(ref _statusPanelIconSize, value); } }
@@ -23,6 +25,7 @@ namespace VpdbAgent.ViewModels.Downloads
 
 		// commands
 		public ReactiveCommand<object> CancelDownload { get; protected set; } = ReactiveCommand.Create();
+		public ReactiveCommand<object> DeleteDownload { get; protected set; } = ReactiveCommand.Create();
 
 		// label props
 		public string DownloadSizeFormatted { get { return _downloadSizeFormatted; } set { this.RaiseAndSetIfChanged(ref _downloadSizeFormatted, value); } }
@@ -32,6 +35,7 @@ namespace VpdbAgent.ViewModels.Downloads
 
 		// privates
 		private bool _transferring;
+		private bool _retryable;
 		private Brush _statusPanelForeground;
 		private string _statusPanelIcon;
 		private int _statusPanelIconSize;
@@ -40,6 +44,9 @@ namespace VpdbAgent.ViewModels.Downloads
 		private string _downloadPercentFormatted;
 		private string _downloadSpeedFormatted;
 		private ObservableCollection<Inline> _statusPanelLabel;
+
+		// deps
+		private static readonly IDownloadManager DownloadManager = Locator.CurrentMutable.GetService<IDownloadManager>();
 
 		// brushes
 		private static readonly Brush RedBrush = (Brush)System.Windows.Application.Current.FindResource("LightRedBrush");
@@ -101,9 +108,10 @@ namespace VpdbAgent.ViewModels.Downloads
 				});
 
 			// abort job on command
-			CancelDownload.Subscribe(_ => {
-				Job.Cancel();
-			});
+			CancelDownload.Subscribe(_ => { Job.Cancel(); });
+
+			// delete job
+			DeleteDownload.Subscribe(_ => { DownloadManager.DeleteJob(Job); });
 		}
 
 		private void OnStatusUpdated()
@@ -112,11 +120,9 @@ namespace VpdbAgent.ViewModels.Downloads
 				case DownloadJob.JobStatus.Aborted:
 					StatusPanelForeground = RedBrush;
 					StatusPanelIcon = CloseIcon;
-					StatusPanelIconSize = 14;
-					StatusPanelLabel = new ObservableCollection<Inline>
-					{
-						new Run("Cancelled"),
-					};
+					StatusPanelIconSize = 12;
+					StatusPanelLabel = new ObservableCollection<Inline> { new Run("Cancelled"), };
+					Retryable = true;
 					OnFinished();
 					break;
 
@@ -124,14 +130,14 @@ namespace VpdbAgent.ViewModels.Downloads
 					StatusPanelForeground = GreenBrush;
 					StatusPanelIcon = CheckIcon;
 					StatusPanelIconSize = 16;
-					StatusPanelLabel = new ObservableCollection<Inline>
-					{
+					StatusPanelLabel = new ObservableCollection<Inline> {
 						new Run("Successfully downloaded "),
 						new Run(Job.TransferredBytes.Bytes().ToString("#.0") + " ") {FontWeight = FontWeights.Bold},
 						new Run(Job.FinishedAt.Humanize(false)),
 						new Run(" at "),
 						new Run(Job.DownloadBytesPerSecond.Bytes().ToString("#.0") + "/s") {FontWeight = FontWeights.Bold}
 					};
+					Retryable = false;
 					OnFinished();
 					break;
 
@@ -139,11 +145,11 @@ namespace VpdbAgent.ViewModels.Downloads
 					StatusPanelForeground = RedBrush;
 					StatusPanelIcon = WarningIcon;
 					StatusPanelIconSize = 18;
-					StatusPanelLabel = new ObservableCollection<Inline>
-					{
+					StatusPanelLabel = new ObservableCollection<Inline> {
 						new Run("Error: "),
 						new Run(Job.ErrorMessage)
 					};
+					Retryable = true;
 					OnFinished();
 					break;
 
@@ -151,16 +157,15 @@ namespace VpdbAgent.ViewModels.Downloads
 					StatusPanelForeground = GreyBrush;
 					StatusPanelIcon = ClockIcon;
 					StatusPanelIconSize = 16;
-					StatusPanelLabel = new ObservableCollection<Inline>
-					{
-						new Run("Transfer queued")
-					};
+					StatusPanelLabel = new ObservableCollection<Inline> { new Run("Transfer queued") };
+					Retryable = false;
 					Transferring = false;
 					break;
 
 				case DownloadJob.JobStatus.Transferring:
 					StatusPanelForeground = Brushes.Transparent;
 					Transferring = true;
+					Retryable = false;
 					break;
 
 				default:

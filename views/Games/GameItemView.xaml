@@ -85,7 +85,7 @@
 
                     <!-- close button -->
                     <Button Command="{Binding CloseResults}" Style="{StaticResource IconButton}" Grid.Column="0" Width="40" Height="40" VerticalAlignment="Top" HorizontalAlignment="Left">
-                        <c:IconControl Height="12" Width="12" Foreground="#40ffffff" Data="{StaticResource IconClose}" />
+                        <c:IconControl Height="12" Width="12" Foreground="{StaticResource LabelTextBrush}" Data="{StaticResource IconClose}" />
                     </Button>
 
                     <StackPanel Grid.Column="1" Orientation="Vertical" Margin="0,5,10,5">

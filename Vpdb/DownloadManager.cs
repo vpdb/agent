@@ -1,15 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows;
 using NLog;
 using ReactiveUI;
 using VpdbAgent.Application;
@@ -23,12 +20,39 @@ namespace VpdbAgent.Vpdb
 	/// </summary>
 	public interface IDownloadManager
 	{
+		/// <summary>
+		/// Downloads a release, including table image, ROMs and other media,
+		/// based on the user's settings.
+		/// </summary>
+		/// <param name="id">ID of the release</param>
+		/// <returns>This instance</returns>
 		IDownloadManager DownloadRelease(string id);
-		ReactiveList<DownloadJob> CurrentJobs { get; }
+
+		IDownloadManager DeleteJob(DownloadJob job);
+
+		/// <summary>
+		/// An observable that produces values as when any job in the queue
+		/// (active or not) changes status.
+		/// </summary>
 		IObservable<DownloadJob.JobStatus> WhenStatusChanged { get; }
+
+		/// <summary>
+		/// An observable that produces a value when a job finished downloading
+		/// successfully.
+		/// </summary>
 		IObservable<DownloadJob> WhenDownloaded { get; }
+
+		/// <summary>
+		/// A list of all current, future and past jobs (i.e. independent of their 
+		/// status)
+		/// </summary>
+		ReactiveList<DownloadJob> CurrentJobs { get; }
+
 	}
 
+	/// <summary>
+	/// Application logic for <see cref="IDownloadManager"/>.
+	/// </summary>
 	public class DownloadManager : IDownloadManager
 	{
 		// increase this on demand...
@@ -41,6 +65,7 @@ namespace VpdbAgent.Vpdb
 
 		// props
 		public ReactiveList<DownloadJob> CurrentJobs { get; }
+
 		public IObservable<DownloadJob.JobStatus> WhenStatusChanged => _whenStatusChanged;
 		public IObservable<DownloadJob> WhenDownloaded => _whenDownloaded;
 
@@ -62,6 +87,7 @@ namespace VpdbAgent.Vpdb
 			_databaseManager = databaseManager;
 			_logger = logger;
 
+			// setup transfer queue
 			_queue = _jobs
 				.ObserveOn(Scheduler.Default)
 				.Select(job => Observable.DeferAsync(async token => Observable.Return(await ProcessDownload(job, token))))
@@ -71,7 +97,8 @@ namespace VpdbAgent.Vpdb
 					_whenDownloaded.OnNext(job);
 				}, error => {
 					_databaseManager.Save();
-					Console.WriteLine("Error: {0}", error);
+					// todo treat error in ui
+					_logger.Error(error, "Error: {0}", error.Message);
 				});
 
 			if (!Directory.Exists(_downloadPath)) {
@@ -104,6 +131,7 @@ namespace VpdbAgent.Vpdb
 					_jobs.OnNext(job);
 
 					// todo also queue all remaining non-table files of the release.
+					// todo also queue media & roms if available, based on settings
 
 				}, error => {
 					_logger.Error(error, "Error retrieving release data.");
@@ -112,11 +140,30 @@ namespace VpdbAgent.Vpdb
 			return this;
 		}
 
+		public IDownloadManager DeleteJob(DownloadJob job)
+		{
+			// update jobs back on main thread
+			System.Windows.Application.Current.Dispatcher.Invoke(delegate {
+				_databaseManager.Database.DownloadJobs.Remove(job);
+				_databaseManager.Save();
+			});
+			return this;
+		}
+
 		public void CancelAll()
 		{
 			_queue.Dispose();
 		}
 
+		/// <summary>
+		/// Starts the download.
+		/// </summary>
+		/// <remarks>
+		/// This is called when the queue has a new download slot available.
+		/// </remarks>
+		/// <param name="job">Job to start</param>
+		/// <param name="token">Cancelation token</param>
+		/// <returns>Job</returns>
 		private async Task<DownloadJob> ProcessDownload(DownloadJob job, CancellationToken token)
 		{
 			var dest = Path.Combine(_downloadPath, job.FileName);
@@ -152,6 +199,11 @@ namespace VpdbAgent.Vpdb
 			return job;
 		}
 
+		/// <summary>
+		/// Persists a new job and forwards its changing status to the
+		/// global one.
+		/// </summary>
+		/// <param name="job">Job to add</param>
 		private void AddToCurrentJobs(DownloadJob job)
 		{
 			// update jobs back on main thread

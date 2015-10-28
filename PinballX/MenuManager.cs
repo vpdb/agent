@@ -37,7 +37,19 @@ namespace VpdbAgent.PinballX
 		/// <returns></returns>
 		IMenuManager Initialize();
 
+		/// <summary>
+		/// Adds a new game to the PinballX database.
+		/// </summary>
+		/// <param name="game">Game to add</param>
+		/// <param name="databasePath">Full path to the database folder</param>
+		/// <returns></returns>
 		Game AddGame(Game game, string databasePath);
+
+		/// <summary>
+		/// Instantiates a new game from a given download job.
+		/// </summary>
+		/// <param name="job">Download job</param>
+		/// <returns></returns>
 		Game NewGame(DownloadJob job);
 
 		/// <summary>
@@ -51,8 +63,7 @@ namespace VpdbAgent.PinballX
 	/// </summary>
 	public class MenuManager : IMenuManager
 	{
-
-		private static readonly string VpdbXml = "Vpdb.xml";
+		private const string VpdbXml = "Vpdb.xml";
 
 		public ReactiveList<PinballXSystem> Systems { get; } = new ReactiveList<PinballXSystem>();
 
@@ -259,7 +270,7 @@ namespace VpdbAgent.PinballX
 		}
 
 		/// <summary>
-		/// Returns an unmarshaled object for a given .XML file
+		/// Returns an unmarshalled object for a given .XML file
 		/// </summary>
 		/// <param name="filepath">Absolute path to the .XML file</param>
 		/// <returns></returns>
@@ -285,6 +296,17 @@ namespace VpdbAgent.PinballX
 			return menu;
 		}
 
+		/// <summary>
+		/// Saves the menu back to the XML file.
+		/// </summary>
+		/// <remarks>
+		/// This should only be used for updating or adding games by VPDB Agent,
+		/// i.e. those in Vpdb.xml that is managed by VPDB Agent. For existing games
+		/// another serializer should be used that keeps eventual comments and
+		/// ordering intact.
+		/// </remarks>
+		/// <param name="menu"></param>
+		/// <param name="filepath"></param>
 		private void MarshallXml(Menu menu, string filepath)
 		{
 			try {
