@@ -54,6 +54,7 @@ namespace VpdbAgent.Models
 				.ToProperty(this, game => game.HasRelease, out _hasRelease);
 		}
 
+		// todo tablePath is in Platform.
 		public Game(PinballX.Models.Game xmlGame, string tablePath, Platform platform, GlobalDatabase db) : this()
 		{
 			Update(platform, db);
@@ -98,6 +99,16 @@ namespace VpdbAgent.Models
 		public int CompareTo(Game other)
 		{
 			return other == null ? 1 : Compare(Id, other.Id, StringComparison.Ordinal);
+		}
+
+		public bool Equals(Game game)
+		{
+			return game?.Id != null && game.Id.Equals(Id);
+		}
+
+		public bool Equals(PinballX.Models.Game game)
+		{
+			return game?.Description != null && game.Description.Equals(Id);
 		}
 
 		public override string ToString()

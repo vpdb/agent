@@ -7,7 +7,9 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using NLog;
 using VpdbAgent.Models;
+using VpdbAgent.Vpdb.Models;
 using VpdbAgent.Vpdb.Network;
+using File = System.IO.File;
 
 namespace VpdbAgent.Application
 {
@@ -70,7 +72,6 @@ namespace VpdbAgent.Application
 			MarshallDatabase();
 			return this;
 		}
-
 
 		/// <summary>
 		/// Reads the internal global .json file of a given platform and 

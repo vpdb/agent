@@ -12,6 +12,7 @@ using System.Reactive.Linq;
 using System.Reactive.Concurrency;
 using System.Windows;
 using VpdbAgent.Application;
+using VpdbAgent.Vpdb;
 
 namespace VpdbAgent.PinballX
 {
@@ -36,6 +37,9 @@ namespace VpdbAgent.PinballX
 		/// <returns></returns>
 		IMenuManager Initialize();
 
+		Game AddGame(Game game, string databasePath);
+		Game NewGame(DownloadJob job);
+
 		/// <summary>
 		/// Systems parsed from <c>PinballX.ini</c>.
 		/// </summary>
@@ -47,6 +51,9 @@ namespace VpdbAgent.PinballX
 	/// </summary>
 	public class MenuManager : IMenuManager
 	{
+
+		private static readonly string VpdbXml = "Vpdb.xml";
+
 		public ReactiveList<PinballXSystem> Systems { get; } = new ReactiveList<PinballXSystem>();
 
 		// dependencies
@@ -94,6 +101,32 @@ namespace VpdbAgent.PinballX
 
 			return this;
 		}
+
+		public Game AddGame(Game game, string databasePath)
+		{
+			// read current xml
+			var vpdbXml = Path.Combine(databasePath, VpdbXml);
+			var menu = UnmarshallXml(vpdbXml);
+
+			// add game
+			menu.Games.Add(game);
+
+			// save xml
+			MarshallXml(menu, vpdbXml);
+
+			return game;
+		}
+
+		public Game NewGame(DownloadJob job)
+		{
+			return new Game() {
+				Filename = Path.GetFileNameWithoutExtension(job.FilePath),
+				Description = job.Release.Game.DisplayName,
+				Manufacturer = job.Release.Game.Manufacturer,
+				Year = job.Release.Game.Year.ToString()
+			};
+		}
+
 
 		/// <summary>
 		/// Updates all systems.
@@ -233,6 +266,10 @@ namespace VpdbAgent.PinballX
 		private Menu UnmarshallXml(string filepath)
 		{
 			var menu = new Menu();
+
+			if (!File.Exists(filepath)) {
+				return menu;
+			}
 			Stream reader = null;
 			try {
 				var serializer = new XmlSerializer(typeof(Menu));
@@ -246,6 +283,20 @@ namespace VpdbAgent.PinballX
 				reader?.Close();
 			}
 			return menu;
+		}
+
+		private void MarshallXml(Menu menu, string filepath)
+		{
+			try {
+				var serializer = new XmlSerializer(typeof(Menu));
+				using (TextWriter writer = new StreamWriter(filepath)) {
+					serializer.Serialize(writer, menu);
+					_logger.Info("Saved {0}.", filepath);
+				}
+			} catch (Exception e) {
+				_logger.Error(e, "Error writing XML to {0}: {1}", filepath, e.Message);
+			}
+
 		}
 	}
 }

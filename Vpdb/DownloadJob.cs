@@ -47,7 +47,7 @@ namespace VpdbAgent.Vpdb
 			set {
 				_file = value;
 				Uri = VpdbClient.GetUri(value.Reference.Url);
-				Filename = value.Reference.Name;
+				FileName = value.Reference.Name;
 				if (_release != null) {
 					Version = _release.Versions.FirstOrDefault(version => version.Files.Contains(_file));
 				}
@@ -66,7 +66,8 @@ namespace VpdbAgent.Vpdb
 		public readonly WebClient Client;
 
 		// convenience props
-		public string Filename { get; private set; }
+		public string FilePath { get; set; }
+		public string FileName { get; private set; }
 		public Version Version { get; private set; }
 		public bool IsFinished => Status != JobStatus.Transferring && Status != JobStatus.Queued;
 		public TimeSpan DownloadTime => FinishedAt - StartedAt;
@@ -113,13 +114,14 @@ namespace VpdbAgent.Vpdb
 		/// <summary>
 		/// Transfer has started
 		/// </summary>
-		public void OnStart(CancellationToken token)
+		public void OnStart(CancellationToken token, string filePath)
 		{
 			if (Status == JobStatus.Completed || Status == JobStatus.Transferring) {
 				throw new InvalidOperationException("Cannot start a job that is " + Status + ".");
 			}
 
 			_cancellationToken = token;
+			FilePath = filePath;
 
 			StartedAt = DateTime.Now;
 			Client.DownloadProgressChanged += OnProgressChanged;

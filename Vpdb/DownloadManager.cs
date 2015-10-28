@@ -25,7 +25,8 @@ namespace VpdbAgent.Vpdb
 	{
 		IDownloadManager DownloadRelease(string id);
 		ReactiveList<DownloadJob> CurrentJobs { get; }
-		IObservable<DownloadJob.JobStatus> StatusChanged { get; }
+		IObservable<DownloadJob.JobStatus> WhenStatusChanged { get; }
+		IObservable<DownloadJob> WhenDownloaded { get; }
 	}
 
 	public class DownloadManager : IDownloadManager
@@ -40,11 +41,13 @@ namespace VpdbAgent.Vpdb
 
 		// props
 		public ReactiveList<DownloadJob> CurrentJobs { get; }
-		public IObservable<DownloadJob.JobStatus> StatusChanged => _statusChanged;
+		public IObservable<DownloadJob.JobStatus> WhenStatusChanged => _whenStatusChanged;
+		public IObservable<DownloadJob> WhenDownloaded => _whenDownloaded;
 
 		// members
 		private readonly Subject<DownloadJob> _jobs = new Subject<DownloadJob>();
-		private readonly Subject<DownloadJob.JobStatus> _statusChanged = new Subject<DownloadJob.JobStatus>();
+		private readonly Subject<DownloadJob.JobStatus> _whenStatusChanged = new Subject<DownloadJob.JobStatus>();
+		private readonly Subject<DownloadJob> _whenDownloaded = new Subject<DownloadJob>();
 		private readonly IDisposable _queue;
 		private readonly string _downloadPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "VpdbAgent", "Download");
 
@@ -65,7 +68,7 @@ namespace VpdbAgent.Vpdb
 				.Merge(MaximalSimultaneousDownloads)
 				.Subscribe(job => {
 					_databaseManager.Save();
-					Console.WriteLine("Job {0} completed.", job);
+					_whenDownloaded.OnNext(job);
 				}, error => {
 					_databaseManager.Save();
 					Console.WriteLine("Error: {0}", error);
@@ -100,6 +103,8 @@ namespace VpdbAgent.Vpdb
 					AddToCurrentJobs(job);
 					_jobs.OnNext(job);
 
+					// todo also queue all remaining non-table files of the release.
+
 				}, error => {
 					_logger.Error(error, "Error retrieving release data.");
 				});
@@ -114,7 +119,7 @@ namespace VpdbAgent.Vpdb
 
 		private async Task<DownloadJob> ProcessDownload(DownloadJob job, CancellationToken token)
 		{
-			var dest = Path.Combine(_downloadPath, job.Filename);
+			var dest = Path.Combine(_downloadPath, job.FileName);
 
 			_logger.Info("Starting downloading of {0} to {1}", job.Uri, dest);
 
@@ -122,7 +127,7 @@ namespace VpdbAgent.Vpdb
 			token.Register(job.Client.CancelAsync);
 
 			// update statuses
-			job.OnStart(token);
+			job.OnStart(token, dest);
 
 			// do the grunt work
 			try {
@@ -152,7 +157,7 @@ namespace VpdbAgent.Vpdb
 			// update jobs back on main thread
 			System.Windows.Application.Current.Dispatcher.Invoke(delegate {
 				
-				job.WhenStatusChanges.Subscribe(status => _statusChanged.OnNext(status));
+				job.WhenStatusChanges.Subscribe(status => _whenStatusChanged.OnNext(status));
 				_databaseManager.Database.DownloadJobs.Add(job);
 				_databaseManager.Save();
 			});

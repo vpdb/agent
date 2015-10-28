@@ -24,7 +24,7 @@ namespace VpdbAgent.ViewModels.Downloads
 				job => new DownloadItemViewModel(job),
 				x => true, 
 				(x, y) => x.Job.CompareTo(y.Job),
-				DownloadManager.StatusChanged
+				DownloadManager.WhenStatusChanged
 			);
 		}
 	}

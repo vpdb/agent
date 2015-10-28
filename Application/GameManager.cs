@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.IO;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Concurrency;
@@ -14,6 +16,7 @@ using VpdbAgent.PinballX;
 using VpdbAgent.PinballX.Models;
 using VpdbAgent.Vpdb;
 using VpdbAgent.Vpdb.Models;
+using File = System.IO.File;
 using Game = VpdbAgent.Models.Game;
 
 namespace VpdbAgent.Application
@@ -89,6 +92,7 @@ namespace VpdbAgent.Application
 		public ReactiveList<Platform> Platforms { get; } = new ReactiveList<Platform>();
 		public ReactiveList<Game> Games { get; } = new ReactiveList<Game>();
 
+		private readonly List<Tuple<string, string>> _gamesToLink = new List<Tuple<string, string>>();
 
 		public GameManager(IMenuManager menuManager, IVpdbClient vpdbClient, ISettingsManager 
 			settingsManager, IDownloadManager downloadManager, IDatabaseManager databaseManager, Logger logger)
@@ -141,6 +145,22 @@ namespace VpdbAgent.Application
 
 			// subscribe to pusher
 			vpdbClient.UserChannel.Subscribe(OnChannelJoined);
+
+			// subscribe to downloaded releases
+			downloadManager.WhenDownloaded.Subscribe(OnReleaseDownloaded);
+
+			// link games if new games are added 
+			Games.Changed.Subscribe(_ => {
+				if (_gamesToLink.Count > 0) {
+					for (var i = _gamesToLink.Count - 1; i >= 0; i--) {
+						var x = _gamesToLink[i];
+						var game = Games.FirstOrDefault(g => g.Id.Equals(x.Item1));
+						var release = _databaseManager.Database.Releases[x.Item2];
+						LinkRelease(game, release);
+						_gamesToLink.RemoveAt(i);
+					}
+				}
+			});
 		}
 
 		public IGameManager Initialize()
@@ -157,6 +177,7 @@ namespace VpdbAgent.Application
 
 		public IGameManager LinkRelease(Game game, Release release)
 		{
+			_logger.Info("Linking {0} to {1}..", game, release);
 			AddRelease(release);
 			game.ReleaseId = release.Id;
 			game.Release = release;
@@ -272,6 +293,44 @@ namespace VpdbAgent.Application
 			} else {
 				_logger.Info("Skipping release update, no linked releases found.");
 			}
+		}
+
+		private void OnReleaseDownloaded(DownloadJob job)
+		{
+			_logger.Info("Adding {0} to PinballX database...", job.Release);
+
+			// add release to database
+			AddRelease(job.Release);
+
+			// todo make this more sophisticated based on settings.
+			var platform = Platforms.FirstOrDefault(p => "Visual Pinball".Equals(p.Name));
+			if (platform == null) {
+				_logger.Error("Cannot retrieve default platform \"Visual Pinball\".");
+				return;
+			}
+
+			// move downloaded file to table folder
+			if (job.FilePath != null && File.Exists(job.FilePath)) {
+				try {
+					var dest = Path.Combine(platform.TablePath, Path.GetFileName(job.FilePath));
+					_logger.Info("Moving downloaded file from {0} to {1}...", job.FilePath, dest);
+					File.Move(job.FilePath, dest);
+				} catch (Exception e) {
+					_logger.Error(e, "Error moving downloaded file.");
+				}
+			} else {
+				_logger.Error("Downloaded file {0} does not exist.", job.FilePath);
+			}
+			var newGame = _menuManager.NewGame(job);
+
+			// now, adding the game force a new rescan. but it's async so in 
+			// order to avoid race conditions, we put this into a "linking" 
+			// queue, meaning on the next updated, this will get linked.
+			_gamesToLink.Add(new Tuple<string, string>(newGame.Description, job.Release.Id));
+
+
+			// save new game to Vpdb.xml (and trigger Games refresh)
+			_menuManager.AddGame(newGame, platform.DatabasePath);
 		}
 
 		/// <summary>

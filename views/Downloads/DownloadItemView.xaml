@@ -44,7 +44,7 @@
                 <Run Text="{Binding Job.Version.Name}"/>
             </TextBlock.Inlines>
         </TextBlock>
-        <TextBlock Text="{Binding Job.Filename}" Style="{StaticResource Label}" TextTrimming="CharacterEllipsis" 
+        <TextBlock Text="{Binding Job.FileName}" Style="{StaticResource Label}" TextTrimming="CharacterEllipsis" 
                    Grid.Column="1" Grid.Row="1"/>
 
         <!-- right side stats -->
