@@ -24,8 +24,9 @@ namespace VpdbAgent.ViewModels.Downloads
 		public double DownloadPercent { get { return _downloadPercent; } set { this.RaiseAndSetIfChanged(ref _downloadPercent, value); } }
 
 		// commands
-		public ReactiveCommand<object> CancelDownload { get; protected set; } = ReactiveCommand.Create();
-		public ReactiveCommand<object> DeleteDownload { get; protected set; } = ReactiveCommand.Create();
+		public ReactiveCommand<object> CancelJob { get; protected set; } = ReactiveCommand.Create();
+		public ReactiveCommand<object> DeleteJob { get; protected set; } = ReactiveCommand.Create();
+		public ReactiveCommand<object> RetryJob { get; protected set; } = ReactiveCommand.Create();
 
 		// label props
 		public string DownloadSizeFormatted { get { return _downloadSizeFormatted; } set { this.RaiseAndSetIfChanged(ref _downloadSizeFormatted, value); } }
@@ -108,10 +109,13 @@ namespace VpdbAgent.ViewModels.Downloads
 				});
 
 			// abort job on command
-			CancelDownload.Subscribe(_ => { Job.Cancel(); });
+			CancelJob.Subscribe(_ => { Job.Cancel(); });
 
+			// retry job
+			RetryJob.Subscribe(_ => { DownloadManager.RetryJob(Job); });
+			
 			// delete job
-			DeleteDownload.Subscribe(_ => { DownloadManager.DeleteJob(Job); });
+			DeleteJob.Subscribe(_ => { DownloadManager.DeleteJob(Job); });
 		}
 
 		private void OnStatusUpdated()

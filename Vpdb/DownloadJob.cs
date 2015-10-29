@@ -55,7 +55,7 @@ namespace VpdbAgent.Vpdb
 
 		[DataMember] [JsonConverter(typeof(StringEnumConverter))]
 		public JobStatus Status { get; private set; } = JobStatus.Queued;
-		[DataMember] public DateTime QueuedAt { get; } = DateTime.Now;
+		[DataMember] public DateTime QueuedAt { get; private set; } = DateTime.Now;
 		[DataMember] public DateTime StartedAt { get; private set; }
 		[DataMember] public DateTime FinishedAt { get; private set; }
 		[DataMember] public long TransferredBytes { get; private set; }
@@ -140,6 +140,12 @@ namespace VpdbAgent.Vpdb
 					//	TransferredBytes = progress.BytesReceived;
 					//});
 				});
+		}
+
+		public void Initialize()
+		{
+			Status = JobStatus.Queued;
+			QueuedAt = DateTime.Now;
 		}
 
 		public void Cancel()

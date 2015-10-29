@@ -30,6 +30,8 @@ namespace VpdbAgent.Vpdb
 
 		IDownloadManager DeleteJob(DownloadJob job);
 
+		IDownloadManager RetryJob(DownloadJob job);
+
 		/// <summary>
 		/// An observable that produces values as when any job in the queue
 		/// (active or not) changes status.
@@ -47,7 +49,6 @@ namespace VpdbAgent.Vpdb
 		/// status)
 		/// </summary>
 		ReactiveList<DownloadJob> CurrentJobs { get; }
-
 	}
 
 	/// <summary>
@@ -137,6 +138,18 @@ namespace VpdbAgent.Vpdb
 					_logger.Error(error, "Error retrieving release data.");
 				});
 
+			return this;
+		}
+
+		public IDownloadManager RetryJob(DownloadJob job)
+		{
+			System.Windows.Application.Current.Dispatcher.Invoke(delegate
+			{
+				job.Initialize();
+				job.WhenStatusChanges.Subscribe(status => _whenStatusChanged.OnNext(status));
+				_databaseManager.Save();
+				_jobs.OnNext(job);
+			});
 			return this;
 		}
 

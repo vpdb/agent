@@ -27,7 +27,7 @@
         </StackPanel>
 
         <!-- select button -->
-        <Button x:Name="SelectButton" Style="{StaticResource ButtonLineSmall}" Grid.Column="2" Content="SELECT" HorizontalAlignment="Right"/>
+        <Button x:Name="SelectButton" Style="{StaticResource ButtonSolidSmall}" Grid.Column="2" Content="SELECT" HorizontalAlignment="Right"/>
 
     </Grid>
 </UserControl>
