@@ -5,6 +5,7 @@ using Splat;
 using VpdbAgent.Application;
 using VpdbAgent.Vpdb.Models;
 using Game = VpdbAgent.Models.Game;
+using Version = VpdbAgent.Vpdb.Models.Version;
 
 namespace VpdbAgent.ViewModels.Games
 {
@@ -15,14 +16,18 @@ namespace VpdbAgent.ViewModels.Games
 		// public members
 		public readonly Game Game;
 		public readonly Release Release;
+		public readonly Version Version;
+		public readonly File File;
 
 		// commands
 		public ReactiveCommand<object> SelectResult { get; protected set; } = ReactiveCommand.Create();
 
-		public GameResultItemViewModel(Game game, Release release, File file, ICommand closeCommand)
+		public GameResultItemViewModel(Game game, Release release, Version version, File file, ICommand closeCommand)
 		{
 			Game = game;
+			Version = version;
 			Release = release;
+			File = file;
 
 			SelectResult.Subscribe(_ =>
 			{

@@ -62,13 +62,14 @@ namespace VpdbAgent.ViewModels.Games
 			}
 
 			// release identify
-			IdentifyRelease = ReactiveCommand.CreateAsyncObservable(_ => VpdbClient.Api.GetReleasesBySize(game.FileSize, 512).SubscribeOn(Scheduler.Default));
-			IdentifyRelease
-				.Select(releases => releases.Select(release => new GameResultItemViewModel(game, release, release.Versions[0].Files[0], CloseResults)))
-				.Subscribe(releases =>
-				{
-					IdentifiedReleases = releases;
-				});
+			IdentifyRelease = ReactiveCommand.CreateAsyncObservable(_ => VpdbClient.Api.GetReleasesBySize(game.FileSize, 1000000).SubscribeOn(Scheduler.Default));
+			IdentifyRelease.Select(releases => releases
+				.Select(release => new {release, release.Versions})
+				.SelectMany(x => x.Versions.Select(version => new {x.release, version, version.Files}))
+				.SelectMany(x => x.Files.Select(file => new GameResultItemViewModel(game, x.release, x.version, file, CloseResults)))
+			).Subscribe(releases => {
+				IdentifiedReleases = releases;
+			});
 
 			// handle errors
 			IdentifyRelease.ThrownExceptions.Subscribe(e => { Logger.Error(e, "Error matching game."); });
