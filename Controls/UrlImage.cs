@@ -71,6 +71,7 @@ namespace VpdbAgent.Controls
 
 			// if cached, set from cache
 			if (IsCached(urlSource)) {
+				Opacity = 1;
 				Source = new BitmapImage(new Uri(GetLocalPath(urlSource)));
 				return;
 			}

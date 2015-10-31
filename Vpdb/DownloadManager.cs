@@ -28,8 +28,18 @@ namespace VpdbAgent.Vpdb
 		/// <returns>This instance</returns>
 		IDownloadManager DownloadRelease(string id);
 
+		/// <summary>
+		/// Deletes a job from the database.
+		/// </summary>
+		/// <param name="job"></param>
+		/// <returns></returns>
 		IDownloadManager DeleteJob(DownloadJob job);
 
+		/// <summary>
+		/// Retries a failed or aborted job.
+		/// </summary>
+		/// <param name="job"></param>
+		/// <returns></returns>
 		IDownloadManager RetryJob(DownloadJob job);
 
 		/// <summary>

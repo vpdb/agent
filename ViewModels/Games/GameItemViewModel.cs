@@ -24,6 +24,7 @@ namespace VpdbAgent.ViewModels.Games
 
 		// data
 		public Game Game { get; }
+		public string Thumb { get; }
 
 		// needed for filters
 		private bool _isVisible = true;
@@ -56,11 +57,14 @@ namespace VpdbAgent.ViewModels.Games
 		public GameItemViewModel(Game game)
 		{
 			Game = game;
+			if (game.Release?.Thumb?.Image?.Url != null) {
+				Thumb = game.Release.Thumb.Image.Url;
+			}
 
 			// release identify
 			IdentifyRelease = ReactiveCommand.CreateAsyncObservable(_ => VpdbClient.Api.GetReleasesBySize(game.FileSize, 512).SubscribeOn(Scheduler.Default));
 			IdentifyRelease
-				.Select(releases => releases.Select(release => new GameResultItemViewModel(game, release, CloseResults)))
+				.Select(releases => releases.Select(release => new GameResultItemViewModel(game, release, release.Versions[0].Files[0], CloseResults)))
 				.Subscribe(releases =>
 				{
 					IdentifiedReleases = releases;

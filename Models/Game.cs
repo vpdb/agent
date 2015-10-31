@@ -12,6 +12,7 @@ namespace VpdbAgent.Models
 	{
 		// read/write fields
 		private string _releaseId;
+		private string _fileId;
 		private Vpdb.Models.Release _release;
 		readonly ObservableAsPropertyHelper<bool> _hasRelease;
 		private bool _exists;
@@ -22,24 +23,13 @@ namespace VpdbAgent.Models
 		[DataMember] public string Filename { get; set; }
 		[DataMember] public string DatabaseFile { get; set; }
 		[DataMember] public bool Enabled { get; set; } = true;
-		[DataMember] public string ReleaseId {
-			get { return _releaseId; }
-			set { this.RaiseAndSetIfChanged(ref _releaseId, value); }
-		}
-		[DataMember] public bool SyncEnabled {
-			get { return _syncEnabled; }
-			set { this.RaiseAndSetIfChanged(ref _syncEnabled, value); }
-		}
+		[DataMember] public string ReleaseId { get { return _releaseId; } set { this.RaiseAndSetIfChanged(ref _releaseId, value); } }
+		[DataMember] public string FileId { get { return _fileId; } set { this.RaiseAndSetIfChanged(ref _fileId, value); } }
+		[DataMember] public bool SyncEnabled { get { return _syncEnabled; } set { this.RaiseAndSetIfChanged(ref _syncEnabled, value); } }
 
 		// internal fields
-		public Vpdb.Models.Release Release {
-			get { return _release; }
-			set { this.RaiseAndSetIfChanged(ref _release, value); }
-		}
-		public bool Exists {
-			get { return _exists; }
-			set { this.RaiseAndSetIfChanged(ref _exists, value); }
-		}
+		public Vpdb.Models.Release Release { get { return _release; } set { this.RaiseAndSetIfChanged(ref _release, value); } }
+		public bool Exists { get { return _exists; } set { this.RaiseAndSetIfChanged(ref _exists, value); } }
 		public bool HasRelease => _hasRelease.Value;
 		public long FileSize { get; set; }
 		public Platform Platform { get; set; }
@@ -54,7 +44,7 @@ namespace VpdbAgent.Models
 				.ToProperty(this, game => game.HasRelease, out _hasRelease);
 		}
 
-		// todo tablePath is in Platform.
+		// todo tablePath is in Platform: remove param.
 		public Game(PinballX.Models.Game xmlGame, string tablePath, Platform platform, GlobalDatabase db) : this()
 		{
 			Update(platform, db);

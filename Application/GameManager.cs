@@ -71,8 +71,9 @@ namespace VpdbAgent.Application
 		/// </summary>
 		/// <param name="game">Local game to link to</param>
 		/// <param name="release">Release from VPDB</param>
+		/// <param name="fileId">File ID at VPDB</param>
 		/// <returns>This instance</returns>
-		IGameManager LinkRelease(Game game, Release release);
+		IGameManager LinkRelease(Game game, Release release, string fileId);
 	}
 
 	/// <summary>
@@ -92,7 +93,7 @@ namespace VpdbAgent.Application
 		public ReactiveList<Platform> Platforms { get; } = new ReactiveList<Platform>();
 		public ReactiveList<Game> Games { get; } = new ReactiveList<Game>();
 
-		private readonly List<Tuple<string, string>> _gamesToLink = new List<Tuple<string, string>>();
+		private readonly List<Tuple<string, string, string>> _gamesToLink = new List<Tuple<string, string, string>>();
 
 		public GameManager(IMenuManager menuManager, IVpdbClient vpdbClient, ISettingsManager 
 			settingsManager, IDownloadManager downloadManager, IDatabaseManager databaseManager, Logger logger)
@@ -156,7 +157,7 @@ namespace VpdbAgent.Application
 						var x = _gamesToLink[i];
 						var game = Games.FirstOrDefault(g => g.Id.Equals(x.Item1));
 						var release = _databaseManager.Database.Releases[x.Item2];
-						LinkRelease(game, release);
+						LinkRelease(game, release, x.Item3);
 						_gamesToLink.RemoveAt(i);
 					}
 				}
@@ -175,13 +176,15 @@ namespace VpdbAgent.Application
 			return this;
 		}
 
-		public IGameManager LinkRelease(Game game, Release release)
+		public IGameManager LinkRelease(Game game, Release release, string fileId)
 		{
 			_logger.Info("Linking {0} to {1}..", game, release);
 			AddRelease(release);
 			game.ReleaseId = release.Id;
+			game.FileId = fileId;
 			game.Release = release;
 			game.Platform.Save();
+
 			return this;
 		}
 
@@ -264,6 +267,8 @@ namespace VpdbAgent.Application
 
 		/// <summary>
 		/// Retrieves all known releases from VPDB and updates them locally.
+		/// 
+		/// todo include file id when searching. (also needs update on backend.)
 		/// </summary>
 		private void UpdateReleases()
 		{
@@ -326,8 +331,7 @@ namespace VpdbAgent.Application
 			// now, adding the game force a new rescan. but it's async so in 
 			// order to avoid race conditions, we put this into a "linking" 
 			// queue, meaning on the next updated, this will get linked.
-			_gamesToLink.Add(new Tuple<string, string>(newGame.Description, job.Release.Id));
-
+			_gamesToLink.Add(new Tuple<string, string, string>(newGame.Description, job.Release.Id, job.File.Reference.Id));
 
 			// save new game to Vpdb.xml (and trigger Games refresh)
 			_menuManager.AddGame(newGame, platform.DatabasePath);
@@ -361,7 +365,8 @@ namespace VpdbAgent.Application
 			{
 				if ("release".Equals(data.GetValue("type").Value<string>())) {
 					var id = data.GetValue("id").Value<string>();
-					if (_databaseManager.Database.Releases.ContainsKey(id)) {
+					var game = Games.FirstOrDefault(g => !string.IsNullOrEmpty(g.ReleaseId) && g.ReleaseId.Equals(id));
+					if (game != null) {
 						var release = _databaseManager.Database.Releases[id];
 						release.Starred = true;
 						_databaseManager.Save();
@@ -377,7 +382,8 @@ namespace VpdbAgent.Application
 			{
 				if ("release".Equals(data.GetValue("type").Value<string>())) {
 					var id = data.GetValue("id").Value<string>();
-					if (_databaseManager.Database.Releases.ContainsKey(id)) {
+					var game = Games.FirstOrDefault(g => !string.IsNullOrEmpty(g.ReleaseId) && g.ReleaseId.Equals(id));
+					if (game != null) {
 						var release = _databaseManager.Database.Releases[id];
 						release.Starred = false;
 						_databaseManager.Save();

@@ -19,14 +19,14 @@ namespace VpdbAgent.ViewModels.Games
 		// commands
 		public ReactiveCommand<object> SelectResult { get; protected set; } = ReactiveCommand.Create();
 
-		public GameResultItemViewModel(Game game, Release release, ICommand closeCommand)
+		public GameResultItemViewModel(Game game, Release release, File file, ICommand closeCommand)
 		{
 			Game = game;
 			Release = release;
 
 			SelectResult.Subscribe(_ =>
 			{
-				GameManager.LinkRelease(Game, release);
+				GameManager.LinkRelease(Game, release, file.Reference.Id);
 				closeCommand.Execute(null);
 			});
 		}
