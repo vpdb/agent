@@ -39,13 +39,14 @@ namespace VpdbAgent.ViewModels.Games
 
 		// statuses
 		public bool IsExecuting => _isExecuting.Value;
+		public bool ShowIdentifyButton => _showIdentifyButton.Value;
 		public bool HasExecuted { get { return _hasExecuted; } set { this.RaiseAndSetIfChanged(ref _hasExecuted, value); } }
 		public bool HasResults { get { return _hasResults; } set { this.RaiseAndSetIfChanged(ref _hasResults, value); } }
-		public bool ShowIdentifyButton { get { return _showIdentifyButton; } set { this.RaiseAndSetIfChanged(ref _showIdentifyButton, value); } }
+
+		private readonly ObservableAsPropertyHelper<bool> _showIdentifyButton;
 		private readonly ObservableAsPropertyHelper<bool> _isExecuting;
 		private bool _hasExecuted;
 		private bool _hasResults;
-		private bool _showIdentifyButton;
 
 		public GameItemViewModel(Game game)
 		{
@@ -79,7 +80,6 @@ namespace VpdbAgent.ViewModels.Games
 					IdentifiedReleases = releases;
 					HasExecuted = true;
 				}
-
 			});
 
 			// handle errors
@@ -88,29 +88,18 @@ namespace VpdbAgent.ViewModels.Games
 			// spinner
 			IdentifyRelease.IsExecuting.ToProperty(this, vm => vm.IsExecuting, out _isExecuting);
 
+			// result switch
 			IdentifyRelease.Select(r => r.Count > 0).Subscribe(hasResults => { HasResults = hasResults; });
 
 			// close button
 			CloseResults.Subscribe(_ => { HasExecuted = false; });
 
-
 			// identify button visibility
-			Changed.Subscribe(x => {
-				if (x.PropertyName.Equals("HasExecuted")) {
-					UpdateStatus();
-				}
-			});
-			Game.Changed.Subscribe(x => {
-				if (x.PropertyName.Equals("HasRelease")) {
-					UpdateStatus();
-				}
-			});
-			UpdateStatus();
-		}
-
-		private void UpdateStatus()
-		{
-			ShowIdentifyButton = !HasExecuted && !Game.HasRelease;
+			this.WhenAny(
+				vm => vm.HasExecuted, 
+				vm => vm.Game.HasRelease,
+				(hasExecuted, hasRelease) => !hasExecuted.Value && !hasRelease.Value
+			).ToProperty(this, vm => vm.ShowIdentifyButton, out _showIdentifyButton);
 		}
 
 		public override string ToString()

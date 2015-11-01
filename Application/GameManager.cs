@@ -180,11 +180,12 @@ namespace VpdbAgent.Application
 		{
 			_logger.Info("Linking {0} to {1}..", game, release);
 			AddRelease(release);
-			game.ReleaseId = release.Id;
-			game.FileId = fileId;
-			game.Release = release;
-			game.Platform.Save();
 
+			using (game.SuppressChangeNotifications()) {
+				game.ReleaseId = release.Id;
+				game.FileId = fileId;
+				game.Release = release;
+			}
 			return this;
 		}
 

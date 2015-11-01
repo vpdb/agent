@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using System.Reactive;
+using System.Reactive.Concurrency;
 using System.Runtime.Serialization;
 using ReactiveUI;
 using static System.String;
@@ -16,7 +18,7 @@ namespace VpdbAgent.Models
 		private Vpdb.Models.Release _release;
 		readonly ObservableAsPropertyHelper<bool> _hasRelease;
 		private bool _exists;
-		private bool _syncEnabled;
+		private bool _isSynced;
 
 		// serialized properties
 		[DataMember] public string Id { get; set; }
@@ -25,42 +27,48 @@ namespace VpdbAgent.Models
 		[DataMember] public bool Enabled { get; set; } = true;
 		[DataMember] public string ReleaseId { get { return _releaseId; } set { this.RaiseAndSetIfChanged(ref _releaseId, value); } }
 		[DataMember] public string FileId { get { return _fileId; } set { this.RaiseAndSetIfChanged(ref _fileId, value); } }
-		[DataMember] public bool SyncEnabled { get { return _syncEnabled; } set { this.RaiseAndSetIfChanged(ref _syncEnabled, value); } }
+		[DataMember] public bool IsSynced { get { return _isSynced; } set { this.RaiseAndSetIfChanged(ref _isSynced, value); } }
 
 		// internal fields
 		public Vpdb.Models.Release Release { get { return _release; } set { this.RaiseAndSetIfChanged(ref _release, value); } }
 		public bool Exists { get { return _exists; } set { this.RaiseAndSetIfChanged(ref _exists, value); } }
 		public bool HasRelease => _hasRelease.Value;
 		public long FileSize { get; set; }
-		public Platform Platform { get; set; }
+		public Platform Platform { get; private set; }
 
 		/// <summary>
 		/// Sets up Output Properties
 		/// </summary>
 		public Game()
 		{
+			// update HasRelease
 			this.WhenAnyValue(game => game.ReleaseId)
 				.Select(releaseId => releaseId != null)
 				.ToProperty(this, game => game.HasRelease, out _hasRelease);
 		}
 
-		// todo tablePath is in Platform: remove param.
-		public Game(PinballX.Models.Game xmlGame, string tablePath, Platform platform, GlobalDatabase db) : this()
+		public Game(PinballX.Models.Game xmlGame, Platform platform, GlobalDatabase db) : this()
 		{
 			Update(platform, db);
-			UpdateFromGame(xmlGame, tablePath);
+			UpdateFromGame(xmlGame, platform.TablePath);
 		}
 
-		internal Game Merge(PinballX.Models.Game xmlGame, string tablePath, Platform platform, GlobalDatabase db)
+		internal Game Merge(PinballX.Models.Game xmlGame, Platform platform, GlobalDatabase db)
 		{
 			Update(platform, db);
-			UpdateFromGame(xmlGame, tablePath);
+			UpdateFromGame(xmlGame, platform.TablePath);
 			return this;
 		}
 
 		private void Update(Platform platform, GlobalDatabase db)
 		{
 			Platform = platform;
+
+			// save to disk if these attributes change
+			this.WhenAny(g => g.ReleaseId, g => g.FileId, g => g.IsSynced, (rid, fid, s) => Unit.Default)
+				.Subscribe(Platform.GamePropertyChanged);
+
+			// link release id to release object
 			if (ReleaseId != null && db.Releases.ContainsKey(ReleaseId)) {
 				Release = db.Releases[ReleaseId];
 			}

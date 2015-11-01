@@ -2,6 +2,10 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reactive;
+using System.Reactive.Concurrency;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Windows;
 using Newtonsoft.Json;
 using NLog;
@@ -80,8 +84,14 @@ namespace VpdbAgent.Models
 
 		public readonly ReactiveList<Game> Games = new ReactiveList<Game>();
 
+		public readonly Subject<Unit> GamePropertyChanged = new Subject<Unit>();
 		private readonly PlatformDatabase _database;
 		private readonly Logger _logger = Locator.CurrentMutable.GetService<Logger>();
+		private readonly JsonSerializer _serializer = new JsonSerializer {
+			NullValueHandling = NullValueHandling.Ignore,
+			ContractResolver = new SnakeCasePropertyNamesContractResolver(),
+			Formatting = Formatting.Indented
+		};
 
 		public Platform(PinballXSystem system, GlobalDatabase db)
 		{
@@ -98,6 +108,12 @@ namespace VpdbAgent.Models
 			_database = UnmarshallDatabase();
 
 			UpdateGames(system, db);
+
+			// save changes, but at most once per second.
+			GamePropertyChanged
+				.ObserveOn(Scheduler.Default)
+				.Sample(TimeSpan.FromSeconds(1))
+				.Subscribe(_ => Save());
 		}
 
 		/// <summary>
@@ -166,8 +182,8 @@ namespace VpdbAgent.Models
 			foreach (var xmlGame in xmlGames) {
 				var jsonGame = jsonGames?.FirstOrDefault(g => (g.Id.Equals(xmlGame.Description)));
 				games.Add(jsonGame == null
-					? new Game(xmlGame, tablePath, this, db)
-					: jsonGame.Merge(xmlGame, tablePath, this, db)
+					? new Game(xmlGame, this, db)
+					: jsonGame.Merge(xmlGame, this, db)
 				);
 			}
 			return games;
@@ -184,17 +200,11 @@ namespace VpdbAgent.Models
 				return new PlatformDatabase();
 			}
 
-			var serializer = new JsonSerializer {
-				NullValueHandling = NullValueHandling.Ignore,
-				ContractResolver = new SnakeCasePropertyNamesContractResolver(),
-				Formatting = Formatting.Indented
-			};
-
 			try {
 				using (var sr = new StreamReader(DatabaseFile))
 				using (JsonReader reader = new JsonTextReader(sr)) {
 					try {
-						var db = serializer.Deserialize<PlatformDatabase>(reader);
+						var db = _serializer.Deserialize<PlatformDatabase>(reader);
 						reader.Close();
 						return db ?? new PlatformDatabase();
 					} catch (Exception e) {
@@ -222,16 +232,10 @@ namespace VpdbAgent.Models
 				return;
 			}
 
-			var serializer = new JsonSerializer {
-				NullValueHandling = NullValueHandling.Ignore,
-				ContractResolver = new SnakeCasePropertyNamesContractResolver(),
-				Formatting = Formatting.Indented
-			};
-
 			try {
 				using (var sw = new StreamWriter(DatabaseFile))
 				using (JsonWriter writer = new JsonTextWriter(sw)) {
-					serializer.Serialize(writer, _database);
+					_serializer.Serialize(writer, _database);
 				}
 				_logger.Debug("Wrote vpdb.json back to {0}", DatabaseFile);
 			} catch (Exception e) {

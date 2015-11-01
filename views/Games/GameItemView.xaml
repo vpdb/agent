@@ -46,7 +46,7 @@
                 <!-- controls -->
                 <StackPanel Visibility="{Binding Path=Game.HasRelease, Converter={StaticResource TrueToVisible}}" Grid.Column="2" Orientation="Horizontal" Margin="0,5,0,0">
                     <c:IconControl Foreground="{Binding Path=Game.Release.Starred, Converter={StaticResource TrueToPrimary}}" Data="{StaticResource IconStar}" Margin="10,-2,12,0"  Height="18" Width="18" />
-                    <ToggleButton x:Name="SyncButton"  Height="20" Margin="5,0,17,0"/>
+                    <ToggleButton x:Name="SyncButton" IsChecked="{Binding Game.IsSynced}" Height="20" Margin="5,0,17,0"/>
                     <c:LabelFor Content="SYNC" FontSize="15" Foreground="{Binding ElementName=SyncButton, Path=Background}" Margin="0,0,10,0" Target="{x:Reference SyncButton}"/>
                 </StackPanel>
             </Grid>
