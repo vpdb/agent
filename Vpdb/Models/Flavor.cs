@@ -10,15 +10,15 @@ namespace VpdbAgent.Vpdb.Models
 {
 	public class Flavor
 	{
-		[JsonConverter(typeof(StringEnumConverter))] public ELighting Lighting { get; set; }
-		[JsonConverter(typeof(StringEnumConverter))] public EOrientation Orientation { get; set; }
+		[JsonConverter(typeof(StringEnumConverter))] public LightingValue Lighting { get; set; }
+		[JsonConverter(typeof(StringEnumConverter))] public OrientationValue Orientation { get; set; }
 
 		public override string ToString()
 		{
 			return $"{Lighting}/{Orientation}";
 		}
 
-		public enum ELighting { Day, Night, Any }
-		public enum EOrientation { FS, WS, Any }
+		public enum LightingValue { Day, Night, Any }
+		public enum OrientationValue { FS, WS, Any }
 	}
 }

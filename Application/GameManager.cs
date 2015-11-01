@@ -75,6 +75,14 @@ namespace VpdbAgent.Application
 		/// <returns>This instance</returns>
 		IGameManager LinkRelease(Game game, Release release, string fileId);
 
+		/// <summary>
+		/// Explicitly enables syncing of a game.
+		/// </summary>
+		/// <remarks>
+		/// Results in an immediate update if available.
+		/// </remarks>
+		/// <param name="game">Game to synchronize</param>
+		/// <returns>This instance</returns>
 		IGameManager Sync(Game game);
 	}
 
@@ -180,38 +188,49 @@ namespace VpdbAgent.Application
 
 		public IGameManager LinkRelease(Game game, Release release, string fileId)
 		{
-			_logger.Info("Linking {0} to {1}..", game, release);
+			_logger.Info("Linking {0} to {1} ({2})", game, release, fileId);
 			AddRelease(release);
-
-			using (game.SuppressChangeNotifications()) {
-				game.ReleaseId = release.Id;
-				game.FileId = fileId;
-				game.Release = release;
-			}
+			game.ReleaseId = release.Id;
+			game.FileId = fileId;
+			game.Release = release;
 			return this;
 		}
 
 		public IGameManager Sync(Game game)
 		{
-			//_vpdbClient.Api.GetRelease(game.ReleaseId).s
+			_vpdbClient.Api.GetRelease(game.ReleaseId).Subscribe(release => {
+				var latestFile = HasUpdate(game, release);
+				if (latestFile != null) {
+					_logger.Info("Found updated file {0} for {1}, adding to download queue.", latestFile, release);
+					_downloadManager.DownloadRelease(release, latestFile);
+				} else {
+					_logger.Info("No update found for {0}", release);
+				}
+			});
 			return this;
 		}
 
-		private string HasUpdate(Game game, Release release)
+		/// <summary>
+		/// Checks if the given release has a newer version than the one
+		/// referenced in the game.
+		/// </summary>
+		/// <param name="game">Game to match against release</param>
+		/// <param name="release">Freshly obtained release from VPDB</param>
+		/// <returns>The newer file if available, null if no update available</returns>
+		private Vpdb.Models.File HasUpdate(Game game, Release release)
 		{
 			// for now, only orientation is checked. todo add more configurable attributes.
 			var files = release.Versions
 				.SelectMany(version => version.Files)
-				.Where(file => file.Flavor.Orientation == Flavor.EOrientation.FS)
+				.Where(file => file.Flavor.Orientation == Flavor.OrientationValue.FS)
 				.ToList();
-			files.Sort((a, b) => a.ReleasedAt.CompareTo(b.ReleasedAt));
 
-			return null;
-		}
+			files.Sort((a, b) => b.ReleasedAt.CompareTo(a.ReleasedAt));
 
-		private void UpdateRelease(Game game, Release release, string fileId)
-		{
+			files.ForEach(file => _logger.Info("{0}/{2} - {1}", file.Reference.Id, file.ReleasedAt, game.FileId));
 			
+			var latestFile = files[0];
+			return !latestFile.Reference.Id.Equals(game.FileId) ? latestFile : null;
 		}
 
 		/// <summary>
@@ -328,6 +347,8 @@ namespace VpdbAgent.Application
 
 		private void OnReleaseDownloaded(DownloadJob job)
 		{
+			// todo check if need to add or update.
+
 			_logger.Info("Adding {0} to PinballX database...", job.Release);
 
 			// add release to database

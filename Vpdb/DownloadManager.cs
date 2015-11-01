@@ -11,6 +11,7 @@ using NLog;
 using ReactiveUI;
 using VpdbAgent.Application;
 using VpdbAgent.Vpdb.Models;
+using File = VpdbAgent.Vpdb.Models.File;
 
 namespace VpdbAgent.Vpdb
 {
@@ -22,12 +23,26 @@ namespace VpdbAgent.Vpdb
 	public interface IDownloadManager
 	{
 		/// <summary>
-		/// Downloads a release, including table image, ROMs and other media,
-		/// based on the user's settings.
+		/// Downloads or upgrades a release, including table image, ROMs and other 
+		/// media, based on the user's settings.
 		/// </summary>
-		/// <param name="id">ID of the release</param>
+		/// <remarks>
+		/// File selection is based on the user's preferences. This is typically
+		/// called when the user stars a release, where we have no more data
+		/// than the release. 
+		/// </remarks>
+		/// <param name="releaseId">ID of the release</param>
 		/// <returns>This instance</returns>
-		IDownloadManager DownloadRelease(string id);
+		IDownloadManager DownloadRelease(string releaseId);
+
+		/// <summary>
+		/// Downloads or upgrades a release, including table image, ROMs and other
+		/// media, based on the user's settings.
+		/// </summary>
+		/// <param name="release">Release to download or upgrade</param>
+		/// <param name="file">File of the release to download</param>
+		/// <returns>This instance</returns>
+		IDownloadManager DownloadRelease(Release release, File file);
 
 		/// <summary>
 		/// Deletes a job from the database.
@@ -130,24 +145,32 @@ namespace VpdbAgent.Vpdb
 					// todo make this more sophisticated based on settings
 					var file = release.Versions
 						.SelectMany(v => v.Files)
-						.FirstOrDefault(f => f.Flavor.Orientation == Flavor.EOrientation.FS);
+						.FirstOrDefault(f => f.Flavor.Orientation == Flavor.OrientationValue.FS);
 
 					if (file == null) {
 						_logger.Info("Release doesn't seem to have a FS release, aborting.");
 						return;
 					}
 
-					// queue for download
-					var job = new DownloadJob(release, file);
-					AddToCurrentJobs(job);
-					_jobs.OnNext(job);
-
-					// todo also queue all remaining non-table files of the release.
-					// todo also queue media & roms if available, based on settings
+					// download
+					DownloadRelease(release, file);
 
 				}, error => {
 					_logger.Error(error, "Error retrieving release data.");
 				});
+
+			return this;
+		}
+
+		public IDownloadManager DownloadRelease(Release release, File file)
+		{
+			// todo also queue all remaining non-table files of the release.
+			// todo also queue media & roms if available, based on settings
+
+			// queue for download
+			var job = new DownloadJob(release, file);
+			AddToCurrentJobs(job);
+			_jobs.OnNext(job);
 
 			return this;
 		}
