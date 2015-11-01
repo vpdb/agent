@@ -6,7 +6,8 @@
              xmlns:c="clr-namespace:VpdbAgent.Controls"
              mc:Ignorable="d" 
              d:DesignHeight="80" d:DesignWidth="600">
-    <Grid Margin="0,5,10,5">
+
+    <Grid Margin="0,5,10,5" x:Name="ItemBlock">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="60" />
             <ColumnDefinition Width="*" />
@@ -21,9 +22,17 @@
             <Label Padding="0">
                 <TextBlock x:Name="GameName" Text="Medieval Madness (Williams 1997)" TextTrimming="CharacterEllipsis" />
             </Label>
-            <Label Padding="0">
-                <TextBlock x:Name="ReleaseName" Text="Castle Crusher Edition 1.2" TextTrimming="CharacterEllipsis" />
-            </Label>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Style="{StaticResource Label}" TextTrimming="CharacterEllipsis">
+                    <TextBlock.Inlines>
+                        <Run x:Name="ReleaseName" Text="Castle Crusher Edition"/>
+                        <Run x:Name="VersionName" Text="1.2" FontWeight="Bold"/>
+                    </TextBlock.Inlines>
+                </TextBlock>
+                <Label x:Name="Orientation" Content="fs" Style="{StaticResource Tag}" />
+                <Label x:Name="Lighting" Content="day" Style="{StaticResource Tag}" />
+            </StackPanel>
+            
         </StackPanel>
 
         <!-- select button -->

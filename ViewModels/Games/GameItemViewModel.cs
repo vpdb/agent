@@ -68,6 +68,7 @@ namespace VpdbAgent.ViewModels.Games
 				.SelectMany(x => x.Versions.Select(version => new {x.release, version, version.Files}))
 				.SelectMany(x => x.Files.Select(file => new GameResultItemViewModel(game, x.release, x.version, file, CloseResults)))
 			).Subscribe(releases => {
+				// todo try direct match if filename AND size matches.
 				IdentifiedReleases = releases;
 			});
 

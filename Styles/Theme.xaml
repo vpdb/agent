@@ -20,7 +20,16 @@
         <Setter Property="FontSize" Value="18" />
         <Setter Property="Foreground" Value="{DynamicResource LabelTextBrush}" />
     </Style>
-
+    
+    <Style x:Key="Tag" TargetType="{x:Type Label}">
+        <Setter Property="Foreground" Value="#60ffffff" />
+        <Setter Property="Background" Value="{StaticResource LabelTextBrush}" />
+        <Setter Property="Margin" Value="10,0,0,0" />
+        <Setter Property="Padding" Value="7,0,7,0" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="Height" Value="19" />
+    </Style>
+    
     <!-- H1 -->
     <Style x:Key="Header1" TargetType="{x:Type Label}">
         <Setter Property="FontSize" Value="24" />
