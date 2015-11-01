@@ -24,7 +24,8 @@ namespace VpdbAgent.ViewModels.Games
 
 		// commands
 		public ReactiveCommand<List<Release>> IdentifyRelease { get; protected set; }
-		public ReactiveCommand<object> CloseResults { get; protected set; } = ReactiveCommand.Create();
+		public ReactiveCommand<object> CloseResults { get; } = ReactiveCommand.Create();
+		public ReactiveCommand<object> SyncToggled { get; } = ReactiveCommand.Create();
 
 		// data
 		public Game Game { get; }
@@ -63,8 +64,6 @@ namespace VpdbAgent.ViewModels.Games
 				var releases = x as GameResultItemViewModel[] ?? x.ToArray();
 				var numMatches = 0;
 				GameResultItemViewModel match = null;
-
-				// ReSharper disable once LoopCanBePartlyConvertedToQuery
 				foreach (var vm in releases) {
 					if (game.Filename.Equals(vm.File.Reference.Name) && game.FileSize == vm.File.Reference.Bytes) {
 						numMatches++;
@@ -81,6 +80,11 @@ namespace VpdbAgent.ViewModels.Games
 					HasExecuted = true;
 				}
 			});
+
+			// sync button
+			SyncToggled
+				.Where(_ => Game.IsSynced)
+				.Subscribe(_ => { GameManager.Sync(Game); });
 
 			// handle errors
 			IdentifyRelease.ThrownExceptions.Subscribe(e => { Logger.Error(e, "Error matching game."); });

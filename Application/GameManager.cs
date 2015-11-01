@@ -74,6 +74,8 @@ namespace VpdbAgent.Application
 		/// <param name="fileId">File ID at VPDB</param>
 		/// <returns>This instance</returns>
 		IGameManager LinkRelease(Game game, Release release, string fileId);
+
+		IGameManager Sync(Game game);
 	}
 
 	/// <summary>
@@ -187,6 +189,29 @@ namespace VpdbAgent.Application
 				game.Release = release;
 			}
 			return this;
+		}
+
+		public IGameManager Sync(Game game)
+		{
+			//_vpdbClient.Api.GetRelease(game.ReleaseId).s
+			return this;
+		}
+
+		private string HasUpdate(Game game, Release release)
+		{
+			// for now, only orientation is checked. todo add more configurable attributes.
+			var files = release.Versions
+				.SelectMany(version => version.Files)
+				.Where(file => file.Flavor.Orientation == Flavor.EOrientation.FS)
+				.ToList();
+			files.Sort((a, b) => a.ReleasedAt.CompareTo(b.ReleasedAt));
+
+			return null;
+		}
+
+		private void UpdateRelease(Game game, Release release, string fileId)
+		{
+			
 		}
 
 		/// <summary>
