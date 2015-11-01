@@ -1,5 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
+using System.Linq;
+using System.Reactive;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using NLog;
 
 namespace VpdbAgent.Application
@@ -12,6 +18,13 @@ namespace VpdbAgent.Application
 		public string Endpoint { get; set; }
 		public string PbxFolder { get; set; }
 
+		private readonly Subject<string> _pbxFolderChanged = new Subject<string>();
+		private readonly Subject<Unit> _apiChanged = new Subject<Unit>();
+
+		public IObservable<string> PbxFolderChanged => _pbxFolderChanged;
+		public IObservable<Unit> ApiChanged => _apiChanged;
+		public IObservable<EventPattern<PropertyChangedEventArgs>> Changed { get; }
+
 		public SettingsManager()
 		{
 			ApiKey = (string)Properties.Settings.Default["ApiKey"];
@@ -19,6 +32,21 @@ namespace VpdbAgent.Application
 			AuthPass = (string)Properties.Settings.Default["AuthPass"];
 			Endpoint = (string)Properties.Settings.Default["Endpoint"];
 			PbxFolder = (string)Properties.Settings.Default["PbxFolder"];
+
+			Changed = Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>(
+				handler => handler.Invoke,
+				ev => Properties.Settings.Default.PropertyChanged += ev,
+				ev => Properties.Settings.Default.PropertyChanged -= ev);
+
+			Changed
+				.Where(args => args.EventArgs.PropertyName.Equals("PbxFolder"))
+				.Select(args => PbxFolder)
+				.Subscribe(_pbxFolderChanged);
+
+			Changed
+				.Where(args => new[] { "ApiKey", "AuthUser", "AuthPass", "Endpoint" }.Contains(args.EventArgs.PropertyName))
+				.Select(args => Unit.Default)
+				.Subscribe(_apiChanged);
 		}
 
 		public bool IsInitialized()
