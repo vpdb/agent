@@ -182,11 +182,9 @@
         <Setter Property="Background" Value="{StaticResource LabelTextBrush}" />
         <Setter Property="Template">
             <Setter.Value>
-
                 <ControlTemplate TargetType="ToggleButton">
-
                     <Viewbox Stretch="Uniform">
-                        <Canvas Name="Layer_1" Width="20" Height="20" Canvas.Left="10" Canvas.Top="0">
+                        <Canvas Width="20" Height="20">
                             <Ellipse  Canvas.Left="0" Width="20" Height="20" Stroke="{TemplateBinding Background}" StrokeThickness="2" Fill="Transparent">
                                 <Ellipse.Clip>
                                     <RectangleGeometry Rect="0,0,10,20"/>
@@ -198,7 +196,7 @@
                                 </Ellipse.Clip>
                             </Ellipse>
                             <Border Canvas.Left="10" Width="10" Height="20" Name="rect416927" Background="Transparent" BorderBrush="{TemplateBinding Background}" BorderThickness="0,2,0,2"/>
-                            <Ellipse x:Name="ellipse" Canvas.Top="4" Canvas.Left="4" Width="12" Height="12" Fill="{TemplateBinding Background}">
+                            <Ellipse x:Name="Knob" Canvas.Top="4" Canvas.Left="4" Width="12" Height="12" Fill="{TemplateBinding Background}">
                                 <Ellipse.RenderTransform>
                                     <TranslateTransform X="0" Y="0" />
                                 </Ellipse.RenderTransform>
@@ -212,7 +210,7 @@
                                     <Storyboard>
                                         <ColorAnimation Storyboard.TargetProperty="Background.Color" To="{StaticResource PrimaryColor}" Duration="0:0:0.2" />
                                         <ColorAnimation Storyboard.TargetProperty="Foreground.Color" To="{StaticResource PrimaryColor}" Duration="0:0:0.2" />
-                                        <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(Ellipse.RenderTransform).(TranslateTransform.X)" Storyboard.TargetName="ellipse">
+                                        <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(Ellipse.RenderTransform).(TranslateTransform.X)" Storyboard.TargetName="Knob">
                                             <SplineDoubleKeyFrame KeyTime="0" Value="0"/>
                                             <SplineDoubleKeyFrame KeyTime="0:0:0.4" Value="10" KeySpline="0, 1, 0.6, 1"/>
                                         </DoubleAnimationUsingKeyFrames>
@@ -224,7 +222,7 @@
                                     <Storyboard>
                                         <ColorAnimation Storyboard.TargetProperty="Background.Color" To="{StaticResource LabelTextColor}" Duration="0:0:0.2" />
                                         <ColorAnimation Storyboard.TargetProperty="Foreground.Color" To="{StaticResource LabelTextColor}" Duration="0:0:0.2" />
-                                        <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(Ellipse.RenderTransform).(TranslateTransform.X)" Storyboard.TargetName="ellipse">
+                                        <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(Ellipse.RenderTransform).(TranslateTransform.X)" Storyboard.TargetName="Knob">
                                             <SplineDoubleKeyFrame KeyTime="0" Value="10"/>
                                             <SplineDoubleKeyFrame KeyTime="0:0:0.3" Value="0" KeySpline="0, 0.5, 0.5, 1"/>
                                         </DoubleAnimationUsingKeyFrames>
