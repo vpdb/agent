@@ -69,7 +69,7 @@
                 </Label>
 
                 <!-- identify button -->
-                <Button IsEnabled="{Binding Game.Exists}" Command="{Binding IdentifyRelease}" Visibility="{Binding Path=Game.HasRelease, Converter={StaticResource TrueToCollapsed}}" Style="{StaticResource ButtonLine}" Grid.Column="1" Content="IDENTIFY" HorizontalAlignment="Right" Margin="0,-5,10,-5"/>
+                <Button IsEnabled="{Binding Game.Exists}" Command="{Binding IdentifyRelease}" Visibility="{Binding Path=ShowIdentifyButton, Converter={StaticResource TrueToVisible}}" Style="{StaticResource ButtonLine}" Grid.Column="1" Content="IDENTIFY" HorizontalAlignment="Right" Margin="0,-5,10,-5"/>
                 <Viewbox Grid.Column="1" StretchDirection="Both" Stretch="Uniform" Height="24" Width="24" HorizontalAlignment="Right" Margin="0,0,10,0">
                     <loadin:LoadingIndicator Foreground="{StaticResource PrimaryColorBrush}" SpeedRatio="1" IsActive="{Binding IsExecuting}"  Style="{DynamicResource LoadingIndicatorArcsStyle}"/>
                 </Viewbox>

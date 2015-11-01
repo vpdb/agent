@@ -37,9 +37,11 @@ namespace VpdbAgent.ViewModels.Games
 		public bool IsExecuting => _isExecuting.Value;
 		public bool HasExecuted { get { return _hasExecuted; } set { this.RaiseAndSetIfChanged(ref _hasExecuted, value); } }
 		public bool HasResults { get { return _hasResults; } set { this.RaiseAndSetIfChanged(ref _hasResults, value); } }
+		public bool ShowIdentifyButton { get { return _showIdentifyButton; } set { this.RaiseAndSetIfChanged(ref _showIdentifyButton, value); } }
 		private readonly ObservableAsPropertyHelper<bool> _isExecuting;
 		private bool _hasExecuted;
 		private bool _hasResults;
+		private bool _showIdentifyButton;
 
 		public GameItemViewModel(Game game)
 		{
@@ -72,6 +74,25 @@ namespace VpdbAgent.ViewModels.Games
 
 			// close button
 			CloseResults.Subscribe(_ => { HasExecuted = false; });
+
+
+			// identify button visibility
+			Changed.Subscribe(x => {
+				if (x.PropertyName.Equals("HasExecuted")) {
+					UpdateStatus();
+				}
+			});
+			Game.Changed.Subscribe(x => {
+				if (x.PropertyName.Equals("HasRelease")) {
+					UpdateStatus();
+				}
+			});
+			UpdateStatus();
+		}
+
+		private void UpdateStatus()
+		{
+			ShowIdentifyButton = !HasExecuted && !Game.HasRelease;
 		}
 
 		public override string ToString()
