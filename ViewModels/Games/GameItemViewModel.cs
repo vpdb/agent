@@ -24,7 +24,6 @@ namespace VpdbAgent.ViewModels.Games
 
 		// data
 		public Game Game { get; }
-		public string Thumb { get; }
 
 		// needed for filters
 		private bool _isVisible = true;
@@ -32,34 +31,19 @@ namespace VpdbAgent.ViewModels.Games
 
 		// release search results
 		private IEnumerable<GameResultItemViewModel> _identifiedReleases;
-		public IEnumerable<GameResultItemViewModel> IdentifiedReleases
-		{
-			get { return _identifiedReleases; }
-			set { this.RaiseAndSetIfChanged(ref _identifiedReleases, value); }
-		}
+		public IEnumerable<GameResultItemViewModel> IdentifiedReleases { get { return _identifiedReleases; } set { this.RaiseAndSetIfChanged(ref _identifiedReleases, value); } }
 
 		// statuses
-		private readonly ObservableAsPropertyHelper<bool> _isExecuting;
 		public bool IsExecuting => _isExecuting.Value;
+		public bool HasExecuted { get { return _hasExecuted; } set { this.RaiseAndSetIfChanged(ref _hasExecuted, value); } }
+		public bool HasResults { get { return _hasResults; } set { this.RaiseAndSetIfChanged(ref _hasResults, value); } }
+		private readonly ObservableAsPropertyHelper<bool> _isExecuting;
 		private bool _hasExecuted;
-		public bool HasExecuted
-		{
-			get { return _hasExecuted; }
-			set { this.RaiseAndSetIfChanged(ref _hasExecuted, value); }
-		}
 		private bool _hasResults;
-		public bool HasResults
-		{
-			get { return _hasResults; }
-			set { this.RaiseAndSetIfChanged(ref _hasResults, value); }
-		}
 
 		public GameItemViewModel(Game game)
 		{
 			Game = game;
-			if (game.Release?.Thumb?.Image?.Url != null) {
-				Thumb = game.Release.Thumb.Image.Url;
-			}
 
 			// release identify
 			IdentifyRelease = ReactiveCommand.CreateAsyncObservable(_ => VpdbClient.Api.GetReleasesBySize(game.FileSize, 1000000).SubscribeOn(Scheduler.Default));
@@ -68,6 +52,7 @@ namespace VpdbAgent.ViewModels.Games
 				.SelectMany(x => x.Versions.Select(version => new {x.release, version, version.Files}))
 				.SelectMany(x => x.Files.Select(file => new GameResultItemViewModel(game, x.release, x.version, file, CloseResults)))
 			).Subscribe(releases => {
+
 				// todo try direct match if filename AND size matches.
 				IdentifiedReleases = releases;
 			});

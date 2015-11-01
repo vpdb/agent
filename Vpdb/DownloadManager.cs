@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using NLog;
 using ReactiveUI;
 using VpdbAgent.Application;
+using VpdbAgent.Vpdb.Models;
 
 namespace VpdbAgent.Vpdb
 {
@@ -129,7 +130,7 @@ namespace VpdbAgent.Vpdb
 					// todo make this more sophisticated based on settings
 					var file = release.Versions
 						.SelectMany(v => v.Files)
-						.FirstOrDefault(f => f.Flavor.Orientation.Equals("fs"));
+						.FirstOrDefault(f => f.Flavor.Orientation == Flavor.EOrientation.FS);
 
 					if (file == null) {
 						_logger.Info("Release doesn't seem to have a FS release, aborting.");

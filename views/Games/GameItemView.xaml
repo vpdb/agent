@@ -26,7 +26,7 @@
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
-        <c:UrlImage UrlSource="{Binding Game.Release.LatestVersion.Thumb.Image.Url}" Grid.Column="0" Margin="0,10,0,0" Width="70" Height="70" VerticalAlignment="Top" HorizontalAlignment="Left"/>
+        <c:UrlImage UrlSource="{Binding Game.Release.Thumb.Image.Url}" Grid.Column="0" Margin="0,10,0,0" Width="70" Height="70" VerticalAlignment="Top" HorizontalAlignment="Left"/>
 
         <StackPanel Grid.Column="1" Orientation="Vertical">
 

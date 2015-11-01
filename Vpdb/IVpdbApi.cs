@@ -14,7 +14,7 @@ namespace VpdbAgent.Vpdb
 		[Get("/api/v1/releases?thumb_format=square")]
 		Task<List<Release>> GetReleases();
 
-		[Get("/api/v1/releases/{id}")]
+		[Get("/api/v1/releases/{id}?thumb_format=square")]
 		IObservable<Release> GetRelease([AliasAs("id")] string releaseId);
 
 		[Get("/api/v1/releases?thumb_format=square")]
