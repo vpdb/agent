@@ -347,12 +347,24 @@ namespace VpdbAgent.Application
 
 		private void OnReleaseDownloaded(DownloadJob job)
 		{
-			// todo check if need to add or update.
-
-			_logger.Info("Adding {0} to PinballX database...", job.Release);
-
 			// add release to database
 			AddRelease(job.Release);
+
+			// find release locally
+			var game = Games.FirstOrDefault(g => job.Release.Id.Equals(g.ReleaseId));
+
+			// add or update depending if found or not
+			if (game == null) {
+				AddGame(job);
+
+			} else {
+				UpdateGame(game, job);
+			}
+		}
+
+		private void AddGame(DownloadJob job)
+		{
+			_logger.Info("Adding {0} to PinballX database...", job.Release);
 
 			// todo make this more sophisticated based on settings.
 			var platform = Platforms.FirstOrDefault(p => "Visual Pinball".Equals(p.Name));
@@ -361,18 +373,7 @@ namespace VpdbAgent.Application
 				return;
 			}
 
-			// move downloaded file to table folder
-			if (job.FilePath != null && File.Exists(job.FilePath)) {
-				try {
-					var dest = Path.Combine(platform.TablePath, Path.GetFileName(job.FilePath));
-					_logger.Info("Moving downloaded file from {0} to {1}...", job.FilePath, dest);
-					File.Move(job.FilePath, dest);
-				} catch (Exception e) {
-					_logger.Error(e, "Error moving downloaded file.");
-				}
-			} else {
-				_logger.Error("Downloaded file {0} does not exist.", job.FilePath);
-			}
+			MoveDownloadedFile(job, platform);
 			var newGame = _menuManager.NewGame(job);
 
 			// now, adding the game force a new rescan. but it's async so in 
@@ -382,6 +383,41 @@ namespace VpdbAgent.Application
 
 			// save new game to Vpdb.xml (and trigger Games refresh)
 			_menuManager.AddGame(newGame, platform.DatabasePath);
+		}
+
+		private void UpdateGame(Game game, DownloadJob job)
+		{
+			_logger.Info("Updating {0} in PinballX database...", job.Release);
+
+			MoveDownloadedFile(job, game.Platform);
+				
+			// update and save json
+			game.FileId = Path.GetFileNameWithoutExtension(job.FilePath);
+
+			// update and save xml
+			_menuManager.UpdateGame(game);
+		}
+
+		private void MoveDownloadedFile(DownloadJob job, Platform platform)
+		{
+			// move downloaded file to table folder
+			if (job.FilePath != null && File.Exists(job.FilePath)) {
+				
+				try {
+					var dest = Path.Combine(platform.TablePath, Path.GetFileName(job.FilePath));
+					if (!File.Exists(dest)) {
+						_logger.Info("Moving downloaded file from {0} to {1}...", job.FilePath, dest);
+						File.Move(job.FilePath, dest);
+					} else {
+						// todo see how to handle, probably name it differently.
+						_logger.Warn("File {0} already exists at destination!", dest);
+					}
+				} catch (Exception e) {
+					_logger.Error(e, "Error moving downloaded file.");
+				}
+			} else {
+				_logger.Error("Downloaded file {0} does not exist.", job.FilePath);
+			}
 		}
 
 		/// <summary>

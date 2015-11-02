@@ -52,10 +52,15 @@ namespace VpdbAgent.PinballX
 		/// <returns></returns>
 		Game NewGame(DownloadJob job);
 
+		Game FindGame(VpdbAgent.Models.Game game);
+
+		IMenuManager UpdateGame(VpdbAgent.Models.Game game);
+
 		/// <summary>
 		/// Systems parsed from <c>PinballX.ini</c>.
 		/// </summary>
 		ReactiveList<PinballXSystem> Systems { get; }
+
 	}
 
 	/// <summary>
@@ -63,7 +68,7 @@ namespace VpdbAgent.PinballX
 	/// </summary>
 	public class MenuManager : IMenuManager
 	{
-		private const string VpdbXml = "Vpdb.xml";
+		public const string VpdbXml = "Vpdb.xml";
 
 		public ReactiveList<PinballXSystem> Systems { get; } = new ReactiveList<PinballXSystem>();
 
@@ -109,7 +114,31 @@ namespace VpdbAgent.PinballX
 					.Select(path => new { path, system = Systems.FirstOrDefault(s => s.DatabasePath.Equals(Path.GetDirectoryName(path))) })
 					.Subscribe(x => UpdateGames(x.system, Path.GetFileName(x.path)));
 			});
+			return this;
+		}
 
+		public Game FindGame(VpdbAgent.Models.Game game)
+		{
+			return Systems
+				.Where(s => s.Name.Equals(game.Platform.Name))
+				.SelectMany(s => s.Games)
+				.FirstOrDefault(g => g.Description.Equals(game.Id));
+		}
+
+		public IMenuManager UpdateGame(VpdbAgent.Models.Game jsonGame)
+		{
+			if (jsonGame.DatabaseFile.Equals(MenuManager.VpdbXml)) {
+
+				var game = FindGame(jsonGame);
+				game.Filename = jsonGame.FileId;
+
+				// update and unmarshall
+				_logger.Info("Marshalling own XML.");
+
+			} else {
+				// not our file, string replace.
+				_logger.Info("String-replacing user's XML.");
+			}
 			return this;
 		}
 
@@ -137,7 +166,6 @@ namespace VpdbAgent.PinballX
 				Year = job.Release.Game.Year.ToString()
 			};
 		}
-
 
 		/// <summary>
 		/// Updates all systems.

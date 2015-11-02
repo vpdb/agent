@@ -10,6 +10,12 @@ using File = System.IO.File;
 
 namespace VpdbAgent.Models
 {
+	/// <summary>
+	/// Our internal Game object.
+	/// 
+	/// Saves itself automatically if <see cref="ReleaseId"/>, 
+	/// <see cref="FileId"/> or <see cref="IsSynced"/> change.
+	/// </summary>
 	public class Game : ReactiveObject, IComparable<Game>
 	{
 		// read/write fields
