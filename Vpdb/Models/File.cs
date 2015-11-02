@@ -2,19 +2,23 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
+using ReactiveUI;
 
 namespace VpdbAgent.Vpdb.Models
 {
-	public class File
+	public class File : ReactiveObject
 	{
-		public DateTime ReleasedAt { get; set; }
-		public Flavor Flavor { get; set; }
-		public Dictionary<string, FileReference> Media { get; set; }
-		public List<FileCompatibility> Compatibility;
-		[JsonProperty(PropertyName = "file")]
-		public FileReference Reference { get; set; }
+		private Image _thumb;
+
+		[DataMember] public DateTime ReleasedAt { get; set; }
+		[DataMember] public Flavor Flavor { get; set; }
+		[DataMember] public Dictionary<string, FileReference> Media { get; set; }
+		[DataMember] public List<FileCompatibility> Compatibility;
+		[DataMember] [JsonProperty(PropertyName = "file")] public FileReference Reference { get; set; }
+		[DataMember] public Image Thumb { get { return _thumb; } set { this.RaiseAndSetIfChanged(ref _thumb, value); } }
 
 		public override string ToString()
 		{

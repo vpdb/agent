@@ -43,7 +43,6 @@ namespace VpdbAgent.Controls
 			get { return (string)GetValue(UrlSourceProperty); }
 			set
 			{
-				Logger.Info("Loading image {0}...", value);
 				SetValue(UrlSourceProperty, value);
 				LoadImage();
 			}
@@ -84,6 +83,7 @@ namespace VpdbAgent.Controls
 			webRequest.BeginGetResponse(ar =>
 			{
 				try {
+					Logger.Info("Loading image {0}...", urlSource);
 					var response = webRequest.EndGetResponse(ar);
 					var stream = response.GetResponseStream();
 					if (stream != null && !stream.CanRead) {

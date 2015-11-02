@@ -218,6 +218,7 @@
     <Compile Include="Vpdb\Models\Image.cs" />
     <Compile Include="Vpdb\Models\Messages\RegisterRequest.cs" />
     <Compile Include="Vpdb\Models\Messages\RegisterResponse.cs" />
+    <Compile Include="Vpdb\Models\Thumb.cs" />
     <Compile Include="Vpdb\Models\User.cs" />
     <Compile Include="Vpdb\Models\Version.cs" />
     <Compile Include="Vpdb\Network\AuthenticatedHttpClientHandler.cs" />

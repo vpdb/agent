@@ -83,7 +83,7 @@ namespace VpdbAgent.ViewModels.Games
 
 			// sync button
 			SyncToggled
-				.Where(_ => Game.IsSynced)
+				.Where(_ => Game.IsSynced && Game.HasRelease)
 				.Subscribe(_ => { GameManager.Sync(Game); });
 
 			// handle errors

@@ -10,19 +10,11 @@ namespace VpdbAgent.Vpdb.Models
 {
 	public class Image : ReactiveObject
 	{
-		private string url;
+		private string _url;
 
-		[DataMember]
-		public string Url
-		{
-			get { return url; }
-			set { this.RaiseAndSetIfChanged(ref url, value); }
-		}
-		[DataMember]
-		public bool IsProtected { get; set; }
-		[DataMember]
-		public int Width { get; set; }
-		[DataMember]
-		public int Height { get; set; }
+		[DataMember] public string Url { get { return _url; } set { this.RaiseAndSetIfChanged(ref _url, value); } }
+		[DataMember] public bool IsProtected { get; set; }
+		[DataMember] public int Width { get; set; }
+		[DataMember] public int Height { get; set; }
 	}
 }

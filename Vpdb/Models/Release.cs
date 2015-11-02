@@ -10,7 +10,7 @@ namespace VpdbAgent.Vpdb.Models
 		private bool _starred;
 		private string _name;
 		private List<Version> _versions;
-		private ReleaseThumb _thumb;
+		private Thumb _thumb;
 
 		[DataMember] public string Id { get; set; }
 		[DataMember] public string Name { get { return _name; } set { this.RaiseAndSetIfChanged(ref _name, value); } }
@@ -19,7 +19,7 @@ namespace VpdbAgent.Vpdb.Models
 		[DataMember] public ReleaseCounter Counter { get; set; }
 		[DataMember] public Game Game { get; set; }
 
-		[DataMember] public ReleaseThumb Thumb { get { return _thumb; } set { this.RaiseAndSetIfChanged(ref _thumb, value); } }
+		[DataMember] public Thumb Thumb { get { return _thumb; } set { this.RaiseAndSetIfChanged(ref _thumb, value); } }
 		[DataMember] public List<Version> Versions { get { return _versions; } set { this.RaiseAndSetIfChanged(ref _versions, value); } }
 		[DataMember] public bool Starred { get { return _starred; }       set { this.RaiseAndSetIfChanged(ref _starred, value); } }
 
@@ -28,16 +28,6 @@ namespace VpdbAgent.Vpdb.Models
 			public int Comments { get; set; }
 			public int Stars { get; set; }
 			public int Downloads { get; set; }
-		}
-
-		public class ReleaseThumb : ReactiveObject
-		{
-			private Image _image;
-
-			[DataMember]
-			public Image Image { get { return _image; } set { this.RaiseAndSetIfChanged(ref _image, value); } }
-			[DataMember]
-			public Flavor Flavor { get; set; }
 		}
 
 		/// <summary>

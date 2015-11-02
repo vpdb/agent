@@ -16,13 +16,12 @@ namespace VpdbAgent.Common.TypeConverters
 
 		public bool TryConvert(object from, Type toType, object conversionHint, out object result)
 		{
-			if (toType == typeof(string)) {
+			if (toType == typeof(string) && from != null) {
 				result = ((Image)from).Url;
 				return true;
-			} else {
-				result = null;
-				return false;
 			}
+			result = null;
+			return false;
 		}
 	}
 }
