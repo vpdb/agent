@@ -131,12 +131,12 @@ namespace VpdbAgent.Application
 				.Merge())
 			.Subscribe(UpdatePlatform);
 
-			// setup game change listener only once all games are fetched.
+			// setup game change listener once all games are fetched.
 			_menuManager.Initialized.Subscribe(_ => SetupGameChanges());
 
 			// update releases from VPDB on the first run, but delay it a bit so it 
 			// doesn't do all that shit at the same time!
-			Games.Changed.Take(1).Delay(TimeSpan.FromSeconds(2)).Subscribe(_ => UpdateReleases());
+			_menuManager.Initialized.Delay(TimeSpan.FromSeconds(2)).Subscribe(_ => UpdateReleases());
 
 			// subscribe to pusher
 			vpdbClient.UserChannel.Subscribe(OnChannelJoined);
@@ -145,17 +145,7 @@ namespace VpdbAgent.Application
 			downloadManager.WhenDownloaded.Subscribe(OnReleaseDownloaded);
 
 			// link games if new games are added 
-			Games.Changed.Subscribe(_ => {
-				if (_gamesToLink.Count > 0) {
-					for (var i = _gamesToLink.Count - 1; i >= 0; i--) {
-						var x = _gamesToLink[i];
-						var game = Games.FirstOrDefault(g => g.Id.Equals(x.Item1));
-						var release = _databaseManager.Database.Releases[x.Item2];
-						LinkRelease(game, release, x.Item3);
-						_gamesToLink.RemoveAt(i);
-					}
-				}
-			});
+			Games.Changed.Subscribe(_ => SetupGameLinker());
 		}
 
 		public IGameManager Initialize()
@@ -168,7 +158,6 @@ namespace VpdbAgent.Application
 			_databaseManager.Initialize();
 			_menuManager.Initialize();
 
-			SetupGameChanges();
 			return this;
 		}
 
@@ -196,9 +185,17 @@ namespace VpdbAgent.Application
 			return this;
 		}
 
+		/// <summary>
+		/// Sets up a listener that updates our global game list when either games
+		/// added or removed, or platforms are added or removed.
+		/// </summary>
+		/// <seealso cref="http://stackoverflow.com/questions/15254708/"/>
+		/// <remarks>
+		/// This 
+		/// </remarks>
 		private void SetupGameChanges()
 		{
-			// here we push all games in all platforms into the Games list. See http://stackoverflow.com/questions/15254708/
+			// here we push all games in all platforms into the Games list.
 			var whenPlatformsOrGamesInThosePlatformsChange = Observable.Merge(
 				Platforms.Changed                                                      // one of the games changes
 					.SelectMany(_ => Platforms.Select(x => x.Games.Changed).Merge())
@@ -212,7 +209,7 @@ namespace VpdbAgent.Application
 					System.Windows.Application.Current.Dispatcher.Invoke(delegate {
 						// TODO better logic
 						using (Games.SuppressChangeNotifications()) {
-							Games.RemoveRange(0, Games.Count);
+							Games.Clear();
 							Games.AddRange(games);
 						}
 						_logger.Info("Set {0} games.", games.Count);
@@ -220,6 +217,23 @@ namespace VpdbAgent.Application
 				});
 		}
 
+		/// <summary>
+		/// Checks if any games are to be linked to a release. Executed each time
+		/// games change.
+		/// </summary>
+		/// See <see cref="AddGame"/> for an explanation.
+		private void SetupGameLinker()
+		{
+			if (_gamesToLink.Count > 0) {
+				for (var i = _gamesToLink.Count - 1; i >= 0; i--) {
+					var x = _gamesToLink[i];
+					var game = Games.FirstOrDefault(g => g.Id.Equals(x.Item1));
+					var release = _databaseManager.Database.Releases[x.Item2];
+					LinkRelease(game, release, x.Item3);
+					_gamesToLink.RemoveAt(i);
+				}
+			}
+		}
 
 		/// <summary>
 		/// Checks if the given release has a newer version than the one

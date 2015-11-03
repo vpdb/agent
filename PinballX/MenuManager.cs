@@ -72,8 +72,12 @@ namespace VpdbAgent.PinballX
 		/// </summary>
 		ReactiveList<PinballXSystem> Systems { get; }
 
+		/// <summary>
+		/// A one-time messenger that announces that the all systems have been 
+		/// parsed and <see cref="Systems"/> is filled up with all available
+		/// games.
+		/// </summary>
 		IObservable<Unit> Initialized { get; }
-
 	}
 
 	/// <summary>
@@ -95,7 +99,6 @@ namespace VpdbAgent.PinballX
 		private readonly IFileSystemWatcher _watcher;
 		private readonly ISettingsManager _settingsManager;
 		private readonly Logger _logger;
-
 
 		public MenuManager(IFileSystemWatcher fileSystemWatcher, ISettingsManager settingsManager, Logger logger)
 		{
@@ -232,9 +235,9 @@ namespace VpdbAgent.PinballX
 
 			if (!_isInitialized) {
 				_initialized.OnNext(Unit.Default);
+				_initialized.OnCompleted();
 				_isInitialized = true;
 			}
-
 		}
 
 		/// <summary>
@@ -269,7 +272,7 @@ namespace VpdbAgent.PinballX
 		/// Parses PinballX.ini and reads all systems from it.
 		/// </summary>
 		/// <returns>Parsed systems</returns>
-		private List<PinballXSystem> ParseSystems(string iniPath)
+		private IEnumerable<PinballXSystem> ParseSystems(string iniPath)
 		{
 			var systems = new List<PinballXSystem>();
 			// only notify after this block
