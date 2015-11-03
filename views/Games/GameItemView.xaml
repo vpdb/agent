@@ -29,7 +29,8 @@
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
-        <c:UrlImage UrlSource="{Binding Game.Release.Thumb.Image.Url}" Grid.Column="0" Margin="0,10,0,0" Width="70" Height="70" VerticalAlignment="Top" HorizontalAlignment="Left"/>
+        <c:UrlImage UrlSource="{Binding File.Thumb.Url}" Width="70" Height="70"
+                    Grid.Column="0" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="0,10,0,0" />
 
         <StackPanel Grid.Column="1" Orientation="Vertical">
 
@@ -75,10 +76,16 @@
                 </Label>
 
                 <!-- identify button -->
-                <Button IsEnabled="{Binding Game.Exists}" Command="{Binding IdentifyRelease}" Visibility="{Binding Path=ShowIdentifyButton, Converter={StaticResource TrueToVisible}}" Style="{StaticResource ButtonLine}" Grid.Column="1" Content="IDENTIFY" HorizontalAlignment="Right" Margin="0,-5,10,-5"/>
-                <Viewbox Grid.Column="1" StretchDirection="Both" Stretch="Uniform" Height="24" Width="24" HorizontalAlignment="Right" Margin="0,0,10,0">
+                <Button IsEnabled="{Binding Game.Exists}" Command="{Binding IdentifyRelease}" 
+                        Visibility="{Binding Path=ShowIdentifyButton, Converter={StaticResource TrueToVisible}}" 
+                        Style="{StaticResource ButtonLine}" 
+                        Grid.Column="1" Content="IDENTIFY" HorizontalAlignment="Right" Margin="0,-5,10,-5"/>
+                <Viewbox Grid.Column="1" StretchDirection="Both" Stretch="Uniform" 
+                         Height="24" Width="24" HorizontalAlignment="Right" Margin="0,0,10,0">
                     <loadin:LoadingIndicator Foreground="{StaticResource PrimaryColorBrush}" SpeedRatio="1" IsActive="{Binding IsExecuting}"  Style="{DynamicResource LoadingIndicatorArcsStyle}"/>
                 </Viewbox>
+                <Label Visibility="{Binding Path=Game.HasUpdate, Converter={StaticResource TrueToVisible}}" 
+                       Grid.Column="1" Content="Update available" Margin="0,0,10,0" FontStyle="Italic" Foreground="{StaticResource PrimaryColorBrush}"/>
             </Grid>
 
             <!-- release results -->

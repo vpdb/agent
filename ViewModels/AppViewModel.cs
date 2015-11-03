@@ -39,10 +39,8 @@ namespace VpdbAgent.ViewModels
      */
 	public class AppViewModel : ReactiveObject, IScreen
 	{
-		public RoutingState Router { get; private set; }
+		public RoutingState Router { get; }
 
-		// commands
-		public ReactiveCommand<object> GotoSettings { get; protected set; }
 
 		public AppViewModel(IMutableDependencyResolver dependencyResolver = null, RoutingState testRouter = null)
 		{
@@ -69,8 +67,6 @@ namespace VpdbAgent.ViewModels
 					Locator.Current.GetService<ISettingsManager>())
 				);
 			}
-
-			GotoSettings = ReactiveCommand.CreateAsyncObservable(_ => Router.Navigate.ExecuteAsync(new SettingsViewModel(this, Locator.Current.GetService<ISettingsManager>())));
 		}
 
 		private void RegisterParts(IMutableDependencyResolver locator)

@@ -10,6 +10,7 @@ using VpdbAgent.Application;
 using VpdbAgent.Vpdb;
 using VpdbAgent.Vpdb.Models;
 using Game = VpdbAgent.Models.Game;
+using Version = VpdbAgent.Vpdb.Models.Version;
 
 namespace VpdbAgent.ViewModels.Games
 {
@@ -29,6 +30,8 @@ namespace VpdbAgent.ViewModels.Games
 
 		// data
 		public Game Game { get; }
+		public Version Version => _version.Value;
+		public File File => _file.Value;
 
 		// needed for filters
 		private bool _isVisible = true;
@@ -46,12 +49,29 @@ namespace VpdbAgent.ViewModels.Games
 
 		private readonly ObservableAsPropertyHelper<bool> _showIdentifyButton;
 		private readonly ObservableAsPropertyHelper<bool> _isExecuting;
+		private readonly ObservableAsPropertyHelper<Version> _version;
+		private readonly ObservableAsPropertyHelper<File> _file;
 		private bool _hasExecuted;
 		private bool _hasResults;
 
 		public GameItemViewModel(Game game)
 		{
 			Game = game;
+
+			this.WhenAnyValue(vm => vm.Game.Release)
+				.Where(r => r != null)
+				.SelectMany(r => r.Versions)
+				.SelectMany(v => v.Files)
+				.Where(f => f.Reference.Id.Equals(Game.FileId))
+				.ToProperty(this, vm => vm.File, out _file);
+
+			this.WhenAnyValue(vm => vm.Game.Release)
+				.Where(r => r != null)
+				.SelectMany(r => r.Versions)
+				.SelectMany(v => v.Files.Select(f => new { v, f }))
+				.Where(x => x.f.Reference.Id.Equals(Game.FileId))
+				.Select(x => x.v)
+				.ToProperty(this, vm => vm.Version, out _version);
 
 			// release identify
 			IdentifyRelease = ReactiveCommand.CreateAsyncObservable(_ => VpdbClient.Api.GetReleasesBySize(game.FileSize, MatchThreshold).SubscribeOn(Scheduler.Default));

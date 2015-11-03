@@ -34,11 +34,6 @@ namespace VpdbAgent
 			StartMeasuring();
 		}
 
-		private void SettingsButton_Click(object sender, RoutedEventArgs e)
-		{
-			AppViewModel.GotoSettings.Execute(null);
-		}
-
 		private void RestoreWindowPlacement()
 		{
 			Height = Properties.Settings.Default.WindowHeight;
@@ -83,9 +78,9 @@ namespace VpdbAgent
 
 		private void StartMeasuring()
 		{
-			Status.Text = "Loading...";
+			//Status.Text = "Loading...";
 			GC.Collect();
-			_pendingOutput = Status;
+			//_pendingOutput = Status;
 			Timer.Restart();
 		}
 

@@ -3,10 +3,10 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:VpdbAgent"
         xmlns:Controls="http://metro.mahapps.com/winfx/xaml/controls"
         xmlns:c="clr-namespace:VpdbAgent.Controls"
         xmlns:rx="clr-namespace:ReactiveUI;assembly=ReactiveUI"
+        xmlns:vm="clr-namespace:VpdbAgent.ViewModels"
         mc:Ignorable="d"
         ResizeMode="CanResizeWithGrip"
         WindowTitleBrush="{DynamicResource TransparentBrush}"
@@ -15,7 +15,8 @@
         TitleCaps="False"
         GlowBrush="#40000000"
         RenderOptions.ClearTypeHint="Enabled"
-        Icon="vpdb-agent.ico">
+        Icon="vpdb-agent.ico" 
+        d:DataContext="{d:DesignInstance Type=vm:AppViewModel}">
 
     <Controls:MetroWindow.Resources>
         <SolidColorBrush x:Key="TransparentBrush" Color="Transparent" />
@@ -29,25 +30,8 @@
         </DataTemplate>
     </Controls:MetroWindow.IconTemplate>
 
-    <DockPanel LastChildFill="True">
-        <DockPanel DockPanel.Dock="Bottom" Margin="7,0,15,7">
-            <TextBlock DockPanel.Dock="Left" Style="{StaticResource Label}" FontSize="12" x:Name="Status" Text="Status info. All green." />
-            <TextBlock DockPanel.Dock="Right" Style="{StaticResource Label}" TextAlignment="Right" FontSize="12" x:Name="LoginStatus" Text="Not logged." />
-        </DockPanel>
-        <DockPanel Margin="7" >
-            <DockPanel Margin="7" DockPanel.Dock="Top" LastChildFill="False">
-                <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Click="SettingsButton_Click" Height="30">
-                    <StackPanel Orientation="Horizontal">
-                        <c:IconControl Height="15" Width="15" Foreground="#80ffffff" Data="{StaticResource IconSettings}" Margin="10,0,10,0" />
-                        <TextBlock VerticalAlignment="Center" Text="SETTINGS" Margin="0,0,10,0" />
-                    </StackPanel>
-                </Button>
-            </DockPanel>
-            <rx:RoutedViewHost
+    <rx:RoutedViewHost
                 Router="{Binding Router}"
                 HorizontalContentAlignment="Stretch"
                 VerticalContentAlignment="Stretch" />
-        </DockPanel>
-    </DockPanel>
-	
 </Controls:MetroWindow>

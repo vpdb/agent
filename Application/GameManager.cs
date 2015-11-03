@@ -186,7 +186,7 @@ namespace VpdbAgent.Application
 		public IGameManager Sync(Game game)
 		{
 			_vpdbClient.Api.GetRelease(game.ReleaseId).Subscribe(release => {
-				var latestFile = HasUpdate(game, release);
+				var latestFile = game.FindUpdate(release);
 				if (latestFile != null) {
 					_logger.Info("Found updated file {0} for {1}, adding to download queue.", latestFile, release);
 					_downloadManager.DownloadRelease(release, latestFile);
@@ -252,29 +252,6 @@ namespace VpdbAgent.Application
 					_gamesToLink.RemoveAt(i);
 				}
 			}
-		}
-
-		/// <summary>
-		/// Checks if the given release has a newer version than the one
-		/// referenced in the game.
-		/// </summary>
-		/// <param name="game">Game to match against release</param>
-		/// <param name="release">Freshly obtained release from VPDB</param>
-		/// <returns>The newer file if available, null if no update available</returns>
-		private Vpdb.Models.File HasUpdate(Game game, Release release)
-		{
-			// for now, only orientation is checked. todo add more configurable attributes.
-			var files = release.Versions
-				.SelectMany(version => version.Files)
-				.Where(file => file.Flavor.Orientation == Flavor.OrientationValue.FS)
-				.ToList();
-
-			files.Sort((a, b) => b.ReleasedAt.CompareTo(a.ReleasedAt));
-
-			files.ForEach(file => _logger.Info("{0}/{2} - {1}", file.Reference.Id, file.ReleasedAt, game.FileId));
-			
-			var latestFile = files[0];
-			return !latestFile.Reference.Id.Equals(game.FileId) ? latestFile : null;
 		}
 
 		/// <summary>
@@ -371,14 +348,14 @@ namespace VpdbAgent.Application
 						foreach (var release in releases) {
 							if (!_databaseManager.Database.Releases.ContainsKey(release.Id)) {
 								_databaseManager.Database.Releases.Add(release.Id, release);
-								// so we had a ref we didn't have in the global db. 
-								// now we got it, so link it back to game.
-								var game = Games.FirstOrDefault(g => release.Id.Equals(g.ReleaseId));
-								if (game != null) {
-									game.Release = release;
-								}
+								
 							} else {
 								_databaseManager.Database.Releases[release.Id].Update(release);
+							}
+							// also update the game's release link. todo check perf and use a map if too slow
+							var game = Games.FirstOrDefault(g => release.Id.Equals(g.ReleaseId));
+							if (game != null) {
+								game.Release = release;
 							}
 						}
 						// save

@@ -1,12 +1,15 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Runtime.Serialization;
 using ReactiveUI;
 using static System.String;
 using System.Reactive.Linq;
-using File = System.IO.File;
+using NLog;
+using VpdbAgent.Vpdb.Models;
+using File = VpdbAgent.Vpdb.Models.File;
 
 namespace VpdbAgent.Models
 {
@@ -21,10 +24,12 @@ namespace VpdbAgent.Models
 		// read/write fields
 		private string _releaseId;
 		private string _fileId;
-		private Vpdb.Models.Release _release;
-		readonly ObservableAsPropertyHelper<bool> _hasRelease;
 		private bool _exists;
 		private bool _isSynced;
+		private Release _release;
+		private readonly ObservableAsPropertyHelper<bool> _hasRelease;
+		private readonly ObservableAsPropertyHelper<bool> _hasUpdate;
+		private readonly ObservableAsPropertyHelper<File> _updatedRelease;
 
 		// serialized properties
 		[DataMember] public string Id { get; set; }
@@ -35,10 +40,12 @@ namespace VpdbAgent.Models
 		[DataMember] public string FileId { get { return _fileId; } set { this.RaiseAndSetIfChanged(ref _fileId, value); } }
 		[DataMember] public bool IsSynced { get { return _isSynced; } set { this.RaiseAndSetIfChanged(ref _isSynced, value); } }
 
-		// internal fields
-		public Vpdb.Models.Release Release { get { return _release; } set { this.RaiseAndSetIfChanged(ref _release, value); } }
+		// non-serialized props
+		public Release Release { get { return _release; } set { this.RaiseAndSetIfChanged(ref _release, value); } }
 		public bool Exists { get { return _exists; } set { this.RaiseAndSetIfChanged(ref _exists, value); } }
 		public bool HasRelease => _hasRelease.Value;
+		public bool HasUpdate => _hasUpdate.Value;
+		public File UpdatedRelease => _updatedRelease.Value;
 		public long FileSize { get; set; }
 		public Platform Platform { get; private set; }
 
@@ -51,6 +58,19 @@ namespace VpdbAgent.Models
 			this.WhenAnyValue(game => game.ReleaseId)
 				.Select(releaseId => releaseId != null)
 				.ToProperty(this, game => game.HasRelease, out _hasRelease);
+
+			this.WhenAnyValue(game => game.Release, game => game.FileId, (release, fileId) => new { game = this, release })
+				.Select(x => x.game.FindUpdate(x.release))
+				.ToProperty(this, game => game.UpdatedRelease, out _updatedRelease);
+
+			this.WhenAnyValue(game => game.UpdatedRelease)
+				.Select(update => update != null)
+				.ToProperty(this, game => game.HasUpdate, out _hasUpdate);
+
+			this.WhenAnyValue(game => game.UpdatedRelease)
+				.Subscribe(file => {
+					Console.WriteLine("new release = {0}", file);
+				});
 		}
 
 		public Game(PinballX.Models.Game xmlGame, Platform platform, GlobalDatabase db) : this()
@@ -64,6 +84,31 @@ namespace VpdbAgent.Models
 			Update(platform, db);
 			UpdateFromGame(xmlGame, platform.TablePath);
 			return this;
+		}
+
+		/// <summary>
+		/// Checks if the given release has a newer version than the one
+		/// referenced in the game.
+		/// </summary>
+		/// <param name="release">Freshly obtained release from VPDB</param>
+		/// <returns>The newer file if available, null if no update available</returns>
+		public File FindUpdate(Release release)
+		{
+			if (FileId == null || release == null) {
+				return null;
+			}
+
+			// for now, only orientation is checked. todo add more configurable attributes.
+			var files = release.Versions
+				.SelectMany(version => version.Files)
+				.Where(file => file.Flavor.Orientation == Flavor.OrientationValue.FS)
+				.ToList();
+
+			files.Sort((a, b) => b.ReleasedAt.CompareTo(a.ReleasedAt));
+
+			var latestFile = files[0];
+			var updatedRelease = !latestFile.Reference.Id.Equals(FileId) ? latestFile : null;
+			return updatedRelease;
 		}
 
 		private void Update(Platform platform, GlobalDatabase db)
@@ -86,17 +131,26 @@ namespace VpdbAgent.Models
 			Enabled = xmlGame.Enabled == null || "true".Equals(xmlGame.Enabled, StringComparison.InvariantCultureIgnoreCase);
 			DatabaseFile = xmlGame.DatabaseFile;
 
-			if (File.Exists(tablePath + @"\" + xmlGame.Filename + ".vpt")) {
+			var oldFilename = Filename;
+
+			if (System.IO.File.Exists(tablePath + @"\" + xmlGame.Filename + ".vpt")) {
 				Filename = xmlGame.Filename + ".vpt";
 				FileSize = new FileInfo(tablePath + @"\" + xmlGame.Filename + ".vpt").Length;
 				Exists = true;
-			} else if (File.Exists(tablePath + @"\" + xmlGame.Filename + ".vpx")) {
+			} else if (System.IO.File.Exists(tablePath + @"\" + xmlGame.Filename + ".vpx")) {
 				Filename = xmlGame.Filename + ".vpx";
 				FileSize = new FileInfo(tablePath + @"\" + xmlGame.Filename + ".vpx").Length;
 				Exists = true;
 			} else {
 				Filename = xmlGame.Filename;
 				Exists = false;
+			}
+
+			// if filename has changed, unlink.
+			if (oldFilename != Filename) {
+				FileId = null;
+				ReleaseId = null;
+				Release = null;
 			}
 		}
 

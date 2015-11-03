@@ -5,18 +5,38 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:rx="clr-namespace:ReactiveUI;assembly=ReactiveUI"
              xmlns:vm="clr-namespace:VpdbAgent.ViewModels"
+             xmlns:c="clr-namespace:VpdbAgent.Controls"
              mc:Ignorable="d" 
              d:DesignHeight="300" 
              d:DesignWidth="900" 
              d:DataContext="{d:DesignInstance Type=vm:MainViewModel}">
-    <Grid>
-        <TabControl>
-            <TabItem Header="Games">
-                <rx:ViewModelViewHost x:Name="GamesContent" VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch"/>
-            </TabItem>
-            <TabItem Header="Downloads">
-                <rx:ViewModelViewHost x:Name="DownloadsContent" VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch"/>
-            </TabItem>
-        </TabControl>
-    </Grid>
+
+    <DockPanel LastChildFill="True">
+        <DockPanel DockPanel.Dock="Bottom" Margin="7,0,15,7">
+            <TextBlock DockPanel.Dock="Left" Style="{StaticResource Label}" FontSize="12" x:Name="Status" Text="Status info. All green." />
+            <TextBlock DockPanel.Dock="Right" Style="{StaticResource Label}" TextAlignment="Right" FontSize="12" x:Name="LoginStatus" Text="Not logged." />
+        </DockPanel>
+        <DockPanel Margin="7" >
+            <Grid>
+                <TabControl>
+                    <TabItem Header="Games">
+                        <rx:ViewModelViewHost x:Name="GamesContent" VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch"/>
+                    </TabItem>
+                    <TabItem Header="Downloads">
+                        <rx:ViewModelViewHost x:Name="DownloadsContent" VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch"/>
+                    </TabItem>
+                    <TabItem Header="Messages">
+                        <rx:ViewModelViewHost x:Name="MessagesContent" VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch"/>
+                    </TabItem>
+                </TabControl>
+                <Button Style="{StaticResource IconButton}" Click="SettingsButton_Click" Height="30" 
+                        HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,12,0,0">
+                    <StackPanel Orientation="Horizontal">
+                        <c:IconControl Height="15" Width="15" Foreground="#80ffffff" Data="{StaticResource IconSettings}" Margin="10,0,10,0" />
+                        <TextBlock VerticalAlignment="Center" Text="SETTINGS" Margin="0,0,10,0" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </DockPanel>
+    </DockPanel>
 </UserControl>

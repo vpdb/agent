@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.Serialization;
 using ReactiveUI;
 
@@ -41,8 +42,16 @@ namespace VpdbAgent.Vpdb.Models
 			Authors = release.Authors;
 			Counter = release.Counter;
 			Game = release.Game;
-			Versions = release.Versions;
 			Starred = release.Starred;
+
+			release.Versions.ForEach(version =>
+			{
+				var existingVersion = Versions.FirstOrDefault(v => version.Name.Equals(v.Name));
+				if (existingVersion != null) {
+					Versions.Remove(existingVersion);
+				}
+				Versions.Add(version);
+			});
 		}
 
 		public override string ToString()

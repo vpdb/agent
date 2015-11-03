@@ -33,6 +33,11 @@ namespace VpdbAgent.Views
 			});
 		}
 
+		private void SettingsButton_Click(object sender, RoutedEventArgs e)
+		{
+			ViewModel.GotoSettings.Execute(null);
+		}
+
 		#region ViewModel
 		public MainViewModel ViewModel
 		{

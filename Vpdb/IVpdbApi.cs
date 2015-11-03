@@ -11,16 +11,16 @@ namespace VpdbAgent.Vpdb
 		[Get("/api/v1/user")]
 		IObservable<UserFull> GetProfile();
 
-		[Get("/api/v1/releases?thumb_format=square")]
+		[Get("/api/v1/releases?thumb_format=square&thumb_per_file=1")]
 		Task<List<Release>> GetReleases();
 
-		[Get("/api/v1/releases/{id}?thumb_format=square")]
+		[Get("/api/v1/releases/{id}?thumb_format=square&thumb_per_file=1")]
 		IObservable<Release> GetRelease([AliasAs("id")] string releaseId);
 
 		[Get("/api/v1/releases?thumb_format=square&thumb_per_file=1")]
 		IObservable<List<Release>> GetReleasesBySize([AliasAs("filesize")] long filesize, [AliasAs("threshold")] long threshold);
 
-		[Get("/api/v1/releases?thumb_format=square")]
+		[Get("/api/v1/releases?thumb_format=square&thumb_per_file=1")]
 		IObservable<List<Release>> GetReleasesByIds([AliasAs("ids")] string releases);
 	}
 }
