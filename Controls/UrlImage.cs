@@ -1,7 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
 using System.IO;
-using System.Linq.Expressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Animation;
@@ -68,52 +67,37 @@ namespace VpdbAgent.Controls
 				return;
 			}
 
-			// if cached, set from cache
-			if (IsCached(urlSource)) {
-				Opacity = 1;
-				Source = new BitmapImage(new Uri(GetLocalPath(urlSource)));
-				return;
-			}
-
-			// remote, so make it transparent for fading animation
-			Opacity = 0;
-
-			// download
-			var webRequest = VpdbClient.GetWebRequest(urlSource);
-			webRequest.BeginGetResponse(ar =>
+			// on worker thread
+			Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(delegate
 			{
-				try {
-					Logger.Info("Loading image {0}...", urlSource);
-					var response = webRequest.EndGetResponse(ar);
-					var stream = response.GetResponseStream();
-					if (stream != null && !stream.CanRead) {
-						return;
-					}
-					var buffer = new byte[response.ContentLength];
-					stream?.BeginRead(buffer, 0, buffer.Length, aResult =>
-					{
-						stream.EndRead(aResult);
-						var image = new BitmapImage();
-						image.BeginInit();
-						image.StreamSource = new MemoryStream(buffer);
-						image.EndInit();
-						image.Freeze();
-						Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(delegate {
-							Cache(urlSource, buffer);
-							var da = new DoubleAnimation {
-								From = 0,
-								To = 1,
-								Duration = new Duration(TimeSpan.FromMilliseconds(200))
-							};
-							Source = image;
-							BeginAnimation(OpacityProperty, da);
-						}));
-					}, null);
+				var localPath = GetLocalPath(urlSource);
 
-				} catch (Exception e) {
-					Logger.Warn("Error loading image {0}: {1}", webRequest.RequestUri.AbsoluteUri, e.Message);
+				// if cached, set from cache
+				if (IsCached(urlSource)) {
+					Opacity = 1;
+					Source = new BitmapImage(new Uri(localPath));
+					return;
 				}
-			}, null);
+
+				// remote, so make it transparent for fading animation
+				Opacity = 0;
+
+				// download
+				var webClient = VpdbClient.GetWebClient();
+				var uri = VpdbClient.GetUri(urlSource);
+				MakeLocalPath(urlSource);
+				Logger.Info("Downloading image from {0}", uri.ToString());
+				webClient.DownloadFile(uri, localPath);
+
+				// animate into view
+				Source = new BitmapImage(new Uri(localPath));
+				var da = new DoubleAnimation {
+					From = 0,
+					To = 1,
+					Duration = new Duration(TimeSpan.FromMilliseconds(300))
+				};
+				BeginAnimation(OpacityProperty, da);
+			}));
 		}
 
 		/// <summary>
@@ -143,23 +127,14 @@ namespace VpdbAgent.Controls
 		}
 
 		/// <summary>
-		/// Saves an image to the cache
+		/// Creates the cache folder of the path to cache.
 		/// </summary>
 		/// <param name="path">Absolute remote path without host and schema</param>
-		/// <param name="bytes">Downloaded image</param>
-		private static void Cache(string path, byte[] bytes)
+		private static void MakeLocalPath(string path)
 		{
-			var localPath = GetLocalPath(path);
-			try {
-				
-				var localDir = Path.GetDirectoryName(localPath);
-				if (localDir != null && !Directory.Exists(localDir)) {
-					Directory.CreateDirectory(localDir);
-				}
-				File.WriteAllBytes(localPath, bytes);
-
-			} catch (Exception e) {
-				Logger.Error(e, "Error writing cache image to {0}", localPath);
+			var localDir = Path.GetDirectoryName(GetLocalPath(path));
+			if (localDir != null && !Directory.Exists(localDir)) {
+				Directory.CreateDirectory(localDir);
 			}
 		}
 	}

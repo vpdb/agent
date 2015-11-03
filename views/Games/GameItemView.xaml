@@ -8,6 +8,8 @@
              xmlns:loadin="clr-namespace:LoadingIndicators.WPF;assembly=LoadingIndicators.WPF"
              xmlns:typeConverters="clr-namespace:VpdbAgent.Common.TypeConverters"
              xmlns:vm="clr-namespace:VpdbAgent.ViewModels.Games"
+             xmlns:diag="clr-namespace:System.Diagnostics;assembly=WindowsBase"
+             xmlns:valueConverters="clr-namespace:VpdbAgent.Common.ValueConverters"
              mc:Ignorable="d" 
              Padding="20,0,0,0"
              d:DesignWidth="800"
@@ -18,6 +20,7 @@
         <typeConverters:BooleanToVisibilityConverter x:Key="TrueToCollapsed" True="Collapsed" False="Visible" />
         <typeConverters:BooleanToBrushConverter x:Key="FalseToRed" True="Transparent" False="DarkRed" />
         <typeConverters:BooleanToBrushConverter x:Key="TrueToPrimary" True="{StaticResource PrimaryColorBrush}" False="{StaticResource LabelTextBrush}" />
+        <valueConverters:DebugDataBindingConverter x:Key="DebugBinding"/>
     </UserControl.Resources>
 
     <Grid>
@@ -46,7 +49,8 @@
                 <!-- controls -->
                 <StackPanel Visibility="{Binding Path=Game.HasRelease, Converter={StaticResource TrueToVisible}}" Grid.Column="2" Orientation="Horizontal" Margin="0,5,0,0">
                     <c:IconControl Foreground="{Binding Path=Game.Release.Starred, Converter={StaticResource TrueToPrimary}}" Data="{StaticResource IconStar}" Margin="10,-2,12,0"  Height="18" Width="18" />
-                    <ToggleButton x:Name="SyncButton" Command="{Binding SyncToggled}" IsChecked="{Binding Game.IsSynced}" Height="20" Margin="5,0,17,0"/>
+                    <ToggleButton x:Name="SyncButton" Command="{Binding SyncToggled}" 
+                                  IsChecked="{Binding Game.IsSynced, Converter={StaticResource DebugBinding}, diag:PresentationTraceSources.TraceLevel=High}" Height="20" Margin="5,0,17,0"/>
                     <c:LabelFor Content="SYNC" FontSize="15" Foreground="{Binding ElementName=SyncButton, Path=Background}" Margin="0,0,10,0" Target="{x:Reference SyncButton}"/>
                 </StackPanel>
             </Grid>

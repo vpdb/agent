@@ -362,6 +362,10 @@ namespace VpdbAgent.Application
 			}
 		}
 
+		/// <summary>
+		/// Adds a downloaded game to the PinballX database.
+		/// </summary>
+		/// <param name="job">Job of the downloaded game</param>
 		private void AddGame(DownloadJob job)
 		{
 			_logger.Info("Adding {0} to PinballX database...", job.Release);
@@ -376,28 +380,43 @@ namespace VpdbAgent.Application
 			MoveDownloadedFile(job, platform);
 			var newGame = _menuManager.NewGame(job);
 
-			// now, adding the game force a new rescan. but it's async so in 
-			// order to avoid race conditions, we put this into a "linking" 
-			// queue, meaning on the next updated, this will get linked.
+			// adding the game (updating the xml) forces a new rescan. but it's
+			// async so in order to avoid race conditions, we put this into a 
+			// "linking" queue, meaning on the next update, it will also get 
+			// linked.
 			_gamesToLink.Add(new Tuple<string, string, string>(newGame.Description, job.Release.Id, job.File.Reference.Id));
 
-			// save new game to Vpdb.xml (and trigger Games refresh)
+			// save new game to Vpdb.xml (and trigger rescan)
 			_menuManager.AddGame(newGame, platform.DatabasePath);
 		}
 
+		/// <summary>
+		/// Updates an existing game in the PinballX database
+		/// </summary>
+		/// <remarks>
+		/// Usually happends when a game is updated to a new version.
+		/// </remarks>
+		/// <param name="game">Game to be updated</param>
+		/// <param name="job">Job of downloaded game</param>
 		private void UpdateGame(Game game, DownloadJob job)
 		{
-			_logger.Info("Updating {0} in PinballX database...", job.Release);
+			var oldFileName = Path.GetFileNameWithoutExtension(game.Filename);
 
+			_logger.Info("Updating {0} in PinballX database...", job.Release);
 			MoveDownloadedFile(job, game.Platform);
 				
 			// update and save json
 			game.FileId = Path.GetFileNameWithoutExtension(job.FilePath);
 
 			// update and save xml
-			_menuManager.UpdateGame(game);
+			_menuManager.UpdateGame(oldFileName, game);
 		}
 
+		/// <summary>
+		/// Moves a downloaded file to the table folder of the platform.
+		/// </summary>
+		/// <param name="job">Job of downloaded file</param>
+		/// <param name="platform">Platform of the downloaded file</param>
 		private void MoveDownloadedFile(DownloadJob job, Platform platform)
 		{
 			// move downloaded file to table folder

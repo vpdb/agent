@@ -34,7 +34,7 @@ namespace VpdbAgent.PinballX
 		/// Starts watching file system for configuration changes and triggers an
 		/// initial update.
 		/// </summary>
-		/// <returns></returns>
+		/// <returns>This instance</returns>
 		IMenuManager Initialize();
 
 		/// <summary>
@@ -52,9 +52,18 @@ namespace VpdbAgent.PinballX
 		/// <returns></returns>
 		Game NewGame(DownloadJob job);
 
-		Game FindGame(VpdbAgent.Models.Game game);
-
-		IMenuManager UpdateGame(VpdbAgent.Models.Game game);
+		/// <summary>
+		/// Updates a game. If the game is not found, an exception is thrown.
+		/// </summary>
+		/// <remarks>
+		/// If the game originates from our own Vpdb.xml, data is marshalled as
+		/// as usual. However, if it comes from another (i.e.: the user's) xml,
+		/// we do a string-replace in order to keep the rest of the file as-is.
+		/// </remarks>
+		/// <param name="oldFileName">File ID ("name") of the game to update</param>
+		/// <param name="game">Game to update</param>
+		/// <returns>This instance</returns>
+		IMenuManager UpdateGame(string oldFileName, VpdbAgent.Models.Game game);
 
 		/// <summary>
 		/// Systems parsed from <c>PinballX.ini</c>.
@@ -117,31 +126,6 @@ namespace VpdbAgent.PinballX
 			return this;
 		}
 
-		public Game FindGame(VpdbAgent.Models.Game game)
-		{
-			return Systems
-				.Where(s => s.Name.Equals(game.Platform.Name))
-				.SelectMany(s => s.Games)
-				.FirstOrDefault(g => g.Description.Equals(game.Id));
-		}
-
-		public IMenuManager UpdateGame(VpdbAgent.Models.Game jsonGame)
-		{
-			if (jsonGame.DatabaseFile.Equals(MenuManager.VpdbXml)) {
-
-				var game = FindGame(jsonGame);
-				game.Filename = jsonGame.FileId;
-
-				// update and unmarshall
-				_logger.Info("Marshalling own XML.");
-
-			} else {
-				// not our file, string replace.
-				_logger.Info("String-replacing user's XML.");
-			}
-			return this;
-		}
-
 		public Game AddGame(Game game, string databasePath)
 		{
 			// read current xml
@@ -165,6 +149,40 @@ namespace VpdbAgent.PinballX
 				Manufacturer = job.Release.Game.Manufacturer,
 				Year = job.Release.Game.Year.ToString()
 			};
+		}
+
+		public IMenuManager UpdateGame(string oldFileName, VpdbAgent.Models.Game jsonGame)
+		{
+			if (jsonGame.DatabaseFile.Equals(VpdbXml)) {
+
+				// read xml
+				var vpdbXml = Path.Combine(jsonGame.Platform.DatabasePath, VpdbXml);
+				var menu = UnmarshallXml(vpdbXml);
+
+				// get game
+				var game = menu.Games.FirstOrDefault(g => g.Filename.Equals(oldFileName));
+				if (game == null) {
+					throw new InvalidOperationException($"Cannot find game with ID {jsonGame.Id} in {vpdbXml}.");
+				}
+
+				// update game
+				game.Filename = jsonGame.FileId;
+
+				// save xml
+				MarshallXml(menu, vpdbXml);
+
+			} else {
+
+				// not our file, string replace.
+				var xmlPath = Path.Combine(jsonGame.Platform.DatabasePath, jsonGame.DatabaseFile);
+
+				var xml = File.ReadAllText(xmlPath);
+				xml = xml.Replace($"name=\"{oldFileName}\"", $"name=\"{jsonGame.FileId}\"");
+				File.WriteAllText(xmlPath, xml);
+
+				_logger.Info("Replaced name \"{0}\" with \"{1}\" in {2}.", oldFileName, jsonGame.FileId, xmlPath);
+			}
+			return this;
 		}
 
 		/// <summary>

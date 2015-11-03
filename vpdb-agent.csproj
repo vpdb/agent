@@ -152,6 +152,7 @@
     <Compile Include="Application\DatabaseManager.cs" />
     <Compile Include="Common\FilesystemWatchCache.cs" />
     <Compile Include="Common\ObservableTrace.cs" />
+    <Compile Include="Common\ValueConverters\DebugDataBindingConverter.cs" />
     <Compile Include="Controls\IconControl.cs" />
     <Compile Include="Controls\LabelFor.cs" />
     <Compile Include="Controls\RichTextBlock.cs" />

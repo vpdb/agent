@@ -89,9 +89,11 @@ namespace VpdbAgent.ViewModels.Downloads
 					System.Windows.Application.Current.Dispatcher.Invoke(delegate {
 						var timespan = DateTime.Now - lastUpdatedProgress;
 						var bytespan = progress.BytesReceived - bytesReceived;
-						var downloadSpeed = bytespan / timespan.Seconds;
 
-						DownloadSpeedFormatted = $"{downloadSpeed.Bytes().ToString("#.0")}/s";
+						if (timespan.TotalMilliseconds > 0) {
+							var downloadSpeed = 1000 * bytespan / timespan.TotalMilliseconds;
+							DownloadSpeedFormatted = $"{downloadSpeed.Bytes().ToString("#.0")}/s";
+						}
 
 						bytesReceived = progress.BytesReceived;
 						lastUpdatedProgress = DateTime.Now;
