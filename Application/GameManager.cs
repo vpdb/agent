@@ -60,6 +60,13 @@ namespace VpdbAgent.Application
 		ReactiveList<Game> Games { get; }
 
 		/// <summary>
+		/// A one-time message fired when everything has been initialized and
+		/// GUI can start adding its own subscriptions without re-updating
+		/// during initialization.
+		/// </summary>
+		IObservable<Unit> Initialized { get; }
+
+		/// <summary>
 		/// Initializes the menu manager, which basically starts watching
 		/// relevant files.
 		/// </summary>
@@ -102,7 +109,11 @@ namespace VpdbAgent.Application
 		// props
 		public ReactiveList<Platform> Platforms { get; } = new ReactiveList<Platform>();
 		public ReactiveList<Game> Games { get; } = new ReactiveList<Game>();
+		public IObservable<Unit> Initialized => _initialized;
 
+		// privates
+		private readonly Subject<Unit> _initialized = new Subject<Unit>();
+		private bool _isInitialized;
 		private readonly List<Tuple<string, string, string>> _gamesToLink = new List<Tuple<string, string, string>>();
 
 		public GameManager(IMenuManager menuManager, IVpdbClient vpdbClient, ISettingsManager 
@@ -157,6 +168,7 @@ namespace VpdbAgent.Application
 
 			_databaseManager.Initialize();
 			_menuManager.Initialize();
+			_vpdbClient.Initialize();
 
 			return this;
 		}
@@ -202,7 +214,8 @@ namespace VpdbAgent.Application
 					.Select(_ => Unit.Default),
 				Platforms.Changed.Select(_ => Unit.Default));                          // one of the platforms changes
 
-			whenPlatformsOrGamesInThosePlatformsChange.StartWith(Unit.Default)
+			whenPlatformsOrGamesInThosePlatformsChange
+				.StartWith(Unit.Default)
 				.Select(_ => Platforms.SelectMany(x => x.Games).ToList())
 				.Where(games => games.Count > 0)
 				.Subscribe(games => {
@@ -213,6 +226,12 @@ namespace VpdbAgent.Application
 							Games.AddRange(games);
 						}
 						_logger.Info("Set {0} games.", games.Count);
+
+						if (!_isInitialized) {
+							_initialized.OnNext(Unit.Default);
+							_initialized.OnCompleted();
+							_isInitialized = true;
+						}
 					});
 				});
 		}

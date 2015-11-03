@@ -26,9 +26,7 @@ namespace VpdbAgent.ViewModels
 		{
 			HostScreen = screen;
 
-			Games = new GamesViewModel(
-				Locator.Current.GetService<IGameManager>(),
-				Locator.Current.GetService<IVpdbClient>());
+			Games = new GamesViewModel(Locator.Current.GetService<IGameManager>());
 			Downloads = new DownloadsViewModel();
 		}
 	}
