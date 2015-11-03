@@ -131,24 +131,8 @@ namespace VpdbAgent.Application
 				.Merge())
 			.Subscribe(UpdatePlatform);
 
-			// here we push all games in all platforms into the Games list. See http://stackoverflow.com/questions/15254708/
-			var whenPlatformsOrGamesInThosePlatformsChange = Observable.Merge(
-				Platforms.Changed                                                      // one of the games changes
-					.SelectMany(_ => Platforms.Select(x => x.Games.Changed).Merge())
-					.Select(_ => Unit.Default),
-				Platforms.Changed.Select(_ => Unit.Default));                          // one of the platforms changes
-
-			whenPlatformsOrGamesInThosePlatformsChange.StartWith(Unit.Default)
-				.Select(_ => Platforms.SelectMany(x => x.Games).ToList())
-				.Where(games => games.Count > 0)
-				.Subscribe(games => {
-					// TODO better logic
-					using (Games.SuppressChangeNotifications()) {
-						Games.RemoveRange(0, Games.Count);
-						Games.AddRange(games);
-					}
-					_logger.Info("Set {0} games.", games.Count);
-				});
+			// setup game change listener only once all games are fetched.
+			_menuManager.Initialized.Subscribe(_ => SetupGameChanges());
 
 			// update releases from VPDB on the first run, but delay it a bit so it 
 			// doesn't do all that shit at the same time!
@@ -183,6 +167,8 @@ namespace VpdbAgent.Application
 
 			_databaseManager.Initialize();
 			_menuManager.Initialize();
+
+			SetupGameChanges();
 			return this;
 		}
 
@@ -209,6 +195,31 @@ namespace VpdbAgent.Application
 			});
 			return this;
 		}
+
+		private void SetupGameChanges()
+		{
+			// here we push all games in all platforms into the Games list. See http://stackoverflow.com/questions/15254708/
+			var whenPlatformsOrGamesInThosePlatformsChange = Observable.Merge(
+				Platforms.Changed                                                      // one of the games changes
+					.SelectMany(_ => Platforms.Select(x => x.Games.Changed).Merge())
+					.Select(_ => Unit.Default),
+				Platforms.Changed.Select(_ => Unit.Default));                          // one of the platforms changes
+
+			whenPlatformsOrGamesInThosePlatformsChange.StartWith(Unit.Default)
+				.Select(_ => Platforms.SelectMany(x => x.Games).ToList())
+				.Where(games => games.Count > 0)
+				.Subscribe(games => {
+					System.Windows.Application.Current.Dispatcher.Invoke(delegate {
+						// TODO better logic
+						using (Games.SuppressChangeNotifications()) {
+							Games.RemoveRange(0, Games.Count);
+							Games.AddRange(games);
+						}
+						_logger.Info("Set {0} games.", games.Count);
+					});
+				});
+		}
+
 
 		/// <summary>
 		/// Checks if the given release has a newer version than the one

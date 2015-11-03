@@ -5,11 +5,13 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
+using System.Reactive;
 using System.Xml.Serialization;
 using ReactiveUI;
 using VpdbAgent.PinballX.Models;
 using System.Reactive.Linq;
 using System.Reactive.Concurrency;
+using System.Reactive.Subjects;
 using System.Windows;
 using VpdbAgent.Application;
 using VpdbAgent.Vpdb;
@@ -70,6 +72,8 @@ namespace VpdbAgent.PinballX
 		/// </summary>
 		ReactiveList<PinballXSystem> Systems { get; }
 
+		IObservable<Unit> Initialized { get; }
+
 	}
 
 	/// <summary>
@@ -79,12 +83,19 @@ namespace VpdbAgent.PinballX
 	{
 		public const string VpdbXml = "Vpdb.xml";
 
+		// publics
 		public ReactiveList<PinballXSystem> Systems { get; } = new ReactiveList<PinballXSystem>();
+		public IObservable<Unit> Initialized => _initialized;
+
+		// privates
+		private readonly Subject<Unit> _initialized = new Subject<Unit>();
+		private bool _isInitialized;
 
 		// dependencies
 		private readonly IFileSystemWatcher _watcher;
 		private readonly ISettingsManager _settingsManager;
 		private readonly Logger _logger;
+
 
 		public MenuManager(IFileSystemWatcher fileSystemWatcher, ISettingsManager settingsManager, Logger logger)
 		{
@@ -218,6 +229,12 @@ namespace VpdbAgent.PinballX
 				UpdateGames(system);
 			}
 			_logger.Info("All games parsed.");
+
+			if (!_isInitialized) {
+				_initialized.OnNext(Unit.Default);
+				_isInitialized = true;
+			}
+
 		}
 
 		/// <summary>
@@ -252,7 +269,7 @@ namespace VpdbAgent.PinballX
 		/// Parses PinballX.ini and reads all systems from it.
 		/// </summary>
 		/// <returns>Parsed systems</returns>
-		private IEnumerable<PinballXSystem> ParseSystems(string iniPath)
+		private List<PinballXSystem> ParseSystems(string iniPath)
 		{
 			var systems = new List<PinballXSystem>();
 			// only notify after this block

@@ -15,6 +15,10 @@ namespace VpdbAgent.PinballX.Models
 	/// </summary>
 	public class PinballXSystem
 	{
+		// deps
+		private readonly static ISettingsManager SettingsManager = Locator.Current.GetService<ISettingsManager>();
+
+		// from pinballx.ini
 		public string Name { get; set; }
 		public bool Enabled { get; set; }
 		public string WorkingPath { get; set; }
@@ -23,10 +27,12 @@ namespace VpdbAgent.PinballX.Models
 		public string Parameters { get; set; }
 		public Platform.PlatformType Type { get; set; }
 
+		// convenient props
 		public string DatabasePath { get; set; }
 		public string MediaPath { get; set; }
 
-		public ReactiveList<Game> Games { get; private set; } = new ReactiveList<Game>();
+		// data props
+		public ReactiveList<Game> Games { get; } = new ReactiveList<Game>();
 
 		public PinballXSystem(KeyDataCollection data)
 		{
@@ -68,10 +74,10 @@ namespace VpdbAgent.PinballX.Models
 			WorkingPath = data["WorkingPath"];
 			TablePath = data["TablePath"];
 			Executable = data["Executable"];
+			Parameters = data["Parameters"];
 
-			var settingsManager = Locator.Current.GetService<ISettingsManager>();
-			DatabasePath = settingsManager.PbxFolder + @"\Databases\" + Name;
-			MediaPath = settingsManager.PbxFolder + @"\Media\" + Name;
+			DatabasePath = SettingsManager.PbxFolder + @"\Databases\" + Name;
+			MediaPath = SettingsManager.PbxFolder + @"\Media\" + Name;
 		}
 
 		public override string ToString()
