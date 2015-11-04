@@ -66,11 +66,6 @@ namespace VpdbAgent.Models
 			this.WhenAnyValue(game => game.UpdatedRelease)
 				.Select(update => update != null)
 				.ToProperty(this, game => game.HasUpdate, out _hasUpdate);
-
-			this.WhenAnyValue(game => game.UpdatedRelease)
-				.Subscribe(file => {
-					Console.WriteLine("new release = {0}", file);
-				});
 		}
 
 		public Game(PinballX.Models.Game xmlGame, Platform platform, GlobalDatabase db) : this()

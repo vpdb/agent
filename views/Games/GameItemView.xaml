@@ -59,10 +59,16 @@
             </Grid>
 
             <!-- second row -->
-            <Label Visibility="{Binding Path=Game.HasRelease, Converter={StaticResource TrueToVisible}}" Margin="0,0,0,-10">
-                <TextBlock Text="{Binding Game.Release.Name}" TextTrimming="CharacterEllipsis"/>
-            </Label>
-
+            <TextBlock Visibility="{Binding Path=Game.HasRelease, Converter={StaticResource TrueToVisible}}"
+                       Style="{StaticResource Label}" TextTrimming="CharacterEllipsis" Margin="5,0,0,-5">
+                <TextBlock.Inlines>
+                    <Run Text="{Binding Game.Release.Name}"/>
+                    <Run Text="{Binding Version.Name}" FontWeight="Bold"/>
+                    <Run Text=" by" FontStyle="Italic"/>
+                    <Run Text="{Binding Path=Game.Release.AuthorNames, Mode=OneWay}" FontStyle="Italic"/>
+                </TextBlock.Inlines>
+            </TextBlock>
+            
             <!-- third row -->
             <Grid Margin="0,0,0,10">
                 <Grid.ColumnDefinitions>

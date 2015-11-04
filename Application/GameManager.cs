@@ -180,6 +180,13 @@ namespace VpdbAgent.Application
 			game.ReleaseId = release.Id;
 			game.FileId = fileId;
 			game.Release = release;
+
+			// also update in case we didn't catch the last version.
+			_vpdbClient.Api.GetRelease(release.Id).Subscribe(updatedRelease => {
+				AddRelease(updatedRelease);
+				game.Release = updatedRelease;
+			});
+
 			return this;
 		}
 

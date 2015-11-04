@@ -22,7 +22,14 @@ namespace VpdbAgent.Vpdb.Models
 
 		[DataMember] public Thumb Thumb { get { return _thumb; } set { this.RaiseAndSetIfChanged(ref _thumb, value); } }
 		[DataMember] public List<Version> Versions { get { return _versions; } set { this.RaiseAndSetIfChanged(ref _versions, value); } }
-		[DataMember] public bool Starred { get { return _starred; }       set { this.RaiseAndSetIfChanged(ref _starred, value); } }
+		[DataMember] public bool Starred { get { return _starred; } set { this.RaiseAndSetIfChanged(ref _starred, value); } }
+
+		// convenience methods
+		public string AuthorNames { get {
+			return Authors.Count > 1 
+					? string.Join(", ", Authors.Take(Authors.Count - 1).Select(a => a.User.Name)) + " & " + Authors.Last().User.Name
+					: Authors.First().User.Name;
+		} }
 
 		public class ReleaseCounter
 		{
