@@ -58,6 +58,7 @@ namespace VpdbAgent.ViewModels.Games
 		{
 			Game = game;
 
+			// find file object in release
 			this.WhenAnyValue(vm => vm.Game.Release)
 				.Where(r => r != null)
 				.SelectMany(r => r.Versions)
@@ -65,6 +66,7 @@ namespace VpdbAgent.ViewModels.Games
 				.Where(f => f.Reference.Id.Equals(Game.FileId))
 				.ToProperty(this, vm => vm.File, out _file);
 
+			// find version object in release
 			this.WhenAnyValue(vm => vm.Game.Release)
 				.Where(r => r != null)
 				.SelectMany(r => r.Versions)

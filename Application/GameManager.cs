@@ -362,7 +362,7 @@ namespace VpdbAgent.Application
 							// also update the game's release link. todo check perf and use a map if too slow
 							var game = Games.FirstOrDefault(g => release.Id.Equals(g.ReleaseId));
 							if (game != null) {
-								game.Release = release;
+								game.Release = _databaseManager.Database.Releases[release.Id];
 							}
 						}
 						// save
