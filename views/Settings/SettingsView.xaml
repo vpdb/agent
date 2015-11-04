@@ -2,7 +2,8 @@
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:c="clr-namespace:VpdbAgent.Controls"
       mc:Ignorable="d" 
       d:DesignHeight="800" d:DesignWidth="800">
 
@@ -45,6 +46,11 @@
                     <Button x:Name="PinballXFolderButton" Content="CHOOSE FOLDER" ToolTip="We need to know where PinballX sits so we know where to look for your tables."
                             Grid.Column="2" Style="{StaticResource ButtonSolidLarge}" />
                 </Grid>
+                <StackPanel x:Name="PbxFolderErrorPanel" Orientation="Horizontal">
+                    <c:IconControl Foreground="{StaticResource LightRedBrush}" Data="{StaticResource IconWarning}"
+                                   Height="18" Width="18" Margin="20,0,10,0" />
+                    <Label x:Name="PbxFolderError" Foreground="{StaticResource LightRedBrush}" Content="Error message"/>
+                </StackPanel>
 
                 <Label Content="VPDB Connection" Style="{StaticResource Header1}" Margin="0,20,0,0"/>
                 <Separator/>
@@ -52,6 +58,11 @@
                 <!-- API KEY -->
                 <Label Content="API Key" HorizontalAlignment="Left" />
                 <TextBox x:Name="ApiKey" HorizontalAlignment="Stretch" Height="23" TextWrapping="Wrap" ToolTip="You can get your API key on vpdb.io by browsing to Profile -> Application Access Tokens and generate one."/>
+                <StackPanel x:Name="ApiKeyErrorPanel" Orientation="Horizontal">
+                    <c:IconControl Foreground="{StaticResource LightRedBrush}" Data="{StaticResource IconWarning}"
+                                   Height="18" Width="18" Margin="0,0,10,0" />
+                    <Label x:Name="ApiKeyError" Foreground="{StaticResource LightRedBrush}" Content="Error message"/>
+                </StackPanel>
 
                 <!-- [X] Advanced Options -->
                 <CheckBox x:Name="ShowAdvancedOptions" Content="Show Advanced Options" FontSize="18" Margin="0,20,0,0" Checked="ShowAdvancedOptions_Checked" Unchecked="ShowAdvancedOptions_Checked"/>

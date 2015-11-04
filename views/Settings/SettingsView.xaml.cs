@@ -41,6 +41,12 @@ namespace VpdbAgent.Views
 				d(this.OneWayBind(ViewModel, vm => vm.PbxFolder, v => v.PbxFolder.Text));
 				d(this.OneWayBind(ViewModel, vm => vm.PbxFolderLabel, v => v.PbxFolderLabel.Text));
 
+				// error fields
+				d(this.OneWayBind(ViewModel, vm => vm.Errors, v => v.PbxFolderErrorPanel.Visibility, null, "PbxFolder"));
+				d(this.OneWayBind(ViewModel, vm => vm.Errors, v => v.PbxFolderError.Content, null, "PbxFolder"));
+				d(this.OneWayBind(ViewModel, vm => vm.Errors, v => v.ApiKeyErrorPanel.Visibility, null, "ApiKey"));
+				d(this.OneWayBind(ViewModel, vm => vm.Errors, v => v.ApiKeyError.Content, null, "ApiKey"));
+
 				// commands
 				d(this.BindCommand(ViewModel, vm => vm.ChooseFolder, v => v.PinballXFolderButton));
 				d(this.BindCommand(ViewModel, vm => vm.CloseSettings, v => v.CancelButton));

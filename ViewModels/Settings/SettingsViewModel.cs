@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Windows.Forms;
 using NLog;
 using ReactiveUI;
@@ -8,25 +9,37 @@ namespace VpdbAgent.ViewModels.Settings
 {
 	public class SettingsViewModel : ReactiveObject, IRoutableViewModel
 	{
+		// dependencies
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+		private readonly ISettingsManager _settingsManager;
+
+		// setting props
+		public string ApiKey { get { return _apiKey; } set { this.RaiseAndSetIfChanged(ref _apiKey, value); } }
+		public string AuthUser { get { return _authUser; } set { this.RaiseAndSetIfChanged(ref _authUser, value); } }
+		public string AuthPass { get { return _authPass; } set { this.RaiseAndSetIfChanged(ref _authPass, value); } }
+		public string Endpoint { get { return _endpoint; } set { this.RaiseAndSetIfChanged(ref _endpoint, value); } }
+		public string PbxFolder { get { return _pbxFolder; } set { this.RaiseAndSetIfChanged(ref _pbxFolder, value); } }
+
+		// other props
+		public string PbxFolderLabel => string.IsNullOrEmpty(_pbxFolder) ? "No folder set." : "Location:";
+		public Dictionary<string, string> Errors { get { return _errors; } set { this.RaiseAndSetIfChanged(ref _errors, value); } }
 
 		// screen
 		public IScreen HostScreen { get; protected set; }
 		public string UrlPathSegment => "settings";
-
-		// deps
-		private readonly ISettingsManager _settingsManager;
 
 		// commands
 		public ReactiveCommand<object> ChooseFolder { get; } = ReactiveCommand.Create();
 		public ReactiveCommand<object> SaveSettings { get; } = ReactiveCommand.Create();
 		public ReactiveCommand<object> CloseSettings { get; } = ReactiveCommand.Create();
 
+		// privates
 		private string _apiKey;
 		private string _pbxFolder;
 		private string _endpoint;
 		private string _authUser;
 		private string _authPass;
+		private Dictionary<string, string> _errors;
 
 		public SettingsViewModel(IScreen screen, ISettingsManager settingsManager)
 		{
@@ -41,6 +54,8 @@ namespace VpdbAgent.ViewModels.Settings
 
 			ChooseFolder.Subscribe(_ => OpenFolderDialog());
 			SaveSettings.Subscribe(_ => Save());
+
+			Errors = new Dictionary<string, string>();
 
 			CloseSettings.InvokeCommand(HostScreen.Router, r => r.NavigateBack);
 		}
@@ -73,6 +88,7 @@ namespace VpdbAgent.ViewModels.Settings
 				Logger.Info("Settings saved.");
 
 			} else {
+				Errors = errors;
 
 				// TODO properly display error
 				foreach (var field in errors.Keys) {
@@ -80,33 +96,5 @@ namespace VpdbAgent.ViewModels.Settings
 				}
 			}
 		}
-
-		public string ApiKey
-		{
-			get { return _apiKey; }
-			set { this.RaiseAndSetIfChanged(ref _apiKey, value); }
-		}
-		public string AuthUser
-		{
-			get { return _authUser; }
-			set { this.RaiseAndSetIfChanged(ref _authUser, value); }
-		}
-		public string AuthPass
-		{
-			get { return _authPass; }
-			set { this.RaiseAndSetIfChanged(ref _authPass, value); }
-		}
-		public string Endpoint
-		{
-			get { return _endpoint; }
-			set { this.RaiseAndSetIfChanged(ref _endpoint, value); }
-		}
-		public string PbxFolder
-		{
-			get { return this._pbxFolder; }
-			set { this.RaiseAndSetIfChanged(ref _pbxFolder, value); }
-		}
-
-		public string PbxFolderLabel => string.IsNullOrEmpty(_pbxFolder) ? "No folder set." : "Location:";
 	}
 }

@@ -31,6 +31,7 @@
     <ApplicationVersion>0.0.1.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -152,6 +153,9 @@
     <Compile Include="Application\DatabaseManager.cs" />
     <Compile Include="Common\FilesystemWatchCache.cs" />
     <Compile Include="Common\ObservableTrace.cs" />
+    <Compile Include="Common\TypeConverters\DictionaryToStringConverter.cs" />
+    <Compile Include="Common\TypeConverters\DictionaryToVisibilityConverter.cs" />
+    <Compile Include="Common\TypeConverters\NullToCollapsedConverter.cs" />
     <Compile Include="Common\ValueConverters\DebugDataBindingConverter.cs" />
     <Compile Include="Controls\IconControl.cs" />
     <Compile Include="Controls\LabelFor.cs" />

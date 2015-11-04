@@ -114,6 +114,9 @@ namespace VpdbAgent.ViewModels
 
 			// converters
 			locator.RegisterConstant(new ImageToUrlTypeConverter(), typeof(IBindingTypeConverter));
+			locator.RegisterConstant(new NullToCollapsedConverter(), typeof(IBindingTypeConverter));
+			locator.RegisterConstant(new DictionaryToStringConverter(), typeof(IBindingTypeConverter));
+			locator.RegisterConstant(new DictionaryToVisibilityConverter(), typeof(IBindingTypeConverter));
 
 			// view models
 			locator.RegisterLazySingleton(() => new MainView(), typeof(IViewFor<MainViewModel>));

@@ -57,8 +57,10 @@ namespace VpdbAgent.Application
 		public Dictionary<string, string> Validate()
 		{
 			var errors = new Dictionary<string, string>();
-			if (!Directory.Exists(PbxFolder) || !Directory.Exists(PbxFolder + @"\Config")) {
-				errors.Add("PbxFolder", "Folder \"" + PbxFolder + "\" is not a valid PinballX folder.");
+			if (string.IsNullOrEmpty(PbxFolder)) {
+				errors.Add("PbxFolder", "The folder where PinballX is installed must be set.");
+			} else if (!Directory.Exists(PbxFolder) || !Directory.Exists(PbxFolder + @"\Config")) {
+				errors.Add("PbxFolder", "The folder \"" + PbxFolder + "\" is not a valid PinballX folder.");
 			}
 			return errors;
 		}
