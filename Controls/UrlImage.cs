@@ -120,7 +120,7 @@ namespace VpdbAgent.Controls
 		{
 			return Path.Combine(
 				Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-				"VpdbAgent",
+				"VPDB",
 				"Cache",
 				path.Replace("/", @"\").Substring(1)
 			);
