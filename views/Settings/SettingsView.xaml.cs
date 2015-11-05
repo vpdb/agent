@@ -29,7 +29,6 @@ namespace VpdbAgent.Views
 		public SettingsView()
 		{
 			InitializeComponent();
-			UpdateAdvancedOptions();
 
 			this.WhenActivated(d => {
 
@@ -41,11 +40,20 @@ namespace VpdbAgent.Views
 				d(this.OneWayBind(ViewModel, vm => vm.PbxFolder, v => v.PbxFolder.Text));
 				d(this.OneWayBind(ViewModel, vm => vm.PbxFolderLabel, v => v.PbxFolderLabel.Text));
 
+				// advanced options
+				d(this.Bind(ViewModel, vm => vm.ShowAdvancedOptions, v => v.ShowAdvancedOptions.IsChecked));
+				d(this.OneWayBind(ViewModel, vm => vm.ShowAdvancedOptions, v => v.ApiEndpointLabel.Visibility));
+				d(this.OneWayBind(ViewModel, vm => vm.ShowAdvancedOptions, v => v.Endpoint.Visibility));
+				d(this.OneWayBind(ViewModel, vm => vm.ShowAdvancedOptions, v => v.BasicAuthLabel.Visibility));
+				d(this.OneWayBind(ViewModel, vm => vm.ShowAdvancedOptions, v => v.BasicAuth.Visibility));
+
 				// error fields
 				d(this.OneWayBind(ViewModel, vm => vm.Errors, v => v.PbxFolderErrorPanel.Visibility, null, "PbxFolder"));
 				d(this.OneWayBind(ViewModel, vm => vm.Errors, v => v.PbxFolderError.Content, null, "PbxFolder"));
 				d(this.OneWayBind(ViewModel, vm => vm.Errors, v => v.ApiKeyErrorPanel.Visibility, null, "ApiKey"));
 				d(this.OneWayBind(ViewModel, vm => vm.Errors, v => v.ApiKeyError.Content, null, "ApiKey"));
+				d(this.OneWayBind(ViewModel, vm => vm.Errors, v => v.AuthErrorPanel.Visibility, null, "Auth"));
+				d(this.OneWayBind(ViewModel, vm => vm.Errors, v => v.AuthError.Content, null, "Auth"));
 
 				// commands
 				d(this.BindCommand(ViewModel, vm => vm.ChooseFolder, v => v.PinballXFolderButton));
@@ -54,27 +62,6 @@ namespace VpdbAgent.Views
 			});
 		
 			//CancelButton.Visibility = NavigationService.CanGoBack ? Visibility.Visible : Visibility.Hidden;
-		}
-
-
-		private void ShowAdvancedOptions_Checked(object sender, RoutedEventArgs e)
-		{
-			UpdateAdvancedOptions();
-		}
-
-		private void UpdateAdvancedOptions()
-		{
-			if (ShowAdvancedOptions.IsChecked != null && !(bool)ShowAdvancedOptions.IsChecked) {
-				ApiEndpointLabel.Visibility = Visibility.Collapsed;
-				Endpoint.Visibility = Visibility.Collapsed;
-				BasicAuthLabel.Visibility = Visibility.Collapsed;
-				BasicAuth.Visibility = Visibility.Collapsed;
-			} else {
-				ApiEndpointLabel.Visibility = Visibility.Visible;
-				Endpoint.Visibility = Visibility.Visible;
-				BasicAuthLabel.Visibility = Visibility.Visible;
-				BasicAuth.Visibility = Visibility.Visible;
-			}
 		}
 
 		#region ViewModel
@@ -93,11 +80,5 @@ namespace VpdbAgent.Views
 			set { ViewModel = (SettingsViewModel)value; }
 		}
 		#endregion
-
-		private void PasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
-		{
-			//ViewModel.SecurePassword = 
-			//if (this.DataContext != null) { ((dynamic)this.DataContext).SecurePassword = ((PasswordBox)sender).SecurePassword; }
-		}
 	}
 }

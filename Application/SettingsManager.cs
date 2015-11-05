@@ -3,10 +3,18 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Reactive;
+using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Reactive.Threading.Tasks;
+using System.Threading.Tasks;
+using Newtonsoft.Json;
 using NLog;
+using Refit;
+using VpdbAgent.Vpdb;
+using VpdbAgent.Vpdb.Network;
 
 namespace VpdbAgent.Application
 {
@@ -54,14 +62,46 @@ namespace VpdbAgent.Application
 			return !string.IsNullOrEmpty(PbxFolder);
 		}
 
-		public Dictionary<string, string> Validate()
+		public async Task<Dictionary<string, string>> Validate()
 		{
 			var errors = new Dictionary<string, string>();
+
+			// pinballx folder
 			if (string.IsNullOrEmpty(PbxFolder)) {
 				errors.Add("PbxFolder", "The folder where PinballX is installed must be set.");
 			} else if (!Directory.Exists(PbxFolder) || !Directory.Exists(PbxFolder + @"\Config")) {
 				errors.Add("PbxFolder", "The folder \"" + PbxFolder + "\" is not a valid PinballX folder.");
 			}
+
+			// network params
+			if (string.IsNullOrEmpty(ApiKey)) {
+				errors.Add("ApiKey", "The API is mandatory and needed in order to communicate with VPDB.");
+			}
+			if (string.IsNullOrEmpty(Endpoint)) {
+				errors.Add("Endpoint", "The endpoint is mandatory. In doubt, put \"https://vpdb.io\".");
+			}
+
+			// test params if set
+			if (!string.IsNullOrEmpty(ApiKey) && !string.IsNullOrEmpty(Endpoint)) {
+				try
+				{
+					var handler = new AuthenticatedHttpClientHandler(ApiKey, AuthUser, AuthPass);
+					var client = new HttpClient(handler) { BaseAddress = new Uri(Endpoint) };
+					var settings = new RefitSettings { JsonSerializerSettings = new JsonSerializerSettings { ContractResolver = new SnakeCasePropertyNamesContractResolver() } };
+					var api = RestService.For<IVpdbApi>(client, settings);
+					var user = await api.GetProfile().SubscribeOn(Scheduler.Default).ToTask();
+
+
+				} catch (ApiException e) {
+					if (e.HasContent && e.Content.StartsWith("<html")) {
+						errors.Add("Auth", "Access denied to VPDB. Seems like the site is protected and you need to put additional credentials in here.");
+					}
+					Console.WriteLine("Error! {0}", e);
+				} catch (Exception e) {
+					errors.Add("ApiKey", e.Message);
+				}
+			}
+
 			return errors;
 		}
 
@@ -75,7 +115,7 @@ namespace VpdbAgent.Application
 			Properties.Settings.Default.Save();
 			return this;
 		}
-		
+
 	}
 
 	public interface ISettingsManager
@@ -87,7 +127,7 @@ namespace VpdbAgent.Application
 		string PbxFolder { get; set; }
 
 		bool IsInitialized();
-		Dictionary<string, string> Validate();
+		Task<Dictionary<string, string>> Validate();
 		SettingsManager Save();
 	}
 }

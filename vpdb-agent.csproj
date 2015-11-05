@@ -154,7 +154,9 @@
     <Compile Include="Common\FilesystemWatchCache.cs" />
     <Compile Include="Common\ObservableTrace.cs" />
     <Compile Include="Common\TypeConverters\DictionaryToStringConverter.cs" />
+    <Compile Include="Common\TypeConverters\DictionaryToBooleanConverter.cs" />
     <Compile Include="Common\TypeConverters\DictionaryToVisibilityConverter.cs" />
+    <Compile Include="Common\TypeConverters\NullToFalseConverter.cs" />
     <Compile Include="Common\TypeConverters\NullToCollapsedConverter.cs" />
     <Compile Include="Common\ValueConverters\DebugDataBindingConverter.cs" />
     <Compile Include="Controls\IconControl.cs" />

@@ -5,15 +5,15 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:c="clr-namespace:VpdbAgent.Controls"
       mc:Ignorable="d" 
-      d:DesignHeight="800" d:DesignWidth="800">
+      d:DesignHeight="1200" d:DesignWidth="800">
 
     <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-		<ScrollViewer>
-            
+        <ScrollViewer>
+
             <StackPanel Orientation="Vertical">
 
                 <Label Content="Welcome!" HorizontalAlignment="Center" FontSize="36" FontWeight="Light" Foreground="{StaticResource PrimaryColorBrush}"/>
@@ -65,7 +65,7 @@
                 </StackPanel>
 
                 <!-- [X] Advanced Options -->
-                <CheckBox x:Name="ShowAdvancedOptions" Content="Show Advanced Options" FontSize="18" Margin="0,20,0,0" Checked="ShowAdvancedOptions_Checked" Unchecked="ShowAdvancedOptions_Checked"/>
+                <CheckBox x:Name="ShowAdvancedOptions" Content="Show Advanced Options" FontSize="18" Margin="0,20,0,0"/>
 
                 <!-- API Endpoint -->
                 <Label x:Name="ApiEndpointLabel" Content="VPDB API Endpoint" HorizontalAlignment="Left" Margin="0,20,0,0"/>
@@ -82,10 +82,15 @@
                     <TextBox x:Name="AuthUser" Height="23" Grid.Column="0" ToolTip="In the beta phase, VPDB has an additional layer of authentication. Put the username here."/>
                     <TextBox x:Name="AuthPass" Height="23" Grid.Column="2" ToolTip="In the beta phase, VPDB has an additional layer of authentication. Put the password here."/>
                 </Grid>
+                <StackPanel x:Name="AuthErrorPanel" Orientation="Horizontal">
+                    <c:IconControl Foreground="{StaticResource LightRedBrush}" Data="{StaticResource IconWarning}"
+                                   Height="18" Width="18" Margin="0,0,10,0" />
+                    <Label x:Name="AuthError" Foreground="{StaticResource LightRedBrush}" Content="Error message"/>
+                </StackPanel>
 
             </StackPanel>
         </ScrollViewer>
-        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Grid.Column="1">
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
             <Button x:Name="CancelButton" Content="CANCEL" Margin="0,0,10,0" Style="{StaticResource ButtonLineLarge}"/>
             <Button x:Name="SaveButton" Content="SAVE" Style="{StaticResource ButtonSolidPrimaryLarge}"/>
         </StackPanel>

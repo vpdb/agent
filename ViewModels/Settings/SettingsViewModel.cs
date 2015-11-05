@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using NLog;
 using ReactiveUI;
@@ -23,6 +24,7 @@ namespace VpdbAgent.ViewModels.Settings
 		// other props
 		public string PbxFolderLabel => string.IsNullOrEmpty(_pbxFolder) ? "No folder set." : "Location:";
 		public Dictionary<string, string> Errors { get { return _errors; } set { this.RaiseAndSetIfChanged(ref _errors, value); } }
+		public bool ShowAdvancedOptions { get { return _showAdvancedOptions; } set { this.RaiseAndSetIfChanged(ref _showAdvancedOptions, value); } }
 
 		// screen
 		public IScreen HostScreen { get; protected set; }
@@ -39,6 +41,7 @@ namespace VpdbAgent.ViewModels.Settings
 		private string _endpoint;
 		private string _authUser;
 		private string _authPass;
+		private bool _showAdvancedOptions;
 		private Dictionary<string, string> _errors;
 
 		public SettingsViewModel(IScreen screen, ISettingsManager settingsManager)
@@ -53,7 +56,7 @@ namespace VpdbAgent.ViewModels.Settings
 			PbxFolder = _settingsManager.PbxFolder;
 
 			ChooseFolder.Subscribe(_ => OpenFolderDialog());
-			SaveSettings.Subscribe(_ => Save());
+			SaveSettings.Subscribe(async _ => await Save());
 
 			Errors = new Dictionary<string, string>();
 
@@ -74,7 +77,7 @@ namespace VpdbAgent.ViewModels.Settings
 			Logger.Info("PinballX folder set to {0}.", PbxFolder);
 		}
 
-		private void Save()
+		private async Task Save()
 		{
 			_settingsManager.ApiKey = _apiKey;
 			_settingsManager.AuthUser = _authUser;
@@ -82,13 +85,17 @@ namespace VpdbAgent.ViewModels.Settings
 			_settingsManager.Endpoint = _endpoint;
 			_settingsManager.PbxFolder = _pbxFolder;
 
-			var errors = _settingsManager.Validate();
+			var errors = await _settingsManager.Validate();
+
 			if (errors.Count == 0) {
 				_settingsManager.Save();
 				Logger.Info("Settings saved.");
 
 			} else {
 				Errors = errors;
+				if (errors.ContainsKey("Auth")) {
+					ShowAdvancedOptions = true;
+				}
 
 				// TODO properly display error
 				foreach (var field in errors.Keys) {

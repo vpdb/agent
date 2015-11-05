@@ -104,6 +104,7 @@ namespace VpdbAgent.Vpdb
 			
 			// setup rest client
 			var handler = new AuthenticatedHttpClientHandler(_settingsManager.ApiKey, _settingsManager.AuthUser, _settingsManager.AuthPass) {
+				// todo enable gzip in api!!
 //				AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
 			};
 			var client = new HttpClient(handler) {
