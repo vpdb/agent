@@ -84,7 +84,7 @@
     <Style x:Key="ButtonSolidPrimary" TargetType="Button" BasedOn="{StaticResource ButtonSolid}">
         <Style.Triggers>
             <Trigger Property="IsEnabled" Value="False">
-                <Setter Property="Background" Value="#08ffffff" />
+                <Setter Property="Background" Value="{StaticResource PrimaryColor25Brush}" />
             </Trigger>
             <Trigger Property="IsEnabled" Value="True">
                 <Setter Property="Background" Value="{StaticResource PrimaryColor75Brush}" />

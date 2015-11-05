@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Eventing;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using NLog;
 using ReactiveUI;
+using Refit;
 using VpdbAgent.Application;
+using VpdbAgent.Vpdb.Models;
 
 namespace VpdbAgent.ViewModels.Settings
 {
@@ -25,14 +28,17 @@ namespace VpdbAgent.ViewModels.Settings
 		public string PbxFolderLabel => string.IsNullOrEmpty(_pbxFolder) ? "No folder set." : "Location:";
 		public Dictionary<string, string> Errors { get { return _errors; } set { this.RaiseAndSetIfChanged(ref _errors, value); } }
 		public bool ShowAdvancedOptions { get { return _showAdvancedOptions; } set { this.RaiseAndSetIfChanged(ref _showAdvancedOptions, value); } }
+		public bool IsValidating => _isValidating.Value;
+		public bool IsFirstRun => _isFirstRun.Value;
+		public bool CanCancel => _canCancel.Value;
 
 		// screen
 		public IScreen HostScreen { get; protected set; }
 		public string UrlPathSegment => "settings";
 
 		// commands
+		public ReactiveCommand<Dictionary<string, string>> SaveSettings { get; }
 		public ReactiveCommand<object> ChooseFolder { get; } = ReactiveCommand.Create();
-		public ReactiveCommand<object> SaveSettings { get; } = ReactiveCommand.Create();
 		public ReactiveCommand<object> CloseSettings { get; } = ReactiveCommand.Create();
 
 		// privates
@@ -43,6 +49,9 @@ namespace VpdbAgent.ViewModels.Settings
 		private string _authPass;
 		private bool _showAdvancedOptions;
 		private Dictionary<string, string> _errors;
+		private readonly ObservableAsPropertyHelper<bool> _isValidating;
+		private readonly ObservableAsPropertyHelper<bool> _isFirstRun;
+		private readonly ObservableAsPropertyHelper<bool> _canCancel;
 
 		public SettingsViewModel(IScreen screen, ISettingsManager settingsManager)
 		{
@@ -55,12 +64,19 @@ namespace VpdbAgent.ViewModels.Settings
 			Endpoint = _settingsManager.Endpoint;
 			PbxFolder = _settingsManager.PbxFolder;
 
+			SaveSettings = ReactiveCommand.CreateAsyncTask(_ => Save());
+			SaveSettings.IsExecuting.ToProperty(this, vm => vm.IsValidating, out _isValidating);
+
 			ChooseFolder.Subscribe(_ => OpenFolderDialog());
-			SaveSettings.Subscribe(async _ => await Save());
-
-			Errors = new Dictionary<string, string>();
-
 			CloseSettings.InvokeCommand(HostScreen.Router, r => r.NavigateBack);
+
+			_settingsManager.WhenAnyValue(sm => sm.IsFirstRun).ToProperty(this, vm => vm.IsFirstRun, out _isFirstRun);
+			_settingsManager.WhenAnyValue(sm => sm.CanCancel).ToProperty(this, vm => vm.CanCancel, out _canCancel);
+		}
+
+		public SettingsViewModel(IScreen screen, ISettingsManager settingsManager, Dictionary<string, string> errors) : this(screen, settingsManager)
+		{
+			Errors = errors;
 		}
 
 		private void OpenFolderDialog()
@@ -77,7 +93,7 @@ namespace VpdbAgent.ViewModels.Settings
 			Logger.Info("PinballX folder set to {0}.", PbxFolder);
 		}
 
-		private async Task Save()
+		private async Task<Dictionary<string, string>> Save()
 		{
 			_settingsManager.ApiKey = _apiKey;
 			_settingsManager.AuthUser = _authUser;
@@ -88,8 +104,16 @@ namespace VpdbAgent.ViewModels.Settings
 			var errors = await _settingsManager.Validate();
 
 			if (errors.Count == 0) {
+
+				var firstRun = _settingsManager.IsFirstRun;
 				_settingsManager.Save();
 				Logger.Info("Settings saved.");
+
+				if (firstRun) {
+					HostScreen.Router.NavigateAndReset.ExecuteAsync(new MainViewModel(HostScreen, _settingsManager));
+				} else {
+					HostScreen.Router.Navigate.ExecuteAsync(new MainViewModel(HostScreen, _settingsManager));
+				}
 
 			} else {
 				Errors = errors;
@@ -102,6 +126,7 @@ namespace VpdbAgent.ViewModels.Settings
 					Logger.Error("Settings validation error for field {0}: {1}", field, errors[field]);
 				}
 			}
+			return errors;
 		}
 	}
 }

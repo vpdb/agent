@@ -109,11 +109,6 @@ namespace VpdbAgent.PinballX
 	
 		public IMenuManager Initialize()
 		{
-			// settings must be initialized before doing this.
-			if (!_settingsManager.IsInitialized()) {
-				return this;
-			}
-
 			var iniPath = _settingsManager.PbxFolder + @"\Config\PinballX.ini";
 			var dbPath = _settingsManager.PbxFolder + @"\Databases\";
 

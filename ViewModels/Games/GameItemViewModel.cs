@@ -101,7 +101,7 @@ namespace VpdbAgent.ViewModels.Games
 					IdentifiedReleases = releases;
 					HasExecuted = true;
 				}
-			});
+			}, exception => VpdbClient.HandleApiError(exception));
 
 			// sync button
 			SyncToggled

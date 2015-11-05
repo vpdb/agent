@@ -7,6 +7,7 @@ using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using NLog;
 using PusherClient;
@@ -162,13 +163,22 @@ namespace VpdbAgent.Application
 		public IGameManager Initialize()
 		{
 			// settings must be initialized before doing this.
-			if (!_settingsManager.IsInitialized()) {
+			if (string.IsNullOrEmpty(_settingsManager.ApiKey)) {
 				throw new InvalidOperationException("Must initialize settings before game manager.");
 			}
 
+			// handle api authentication
+			_settingsManager.ApiAuthenticated.Subscribe(user => {
+				_logger.Info("Authenticated successfully.");
+			}, exception => _vpdbClient.HandleApiError(exception));
+
+			// initialize managers
 			_databaseManager.Initialize();
 			_menuManager.Initialize();
 			_vpdbClient.Initialize();
+
+			// validate settings and retrieve profile
+			Task.Run(() => _settingsManager.Validate());
 
 			return this;
 		}

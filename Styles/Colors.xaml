@@ -19,6 +19,7 @@
     <SolidColorBrush x:Key="PrimaryColorBrush" Color="{StaticResource PrimaryColor}" options:Freeze="True" />
     <SolidColorBrush x:Key="PrimaryColor85Brush" Color="{StaticResource PrimaryColor85}" options:Freeze="True" />
     <SolidColorBrush x:Key="PrimaryColor75Brush" Color="{StaticResource PrimaryColor75}" options:Freeze="True" />
+    <SolidColorBrush x:Key="PrimaryColor25Brush" Color="{StaticResource PrimaryColor}" Opacity="0.25" options:Freeze="True" />
     <SolidColorBrush x:Key="InputTextColorBrush" Color="{StaticResource InputTextColor}" options:Freeze="True" />
     <SolidColorBrush x:Key="LabelTextBrush" Color="{StaticResource LabelTextColor}" options:Freeze="True" />
     <SolidColorBrush x:Key="WhiteBrush" Color="{StaticResource WhiteColor}" options:Freeze="True" />

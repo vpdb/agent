@@ -110,7 +110,7 @@ namespace VpdbAgent.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("720")]
+        [global::System.Configuration.DefaultSettingValueAttribute("730")]
         public double WindowHeight {
             get {
                 return ((double)(this["WindowHeight"]));
@@ -141,6 +141,18 @@ namespace VpdbAgent.Properties {
             }
             set {
                 this["WindowMax"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool IsFirstRun {
+            get {
+                return ((bool)(this["IsFirstRun"]));
+            }
+            set {
+                this["IsFirstRun"] = value;
             }
         }
     }

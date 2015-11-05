@@ -1,31 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Forms;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+﻿using System.Windows;
 using ReactiveUI;
-using VpdbAgent.ViewModels;
 using VpdbAgent.ViewModels.Settings;
 using UserControl = System.Windows.Controls.UserControl;
 
-namespace VpdbAgent.Views
+namespace VpdbAgent.Views.Settings
 {
 	/// <summary>
 	/// Interaction logic for SettingsPage.xaml
 	/// </summary>
 	public partial class SettingsView : UserControl, IViewFor<SettingsViewModel>
 	{
-
 		public SettingsView()
 		{
 			InitializeComponent();
@@ -40,25 +24,22 @@ namespace VpdbAgent.Views
 				d(this.OneWayBind(ViewModel, vm => vm.PbxFolder, v => v.PbxFolder.Text));
 				d(this.OneWayBind(ViewModel, vm => vm.PbxFolderLabel, v => v.PbxFolderLabel.Text));
 
-				// advanced options
-				d(this.Bind(ViewModel, vm => vm.ShowAdvancedOptions, v => v.ShowAdvancedOptions.IsChecked));
-				d(this.OneWayBind(ViewModel, vm => vm.ShowAdvancedOptions, v => v.ApiEndpointLabel.Visibility));
-				d(this.OneWayBind(ViewModel, vm => vm.ShowAdvancedOptions, v => v.Endpoint.Visibility));
-				d(this.OneWayBind(ViewModel, vm => vm.ShowAdvancedOptions, v => v.BasicAuthLabel.Visibility));
-				d(this.OneWayBind(ViewModel, vm => vm.ShowAdvancedOptions, v => v.BasicAuth.Visibility));
-
 				// error fields
 				d(this.OneWayBind(ViewModel, vm => vm.Errors, v => v.PbxFolderErrorPanel.Visibility, null, "PbxFolder"));
-				d(this.OneWayBind(ViewModel, vm => vm.Errors, v => v.PbxFolderError.Content, null, "PbxFolder"));
+				d(this.OneWayBind(ViewModel, vm => vm.Errors, v => v.PbxFolderError.Text, null, "PbxFolder"));
 				d(this.OneWayBind(ViewModel, vm => vm.Errors, v => v.ApiKeyErrorPanel.Visibility, null, "ApiKey"));
-				d(this.OneWayBind(ViewModel, vm => vm.Errors, v => v.ApiKeyError.Content, null, "ApiKey"));
+				d(this.OneWayBind(ViewModel, vm => vm.Errors, v => v.ApiKeyError.Text, null, "ApiKey"));
 				d(this.OneWayBind(ViewModel, vm => vm.Errors, v => v.AuthErrorPanel.Visibility, null, "Auth"));
-				d(this.OneWayBind(ViewModel, vm => vm.Errors, v => v.AuthError.Content, null, "Auth"));
+				d(this.OneWayBind(ViewModel, vm => vm.Errors, v => v.AuthError.Text, null, "Auth"));
 
 				// commands
 				d(this.BindCommand(ViewModel, vm => vm.ChooseFolder, v => v.PinballXFolderButton));
 				d(this.BindCommand(ViewModel, vm => vm.CloseSettings, v => v.CancelButton));
 				d(this.BindCommand(ViewModel, vm => vm.SaveSettings, v => v.SaveButton));
+
+				//d(this.OneWayBind(ViewModel, vm => vm.IsValidating, v => v.ProgressSpinner.IsVisible));
+
+				DataContext = ViewModel;
 			});
 		
 			//CancelButton.Visibility = NavigationService.CanGoBack ? Visibility.Visible : Visibility.Hidden;

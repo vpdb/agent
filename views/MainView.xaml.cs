@@ -26,10 +26,14 @@ namespace VpdbAgent.Views
 		{
 			InitializeComponent();
 
-			this.WhenActivated(d =>
-			{
+			this.WhenActivated(d => {
+
+				// tab content
 				d(this.OneWayBind(ViewModel, vm => vm.Games, v => v.GamesContent.ViewModel));
 				d(this.OneWayBind(ViewModel, vm => vm.Downloads, v => v.DownloadsContent.ViewModel));
+
+				// status fields
+				d(this.OneWayBind(ViewModel, vm => vm.LoginStatus, v => v.LoginStatus.Text));
 			});
 		}
 

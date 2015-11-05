@@ -11,7 +11,9 @@ using System.Reactive.Subjects;
 using System.Text;
 using VpdbAgent.Vpdb.Network;
 using PusherClient;
+using ReactiveUI;
 using VpdbAgent.Application;
+using VpdbAgent.ViewModels.Settings;
 using VpdbAgent.Vpdb.Models;
 
 namespace VpdbAgent.Vpdb
@@ -30,11 +32,6 @@ namespace VpdbAgent.Vpdb
 		/// Access to the VPDB API
 		/// </summary>
 		IVpdbApi Api { get; }
-
-		/// <summary>
-		/// Full profile of the currently logged user
-		/// </summary>
-		UserFull User { get; }
 
 		/// <summary>
 		/// Access to Pusher's user channel
@@ -70,6 +67,8 @@ namespace VpdbAgent.Vpdb
 		/// <param name="path">Absolute path</param>
 		/// <returns>Uri with including hostname</returns>
 		Uri GetUri(string path);
+
+		void HandleApiError(Exception e);
 	}
 
 	/// <summary>
@@ -80,33 +79,30 @@ namespace VpdbAgent.Vpdb
 		// dependencies
 		private readonly ISettingsManager _settingsManager;
 		private readonly Logger _logger;
+		private readonly IScreen _screen;
 
 		// api
 		public IVpdbApi Api { get; private set; }
-		public UserFull User { get; private set; }
 		public Subject<Channel> UserChannel { get; } = new Subject<Channel>();
 
 		// private members
 		private Pusher _pusher;
 		private Channel _userChannel;
 
-		public VpdbClient(ISettingsManager settingsManager, Logger logger)
+		public VpdbClient(ISettingsManager settingsManager, IScreen screen, Logger logger)
 		{
 			_settingsManager = settingsManager;
 			_logger = logger;
+			_screen = screen;
 		}
 
 		public IVpdbClient Initialize()
 		{
-			if (!_settingsManager.IsInitialized()) {
-				return this;
-			}
-			
 			// setup rest client
-			var handler = new AuthenticatedHttpClientHandler(_settingsManager.ApiKey, _settingsManager.AuthUser, _settingsManager.AuthPass) {
-				// todo enable gzip in api!!
-//				AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
-			};
+			var handler = new AuthenticatedHttpClientHandler(_settingsManager.ApiKey, _settingsManager.AuthUser, _settingsManager.AuthPass);
+			// todo enable gzip in api!!
+			// AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
+
 			var client = new HttpClient(handler) {
 				BaseAddress = new Uri(_settingsManager.Endpoint)
 			};
@@ -117,15 +113,11 @@ namespace VpdbAgent.Vpdb
 			};
 			Api = RestService.For<IVpdbApi>(client, settings);
 
-			// retrieve user profile
-			Api.GetProfile().SubscribeOn(Scheduler.Default).Subscribe(user => {
-				User = user;
-				_logger.Info("Logged as <{0}>", user.Email);
-				if (user.Permissions.Messages?.Contains("receive") == true) {
+			// subscribe to pusher if profile allows
+			_settingsManager.ApiAuthenticated.Subscribe(user => {
+				if (user != null && user.Permissions.Messages?.Contains("receive") == true) {
 					SetupPusher(user);
 				}
-			}, error => {
-				_logger.Error(error, "Error logging in: {0}", error.Message);
 			});
 
 			// initialize pusher
@@ -159,13 +151,23 @@ namespace VpdbAgent.Vpdb
 			return new Uri(_settingsManager.Endpoint + path);
 		}
 
+		public void HandleApiError(Exception e)
+		{
+			var apiException = e as ApiException;
+			if (apiException?.StatusCode == HttpStatusCode.Unauthorized) {
+				var errors = _settingsManager.OnApiFailed(apiException);
+				_screen.Router.Navigate.Execute(new SettingsViewModel(_screen, _settingsManager, errors));
+			}
+			_logger.Error(e, "API error!");
+		}
+
 		/// <summary>
 		/// Adds authentication headers based on the user's settings.
 		/// </summary>
 		/// <param name="headers">Current headers</param>
 		private void AddHeaders(NameValueCollection headers)
 		{
-			if (_settingsManager.IsInitialized()) {
+			if (!string.IsNullOrEmpty(_settingsManager.ApiKey)) {
 				if (!string.IsNullOrEmpty(_settingsManager.AuthUser)) {
 					var authHeader = Encoding.ASCII.GetBytes(_settingsManager.AuthUser + ":" + _settingsManager.AuthPass);
 					headers.Add("Authorization", "Basic " + Convert.ToBase64String(authHeader));

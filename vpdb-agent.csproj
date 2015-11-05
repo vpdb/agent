@@ -159,6 +159,7 @@
     <Compile Include="Common\TypeConverters\NullToFalseConverter.cs" />
     <Compile Include="Common\TypeConverters\NullToCollapsedConverter.cs" />
     <Compile Include="Common\ValueConverters\DebugDataBindingConverter.cs" />
+    <Compile Include="Common\ValueConverters\InverseBooleanConverter.cs" />
     <Compile Include="Controls\IconControl.cs" />
     <Compile Include="Controls\LabelFor.cs" />
     <Compile Include="Controls\RichTextBlock.cs" />

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ReactiveUI;
+﻿using ReactiveUI;
 using Splat;
 using VpdbAgent.Application;
 using VpdbAgent.Common.TypeConverters;
@@ -15,6 +9,7 @@ using VpdbAgent.ViewModels.Settings;
 using VpdbAgent.Views;
 using VpdbAgent.Views.Downloads;
 using VpdbAgent.Views.Games;
+using VpdbAgent.Views.Settings;
 using VpdbAgent.Vpdb;
 
 namespace VpdbAgent.ViewModels
@@ -59,13 +54,10 @@ namespace VpdbAgent.ViewModels
 			var settingsManager = Locator.Current.GetService<ISettingsManager>();
 
 			// Navigate to the opening page of the application
-			if (settingsManager.IsInitialized()) {
-				Router.Navigate.Execute(new MainViewModel(this));
+			if (!settingsManager.IsFirstRun) {
+				Router.Navigate.Execute(new MainViewModel(this, Locator.Current.GetService<ISettingsManager>()));
 			} else {
-				Router.Navigate.Execute(new SettingsViewModel(
-					this, 
-					Locator.Current.GetService<ISettingsManager>())
-				);
+				Router.Navigate.Execute(new SettingsViewModel(this, Locator.Current.GetService<ISettingsManager>()));
 			}
 		}
 
@@ -73,10 +65,11 @@ namespace VpdbAgent.ViewModels
 		{
 			locator.RegisterConstant(this, typeof(IScreen));
 
-
 			// services
 			locator.RegisterLazySingleton(NLog.LogManager.GetCurrentClassLogger, typeof(NLog.Logger));
-			locator.RegisterLazySingleton(() => new SettingsManager(), typeof(ISettingsManager));
+			locator.RegisterLazySingleton(() => new SettingsManager(
+				locator.GetService<NLog.Logger>()
+			), typeof(ISettingsManager));
 			locator.RegisterLazySingleton(() => new FileSystemWatcher(
 				locator.GetService<NLog.Logger>()
 			), typeof(IFileSystemWatcher));
@@ -94,6 +87,7 @@ namespace VpdbAgent.ViewModels
 
 			locator.RegisterLazySingleton(() => new VpdbClient(
 				locator.GetService<ISettingsManager>(),
+				this,
 				locator.GetService<NLog.Logger>()
 			), typeof(IVpdbClient));
 
