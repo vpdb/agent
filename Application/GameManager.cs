@@ -170,7 +170,7 @@ namespace VpdbAgent.Application
 			// handle api authentication
 			_settingsManager.ApiAuthenticated.Subscribe(user => {
 				_logger.Info("Authenticated successfully.");
-			}, exception => _vpdbClient.HandleApiError(exception));
+			}, exception => _vpdbClient.HandleApiError(exception, "subscribing to ApiAuthenticated for printing something"));
 
 			// initialize managers
 			_databaseManager.Initialize();
@@ -195,7 +195,7 @@ namespace VpdbAgent.Application
 			_vpdbClient.Api.GetRelease(release.Id).Subscribe(updatedRelease => {
 				AddRelease(updatedRelease);
 				game.Release = updatedRelease;
-			}, exception => _vpdbClient.HandleApiError(exception));
+			}, exception => _vpdbClient.HandleApiError(exception, "retrieving release details during linking"));
 
 			return this;
 		}
@@ -210,7 +210,7 @@ namespace VpdbAgent.Application
 				} else {
 					_logger.Info("No update found for {0}", release);
 				}
-			}, exception => _vpdbClient.HandleApiError(exception));
+			}, exception => _vpdbClient.HandleApiError(exception, "retrieving release details during sync"));
 			return this;
 		}
 
@@ -377,7 +377,7 @@ namespace VpdbAgent.Application
 						}
 						// save
 						_databaseManager.Save();
-					}, exception => _vpdbClient.HandleApiError(exception));
+					}, exception => _vpdbClient.HandleApiError(exception, "retrieving all known releases by id"));
 			} else {
 				_logger.Info("Skipping release update, no linked releases found.");
 			}

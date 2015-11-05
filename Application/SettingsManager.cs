@@ -106,7 +106,7 @@ namespace VpdbAgent.Application
 					_apiAuthenticated.OnNext(user);
 					AuthenticatedUser = user;
 				} else {
-					_apiAuthenticated.OnError(e);
+					_apiAuthenticated.OnNext(null);
 					AuthenticatedUser = null;
 				}
 			});

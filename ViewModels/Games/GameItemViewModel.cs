@@ -101,7 +101,7 @@ namespace VpdbAgent.ViewModels.Games
 					IdentifiedReleases = releases;
 					HasExecuted = true;
 				}
-			}, exception => VpdbClient.HandleApiError(exception));
+			}, exception => VpdbClient.HandleApiError(exception, "identifying a game by file size"));
 
 			// sync button
 			SyncToggled

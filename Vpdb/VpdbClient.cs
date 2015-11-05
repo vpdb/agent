@@ -68,7 +68,7 @@ namespace VpdbAgent.Vpdb
 		/// <returns>Uri with including hostname</returns>
 		Uri GetUri(string path);
 
-		void HandleApiError(Exception e);
+		void HandleApiError(Exception e, string origin);
 	}
 
 	/// <summary>
@@ -118,7 +118,7 @@ namespace VpdbAgent.Vpdb
 				if (user != null && user.Permissions.Messages?.Contains("receive") == true) {
 					SetupPusher(user);
 				}
-			});
+			}, exception => HandleApiError(exception, "subscribing to ApiAuthenticated for Pusher"));
 
 			// initialize pusher
 			_pusher = new Pusher("02ee40b62e1fb0696e02", new PusherOptions() {
@@ -151,14 +151,14 @@ namespace VpdbAgent.Vpdb
 			return new Uri(_settingsManager.Endpoint + path);
 		}
 
-		public void HandleApiError(Exception e)
+		public void HandleApiError(Exception e, string origin)
 		{
 			var apiException = e as ApiException;
 			if (apiException?.StatusCode == HttpStatusCode.Unauthorized) {
 				var errors = _settingsManager.OnApiFailed(apiException);
 				_screen.Router.Navigate.Execute(new SettingsViewModel(_screen, _settingsManager, errors));
 			}
-			_logger.Error(e, "API error!");
+			_logger.Error(e, "API error while {0}:", origin);
 		}
 
 		/// <summary>

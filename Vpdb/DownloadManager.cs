@@ -155,7 +155,7 @@ namespace VpdbAgent.Vpdb
 					// download
 					DownloadRelease(release, file);
 
-				}, exception => _vpdbClient.HandleApiError(exception));
+				}, exception => _vpdbClient.HandleApiError(exception, "retrieving release details during download"));
 
 			return this;
 		}
