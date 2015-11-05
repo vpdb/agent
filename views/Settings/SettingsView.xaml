@@ -30,7 +30,7 @@
                        Foreground="{StaticResource PrimaryColorBrush}" HorizontalAlignment="Center" FontSize="36" FontWeight="Light" />
                 <TextBlock Visibility="{Binding Path=IsFirstRun, Converter={StaticResource TrueToVisible}}" Style="{StaticResource Label}" 
                            Foreground="{StaticResource PrimaryColorBrush}" TextAlignment="Center" TextWrapping="Wrap" Margin="50,10,50,0">
-                    The client you have just installed will seriously make your life easier if you're running it on a 
+                    The application you have just installed will seriously make your life easier if you're running it on a 
                     Virtual Cabinet, but also if you just want to keep up with new tables on your desktop.
                 </TextBlock>
                 <TextBlock Visibility="{Binding Path=IsFirstRun, Converter={StaticResource TrueToVisible}}" 
