@@ -140,8 +140,8 @@ namespace VpdbAgent.Vpdb
 			_logger.Info("Retrieving details for release {0}...", id);
 			_vpdbClient.Api.GetRelease(id)
 				.ObserveOn(Scheduler.Default)
-				.Subscribe(release =>
-				{
+				.Subscribe(release => {
+
 					// todo make this more sophisticated based on settings
 					var file = release.Versions
 						.SelectMany(v => v.Files)
@@ -155,9 +155,7 @@ namespace VpdbAgent.Vpdb
 					// download
 					DownloadRelease(release, file);
 
-				}, error => {
-					_logger.Error(error, "Error retrieving release data.");
-				});
+				}, exception => _vpdbClient.HandleApiError(exception));
 
 			return this;
 		}

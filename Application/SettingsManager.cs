@@ -85,21 +85,31 @@ namespace VpdbAgent.Application
 					var user = await api.GetProfile().SubscribeOn(Scheduler.Default).ToTask();
 
 					_logger.Info("Logged as <{0}>", user.Email);
-					_apiAuthenticated.OnNext(user);
-					AuthenticatedUser = user;
+					OnValidationResult(null, user);
 
 				} catch (ApiException e) {
 					HandleApiError(errors, e);
-					_apiAuthenticated.OnError(e);
-					AuthenticatedUser = null;
+					OnValidationResult(e, null);
 
 				} catch (Exception e) {
 					errors.Add("ApiKey", e.Message);
-					_apiAuthenticated.OnError(e);
-					AuthenticatedUser = null;
+					OnValidationResult(e, null);
 				}
 			}
 			return errors;
+		}
+
+		private void OnValidationResult(Exception e, UserFull user)
+		{
+			System.Windows.Application.Current.Dispatcher.Invoke(delegate {
+				if (user != null) {
+					_apiAuthenticated.OnNext(user);
+					AuthenticatedUser = user;
+				} else {
+					_apiAuthenticated.OnError(e);
+					AuthenticatedUser = null;
+				}
+			});
 		}
 
 		private static Dictionary<string, string> HandleApiError(Dictionary<string, string> errors, ApiException e)

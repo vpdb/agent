@@ -66,6 +66,10 @@ namespace VpdbAgent.ViewModels.Settings
 
 			SaveSettings = ReactiveCommand.CreateAsyncTask(_ => Save());
 			SaveSettings.IsExecuting.ToProperty(this, vm => vm.IsValidating, out _isValidating);
+			SaveSettings.ThrownExceptions.Subscribe(e =>
+			{
+				Console.WriteLine("Exception while saving settings.");
+			});
 
 			ChooseFolder.Subscribe(_ => OpenFolderDialog());
 			CloseSettings.InvokeCommand(HostScreen.Router, r => r.NavigateBack);
@@ -110,20 +114,15 @@ namespace VpdbAgent.ViewModels.Settings
 				Logger.Info("Settings saved.");
 
 				if (firstRun) {
-					HostScreen.Router.NavigateAndReset.ExecuteAsync(new MainViewModel(HostScreen, _settingsManager));
+					HostScreen.Router.NavigateAndReset.Execute(new MainViewModel(HostScreen, _settingsManager));
 				} else {
-					HostScreen.Router.Navigate.ExecuteAsync(new MainViewModel(HostScreen, _settingsManager));
+					HostScreen.Router.Navigate.Execute(new MainViewModel(HostScreen, _settingsManager));
 				}
 
 			} else {
 				Errors = errors;
 				if (errors.ContainsKey("Auth")) {
 					ShowAdvancedOptions = true;
-				}
-
-				// TODO properly display error
-				foreach (var field in errors.Keys) {
-					Logger.Error("Settings validation error for field {0}: {1}", field, errors[field]);
 				}
 			}
 			return errors;

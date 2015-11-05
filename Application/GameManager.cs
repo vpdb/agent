@@ -195,7 +195,7 @@ namespace VpdbAgent.Application
 			_vpdbClient.Api.GetRelease(release.Id).Subscribe(updatedRelease => {
 				AddRelease(updatedRelease);
 				game.Release = updatedRelease;
-			});
+			}, exception => _vpdbClient.HandleApiError(exception));
 
 			return this;
 		}
@@ -210,7 +210,7 @@ namespace VpdbAgent.Application
 				} else {
 					_logger.Info("No update found for {0}", release);
 				}
-			});
+			}, exception => _vpdbClient.HandleApiError(exception));
 			return this;
 		}
 
@@ -377,7 +377,7 @@ namespace VpdbAgent.Application
 						}
 						// save
 						_databaseManager.Save();
-					});
+					}, exception => _vpdbClient.HandleApiError(exception));
 			} else {
 				_logger.Info("Skipping release update, no linked releases found.");
 			}
