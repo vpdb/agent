@@ -13,8 +13,10 @@
 
     <DockPanel LastChildFill="True">
         <DockPanel DockPanel.Dock="Bottom" Margin="7,-5,15,7">
-            <TextBlock DockPanel.Dock="Left" Style="{StaticResource Label}" FontSize="12" x:Name="Status" Text="Status info. All green." />
-            <TextBlock DockPanel.Dock="Right" Style="{StaticResource Label}" TextAlignment="Right" FontSize="12" x:Name="LoginStatus" Text="Not logged." />
+            <TextBlock x:Name="AppVersion" DockPanel.Dock="Left" Style="{StaticResource Label}" 
+                       Text="Status info. All green." FontSize="12" />
+            <TextBlock x:Name="LoginStatus" DockPanel.Dock="Right" Style="{StaticResource Label}" 
+                       Text="Not logged." TextAlignment="Right" FontSize="12"/>
         </DockPanel>
         <DockPanel Margin="7" >
             <Grid>

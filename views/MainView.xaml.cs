@@ -34,6 +34,7 @@ namespace VpdbAgent.Views
 
 				// status fields
 				d(this.OneWayBind(ViewModel, vm => vm.LoginStatus, v => v.LoginStatus.Text));
+				d(this.OneWayBind(ViewModel, vm => vm.VersionName, v => v.AppVersion.Text));
 			});
 		}
 

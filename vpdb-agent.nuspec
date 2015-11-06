@@ -1,0 +1,61 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+    <metadata>
+        <id>VpdbAgent</id>
+        <version>0.0.2</version>
+        <authors>freezy</authors>
+        <owners>freezy</owners>
+        <licenseUrl>https://raw.githubusercontent.com/freezy/vpdb-agent/master/LICENSE</licenseUrl>
+        <projectUrl>https://github.com/freezy/vpdb-agent</projectUrl>
+        <iconUrl>https://raw.githubusercontent.com/freezy/vpdb-agent/master/vpdb-agent.ico</iconUrl>
+        <requireLicenseAcceptance>false</requireLicenseAcceptance>
+        <description>VPDB Agent</description>
+        <summary>A Windows desktop application that syncs local data with VPDB.</summary>
+        <language>en-US</language>
+    </metadata>
+    <files>
+        <file src="bin\Release\DeltaCompressionDotNet.dll" target="lib\net45\DeltaCompressionDotNet.dll" />
+        <file src="bin\Release\DeltaCompressionDotNet.MsDelta.dll" target="lib\net45\DeltaCompressionDotNet.MsDelta.dll" />
+        <file src="bin\Release\DeltaCompressionDotNet.PatchApi.dll" target="lib\net45\DeltaCompressionDotNet.PatchApi.dll" />
+        <file src="bin\Release\Humanizer.dll" target="lib\net45\Humanizer.dll" />
+        <file src="bin\Release\Humanizer.xml" target="lib\net45\Humanizer.xml" />
+        <file src="bin\Release\ICSharpCode.SharpZipLib.dll" target="lib\net45\ICSharpCode.SharpZipLib.dll" />
+        <file src="bin\Release\ICSharpCode.SharpZipLib.xml" target="lib\net45\ICSharpCode.SharpZipLib.xml" />
+        <file src="bin\Release\INIFileParser.dll" target="lib\net45\INIFileParser.dll" />
+        <file src="bin\Release\INIFileParser.xml" target="lib\net45\INIFileParser.xml" />
+        <file src="bin\Release\LoadingIndicators.WPF.dll" target="lib\net45\LoadingIndicators.WPF.dll" />
+        <file src="bin\Release\MahApps.Metro.dll" target="lib\net45\MahApps.Metro.dll" />
+        <file src="bin\Release\MahApps.Metro.xml" target="lib\net45\MahApps.Metro.xml" />
+        <file src="bin\Release\Mono.Cecil.dll" target="lib\net45\Mono.Cecil.dll" />
+        <file src="bin\Release\Mono.Cecil.Mdb.dll" target="lib\net45\Mono.Cecil.Mdb.dll" />
+        <file src="bin\Release\Mono.Cecil.Pdb.dll" target="lib\net45\Mono.Cecil.Pdb.dll" />
+        <file src="bin\Release\Mono.Cecil.Rocks.dll" target="lib\net45\Mono.Cecil.Rocks.dll" />
+        <file src="bin\Release\Newtonsoft.Json.dll" target="lib\net45\Newtonsoft.Json.dll" />
+        <file src="bin\Release\Newtonsoft.Json.xml" target="lib\net45\Newtonsoft.Json.xml" />
+        <file src="bin\Release\NLog.config" target="lib\net45\NLog.config" />
+        <file src="bin\Release\NLog.dll" target="lib\net45\NLog.dll" />
+        <file src="bin\Release\NLog.xml" target="lib\net45\NLog.xml" />
+        <file src="bin\Release\NuGet.Squirrel.dll" target="lib\net45\NuGet.Squirrel.dll" />
+        <file src="bin\Release\PusherClient.dll" target="lib\net45\PusherClient.dll" />
+        <file src="bin\Release\PusherClient.xml" target="lib\net45\PusherClient.xml" />
+        <file src="bin\Release\ReactiveUI.dll" target="lib\net45\ReactiveUI.dll" />
+        <file src="bin\Release\ReactiveUI.xml" target="lib\net45\ReactiveUI.xml" />
+        <file src="bin\Release\Refit.dll" target="lib\net45\Refit.dll" />
+        <file src="bin\Release\Splat.dll" target="lib\net45\Splat.dll" />
+        <file src="bin\Release\Squirrel.dll" target="lib\net45\Squirrel.dll" />
+        <file src="bin\Release\System.Reactive.Core.dll" target="lib\net45\System.Reactive.Core.dll" />
+        <file src="bin\Release\System.Reactive.Core.xml" target="lib\net45\System.Reactive.Core.xml" />
+        <file src="bin\Release\System.Reactive.Interfaces.dll" target="lib\net45\System.Reactive.Interfaces.dll" />
+        <file src="bin\Release\System.Reactive.Interfaces.xml" target="lib\net45\System.Reactive.Interfaces.xml" />
+        <file src="bin\Release\System.Reactive.Linq.dll" target="lib\net45\System.Reactive.Linq.dll" />
+        <file src="bin\Release\System.Reactive.Linq.xml" target="lib\net45\System.Reactive.Linq.xml" />
+        <file src="bin\Release\System.Reactive.PlatformServices.dll" target="lib\net45\System.Reactive.PlatformServices.dll" />
+        <file src="bin\Release\System.Reactive.PlatformServices.xml" target="lib\net45\System.Reactive.PlatformServices.xml" />
+        <file src="bin\Release\System.Reactive.Windows.Threading.dll" target="lib\net45\System.Reactive.Windows.Threading.dll" />
+        <file src="bin\Release\System.Reactive.Windows.Threading.xml" target="lib\net45\System.Reactive.Windows.Threading.xml" />
+        <file src="bin\Release\System.Windows.Interactivity.dll" target="lib\net45\System.Windows.Interactivity.dll" />
+        <file src="bin\Release\vpdb-agent.exe" target="lib\net45\vpdb-agent.exe" />
+        <file src="bin\Release\vpdb-agent.exe.config" target="lib\net45\vpdb-agent.exe.config" />
+        <file src="bin\Release\WebSocket4Net.dll" target="lib\net45\WebSocket4Net.dll" />
+    </files>
+</package>

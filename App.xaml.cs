@@ -1,11 +1,6 @@
-﻿using System.Windows;
+﻿using System.Threading.Tasks;
 using NLog;
-using ReactiveUI;
-using Splat;
-using VpdbAgent.ViewModels;
-using VpdbAgent.ViewModels.Games;
-using VpdbAgent.Views;
-using VpdbAgent.Views.Games;
+using Squirrel;
 
 namespace VpdbAgent
 {
@@ -19,7 +14,13 @@ namespace VpdbAgent
 		public App()
 		{
 			_logger.Info("Starting application.");
-			Locator.CurrentMutable.Register(() => new GamesView(), typeof(IViewFor<GamesViewModel>));
+#if !DEBUG
+			Task.Run(async () => {
+				using (var mgr = new UpdateManager(@"C:\dev\vpdb-agent\Releases")) {
+					await mgr.UpdateApp();
+				}
+			});
+#endif
 		}
 	}
 }

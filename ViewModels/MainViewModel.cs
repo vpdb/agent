@@ -1,4 +1,5 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
@@ -16,6 +17,7 @@ namespace VpdbAgent.ViewModels
 {
 	public class MainViewModel : ReactiveObject, IRoutableViewModel
 	{
+		private static readonly Version AppVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
 		// commands
 		public ReactiveCommand<object> GotoSettings { get; protected set; }
 
@@ -25,6 +27,7 @@ namespace VpdbAgent.ViewModels
 
 		private readonly ObservableAsPropertyHelper<string> _loginStatus;
 		public string LoginStatus => _loginStatus.Value;
+		public string VersionName => $"VPDB Agent v{AppVersion.Major}.{AppVersion.Minor}.{AppVersion.Build}";
 
 		// tabs
 		public GamesViewModel Games { get; }
