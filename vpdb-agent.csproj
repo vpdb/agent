@@ -202,7 +202,6 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="AkavacheSqliteLinkerOverride.cs" />
     <Compile Include="Application\DatabaseManager.cs" />
     <Compile Include="Common\FilesystemWatchCache.cs" />
     <Compile Include="Common\ObservableTrace.cs" />

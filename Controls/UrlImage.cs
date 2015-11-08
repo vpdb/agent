@@ -120,7 +120,7 @@ namespace VpdbAgent.Controls
 		private static string GetLocalPath(string path)
 		{
 			return Path.Combine(
-				Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+				Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
 				SettingsManager.DataFolder,
 				"Cache",
 				path.Replace("/", @"\").Substring(1)

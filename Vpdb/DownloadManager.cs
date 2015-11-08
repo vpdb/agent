@@ -102,7 +102,7 @@ namespace VpdbAgent.Vpdb
 		private readonly Subject<DownloadJob> _whenDownloaded = new Subject<DownloadJob>();
 		private readonly IDisposable _queue;
 		private readonly string _downloadPath = Path.Combine(
-			Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), 
+			Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), 
 			SettingsManager.DataFolder,
 			"Download"
 		);
