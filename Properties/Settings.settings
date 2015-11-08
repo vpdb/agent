@@ -2,21 +2,6 @@
 <SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="VpdbAgent.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
-    <Setting Name="ApiKey" Type="System.String" Scope="User">
-      <Value Profile="(Default)" />
-    </Setting>
-    <Setting Name="AuthUser" Type="System.String" Scope="User">
-      <Value Profile="(Default)" />
-    </Setting>
-    <Setting Name="AuthPass" Type="System.String" Scope="User">
-      <Value Profile="(Default)" />
-    </Setting>
-    <Setting Name="Endpoint" Type="(Web Service URL)" Scope="User">
-      <Value Profile="(Default)">https://staging.vpdb.io</Value>
-    </Setting>
-    <Setting Name="PbxFolder" Type="System.String" Scope="User">
-      <Value Profile="(Default)" />
-    </Setting>
     <Setting Name="WindowTop" Type="System.Double" Scope="User">
       <Value Profile="(Default)">-1</Value>
     </Setting>
@@ -31,9 +16,6 @@
     </Setting>
     <Setting Name="WindowMax" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
-    </Setting>
-    <Setting Name="IsFirstRun" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">True</Value>
     </Setting>
   </Settings>
 </SettingsFile>
