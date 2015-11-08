@@ -1,4 +1,7 @@
-﻿using ReactiveUI;
+﻿using System;
+using System.Reactive.Concurrency;
+using System.Reactive.Linq;
+using ReactiveUI;
 using Splat;
 using VpdbAgent.Application;
 using VpdbAgent.Common.TypeConverters;
@@ -53,12 +56,22 @@ namespace VpdbAgent.ViewModels
 			LogHost.Default.Level = LogLevel.Debug;
 			var settingsManager = Locator.Current.GetService<ISettingsManager>();
 
+			Locator.CurrentMutable.GetService<NLog.Logger>().Info("Waiting for settings...");
+
 			// Navigate to the opening page of the application
-			if (!settingsManager.IsFirstRun) {
-				Router.Navigate.Execute(new MainViewModel(this, Locator.Current.GetService<ISettingsManager>()));
-			} else {
-				Router.Navigate.Execute(new SettingsViewModel(this, Locator.Current.GetService<ISettingsManager>()));
-			}
+			settingsManager.SettingsAvailable.ObserveOn(Scheduler.CurrentThread).SubscribeOn(Scheduler.CurrentThread).Subscribe(settings => {
+				if (settings == null) {
+					return;
+				}
+				System.Windows.Application.Current.Dispatcher.Invoke(delegate {
+					Locator.CurrentMutable.GetService<NLog.Logger>().Info("Got settings!");
+					if (!settings.IsFirstRun) {
+						Router.Navigate.Execute(new MainViewModel(this, Locator.Current.GetService<ISettingsManager>()));
+					} else {
+						Router.Navigate.Execute(new SettingsViewModel(this, Locator.Current.GetService<ISettingsManager>()));
+					}
+				});
+			});
 		}
 
 		private void RegisterParts(IMutableDependencyResolver locator)

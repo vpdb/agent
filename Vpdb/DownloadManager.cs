@@ -101,7 +101,11 @@ namespace VpdbAgent.Vpdb
 		private readonly Subject<DownloadJob.JobStatus> _whenStatusChanged = new Subject<DownloadJob.JobStatus>();
 		private readonly Subject<DownloadJob> _whenDownloaded = new Subject<DownloadJob>();
 		private readonly IDisposable _queue;
-		private readonly string _downloadPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "VPDB", "Download");
+		private readonly string _downloadPath = Path.Combine(
+			Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), 
+			SettingsManager.DataFolder,
+			"Download"
+		);
 
 		/// <summary>
 		/// Constructor sets up queue and creates download folder if non-existing.

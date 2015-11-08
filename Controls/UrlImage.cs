@@ -8,6 +8,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using NLog;
 using Splat;
+using VpdbAgent.Application;
 using VpdbAgent.Vpdb;
 
 namespace VpdbAgent.Controls
@@ -120,7 +121,7 @@ namespace VpdbAgent.Controls
 		{
 			return Path.Combine(
 				Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-				"VPDB",
+				SettingsManager.DataFolder,
 				"Cache",
 				path.Replace("/", @"\").Substring(1)
 			);

@@ -68,9 +68,10 @@ packaging the builds. In order to release a new version:
 1. Bump version in `AssemblyInfo.cs` AND `vpdb-agent.nuspec`
 2. In the *Package Manager Console*, type: 
 
-       PM> NuGet pack .\vpdb-agent.nuspec
-       PM> squirrel  --releasify .\VpdbAgent.0.0.1.nupkg
-
+   ```
+   PM> NuGet pack .\vpdb-agent.nuspec
+   PM> squirrel  --releasify .\VpdbAgent.0.0.1.nupkg
+   ```
 3. Upload!
 
 

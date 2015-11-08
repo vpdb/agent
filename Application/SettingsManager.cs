@@ -11,6 +11,7 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Reactive.Threading.Tasks;
 using System.Threading.Tasks;
+using Akavache;
 using Newtonsoft.Json;
 using NLog;
 using ReactiveUI;
@@ -23,6 +24,8 @@ namespace VpdbAgent.Application
 {
 	public class SettingsManager : ReactiveObject, ISettingsManager
 	{
+		public const string DataFolder = "VPDB";
+
 		public string ApiKey { get; set; }
 		public string AuthUser { get; set; }
 		public string AuthPass { get; set; }
@@ -33,23 +36,35 @@ namespace VpdbAgent.Application
 		public UserFull AuthenticatedUser { get { return _authenticatedUser; } set { this.RaiseAndSetIfChanged(ref _authenticatedUser, value); } }
 
 		private readonly Subject<UserFull> _apiAuthenticated = new Subject<UserFull>();
+		private readonly BehaviorSubject<ISettingsManager> _settingsAvailable = new BehaviorSubject<ISettingsManager>(null); 
 
 		public IObservable<UserFull> ApiAuthenticated => _apiAuthenticated;
-		
+		public IObservable<ISettingsManager> SettingsAvailable => _settingsAvailable;
+
 		private bool _isFirstRun;
 		private UserFull _authenticatedUser;
 		private bool _canCancel;
 
 		private readonly Logger _logger;
+		private readonly IBlobCache _storage;
 
 		public SettingsManager(Logger logger)
 		{
-			ApiKey = (string)Properties.Settings.Default["ApiKey"];
-			AuthUser = (string)Properties.Settings.Default["AuthUser"];
-			AuthPass = (string)Properties.Settings.Default["AuthPass"];
-			Endpoint = (string)Properties.Settings.Default["Endpoint"];
-			PbxFolder = (string)Properties.Settings.Default["PbxFolder"];
-			IsFirstRun = (bool)Properties.Settings.Default["IsFirstRun"];
+
+			BlobCache.ApplicationName = DataFolder;
+			_storage = BlobCache.Secure;
+
+			Task.Run(async () => {
+
+				ApiKey = await _storage.GetOrCreateObject("ApiKey", () => "");
+				AuthUser = await _storage.GetOrCreateObject("AuthUser", () => "");
+				AuthPass = await _storage.GetOrCreateObject("AuthPass", () => "");
+				Endpoint = await _storage.GetOrCreateObject("Endpoint", () => "https://staging.vpdb.io");
+				PbxFolder = await _storage.GetOrCreateObject("PbxFolder", () => "");
+				IsFirstRun = await _storage.GetOrCreateObject("IsFirstRun", () => true);
+
+				_settingsAvailable.OnNext(this);
+            });
 
 			_logger = logger;
 		}
@@ -128,13 +143,16 @@ namespace VpdbAgent.Application
 
 		public ISettingsManager Save()
 		{
-			Properties.Settings.Default["ApiKey"] = ApiKey;
-			Properties.Settings.Default["AuthUser"] = AuthUser;
-			Properties.Settings.Default["AuthPass"] = AuthPass;
-			Properties.Settings.Default["Endpoint"] = Endpoint;
-			Properties.Settings.Default["PbxFolder"] = PbxFolder;
-			Properties.Settings.Default["IsFirstRun"] = false;
-			Properties.Settings.Default.Save();
+
+			Task.Run(async () => {
+				await _storage.InsertObject("ApiKey", ApiKey);
+				await _storage.InsertObject("AuthUser", AuthUser);
+				await _storage.InsertObject("AuthPass", AuthPass);
+				await _storage.InsertObject("Endpoint", Endpoint);
+				await _storage.InsertObject("PbxFolder", PbxFolder);
+				await _storage.InsertObject("IsFirstRun", false);
+
+			});
 
 			CanCancel = true;
 			IsFirstRun = false;
@@ -159,7 +177,8 @@ namespace VpdbAgent.Application
 		bool CanCancel { get; }
 
 		UserFull AuthenticatedUser { get; }
-		IObservable<UserFull> ApiAuthenticated { get; }
+		IObservable<ISettingsManager> SettingsAvailable { get; }
+        IObservable<UserFull> ApiAuthenticated { get; }
 
 		Task<Dictionary<string, string>> Validate();
 		ISettingsManager Save();

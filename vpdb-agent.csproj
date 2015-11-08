@@ -59,6 +59,14 @@
     <ApplicationIcon>vpdb-agent.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Akavache, Version=4.1.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\akavache.core.4.1.2\lib\net45\Akavache.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Akavache.Sqlite3, Version=4.1.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\akavache.sqlite3.4.1.2\lib\Portable-Net45+Win8+WP8+Wpa81\Akavache.Sqlite3.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="DeltaCompressionDotNet, Version=1.0.0.0, Culture=neutral, PublicKeyToken=1d14d6e5194e7f4a, processorArchitecture=MSIL">
       <HintPath>packages\DeltaCompressionDotNet.1.0.0\lib\net45\DeltaCompressionDotNet.dll</HintPath>
       <Private>True</Private>
@@ -135,6 +143,10 @@
       <HintPath>packages\Splat.1.6.2\lib\Net45\Splat.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="SQLitePCL.raw, Version=0.6.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\SQLitePCL.raw_basic.0.7.0\lib\net45\SQLitePCL.raw.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Squirrel, Version=1.2.1.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>packages\squirrel.windows.1.2.1\lib\Net45\Squirrel.dll</HintPath>
       <Private>True</Private>
@@ -190,6 +202,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="AkavacheSqliteLinkerOverride.cs" />
     <Compile Include="Application\DatabaseManager.cs" />
     <Compile Include="Common\FilesystemWatchCache.cs" />
     <Compile Include="Common\ObservableTrace.cs" />
@@ -432,7 +445,9 @@
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('packages\refit.2.3.0\build\refit.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\refit.2.3.0\build\refit.targets'))" />
+    <Error Condition="!Exists('packages\SQLitePCL.raw_basic.0.7.0\build\net45\SQLitePCL.raw_basic.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\SQLitePCL.raw_basic.0.7.0\build\net45\SQLitePCL.raw_basic.targets'))" />
   </Target>
+  <Import Project="packages\SQLitePCL.raw_basic.0.7.0\build\net45\SQLitePCL.raw_basic.targets" Condition="Exists('packages\SQLitePCL.raw_basic.0.7.0\build\net45\SQLitePCL.raw_basic.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
