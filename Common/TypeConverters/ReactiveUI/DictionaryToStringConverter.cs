@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Windows;
 using ReactiveUI;
-using VpdbAgent.Vpdb.Models;
 
-namespace VpdbAgent.Common.TypeConverters
+namespace VpdbAgent.Common.TypeConverters.ReactiveUI
 {
 	public class DictionaryToStringConverter : IBindingTypeConverter
 	{

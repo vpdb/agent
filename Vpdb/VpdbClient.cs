@@ -78,6 +78,7 @@ namespace VpdbAgent.Vpdb
 	{
 		// dependencies
 		private readonly ISettingsManager _settingsManager;
+		private readonly IVersionManager _versionManager;
 		private readonly Logger _logger;
 		private readonly IScreen _screen;
 
@@ -89,9 +90,10 @@ namespace VpdbAgent.Vpdb
 		private Pusher _pusher;
 		private Channel _userChannel;
 
-		public VpdbClient(ISettingsManager settingsManager, IScreen screen, Logger logger)
+		public VpdbClient(ISettingsManager settingsManager, IVersionManager versionManager, IScreen screen, Logger logger)
 		{
 			_settingsManager = settingsManager;
+			_versionManager = versionManager;
 			_logger = logger;
 			_screen = screen;
 		}
@@ -156,7 +158,7 @@ namespace VpdbAgent.Vpdb
 			var apiException = e as ApiException;
 			if (apiException?.StatusCode == HttpStatusCode.Unauthorized) {
 				var errors = _settingsManager.OnApiFailed(apiException);
-				_screen.Router.Navigate.Execute(new SettingsViewModel(_screen, _settingsManager, errors));
+				_screen.Router.Navigate.Execute(new SettingsViewModel(_screen, _settingsManager, _versionManager, errors));
 			}
 			_logger.Error(e, "API error while {0}:", origin);
 		}

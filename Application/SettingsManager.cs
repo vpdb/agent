@@ -64,8 +64,7 @@ namespace VpdbAgent.Application
 				IsFirstRun = await _storage.GetOrCreateObject("IsFirstRun", () => true);
 
 				_settingsAvailable.OnNext(this);
-            });
-
+			});
 			_logger = logger;
 		}
 
@@ -178,8 +177,8 @@ namespace VpdbAgent.Application
 
 		UserFull AuthenticatedUser { get; }
 		IObservable<ISettingsManager> SettingsAvailable { get; }
-        IObservable<UserFull> ApiAuthenticated { get; }
-
+		IObservable<UserFull> ApiAuthenticated { get; }
+		
 		Task<Dictionary<string, string>> Validate();
 		ISettingsManager Save();
 		Dictionary<string, string> OnApiFailed(ApiException apiException);

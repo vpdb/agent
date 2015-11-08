@@ -4,7 +4,7 @@ using System.Reactive.Linq;
 using ReactiveUI;
 using Splat;
 using VpdbAgent.Application;
-using VpdbAgent.Common.TypeConverters;
+using VpdbAgent.Common.TypeConverters.ReactiveUI;
 using VpdbAgent.PinballX;
 using VpdbAgent.ViewModels.Downloads;
 using VpdbAgent.ViewModels.Games;
@@ -66,9 +66,9 @@ namespace VpdbAgent.ViewModels
 				System.Windows.Application.Current.Dispatcher.Invoke(delegate {
 					Locator.CurrentMutable.GetService<NLog.Logger>().Info("Got settings!");
 					if (!settings.IsFirstRun) {
-						Router.Navigate.Execute(new MainViewModel(this, Locator.Current.GetService<ISettingsManager>()));
+						Router.Navigate.Execute(new MainViewModel(this, Locator.Current.GetService<ISettingsManager>(), Locator.Current.GetService<IVersionManager>()));
 					} else {
-						Router.Navigate.Execute(new SettingsViewModel(this, Locator.Current.GetService<ISettingsManager>()));
+						Router.Navigate.Execute(new SettingsViewModel(this, Locator.Current.GetService<ISettingsManager>(), Locator.Current.GetService<IVersionManager>()));
 					}
 				});
 			});
@@ -86,6 +86,9 @@ namespace VpdbAgent.ViewModels
 			locator.RegisterLazySingleton(() => new FileSystemWatcher(
 				locator.GetService<NLog.Logger>()
 			), typeof(IFileSystemWatcher));
+			locator.RegisterLazySingleton(() => new VersionManager(
+				locator.GetService<NLog.Logger>()
+			), typeof(IVersionManager));
 
 			locator.RegisterLazySingleton(() => new DatabaseManager(
 				locator.GetService<ISettingsManager>(),
@@ -100,6 +103,7 @@ namespace VpdbAgent.ViewModels
 
 			locator.RegisterLazySingleton(() => new VpdbClient(
 				locator.GetService<ISettingsManager>(),
+				locator.GetService<IVersionManager>(),
 				this,
 				locator.GetService<NLog.Logger>()
 			), typeof(IVpdbClient));
@@ -116,6 +120,7 @@ namespace VpdbAgent.ViewModels
 				locator.GetService<ISettingsManager>(),
 				locator.GetService<IDownloadManager>(),
 				locator.GetService<IDatabaseManager>(),
+				locator.GetService<IVersionManager>(),
 				locator.GetService<NLog.Logger>()
 			), typeof(IGameManager));
 
@@ -126,7 +131,7 @@ namespace VpdbAgent.ViewModels
 			locator.RegisterConstant(new DictionaryToStringConverter(), typeof(IBindingTypeConverter));
 			locator.RegisterConstant(new DictionaryToBooleanConverter(), typeof(IBindingTypeConverter));
 			locator.RegisterConstant(new DictionaryToVisibilityConverter(), typeof(IBindingTypeConverter));
-			locator.RegisterConstant(new BooleanToVisibilityTypeConverter(), typeof(IBindingTypeConverter));
+			locator.RegisterConstant(new BooleanToVisibilityConverter(), typeof(IBindingTypeConverter));
 
 			// view models
 			locator.RegisterLazySingleton(() => new MainView(), typeof(IViewFor<MainViewModel>));

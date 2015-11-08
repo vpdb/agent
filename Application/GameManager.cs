@@ -12,6 +12,7 @@ using Newtonsoft.Json.Linq;
 using NLog;
 using PusherClient;
 using ReactiveUI;
+using Squirrel;
 using VpdbAgent.Models;
 using VpdbAgent.PinballX;
 using VpdbAgent.PinballX.Models;
@@ -105,6 +106,7 @@ namespace VpdbAgent.Application
 		private readonly ISettingsManager _settingsManager;
 		private readonly IDownloadManager _downloadManager;
 		private readonly IDatabaseManager _databaseManager;
+		private readonly IVersionManager _versionManager;
 		private readonly Logger _logger;
 
 		// props
@@ -118,13 +120,15 @@ namespace VpdbAgent.Application
 		private readonly List<Tuple<string, string, string>> _gamesToLink = new List<Tuple<string, string, string>>();
 
 		public GameManager(IMenuManager menuManager, IVpdbClient vpdbClient, ISettingsManager 
-			settingsManager, IDownloadManager downloadManager, IDatabaseManager databaseManager, Logger logger)
+			settingsManager, IDownloadManager downloadManager, IDatabaseManager databaseManager,
+			IVersionManager versionManager, Logger logger)
 		{
 			_menuManager = menuManager;
 			_vpdbClient = vpdbClient;
 			_settingsManager = settingsManager;
 			_downloadManager = downloadManager;
 			_databaseManager = databaseManager;
+			_versionManager = versionManager;
 			_logger = logger;
 
 			var systems = _menuManager.Systems;
@@ -176,6 +180,7 @@ namespace VpdbAgent.Application
 			_databaseManager.Initialize();
 			_menuManager.Initialize();
 			_vpdbClient.Initialize();
+			_versionManager.Initialize();
 
 			// validate settings and retrieve profile
 			Task.Run(() => _settingsManager.Validate());

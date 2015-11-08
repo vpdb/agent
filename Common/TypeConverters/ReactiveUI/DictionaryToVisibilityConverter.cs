@@ -2,15 +2,14 @@
 using System.Collections.Generic;
 using System.Windows;
 using ReactiveUI;
-using VpdbAgent.Vpdb.Models;
 
-namespace VpdbAgent.Common.TypeConverters
+namespace VpdbAgent.Common.TypeConverters.ReactiveUI
 {
-	public class DictionaryToBooleanConverter : IBindingTypeConverter
+	public class DictionaryToVisibilityConverter : IBindingTypeConverter
 	{
 		public int GetAffinityForObjects(Type fromType, Type toType)
 		{
-			if (fromType == typeof(Dictionary<string, string>) && toType == typeof(bool)) return 1100;
+			if (fromType == typeof(Dictionary<string, string>) && toType == typeof(Visibility)) return 1100;
 			return -1;
 		}
 
@@ -20,9 +19,9 @@ namespace VpdbAgent.Common.TypeConverters
 				throw new InvalidOperationException("You must supply the key to check against in the conversion hint.");
 			}
 			var key = (string) conversionHint;
-			if (toType == typeof(bool)) {
+			if (toType == typeof(Visibility)) {
 				var dict = (Dictionary<string, string>) from;
-				result = dict != null && dict.ContainsKey(key) && dict[key] != null;
+				result = from != null && dict.ContainsKey(key) && dict[key] != null ? Visibility.Visible: Visibility.Collapsed;
 				return true;
 			}
 			result = null;

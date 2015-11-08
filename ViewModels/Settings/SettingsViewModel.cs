@@ -6,6 +6,7 @@ using System.Windows.Forms;
 using NLog;
 using ReactiveUI;
 using Refit;
+using Squirrel;
 using VpdbAgent.Application;
 using VpdbAgent.Vpdb.Models;
 
@@ -16,6 +17,7 @@ namespace VpdbAgent.ViewModels.Settings
 		// dependencies
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 		private readonly ISettingsManager _settingsManager;
+		private readonly IVersionManager _versionManager;
 
 		// setting props
 		public string ApiKey { get { return _apiKey; } set { this.RaiseAndSetIfChanged(ref _apiKey, value); } }
@@ -53,10 +55,11 @@ namespace VpdbAgent.ViewModels.Settings
 		private readonly ObservableAsPropertyHelper<bool> _isFirstRun;
 		private readonly ObservableAsPropertyHelper<bool> _canCancel;
 
-		public SettingsViewModel(IScreen screen, ISettingsManager settingsManager)
+		public SettingsViewModel(IScreen screen, ISettingsManager settingsManager, IVersionManager versionManager)
 		{
 			HostScreen = screen;
 			_settingsManager = settingsManager;
+			_versionManager = versionManager;
 
 			ApiKey = _settingsManager.ApiKey;
 			AuthUser = _settingsManager.AuthUser;
@@ -78,7 +81,7 @@ namespace VpdbAgent.ViewModels.Settings
 			_settingsManager.WhenAnyValue(sm => sm.CanCancel).ToProperty(this, vm => vm.CanCancel, out _canCancel);
 		}
 
-		public SettingsViewModel(IScreen screen, ISettingsManager settingsManager, Dictionary<string, string> errors) : this(screen, settingsManager)
+		public SettingsViewModel(IScreen screen, ISettingsManager settingsManager, IVersionManager versionManager, Dictionary<string, string> errors) : this(screen, settingsManager, versionManager)
 		{
 			Errors = errors;
 		}
@@ -114,9 +117,9 @@ namespace VpdbAgent.ViewModels.Settings
 				Logger.Info("Settings saved.");
 
 				if (firstRun) {
-					HostScreen.Router.NavigateAndReset.Execute(new MainViewModel(HostScreen, _settingsManager));
+					HostScreen.Router.NavigateAndReset.Execute(new MainViewModel(HostScreen, _settingsManager, _versionManager));
 				} else {
-					HostScreen.Router.Navigate.Execute(new MainViewModel(HostScreen, _settingsManager));
+					HostScreen.Router.Navigate.Execute(new MainViewModel(HostScreen, _settingsManager, _versionManager));
 				}
 
 			} else {

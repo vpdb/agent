@@ -69,7 +69,7 @@ packaging the builds. In order to release a new version:
 2. In the *Package Manager Console*, type: 
 
    ```
-   PM> NuGet pack .\vpdb-agent.nuspec
+   PM> nuget pack .\vpdb-agent.nuspec
    PM> squirrel  --releasify .\VpdbAgent.0.0.1.nupkg
    ```
 3. Upload!

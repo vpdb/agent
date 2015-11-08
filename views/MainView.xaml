@@ -18,6 +18,18 @@
             <TextBlock x:Name="LoginStatus" DockPanel.Dock="Right" Style="{StaticResource Label}" 
                        Text="Not logged." TextAlignment="Right" FontSize="12"/>
         </DockPanel>
+        <DockPanel x:Name="UpdateNotice" DockPanel.Dock="Bottom" Margin="0,5,0,10" Background="{StaticResource PrimaryColorBrush}">
+            <c:IconControl Height="15" Width="15" Foreground="{StaticResource WhiteBrush}" Data="{StaticResource IconStar}" Margin="10,0,10,0" VerticalAlignment="Center"/>
+            <TextBlock DockPanel.Dock="Left" Style="{StaticResource Label}" Foreground="{StaticResource WhiteBrush}" VerticalAlignment="Center">
+                <TextBlock Text="A new version of VPDB Agent is available."/>
+                <Hyperlink x:Name="RestartApp" Foreground="{StaticResource WhiteBrush}" FontWeight="Bold">Restart the app</Hyperlink>
+                <TextBlock Text="to make it yours!"></TextBlock>
+            </TextBlock>
+            <Button x:Name="CloseUpdateNotice" HorizontalAlignment="Right" Style="{StaticResource IconButtonDark}" Width="32" Height="32" VerticalAlignment="Center" >
+                <c:IconControl Height="10" Width="10" Foreground="{StaticResource WhiteBrush}" Data="{StaticResource IconClose}" />
+            </Button>
+        </DockPanel>
+        
         <DockPanel Margin="7" >
             <Grid>
                 <TabControl>
@@ -31,10 +43,10 @@
                         <rx:ViewModelViewHost x:Name="MessagesContent" VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch"/>
                     </TabItem>
                 </TabControl>
-                <Button Style="{StaticResource IconButton}" Click="SettingsButton_Click" Height="30" 
-                        HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,12,0,0">
+                <Button x:Name="GotoSettings" Style="{StaticResource IconButton}" Foreground="{StaticResource LabelTextBrush}"
+                        Height="30" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,12,0,0">
                     <StackPanel Orientation="Horizontal">
-                        <c:IconControl Height="15" Width="15" Foreground="#80ffffff" Data="{StaticResource IconSettings}" Margin="10,0,10,0" />
+                        <c:IconControl Height="15" Width="15" Foreground="{StaticResource LabelTextBrush}" Data="{StaticResource IconSettings}" Margin="10,0,10,0" />
                         <TextBlock VerticalAlignment="Center" Text="SETTINGS" Margin="0,0,10,0" />
                     </StackPanel>
                 </Button>

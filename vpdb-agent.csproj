@@ -203,13 +203,15 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Application\DatabaseManager.cs" />
+    <Compile Include="Application\VersionManager.cs" />
     <Compile Include="Common\FilesystemWatchCache.cs" />
     <Compile Include="Common\ObservableTrace.cs" />
-    <Compile Include="Common\TypeConverters\DictionaryToStringConverter.cs" />
-    <Compile Include="Common\TypeConverters\DictionaryToBooleanConverter.cs" />
-    <Compile Include="Common\TypeConverters\DictionaryToVisibilityConverter.cs" />
-    <Compile Include="Common\TypeConverters\NullToFalseConverter.cs" />
-    <Compile Include="Common\TypeConverters\NullToCollapsedConverter.cs" />
+    <Compile Include="Common\TypeConverters\ReactiveUI\DictionaryToStringConverter.cs" />
+    <Compile Include="Common\TypeConverters\ReactiveUI\DictionaryToBooleanConverter.cs" />
+    <Compile Include="Common\TypeConverters\ReactiveUI\DictionaryToVisibilityConverter.cs" />
+    <Compile Include="Common\TypeConverters\ReactiveUI\NullToFalseConverter.cs" />
+    <Compile Include="Common\TypeConverters\ReactiveUI\NullToCollapsedConverter.cs" />
+    <Compile Include="Common\TypeConverters\ReactiveUI\BooleanToVisibilityConverter.cs" />
     <Compile Include="Common\ValueConverters\DebugDataBindingConverter.cs" />
     <Compile Include="Common\ValueConverters\InverseBooleanConverter.cs" />
     <Compile Include="Controls\IconControl.cs" />
@@ -246,7 +248,7 @@
     <Compile Include="ViewModels\AppViewModel.cs" />
     <Compile Include="ViewModels\Games\GameItemViewModel.cs" />
     <Compile Include="ViewModels\Settings\SettingsViewModel.cs" />
-    <Compile Include="Common\TypeConverters\ImageToUrlTypeConverter.cs" />
+    <Compile Include="Common\TypeConverters\ReactiveUI\ImageToUrlTypeConverter.cs" />
     <Compile Include="Views\MainView.xaml.cs">
       <DependentUpon>MainView.xaml</DependentUpon>
     </Compile>

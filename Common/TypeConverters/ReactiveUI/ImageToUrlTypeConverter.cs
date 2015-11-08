@@ -2,7 +2,7 @@
 using ReactiveUI;
 using VpdbAgent.Vpdb.Models;
 
-namespace VpdbAgent.Common.TypeConverters
+namespace VpdbAgent.Common.TypeConverters.ReactiveUI
 {
 
 	public class ImageToUrlTypeConverter : IBindingTypeConverter

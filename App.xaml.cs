@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Linq.Expressions;
+using System.Threading.Tasks;
 using NLog;
 using Squirrel;
 
@@ -14,13 +16,6 @@ namespace VpdbAgent
 		public App()
 		{
 			_logger.Info("Starting application.");
-#if !DEBUG
-			Task.Run(async () => {
-				using (var mgr = new UpdateManager(@"C:\dev\vpdb-agent\Releases")) {
-					await mgr.UpdateApp();
-				}
-			});
-#endif
 		}
 	}
 }

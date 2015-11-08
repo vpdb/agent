@@ -35,12 +35,14 @@ namespace VpdbAgent.Views
 				// status fields
 				d(this.OneWayBind(ViewModel, vm => vm.LoginStatus, v => v.LoginStatus.Text));
 				d(this.OneWayBind(ViewModel, vm => vm.VersionName, v => v.AppVersion.Text));
-			});
-		}
+				d(this.OneWayBind(ViewModel, vm => vm.ShowUpdateNotice, v => v.UpdateNotice.Visibility));
 
-		private void SettingsButton_Click(object sender, RoutedEventArgs e)
-		{
-			ViewModel.GotoSettings.Execute(null);
+				// commands
+				d(this.BindCommand(ViewModel, vm => vm.GotoSettings, v => v.GotoSettings));
+				d(this.BindCommand(ViewModel, vm => vm.RestartApp, v => v.RestartApp));
+				d(this.BindCommand(ViewModel, vm => vm.CloseUpdateNotice, v => v.CloseUpdateNotice));
+
+			});
 		}
 
 		#region ViewModel
