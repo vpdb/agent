@@ -15,8 +15,8 @@ namespace VpdbAgent.Application
 
 	public class VersionManager : IVersionManager
 	{
-		public const string UpdateFolder = @"C:\dev\vpdb-agent\Releases";
-		public static readonly TimeSpan UpdateInterval = TimeSpan.FromSeconds(5);
+		public const string UpdateFolder = "https://raw.githubusercontent.com/freezy/vpdb-agent/master/Releases"; // @"C:\dev\vpdb-agent\Releases";
+		public static readonly TimeSpan UpdateInterval = TimeSpan.FromDays(1);
 
 		public IObservable<ReleaseEntry> NewVersionAvailable => _newVersionAvailable;
 
