@@ -17,7 +17,6 @@ RefitStubs.cs
 [Dd]ebug/
 [Dd]ebugPublic/
 [Rr]elease/
-[Rr]eleases/
 x64/
 x86/
 build/
@@ -145,6 +144,8 @@ publish/
 
 # NuGet Packages
 *.nupkg
+!Releases/*.nupkg
+
 # The packages folder can be ignored because of Package Restore
 **/packages/*
 # except build/, which is used as an MSBuild target.
