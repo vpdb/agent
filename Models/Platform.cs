@@ -6,7 +6,6 @@ using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Windows;
 using Newtonsoft.Json;
 using NLog;
 using ReactiveUI;
@@ -157,10 +156,10 @@ namespace VpdbAgent.Models
 			List<Game> mergedGames;
 			if (_database == null) {
 				_logger.Warn("No vpdb.json at {0}", DatabaseFile);
-				mergedGames = MergeGames(xmlGames, null, TablePath, db);
+				mergedGames = MergeGames(xmlGames, null, db);
 			} else {
 				_logger.Info("Found and parsed vpdb.json at {0}", DatabaseFile);
-				mergedGames = MergeGames(xmlGames, _database.Games, TablePath, db);
+				mergedGames = MergeGames(xmlGames, _database.Games, db);
 			}
 
 			return mergedGames;
@@ -172,20 +171,26 @@ namespace VpdbAgent.Models
 		/// </summary>
 		/// <param name="xmlGames">Games read from an .XML file</param>
 		/// <param name="jsonGames">Games read from the internal .json database</param>
-		/// <param name="tablePath">Path to the table folder</param>
 		/// <param name="db">Reference to global database</param>
 		/// <returns>List of merged games</returns>
-		private List<Game> MergeGames(IEnumerable<PinballX.Models.Game> xmlGames, IEnumerable<Game> jsonGames, string tablePath, GlobalDatabase db)
+		private List<Game> MergeGames(IEnumerable<PinballX.Models.Game> xmlGames, IEnumerable<Game> jsonGames, GlobalDatabase db)
 		{
+			_logger.Info("MergeGames() START");
+
 			var games = new List<Game>();
+			var enumerableGames = jsonGames as Game[] ?? jsonGames.ToArray();
+			var enumerableXmlGames = xmlGames as PinballX.Models.Game[] ?? xmlGames.ToArray();
+
 			// ReSharper disable once LoopCanBeConvertedToQuery
-			foreach (var xmlGame in xmlGames) {
-				var jsonGame = jsonGames?.FirstOrDefault(g => (g.Id.Equals(xmlGame.Description)));
+			foreach (var xmlGame in enumerableXmlGames) {
+				var jsonGame = enumerableGames.FirstOrDefault(g => (g.Id.Equals(xmlGame.Description)));
 				games.Add(jsonGame == null
 					? new Game(xmlGame, this, db)
 					: jsonGame.Merge(xmlGame, this, db)
 				);
 			}
+
+			_logger.Info("MergeGames() DONE");
 			return games;
 		}
 

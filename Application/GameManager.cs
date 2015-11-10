@@ -118,6 +118,7 @@ namespace VpdbAgent.Application
 		private readonly Subject<Unit> _initialized = new Subject<Unit>();
 		private bool _isInitialized;
 		private readonly List<Tuple<string, string, string>> _gamesToLink = new List<Tuple<string, string, string>>();
+		private IDisposable _gamesSubscription;
 
 		public GameManager(IMenuManager menuManager, IVpdbClient vpdbClient, ISettingsManager 
 			settingsManager, IDownloadManager downloadManager, IDatabaseManager databaseManager,
@@ -172,9 +173,9 @@ namespace VpdbAgent.Application
 			}
 
 			// handle api authentication
-			_settingsManager.ApiAuthenticated.Subscribe(user => {
-				_logger.Info("Authenticated successfully.");
-			}, exception => _vpdbClient.HandleApiError(exception, "subscribing to ApiAuthenticated for printing something"));
+//			_settingsManager.ApiAuthenticated.Subscribe(user => {
+//				_logger.Info("Authenticated successfully.");
+//			}, exception => _vpdbClient.HandleApiError(exception, "subscribing to ApiAuthenticated for printing something"));
 
 			// initialize managers
 			_databaseManager.Initialize();
@@ -183,7 +184,7 @@ namespace VpdbAgent.Application
 			_versionManager.Initialize();
 
 			// validate settings and retrieve profile
-			Task.Run(() => _settingsManager.Validate());
+			Task.Run(async () => await _settingsManager.Validate());
 
 			return this;
 		}
@@ -236,7 +237,7 @@ namespace VpdbAgent.Application
 					.Select(_ => Unit.Default),
 				Platforms.Changed.Select(_ => Unit.Default));                          // one of the platforms changes
 
-			whenPlatformsOrGamesInThosePlatformsChange
+			_gamesSubscription = whenPlatformsOrGamesInThosePlatformsChange
 				.StartWith(Unit.Default)
 				.Select(_ => Platforms.SelectMany(x => x.Games).ToList())
 				.Where(games => games.Count > 0)

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.Eventing;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using NLog;
@@ -78,7 +79,12 @@ namespace VpdbAgent.ViewModels.Settings
 			CloseSettings.InvokeCommand(HostScreen.Router, r => r.NavigateBack);
 
 			_settingsManager.WhenAnyValue(sm => sm.IsFirstRun).ToProperty(this, vm => vm.IsFirstRun, out _isFirstRun);
-			_settingsManager.WhenAnyValue(sm => sm.CanCancel).ToProperty(this, vm => vm.CanCancel, out _canCancel);
+			_settingsManager.WhenAnyValue(sm => sm.CanCancel)
+				.CombineLatest(screen.Router.NavigationStack.Changed, (canCancel, _) => canCancel || screen.Router.NavigationStack.Count > 1)
+				.DistinctUntilChanged()
+				.StartWith(true)
+				.ToProperty(this, vm => vm.CanCancel, out _canCancel);
+
 		}
 
 		public SettingsViewModel(IScreen screen, ISettingsManager settingsManager, IVersionManager versionManager, Dictionary<string, string> errors) : this(screen, settingsManager, versionManager)
@@ -116,10 +122,10 @@ namespace VpdbAgent.ViewModels.Settings
 				_settingsManager.Save();
 				Logger.Info("Settings saved.");
 
-				if (firstRun) {
+				if (HostScreen.Router.NavigationStack.Count == 1) {
 					HostScreen.Router.NavigateAndReset.Execute(new MainViewModel(HostScreen, _settingsManager, _versionManager));
 				} else {
-					HostScreen.Router.Navigate.Execute(new MainViewModel(HostScreen, _settingsManager, _versionManager));
+					HostScreen.Router.NavigateBack.Execute(null);
 				}
 
 			} else {

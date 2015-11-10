@@ -117,7 +117,7 @@ namespace VpdbAgent.Application
 		{
 			System.Windows.Application.Current.Dispatcher.Invoke(delegate {
 				if (user != null) {
-					_apiAuthenticated.OnNext(user);
+					//_apiAuthenticated.OnNext(user);
 					AuthenticatedUser = user;
 				} else {
 					_apiAuthenticated.OnNext(null);
