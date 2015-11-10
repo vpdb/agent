@@ -9,6 +9,7 @@ using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
+using System.Windows.Controls;
 using VpdbAgent.Vpdb.Network;
 using PusherClient;
 using ReactiveUI;
@@ -88,6 +89,7 @@ namespace VpdbAgent.Vpdb
 
 		// private members
 		private Pusher _pusher;
+		private string _connectedApiEndpoint;
 		private Channel _userChannel;
 
 		public VpdbClient(ISettingsManager settingsManager, IVersionManager versionManager, IScreen screen, Logger logger)
@@ -207,16 +209,32 @@ namespace VpdbAgent.Vpdb
 		/// <param name="user"></param>
 		private void SetupPusher(User user)
 		{
-			// pusher test
-			_logger.Info("Setting up Pusher...");
 
-			_pusher.ConnectionStateChanged += PusherConnectionStateChanged;
-			_pusher.Error += PusherError;
+			var isNewConnection = _connectedApiEndpoint == null;
+			var isSameConnection = !isNewConnection && _connectedApiEndpoint.Equals(_settingsManager.Endpoint);
+			var isDifferentConnection = !isNewConnection && !isSameConnection;
 
-			_userChannel = _pusher.Subscribe("private-user-" + user.Id);
-			_userChannel.Subscribed += PusherSubscribed;
+			if (isNewConnection) {
+				_logger.Info("Setting up Pusher...");
 
-			_pusher.Connect();
+				_pusher.ConnectionStateChanged += PusherConnectionStateChanged;
+				_pusher.Error += PusherError;
+
+				_pusher.Connect();
+			}
+
+			if (isDifferentConnection) {
+				_logger.Info("Unsubscribing from previous channel.");
+				_userChannel.Unsubscribe();
+			}
+
+			if (isNewConnection || isDifferentConnection) {
+				_logger.Info("Subscribing to user channel.");
+				_userChannel = _pusher.Subscribe("private-user-" + user.Id);
+				_userChannel.Subscribed += PusherSubscribed;
+			}
+			
+			_connectedApiEndpoint = _settingsManager.Endpoint;
 		}
 
 		private void PusherConnectionStateChanged(object sender, ConnectionState state)
@@ -238,3 +256,4 @@ namespace VpdbAgent.Vpdb
 		#endregion
 	}
 }
+ 

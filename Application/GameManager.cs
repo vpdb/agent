@@ -515,6 +515,7 @@ namespace VpdbAgent.Application
 					if (game != null) {
 						var release = _databaseManager.Database.Releases[id];
 						release.Starred = true;
+						game.Release.Starred = true;
 						_databaseManager.Save();
 						_logger.Info("Toggled star on release {0} [on]", release.Name);
 					} else {
@@ -532,6 +533,7 @@ namespace VpdbAgent.Application
 					if (game != null) {
 						var release = _databaseManager.Database.Releases[id];
 						release.Starred = false;
+						game.Release.Starred = false;
 						_databaseManager.Save();
 						_logger.Info("Toggled star on release {0} [off]", release.Name);
 					} else {
