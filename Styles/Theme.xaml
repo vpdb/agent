@@ -19,6 +19,7 @@
     <Style x:Key="Label" TargetType="{x:Type TextBlock}">
         <Setter Property="FontSize" Value="18" />
         <Setter Property="Foreground" Value="{DynamicResource LabelTextBrush}" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
     </Style>
     
     <Style x:Key="Tag" TargetType="{x:Type Label}">

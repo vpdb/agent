@@ -14,6 +14,7 @@
                 <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Accents/BaseDark.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Clean/CleanWindow.xaml"/>
                 <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Controls.AnimatedTabControl.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Controls.ComboBox.xaml" />
 				
                 <ResourceDictionary Source="pack://application:,,,/LoadingIndicators.WPF;component/Colors.xaml"/>
                 <ResourceDictionary Source="pack://application:,,,/LoadingIndicators.WPF;component/Styles.xaml"/>
@@ -29,6 +30,7 @@
                 <ResourceDictionary Source="Styles/Expanders.xaml" />
                 <ResourceDictionary Source="Styles/Scrollbars.xaml" />
                 <ResourceDictionary Source="Styles/ProgressBars.xaml" />
+                <ResourceDictionary Source="Styles/ComboBoxes.xaml" />
                 <ResourceDictionary Source="Styles/Theme.xaml" />
 
             </ResourceDictionary.MergedDictionaries>

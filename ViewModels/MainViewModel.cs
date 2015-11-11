@@ -59,12 +59,10 @@ namespace VpdbAgent.ViewModels
 			// show notice when new version arrives but hide when button was clicked
 			versionManager.NewVersionAvailable
 				.Where(release => release != null)
-				.Subscribe(newRelease =>
-				{
+				.Subscribe(newRelease => {
 					ShowUpdateNotice = true;
 				});
-			CloseUpdateNotice.Subscribe(_ =>
-			{
+			CloseUpdateNotice.Subscribe(_ => {
 				ShowUpdateNotice = false;
 			});
 
