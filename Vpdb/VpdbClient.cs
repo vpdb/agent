@@ -5,11 +5,8 @@ using System;
 using System.Collections.Specialized;
 using System.Net;
 using System.Net.Http;
-using System.Reactive.Concurrency;
-using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
-using System.Windows.Controls;
 using VpdbAgent.Vpdb.Network;
 using PusherClient;
 using ReactiveUI;
@@ -244,12 +241,14 @@ namespace VpdbAgent.Vpdb
 
 		private void PusherError(object sender, PusherException error)
 		{
+			// todo handle
 			UserChannel.OnNext(null);
 			_logger.Error(error, "Pusher error: {0}", error.Message);
 		}
 
 		private void PusherSubscribed(object sender)
 		{
+			// todo handle
 			UserChannel.OnNext(_userChannel);
 			_logger.Info("Subscribed to channel.");
 		}

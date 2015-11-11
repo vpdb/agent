@@ -88,7 +88,7 @@
                         Grid.Column="1" Content="IDENTIFY" HorizontalAlignment="Right" Margin="0,-5,10,-5"/>
                 <Viewbox Grid.Column="1" StretchDirection="Both" Stretch="Uniform" 
                          Height="24" Width="24" HorizontalAlignment="Right" Margin="0,0,10,0">
-                    <loadin:LoadingIndicator Foreground="{StaticResource PrimaryColorBrush}" SpeedRatio="1" IsActive="{Binding IsExecuting}"  Style="{DynamicResource LoadingIndicatorArcsStyle}"/>
+                    <loadin:LoadingIndicator Foreground="{StaticResource PrimaryColorBrush}" SpeedRatio="1" IsActive="{Binding IsExecuting}" Style="{DynamicResource LoadingIndicatorArcsStyle}"/>
                 </Viewbox>
                 <Label Visibility="{Binding Path=Game.HasUpdate, Converter={StaticResource TrueToVisible}}" 
                        Grid.Column="1" Content="Update available" Margin="0,0,10,0" FontStyle="Italic" Foreground="{StaticResource PrimaryColorBrush}"/>

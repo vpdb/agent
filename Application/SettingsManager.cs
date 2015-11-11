@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
@@ -22,6 +19,95 @@ using VpdbAgent.Vpdb.Network;
 
 namespace VpdbAgent.Application
 {
+
+	/// <summary>
+	/// An API for saving and retrieving settings.
+	/// </summary>
+	/// <remarks>
+	/// We used to use .NET's settings provider, but for unknown reason it uses
+	/// separate settings for every version, meaning everything gets lost on
+	/// app updates.
+	/// 
+	/// We ended up using Akavache which we'll be also using for image caching
+	/// later.
+	/// </remarks>
+	public interface ISettingsManager
+	{
+		/// <summary>
+		/// VPDB's API key
+		/// </summary>
+		string ApiKey { get; set; }
+
+		/// <summary>
+		/// If HTTP Basic authentication is enabled on VPDB, this is the user name.
+		/// </summary>
+		string AuthUser { get; set; }
+
+		/// <summary>
+		/// If HTTP Basic authentication is enabled on VPDB, this is the password.
+		/// </summary>
+		string AuthPass { get; set; }
+
+		/// <summary>
+		/// The endpoint of the VPDB API.
+		/// </summary>
+		string Endpoint { get; set; }
+
+		/// <summary>
+		/// The local folder where the user installed PinballX
+		/// </summary>
+		string PbxFolder { get; set; }
+
+		/// <summary>
+		/// True if the app is starting for the first time
+		/// </summary>
+		bool IsFirstRun { get; }
+
+		/// <summary>
+		/// False when currently saved settings are not valid, forcing the user
+		/// to change and revalidate.
+		/// </summary>
+		bool CanCancel { get; }
+
+		/// <summary>
+		/// The currently authenticated user at VPDB
+		/// </summary>
+		UserFull AuthenticatedUser { get; }
+
+		/// <summary>
+		/// Produces a value each time settings are updated or available
+		/// </summary>
+		IObservable<ISettingsManager> SettingsAvailable { get; }
+
+		/// <summary>
+		/// Produces a value each time the API tried to authenticate. Value is null
+		/// if authentication failed.
+		/// </summary>
+		IObservable<UserFull> ApiAuthenticated { get; }
+
+		/// <summary>
+		/// Validates current settings and returns a list of errors.
+		/// </summary>
+		/// <returns>List of validation errors or empty list if validation succeeded</returns>
+		Task<Dictionary<string, string>> Validate();
+
+		/// <summary>
+		/// Persists current settings.
+		/// </summary>
+		/// <remarks>
+		/// Only call this after <see cref="Validate"/>, since it doesn't validate on its own!
+		/// </remarks>
+		/// <returns>This instance</returns>
+		ISettingsManager Save();
+
+		/// <summary>
+		/// Returns a list of validation errors based on a given exception
+		/// </summary>
+		/// <param name="apiException">Exception to convert to validation error</param>
+		/// <returns>List of (usually only one) validation error(s)</returns>
+		Dictionary<string, string> OnApiFailed(ApiException apiException);
+	}
+
 	public class SettingsManager : ReactiveObject, ISettingsManager
 	{
 		public const string DataFolder = "VPDB";
@@ -99,25 +185,25 @@ namespace VpdbAgent.Application
 					var user = await api.GetProfile().SubscribeOn(Scheduler.Default).ToTask();
 
 					_logger.Info("Logged as <{0}>", user.Email);
-					OnValidationResult(null, user);
+					OnValidationResult(user);
 
 				} catch (ApiException e) {
 					HandleApiError(errors, e);
-					OnValidationResult(e, null);
+					OnValidationResult(null);
 
 				} catch (Exception e) {
 					errors.Add("ApiKey", e.Message);
-					OnValidationResult(e, null);
+					OnValidationResult(null);
 				}
 			}
 			return errors;
 		}
 
-		private void OnValidationResult(Exception e, UserFull user)
+		private void OnValidationResult(UserFull user)
 		{
 			System.Windows.Application.Current.Dispatcher.Invoke(delegate {
 				if (user != null) {
-					//_apiAuthenticated.OnNext(user);
+					_apiAuthenticated.OnNext(user);
 					AuthenticatedUser = user;
 				} else {
 					_apiAuthenticated.OnNext(null);
@@ -163,24 +249,5 @@ namespace VpdbAgent.Application
 			CanCancel = false;
 			return HandleApiError(new Dictionary<string, string>(), apiException);
 		}
-	}
-
-	public interface ISettingsManager
-	{
-		string ApiKey { get; set; }
-		string AuthUser { get; set; }
-		string AuthPass { get; set; }
-		string Endpoint { get; set; }
-		string PbxFolder { get; set; }
-		bool IsFirstRun { get; }
-		bool CanCancel { get; }
-
-		UserFull AuthenticatedUser { get; }
-		IObservable<ISettingsManager> SettingsAvailable { get; }
-		IObservable<UserFull> ApiAuthenticated { get; }
-		
-		Task<Dictionary<string, string>> Validate();
-		ISettingsManager Save();
-		Dictionary<string, string> OnApiFailed(ApiException apiException);
 	}
 }

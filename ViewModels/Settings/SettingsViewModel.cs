@@ -102,8 +102,10 @@ namespace VpdbAgent.ViewModels.Settings
 				dialog.SelectedPath = PbxFolder;
 			}
 			var result = dialog.ShowDialog();
-			PbxFolder = result == DialogResult.OK ? dialog.SelectedPath : string.Empty;
-			Logger.Info("PinballX folder set to {0}.", PbxFolder);
+			if (result == DialogResult.OK) {
+				PbxFolder = dialog.SelectedPath;
+				Logger.Info("PinballX folder set to {0}.", PbxFolder);
+			}
 		}
 
 		private async Task<Dictionary<string, string>> Save()

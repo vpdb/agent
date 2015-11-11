@@ -13,10 +13,9 @@ namespace VpdbAgent.Views.Settings
 		public SettingsView()
 		{
 			InitializeComponent();
+			DataContext = ViewModel; // to avoid binding error messages
 
 			this.WhenActivated(d => {
-
-				DataContext = ViewModel;
 
 				// fields
 				d(this.Bind(ViewModel, vm => vm.ApiKey, v => v.ApiKey.Text));
@@ -39,10 +38,8 @@ namespace VpdbAgent.Views.Settings
 				d(this.BindCommand(ViewModel, vm => vm.CloseSettings, v => v.CancelButton));
 				d(this.BindCommand(ViewModel, vm => vm.SaveSettings, v => v.SaveButton));
 
-				//d(this.OneWayBind(ViewModel, vm => vm.IsValidating, v => v.ProgressSpinner.IsVisible));
+				DataContext = ViewModel;
 			});
-		
-			//CancelButton.Visibility = NavigationService.CanGoBack ? Visibility.Visible : Visibility.Hidden;
 		}
 
 		#region ViewModel
