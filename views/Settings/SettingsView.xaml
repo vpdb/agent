@@ -196,6 +196,17 @@
                         <ComboBoxItem>Any</ComboBoxItem>
                     </ComboBox>
                 </Grid>
+                <Grid Margin="0,10,0,0">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                    <TextBlock Style="{StaticResource Label}" FontSize="15" TextWrapping="Wrap" 
+                               Grid.Column="1" TextAlignment="Right" Margin="5,0,10,0" >
+                        <TextBlock.Inlines>
+                            <Run Text="*"/>
+                            <Run Text="Same" FontStyle="Italic"/>
+                            <Run Text="means &quot;same as previous file if it's an update or same as first choice for new files&quot;."/>
+                        </TextBlock.Inlines>
+                    </TextBlock>
+                </Grid>
 
             </StackPanel>
         </ScrollViewer>

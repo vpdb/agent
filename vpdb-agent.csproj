@@ -127,6 +127,10 @@
       <HintPath>packages\squirrel.windows.1.2.1\lib\Net45\NuGet.Squirrel.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="OpenMcdf, Version=2.0.5739.40493, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\OpenMcdf.2.0.5739.40493\lib\OpenMcdf.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="PusherClient, Version=0.3.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>packages\PusherClient.0.3.0\lib\net40\PusherClient.dll</HintPath>
       <Private>True</Private>
@@ -204,6 +208,7 @@
     </ApplicationDefinition>
     <Compile Include="Application\DatabaseManager.cs" />
     <Compile Include="Application\VersionManager.cs" />
+    <Compile Include="Application\VPinballManager.cs" />
     <Compile Include="Common\FilesystemWatchCache.cs" />
     <Compile Include="Common\ObservableTrace.cs" />
     <Compile Include="Common\TypeConverters\ReactiveUI\DictionaryToStringConverter.cs" />
