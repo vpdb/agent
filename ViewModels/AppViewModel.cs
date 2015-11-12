@@ -89,6 +89,9 @@ namespace VpdbAgent.ViewModels
 			locator.RegisterLazySingleton(() => new VersionManager(
 				locator.GetService<NLog.Logger>()
 			), typeof(IVersionManager));
+			locator.RegisterLazySingleton(() => new VisualPinballManager(
+				locator.GetService<NLog.Logger>()
+			), typeof(IVisualPinballManager));
 
 			locator.RegisterLazySingleton(() => new DatabaseManager(
 				locator.GetService<ISettingsManager>(),
@@ -121,6 +124,7 @@ namespace VpdbAgent.ViewModels
 				locator.GetService<IDownloadManager>(),
 				locator.GetService<IDatabaseManager>(),
 				locator.GetService<IVersionManager>(),
+				locator.GetService<IVisualPinballManager>(),
 				locator.GetService<NLog.Logger>()
 			), typeof(IGameManager));
 

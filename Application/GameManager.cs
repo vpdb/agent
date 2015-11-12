@@ -109,6 +109,7 @@ namespace VpdbAgent.Application
 		private readonly IDownloadManager _downloadManager;
 		private readonly IDatabaseManager _databaseManager;
 		private readonly IVersionManager _versionManager;
+		private readonly IVisualPinballManager _visualPinballManager;
 		private readonly Logger _logger;
 
 		// props
@@ -124,7 +125,7 @@ namespace VpdbAgent.Application
 
 		public GameManager(IMenuManager menuManager, IVpdbClient vpdbClient, ISettingsManager 
 			settingsManager, IDownloadManager downloadManager, IDatabaseManager databaseManager,
-			IVersionManager versionManager, Logger logger)
+			IVersionManager versionManager, IVisualPinballManager visualPinballManager, Logger logger)
 		{
 			_menuManager = menuManager;
 			_vpdbClient = vpdbClient;
@@ -132,6 +133,7 @@ namespace VpdbAgent.Application
 			_downloadManager = downloadManager;
 			_databaseManager = databaseManager;
 			_versionManager = versionManager;
+			_visualPinballManager = visualPinballManager;
 			_logger = logger;
 
 			var systems = _menuManager.Systems;
@@ -165,6 +167,9 @@ namespace VpdbAgent.Application
 
 			// link games if new games are added 
 			Games.Changed.Subscribe(_ => SetupGameLinker());
+
+			_visualPinballManager.ComputeTableHash(@"C:\Games\Visual Pinball\Tables\AbraCaDabra_FS_B2S.vpt");
+			//_visualPinballManager.HashFile(@"C:\Games\Visual Pinball\Tables\Accelerometer Level Test FS.vpt");
 		}
 
 		public IGameManager Initialize()

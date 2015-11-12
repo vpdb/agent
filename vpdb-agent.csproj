@@ -79,6 +79,10 @@
       <HintPath>packages\DeltaCompressionDotNet.1.0.0\lib\net45\DeltaCompressionDotNet.PatchApi.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="HashLib, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\HashLib.2.0.1\lib\net40\HashLib.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Humanizer, Version=1.37.7.0, Culture=neutral, PublicKeyToken=979442b78dfc278e, processorArchitecture=MSIL">
       <HintPath>packages\Humanizer.1.37.7\lib\portable-win+net40+sl50+wp8+wpa81+MonoAndroid10+MonoTouch10+Xamarin.iOS10\Humanizer.dll</HintPath>
       <Private>True</Private>
@@ -208,7 +212,7 @@
     </ApplicationDefinition>
     <Compile Include="Application\DatabaseManager.cs" />
     <Compile Include="Application\VersionManager.cs" />
-    <Compile Include="Application\VPinballManager.cs" />
+    <Compile Include="Application\VisualPinballManager.cs" />
     <Compile Include="Common\FilesystemWatchCache.cs" />
     <Compile Include="Common\ObservableTrace.cs" />
     <Compile Include="Common\TypeConverters\ReactiveUI\DictionaryToStringConverter.cs" />
