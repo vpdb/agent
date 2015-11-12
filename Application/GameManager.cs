@@ -168,7 +168,7 @@ namespace VpdbAgent.Application
 			// link games if new games are added 
 			Games.Changed.Subscribe(_ => SetupGameLinker());
 
-			_visualPinballManager.ComputeTableHash(@"C:\Games\Visual Pinball\Tables\AbraCaDabra_FS_B2S.vpt");
+			_visualPinballManager.ComputeChecksum(@"E:\Pinball\Visual Pinball-103\Tables\AbraCaDabra_FS_B2S.vpt");
 			//_visualPinballManager.HashFile(@"C:\Games\Visual Pinball\Tables\Accelerometer Level Test FS.vpt");
 		}
 
