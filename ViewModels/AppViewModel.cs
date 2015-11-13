@@ -13,6 +13,7 @@ using VpdbAgent.Views;
 using VpdbAgent.Views.Downloads;
 using VpdbAgent.Views.Games;
 using VpdbAgent.Views.Settings;
+using VpdbAgent.VisualPinball;
 using VpdbAgent.Vpdb;
 
 namespace VpdbAgent.ViewModels

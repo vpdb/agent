@@ -18,6 +18,7 @@ using SuperSocket.ClientEngine;
 using VpdbAgent.Models;
 using VpdbAgent.PinballX;
 using VpdbAgent.PinballX.Models;
+using VpdbAgent.VisualPinball;
 using VpdbAgent.Vpdb;
 using VpdbAgent.Vpdb.Models;
 using File = System.IO.File;

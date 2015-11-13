@@ -212,7 +212,8 @@
     </ApplicationDefinition>
     <Compile Include="Application\DatabaseManager.cs" />
     <Compile Include="Application\VersionManager.cs" />
-    <Compile Include="Application\VisualPinballManager.cs" />
+    <Compile Include="VisualPinball\BiffSerializer.cs" />
+    <Compile Include="VisualPinball\VisualPinballManager.cs" />
     <Compile Include="Common\FilesystemWatchCache.cs" />
     <Compile Include="Common\ObservableTrace.cs" />
     <Compile Include="Common\TypeConverters\ReactiveUI\DictionaryToStringConverter.cs" />

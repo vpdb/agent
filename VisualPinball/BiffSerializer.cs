@@ -6,7 +6,9 @@ using System.Threading.Tasks;
 
 namespace VpdbAgent.VisualPinball
 {
-	class BiffSerializer
+	public class BiffSerializer
 	{
+
+
 	}
 }
