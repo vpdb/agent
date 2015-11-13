@@ -7,7 +7,7 @@ using HashLib;
 using NLog;
 using OpenMcdf;
 
-namespace VpdbAgent.Application
+namespace VpdbAgent.VisualPinball
 {
 	/// <summary>
 	/// A class that knows how to read and write VPT files.
@@ -106,6 +106,24 @@ namespace VpdbAgent.Application
 			return Encoding.Default.GetString(data.Skip(codeStart + offset).Take(codeEnd - codeStart - offset).ToArray());
 		}
 
+		public IVisualPinballManager SetTableScript(string path, string tableScript)
+		{
+			var cf = new CompoundFile(path);
+			var storage = cf.RootStorage.GetStorage("GameStg");
+
+			// 1. verify we can do it
+			var computedChecksum = ComputeChecksum(path);
+			var storedChecksum = ReadChecksum(storage);
+			if (!computedChecksum.SequenceEqual(storedChecksum)) {
+				throw new FormatException("Could not recompute checksum.");
+			}
+
+			// 2. update table script
+
+			// 3. update hash
+			return this;
+		}
+
 		public byte[] ComputeChecksum(string path)
 		{
 			var stopwatch = new Stopwatch();
@@ -117,6 +135,9 @@ namespace VpdbAgent.Application
 			var cf = new CompoundFile(path);
 			var storage = cf.RootStorage.GetStorage("GameStg");
 			var info = cf.RootStorage.GetStorage("TableInfo");
+			var fileVersion = BitConverter.ToInt32(storage.GetStream("Version").GetData(), 0);
+
+			_logger.Info("File version is {0}", fileVersion);
 
 			// a list of byte arrays that will be flattened and hashed
 			var hashBuf = new List<byte[]>();
@@ -138,7 +159,12 @@ namespace VpdbAgent.Application
 			AddStream(hashBuf, "Screenshot", info);
 			AddCustomStreams(hashBuf, "CustomInfoTags", storage, info, stats);
 			AddBiffData(hashBuf, "GameData", storage, 0, stats);
-			AddStreams(hashBuf, "GameItem", storage, stats.NumSubObjects, 4, stats);
+
+			// see https://github.com/jsm174/vpinball/commit/396cdc89
+			// and https://github.com/jsm174/vpinball/commit/5fa43010
+			if (fileVersion < 1000) {
+				AddStreams(hashBuf, "GameItem", storage, stats.NumSubObjects, 4, stats);
+			}
 			AddStreams(hashBuf, "Collection", storage, stats.NumCollections, 0, stats);
 
 			// now we have collected the hash data, flatten it
@@ -152,7 +178,7 @@ namespace VpdbAgent.Application
 			var result = hash.ComputeBytes(hashBytes);
 
 			_logger.Info("Hash       = {0} ({1} ms)", BitConverter.ToString(result.GetBytes()), stopwatch.ElapsedMilliseconds);
-			_logger.Info("Hash (MAC) = {0}", BitConverter.ToString(storage.GetStream("MAC").GetData()));
+			_logger.Info("Hash (MAC) = {0}", BitConverter.ToString(ReadChecksum(storage)));
 
 			return result.GetBytes();
 		}
@@ -370,6 +396,17 @@ namespace VpdbAgent.Application
 					break;
 			}
 		}
+
+		/// <summary>
+		/// Reads the stored checksum from the table's `GameStg` storage.
+		/// </summary>
+		/// <param name="storage">`GameStg` of the table</param>
+		/// <returns>Checksum</returns>
+		private static byte[] ReadChecksum(CFStorage storage)
+		{
+			return storage.GetStream("MAC").GetData();
+		}
+
 
 		/// <summary>
 		/// Converts a hex string to a byte array.
