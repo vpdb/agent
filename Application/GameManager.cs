@@ -7,6 +7,7 @@ using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using NLog;
@@ -169,8 +170,17 @@ namespace VpdbAgent.Application
 			// link games if new games are added 
 			Games.Changed.Subscribe(_ => SetupGameLinker());
 
+			var cf = new CompoundFile(@"E:\Pinball\Visual Pinball-103\Tables\AbraCaDabra_FS_B2S.vpt");
+			var storage = cf.RootStorage.GetStorage("GameStg");
+			var gameData = new BiffSerializer(storage.GetStream("GameData").GetData());
+			var parsers = new Dictionary<string, BiffSerializer.IUnstructuredParser> {
+				{ "CODE", new BiffSerializer.ExtendedStringParser() }
+			};
+			gameData.Parse(parsers);
+			Console.WriteLine("CODE = {0}", gameData.GetString("CODE"));
+			
 			//_visualPinballManager.ComputeChecksum(@"E:\Pinball\Visual Pinball-103\Tables\AbraCaDabra_FS_B2S.vpt");
-			_visualPinballManager.ComputeChecksum(@"C:\Games\Visual Pinball\Tables\TOTAN_1.0_randr.vpx");
+			//_visualPinballManager.ComputeChecksum(@"C:\Games\Visual Pinball\Tables\TOTAN_1.0_randr.vpx");
 		}
 
 		public IGameManager Initialize()
