@@ -173,12 +173,12 @@ namespace VpdbAgent.Application
 			var cf = new CompoundFile(@"E:\Pinball\Visual Pinball-103\Tables\AbraCaDabra_FS_B2S.vpt");
 			var storage = cf.RootStorage.GetStorage("GameStg");
 			var gameData = new BiffSerializer(storage.GetStream("GameData").GetData());
-			var parsers = new Dictionary<string, BiffSerializer.IUnstructuredParser> {
-				{ "CODE", new BiffSerializer.ExtendedStringParser() }
+			var parsers = new Dictionary<string, BiffSerializer.IBiffTagSerializer> {
+				{ "CODE", new BiffSerializer.SimpleSerializer() }
 			};
-			gameData.Parse(parsers);
-			Console.WriteLine("CODE = {0}", gameData.GetString("CODE"));
-			
+			gameData.Deserialize(parsers);
+			_logger.Info("Consistency check = {0}", gameData.CheckConsistency());
+
 			//_visualPinballManager.ComputeChecksum(@"E:\Pinball\Visual Pinball-103\Tables\AbraCaDabra_FS_B2S.vpt");
 			//_visualPinballManager.ComputeChecksum(@"C:\Games\Visual Pinball\Tables\TOTAN_1.0_randr.vpx");
 		}

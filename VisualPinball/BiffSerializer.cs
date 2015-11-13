@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using NLog;
@@ -58,7 +59,7 @@ namespace VpdbAgent.VisualPinball
 	/// 
 	/// We only need to understand how to write `GameData`, which up to date
 	/// contains two of these cases: `CODE` and `FONT`. In order to serialize
-	/// correctly, we use the <see cref="IUnstructuredParser"/> interface, 
+	/// correctly, we use the <see cref="IBiffTagSerializer"/> interface, 
 	/// which delivers the correct block size depending on the tag name and 
 	/// must be provided for both `CODE` and `FONT`.
 	/// 
@@ -81,6 +82,11 @@ namespace VpdbAgent.VisualPinball
 		/// A dictionary with byte blocks linked to tags for fast access
 		/// </summary>
 		private readonly Dictionary<string, byte[]> _blocks = new Dictionary<string, byte[]>();
+
+		/// <summary>
+		/// A list of parsers that handle all unstructured tags
+		/// </summary>
+		private Dictionary<string, IBiffTagSerializer> _parsers;
 
 		/// <summary>
 		/// Construct with BIFF data
@@ -113,6 +119,16 @@ namespace VpdbAgent.VisualPinball
 		}
 
 		/// <summary>
+		/// Sets a new string value to a given tag
+		/// </summary>
+		/// <param name="tag">Tag under which the data is stored</param>
+		/// <param name="value">New string value of the tag</param>
+		public void SetString(string tag, string value)
+		{
+			_blocks[tag] = Encoding.Default.GetBytes(value);
+		}
+
+		/// <summary>
 		/// Returns the data as integer
 		/// </summary>
 		/// <param name="tag">Tag under which the data is stored</param>
@@ -126,8 +142,9 @@ namespace VpdbAgent.VisualPinball
 		/// Parses the provided data into block accessible by tag name.
 		/// </summary>
 		/// <param name="parsers">List of parsers to handle unstructured data</param>
-		public void Parse(Dictionary<string, IUnstructuredParser> parsers)
+		public void Deserialize(Dictionary<string, IBiffTagSerializer> parsers)
 		{
+			_parsers = parsers;
 			var i = 0;
 			do {
 			
@@ -161,7 +178,7 @@ namespace VpdbAgent.VisualPinball
 					}
 					var parser = parsers[tag];
 					var size = parser.GetSize(_biffData, i + 8);
-					data = parser.GetData(_biffData, i + 8, size);
+					data = parser.DeserializeData(_biffData, i + 8, size);
 					i += size;
 				}
 
@@ -172,17 +189,53 @@ namespace VpdbAgent.VisualPinball
 					_blocks.Add(tag, data);
 				}
 				_tags.Add(tag);
-
 				i += blockSize + 4;
 
 			} while (i < _biffData.Length - 4);
 		}
 
 		/// <summary>
-		/// A parser that is able to determine the size of a binary block
-		/// by looking at the binary block and return its data.
+		/// Serializes previously parsed data back to the BIFF format
 		/// </summary>
-		public interface IUnstructuredParser
+		/// <returns>Serialized BIFF Data</returns>
+		public byte[] Serialize()
+		{
+			return _tags.SelectMany(tag =>
+			{
+				var block = _blocks[tag];
+				if (!_parsers.ContainsKey(tag)) {
+					return BitConverter.GetBytes(block.Length + 4)  // size of block
+						.Concat(Encoding.Default.GetBytes(tag))     // tag name
+						.Concat(block);                             // data
+				}
+				var parser = _parsers[tag];
+				return BitConverter.GetBytes(4)                     // size of block (always 4)
+					.Concat(Encoding.Default.GetBytes(tag))         // tag name (then we would be done)
+					.Concat(parser.SerializeData(block));           // data block from parser
+			}).ToArray();
+		}
+
+		/// <summary>
+		/// Serializes BIFF data and compares the result with the original data
+		/// and returns true on success.
+		/// </summary>
+		/// <remarks>
+		/// Make sure you change values *after* running this method.
+		/// </remarks>
+		/// <returns>True if we can assume that we can safely serialize previously deserialized data, false otherwise.</returns>
+		public bool CheckConsistency()
+		{
+			var serializedData = Serialize();
+			Logger.Info("Comparing original data ({0} bytes) with re-serialized data ({1} bytes).", _biffData.Length, serializedData.Length);
+			return _biffData.SequenceEqual(serializedData);
+		}
+
+		/// <summary>
+		/// A parser that is able to determine the size of a binary block
+		/// by looking at the binary block and return its data. It is also
+		/// capable of correctly re-serializing the data.
+		/// </summary>
+		public interface IBiffTagSerializer
 		{
 			/// <summary>
 			/// Returns the size of the block
@@ -198,25 +251,48 @@ namespace VpdbAgent.VisualPinball
 			/// </summary>
 			/// <param name="biffData">Entire BIFF data block</param>
 			/// <param name="offset">Offset where block to analyize starts</param>
-			/// <param name="size">Previously parsed size</param>
+			/// <param name="blockSize">Previously parsed size of the entire block</param>
 			/// <returns></returns>
-			byte[] GetData(byte[] biffData, int offset, int size);
+			byte[] DeserializeData(byte[] biffData, int offset, int blockSize);
+
+			/// <summary>
+			/// Serializes back the data from whatever weird structure it was
+			/// deserialized from before.
+			/// </summary>
+			/// <param name="data">Unserialized data</param>
+			/// <returns>Serialized data, without tag info</returns>
+			byte[] SerializeData(byte[] data);
 		}
 
 		/// <summary>
-		/// A simple block starting with 4 bytes of size followed by data of
-		/// that size.
+		/// A block starting with 4 bytes of size followed by data of that size. So 
+		/// we have:
+		/// 
+		///    [4 bytes]    size
+		///    [size bytes] data
+		/// 
 		/// </summary>
-		public class ExtendedStringParser : IUnstructuredParser
+		public class SimpleSerializer : IBiffTagSerializer
 		{
 			public int GetSize(byte[] biffData, int offset)
 			{
-				return BitConverter.ToInt32(biffData, offset) + 4;
+				// size of the block = 4 bytes indicating size + data size
+				return 4 + BitConverter.ToInt32(biffData, offset);
 			}
 
-			public byte[] GetData(byte[] biffData, int offset, int size)
+			public byte[] DeserializeData(byte[] blockData, int offset, int blockSize)
 			{
-				return biffData.Skip(offset + 4).Take(size).ToArray();
+				// what we need is the raw data, i.e. without the 4 size bytes
+				var dataSize = blockSize - 4;
+
+				// skip first 4 bytes that indicate size and take the rest
+				return blockData.Skip(offset + 4).Take(dataSize).ToArray();
+			}
+
+			public byte[] SerializeData(byte[] data)
+			{
+				// concatenate block size and data
+				return BitConverter.GetBytes(data.Length).Concat(data).ToArray();
 			}
 		}
 	}
