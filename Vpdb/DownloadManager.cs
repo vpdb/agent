@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -148,10 +149,16 @@ namespace VpdbAgent.Vpdb
 				.ObserveOn(Scheduler.Default)
 				.Subscribe(release => {
 
-					// todo make this more sophisticated based on settings
+					// match file based on settings todo use weights based on matches so we don't end up with 2 secondary hits trumping 1 primary and 1 secondary.
 					var file = release.Versions
 						.SelectMany(v => v.Files)
-						.FirstOrDefault(f => f.Flavor.Orientation == Flavor.OrientationValue.FS);
+						.FirstOrDefault(f =>
+							FlavorMatches(f.Flavor.Orientation, _settingsManager.DownloadOrientation) &&
+							FlavorMatches(f.Flavor.Lighting, _settingsManager.DownloadLighting)) ?? release.Versions
+								.SelectMany(v => v.Files)
+								.FirstOrDefault(f =>
+									FlavorMatches(f.Flavor.Orientation, _settingsManager.DownloadOrientationFallback) &&
+									FlavorMatches(f.Flavor.Lighting, _settingsManager.DownloadLightingFallback));
 
 					if (file == null) {
 						_logger.Info("Release doesn't seem to have a FS release, aborting.");
@@ -164,6 +171,42 @@ namespace VpdbAgent.Vpdb
 				}, exception => _vpdbClient.HandleApiError(exception, "retrieving release details during download"));
 
 			return this;
+		}
+
+		private static bool FlavorMatches(Flavor.OrientationValue release, SettingsManager.Orientation setting)
+		{
+			switch (setting) {
+				case SettingsManager.Orientation.Any:
+					return true;
+				case SettingsManager.Orientation.DT:
+					return release == Flavor.OrientationValue.WS;
+				case SettingsManager.Orientation.FS:
+					return release == Flavor.OrientationValue.FS;
+				case SettingsManager.Orientation.Universal:
+					return release == Flavor.OrientationValue.Any;
+				case SettingsManager.Orientation.Same:
+					return false;
+				default:
+					throw new ArgumentOutOfRangeException(nameof(setting), setting, null);
+			}
+		}
+
+		private static bool FlavorMatches(Flavor.LightingValue release, SettingsManager.Lighting setting)
+		{
+			switch (setting) {
+				case SettingsManager.Lighting.Any:
+					return true;
+				case SettingsManager.Lighting.Day:
+					return release == Flavor.LightingValue.Day;
+				case SettingsManager.Lighting.Night:
+					return release == Flavor.LightingValue.Night;
+				case SettingsManager.Lighting.Universal:
+					return release == Flavor.LightingValue.Any;
+				case SettingsManager.Lighting.Same:
+					return false;
+				default:
+					throw new ArgumentOutOfRangeException(nameof(setting), setting, null);
+			}
 		}
 
 		public IDownloadManager DownloadRelease(Release release, File file)
@@ -194,7 +237,8 @@ namespace VpdbAgent.Vpdb
 		public IDownloadManager DeleteJob(DownloadJob job)
 		{
 			// update jobs back on main thread
-			System.Windows.Application.Current.Dispatcher.Invoke(delegate {
+			System.Windows.Application.Current.Dispatcher.Invoke(delegate
+			{
 				_databaseManager.Database.DownloadJobs.Remove(job);
 				_databaseManager.Save();
 			});
@@ -228,22 +272,26 @@ namespace VpdbAgent.Vpdb
 			job.OnStart(token, dest);
 
 			// do the grunt work
-			try {
+			try
+			{
 				await job.Client.DownloadFileTaskAsync(job.Uri, dest);
 				job.OnSuccess();
 				_logger.Info("Finished downloading of {0}", job.Uri);
-
-			} catch (WebException e) {
-				
-				if (e.Status == WebExceptionStatus.RequestCanceled) {
+			}
+			catch (WebException e)
+			{
+				if (e.Status == WebExceptionStatus.RequestCanceled)
+				{
 					job.OnCancelled();
-
-				} else {
+				}
+				else
+				{
 					job.OnFailure(e);
 					_logger.Error(e, "Error downloading file (server error): {0}", e.Message);
 				}
-
-			} catch (Exception e) {
+			}
+			catch (Exception e)
+			{
 				job.OnFailure(e);
 				_logger.Error(e, "Error downloading file: {0}", e.Message);
 			}
@@ -258,8 +306,8 @@ namespace VpdbAgent.Vpdb
 		private void AddToCurrentJobs(DownloadJob job)
 		{
 			// update jobs back on main thread
-			System.Windows.Application.Current.Dispatcher.Invoke(delegate {
-				
+			System.Windows.Application.Current.Dispatcher.Invoke(delegate
+			{
 				job.WhenStatusChanges.Subscribe(status => _whenStatusChanged.OnNext(status));
 				_databaseManager.Database.DownloadJobs.Add(job);
 				_databaseManager.Save();
