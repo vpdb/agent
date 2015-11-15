@@ -150,11 +150,8 @@
                 <Grid Margin="0,10,0,0">
                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                     <TextBlock Text="Orientation should be:" Style="{StaticResource Label}" Grid.Column="0" Margin="40,0,0,0"/>
-                    <ComboBox Grid.Column="1" Margin="5,0,10,0">
-                        <ComboBoxItem IsSelected="True">Portrait</ComboBoxItem>
-                        <ComboBoxItem>Landscape</ComboBoxItem>
-                        <ComboBoxItem>Universal (VP10)</ComboBoxItem>
-                    </ComboBox>
+                    <ComboBox ItemsSource="{Binding OrientationSettings}" SelectedValue="{Binding DownloadOrientation}"
+                              DisplayMemberPath="Label" SelectedValuePath="Orientation" Grid.Column="1" Margin="5,0,10,0" />
                 </Grid>
                 <Grid Margin="0,10,0,0">
                     <Grid.ColumnDefinitions>
@@ -162,11 +159,8 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <TextBlock Text="Lighting should be:" Style="{StaticResource Label}" Grid.Column="0" Margin="40,0,0,0"/>
-                    <ComboBox Grid.Column="1" Margin="5,0,10,0">
-                        <ComboBoxItem IsSelected="True">Day</ComboBoxItem>
-                        <ComboBoxItem>Night</ComboBoxItem>
-                        <ComboBoxItem>Universal (VP10)</ComboBoxItem>
-                    </ComboBox>
+                    <ComboBox ItemsSource="{Binding LightingSettings}" SelectedValue="{Binding DownloadLighting}"
+                              DisplayMemberPath="Label" SelectedValuePath="Lighting" Grid.Column="1" Margin="5,0,10,0"/>
                 </Grid>
 
                 <!-- Fallback flavor choice -->
@@ -179,22 +173,14 @@
                 <Grid Margin="0,10,0,0">
                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                     <TextBlock Text="Orientation must be:" Style="{StaticResource Label}" Grid.Column="0" Margin="40,0,0,0"/>
-                    <ComboBox Grid.Column="1" Margin="5,0,10,0">
-                        <ComboBoxItem IsSelected="True">Same *</ComboBoxItem>
-                        <ComboBoxItem>Portrait</ComboBoxItem>
-                        <ComboBoxItem>Landscape</ComboBoxItem>
-                        <ComboBoxItem>Any</ComboBoxItem>
-                    </ComboBox>
+                    <ComboBox ItemsSource="{Binding OrientationFallbackSettings}" SelectedValue="{Binding DownloadOrientationFallback}"
+                              DisplayMemberPath="Label" SelectedValuePath="Orientation" Grid.Column="1" Margin="5,0,10,0" />
                 </Grid>
                 <Grid Margin="0,10,0,0">
                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                     <TextBlock Text="Lighting must be:" Style="{StaticResource Label}" Grid.Column="0" Margin="40,0,0,0"/>
-                    <ComboBox Grid.Column="1" Margin="5,0,10,0">
-                        <ComboBoxItem IsSelected="True">Same *</ComboBoxItem>
-                        <ComboBoxItem>Day</ComboBoxItem>
-                        <ComboBoxItem>Night</ComboBoxItem>
-                        <ComboBoxItem>Any</ComboBoxItem>
-                    </ComboBox>
+                    <ComboBox ItemsSource="{Binding LightingFallbackSettings}" SelectedValue="{Binding DownloadLightingFallback}"
+                              DisplayMemberPath="Label" SelectedValuePath="Lighting" Grid.Column="1" Margin="5,0,10,0" />
                 </Grid>
                 <Grid Margin="0,10,0,0">
                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>

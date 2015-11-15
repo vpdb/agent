@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.Eventing;
+using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -28,6 +29,10 @@ namespace VpdbAgent.ViewModels.Settings
 		public string PbxFolder { get { return _pbxFolder; } set { this.RaiseAndSetIfChanged(ref _pbxFolder, value); } }
 		public bool SyncStarred { get { return _syncStarred; } set { this.RaiseAndSetIfChanged(ref _syncStarred, value); } }
 		public bool DownloadOnStartup { get { return _downloadOnStartup; } set { this.RaiseAndSetIfChanged(ref _downloadOnStartup, value); } }
+		public SettingsManager.Orientation DownloadOrientation { get { return _downloadOrientation; } set { this.RaiseAndSetIfChanged(ref _downloadOrientation, value); } }
+		public SettingsManager.Orientation DownloadOrientationFallback { get { return _downloadOrientationFallback; } set { this.RaiseAndSetIfChanged(ref _downloadOrientationFallback, value); } }
+		public SettingsManager.Lighting DownloadLighting { get { return _downloadLighting; } set { this.RaiseAndSetIfChanged(ref _downloadLighting, value); } }
+		public SettingsManager.Lighting DownloadLightingFallback { get { return _downloadLightingFallback; } set { this.RaiseAndSetIfChanged(ref _downloadLightingFallback, value); } }
 
 		// other props
 		public string PbxFolderLabel => string.IsNullOrEmpty(_pbxFolder) ? "No folder set." : "Location:";
@@ -36,6 +41,10 @@ namespace VpdbAgent.ViewModels.Settings
 		public bool IsValidating => _isValidating.Value;
 		public bool IsFirstRun => _isFirstRun.Value;
 		public bool CanCancel => _canCancel.Value;
+		public List<OrientationSetting> OrientationSettings { get; } = new List<OrientationSetting>();
+		public List<OrientationSetting> OrientationFallbackSettings { get; } = new List<OrientationSetting>();
+		public List<LightingSetting> LightingSettings { get; } = new List<LightingSetting>();
+		public List<LightingSetting> LightingFallbackSettings { get; } = new List<LightingSetting>();
 
 		// screen
 		public IScreen HostScreen { get; protected set; }
@@ -54,6 +63,10 @@ namespace VpdbAgent.ViewModels.Settings
 		private string _authPass;
 		private bool _syncStarred;
 		private bool _downloadOnStartup;
+		private SettingsManager.Orientation _downloadOrientation;
+		private SettingsManager.Orientation _downloadOrientationFallback;
+		private SettingsManager.Lighting _downloadLighting;
+		private SettingsManager.Lighting _downloadLightingFallback;
 		private bool _showAdvancedOptions;
 		private Dictionary<string, string> _errors;
 		private readonly ObservableAsPropertyHelper<bool> _isValidating;
@@ -73,6 +86,10 @@ namespace VpdbAgent.ViewModels.Settings
 			PbxFolder = _settingsManager.PbxFolder;
 			SyncStarred = _settingsManager.SyncStarred;
 			DownloadOnStartup = _settingsManager.DownloadOnStartup;
+			DownloadOrientation = _settingsManager.DownloadOrientation;
+			DownloadOrientationFallback = _settingsManager.DownloadOrientationFallback;
+			DownloadLighting = _settingsManager.DownloadLighting;
+			DownloadLightingFallback = _settingsManager.DownloadLightingFallback;
 
 			SaveSettings = ReactiveCommand.CreateAsyncTask(_ => Save());
 			SaveSettings.IsExecuting.ToProperty(this, vm => vm.IsValidating, out _isValidating);
@@ -90,6 +107,22 @@ namespace VpdbAgent.ViewModels.Settings
 				.DistinctUntilChanged()
 				.StartWith(true)
 				.ToProperty(this, vm => vm.CanCancel, out _canCancel);
+			
+			OrientationSettings.Add(new OrientationSetting("Portrait", SettingsManager.Orientation.FS));
+			OrientationSettings.Add(new OrientationSetting("Landscape", SettingsManager.Orientation.DT));
+			OrientationSettings.Add(new OrientationSetting("Universal (VP10)", SettingsManager.Orientation.Universal));
+			LightingSettings.Add(new LightingSetting("Day", SettingsManager.Lighting.Day));
+			LightingSettings.Add(new LightingSetting("Night", SettingsManager.Lighting.Night));
+			LightingSettings.Add(new LightingSetting("Universal (VP10)", SettingsManager.Lighting.Universal));
+
+			OrientationFallbackSettings.Add(new OrientationSetting("Same *", SettingsManager.Orientation.Same));
+			OrientationFallbackSettings.Add(new OrientationSetting("Portrait", SettingsManager.Orientation.FS));
+			OrientationFallbackSettings.Add(new OrientationSetting("Landscape", SettingsManager.Orientation.DT));
+			OrientationFallbackSettings.Add(new OrientationSetting("Any", SettingsManager.Orientation.Any));
+			LightingFallbackSettings.Add(new LightingSetting("Same *", SettingsManager.Lighting.Same));
+			LightingFallbackSettings.Add(new LightingSetting("Day", SettingsManager.Lighting.Day));
+			LightingFallbackSettings.Add(new LightingSetting("Night", SettingsManager.Lighting.Night));
+			LightingFallbackSettings.Add(new LightingSetting("Any", SettingsManager.Lighting.Any));
 
 		}
 
@@ -123,6 +156,10 @@ namespace VpdbAgent.ViewModels.Settings
 			_settingsManager.PbxFolder = _pbxFolder;
 			_settingsManager.SyncStarred = _syncStarred;
 			_settingsManager.DownloadOnStartup = _downloadOnStartup;
+			_settingsManager.DownloadOrientation = _downloadOrientation;
+			_settingsManager.DownloadOrientationFallback = _downloadOrientationFallback;
+			_settingsManager.DownloadLighting = _downloadLighting;
+			_settingsManager.DownloadLightingFallback = _downloadLightingFallback;
 
 			var errors = await _settingsManager.Validate();
 
@@ -144,6 +181,28 @@ namespace VpdbAgent.ViewModels.Settings
 				}
 			}
 			return errors;
+		}
+
+		public class OrientationSetting
+		{
+			public string Label { get; }
+			public SettingsManager.Orientation Orientation { get; }
+			public OrientationSetting(string label, SettingsManager.Orientation orientation)
+			{
+				Label = label;
+				Orientation = orientation;
+			}
+		}
+
+		public class LightingSetting
+		{
+			public string Label { get; }
+			public SettingsManager.Lighting Lighting { get; }
+			public LightingSetting(string label, SettingsManager.Lighting lighting)
+			{
+				Label = label;
+				Lighting = lighting;
+			}
 		}
 	}
 }

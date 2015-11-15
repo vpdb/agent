@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -60,8 +61,35 @@ namespace VpdbAgent.Application
 		/// </summary>
 		string PbxFolder { get; set; }
 
+		/// <summary>
+		/// If true, starring a release on vpdb.io will make it synced here.
+		/// </summary>
 		bool SyncStarred { get; set; }
+
+		/// <summary>
+		/// If true, download all starred/synced releases on startup.
+		/// </summary>
 		bool DownloadOnStartup { get; set; }
+
+		/// <summary>
+		/// Primary orientation when downloading a release
+		/// </summary>
+		SettingsManager.Orientation DownloadOrientation { get; set; }
+
+		/// <summary>
+		/// If primary orientation is not available, use this if available (otherwise, ignore)
+		/// </summary>
+		SettingsManager.Orientation DownloadOrientationFallback { get; set; }
+
+		/// <summary>
+		/// Primary lighting flavor when downloading a release
+		/// </summary>
+		SettingsManager.Lighting DownloadLighting { get; set; }
+
+		/// <summary>
+		/// If primary lighting is not available, use this if available (otherwise, ignore)
+		/// </summary>
+		SettingsManager.Lighting DownloadLightingFallback { get; set; }
 
 		#endregion
 		#region Read-only Settings
@@ -129,6 +157,11 @@ namespace VpdbAgent.Application
 		public string PbxFolder { get; set; }
 		public bool SyncStarred { get; set; }
 		public bool DownloadOnStartup { get; set; }
+		public Orientation DownloadOrientation { get; set; }
+		public Orientation DownloadOrientationFallback { get; set; }
+		public Lighting DownloadLighting { get; set; }
+		public Lighting DownloadLightingFallback { get; set; }
+
 		public bool IsFirstRun { get { return _isFirstRun; } set { this.RaiseAndSetIfChanged(ref _isFirstRun, value); } }
 		public bool CanCancel { get { return _canCancel; } set { this.RaiseAndSetIfChanged(ref _canCancel, value); } }
 		public UserFull AuthenticatedUser { get { return _authenticatedUser; } set { this.RaiseAndSetIfChanged(ref _authenticatedUser, value); } }
@@ -161,6 +194,10 @@ namespace VpdbAgent.Application
 				PbxFolder = await _storage.GetOrCreateObject("PbxFolder", () => "");
 				SyncStarred = await _storage.GetOrCreateObject("SyncStarred", () => true);
 				DownloadOnStartup = await _storage.GetOrCreateObject("DownloadOnStartup", () => false);
+				DownloadOrientation = await _storage.GetOrCreateObject("DownloadOrientation", () => Orientation.FS );
+				DownloadOrientationFallback = await _storage.GetOrCreateObject("DownloadOrientationFallback", () => Orientation.Same );
+				DownloadLighting = await _storage.GetOrCreateObject("DownloadLighting", () => Lighting.Day );
+				DownloadLightingFallback = await _storage.GetOrCreateObject("DownloadLightingFallback", () => Lighting.Any );
 				IsFirstRun = await _storage.GetOrCreateObject("IsFirstRun", () => true);
 
 				_settingsAvailable.OnNext(this);
@@ -251,6 +288,10 @@ namespace VpdbAgent.Application
 				await _storage.InsertObject("PbxFolder", PbxFolder);
 				await _storage.InsertObject("SyncStarred", SyncStarred);
 				await _storage.InsertObject("DownloadOnStartup", DownloadOnStartup);
+				await _storage.InsertObject("DownloadOrientation", DownloadOrientation);
+				await _storage.InsertObject("DownloadOrientationFallback", DownloadOrientationFallback);
+				await _storage.InsertObject("DownloadLighting", DownloadLighting);
+				await _storage.InsertObject("DownloadLightingFallback", DownloadLightingFallback);
 				await _storage.InsertObject("IsFirstRun", false);
 
 			});
@@ -265,5 +306,25 @@ namespace VpdbAgent.Application
 			CanCancel = false;
 			return HandleApiError(new Dictionary<string, string>(), apiException);
 		}
+
+		public enum Orientation
+		{
+			Same,
+			FS,
+			DT,
+			Any,
+			Universal
+		}
+
+		public enum Lighting
+		{
+			Same,
+			Day,
+			Night,
+			Any,
+			Universal
+		}
 	}
+
+	
 }

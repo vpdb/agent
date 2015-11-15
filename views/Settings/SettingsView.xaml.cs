@@ -23,8 +23,6 @@ namespace VpdbAgent.Views.Settings
 				d(this.Bind(ViewModel, vm => vm.AuthUser, v => v.AuthUser.Text));
 				d(this.Bind(ViewModel, vm => vm.AuthPass, v => v.AuthPass.Text));
 				d(this.OneWayBind(ViewModel, vm => vm.PbxFolder, v => v.PbxFolder.Text));
-//				d(this.OneWayBind(ViewModel, vm => vm.SyncStarred, v => v.SyncStarred.IsChecked));
-//				d(this.OneWayBind(ViewModel, vm => vm.DownloadOnStartup, v => v.DownloadOnStartup.IsChecked));
 
 				// error fields
 				d(this.OneWayBind(ViewModel, vm => vm.Errors, v => v.PbxFolderErrorPanel.Visibility, null, "PbxFolder"));
