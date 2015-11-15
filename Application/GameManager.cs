@@ -170,19 +170,6 @@ namespace VpdbAgent.Application
 			// link games if new games are added 
 			Games.Changed.Subscribe(_ => SetupGameLinker());
 
-			_visualPinballManager.SetTableScript(@"E:\Pinball\Visual Pinball-103\Tables\Abra Ca Dabra (Gottlieb 1975).vpt", "' for the lulz!!");
-                
-/*            var cf = new CompoundFile();
-			var storage = cf.RootStorage.GetStorage("GameStg");
-			var gameData = new BiffSerializer(storage.GetStream("GameData").GetData());
-			var parsers = new Dictionary<string, BiffSerializer.IBiffTagSerializer> {
-				{ "CODE", new BiffSerializer.SimpleSerializer() }
-			};
-			gameData.Deserialize(parsers);
-			_logger.Info("Consistency check = {0}", gameData.CheckConsistency());*/
-
-			//_visualPinballManager.ComputeChecksum(@"E:\Pinball\Visual Pinball-103\Tables\AbraCaDabra_FS_B2S.vpt");
-			//_visualPinballManager.ComputeChecksum(@"C:\Games\Visual Pinball\Tables\TOTAN_1.0_randr.vpx");
 		}
 
 		public IGameManager Initialize()
