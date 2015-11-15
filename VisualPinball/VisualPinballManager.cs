@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using HashLib;
@@ -50,7 +51,7 @@ namespace VpdbAgent.VisualPinball
 	/// 
 	/// Hashing means collecting data everywhere in the file. Apart from images
 	/// and sounds, everything is hashed. The hash function is MD2. See 
-	/// <see cref="ComputeChecksum"/> for more details.
+	/// <see cref="VisualPinballManager.ComputeChecksum"/> for more details.
 	/// 
 	/// The implemented algorithm in this class is not fail-safe, because the 
 	/// VP team could at any point add additional data to be hashed. Therefore, 
@@ -61,12 +62,7 @@ namespace VpdbAgent.VisualPinball
 	/// </remarks>
 	public interface IVisualPinballManager
 	{
-		/// <summary>
-		/// Computes the checksum of a given VTP file.
-		/// </summary>
-		/// <param name="path">Path to VPT file</param>
-		/// <returns>Checksum</returns>
-		byte[] ComputeChecksum(string path);
+		IVisualPinballManager SetTableScript(string path, string tableScript);
 	}
 
 	public class VisualPinballManager : IVisualPinballManager
@@ -108,34 +104,67 @@ namespace VpdbAgent.VisualPinball
 
 		public IVisualPinballManager SetTableScript(string path, string tableScript)
 		{
-			var cf = new CompoundFile(path);
+			_logger.Info("Updating table script for {0}", path);
+
+			var cf = new CompoundFile(path, CFSUpdateMode.Update, CFSConfiguration.Default);
 			var storage = cf.RootStorage.GetStorage("GameStg");
 
-			// 1. verify we can do it
-			var computedChecksum = ComputeChecksum(path);
+			// 1. verify that we can do it
+			_logger.Info("Checking checksum capabilities...");
+			var computedChecksum = ComputeChecksum(cf);
 			var storedChecksum = ReadChecksum(storage);
 			if (!computedChecksum.SequenceEqual(storedChecksum)) {
 				throw new FormatException("Could not recompute checksum.");
 			}
+			_logger.Info("Checking BIFF capabilities...");
+			var gameData = new BiffSerializer(storage.GetStream("GameData").GetData());
+			var parsers = new Dictionary<string, BiffSerializer.IBiffTagSerializer> {
+					{ "CODE", new BiffSerializer.SimpleSerializer() }
+			};
+			gameData.Deserialize(parsers);
+			if (!gameData.CheckConsistency()) {
+				throw new FormatException("Could not re-serialize BIFF data.");
+			}
 
-			// 2. update table script
+			try {
 
-			// 3. update hash
+				// 2. update table script
+				_logger.Info("Setting new CODE...");
+				gameData.SetString("CODE", tableScript);
+				storage.GetStream("GameData").SetData(gameData.Serialize());
+				cf.Commit();
+				cf.Close();
+
+				// 3. update hash
+				cf = new CompoundFile(path, CFSUpdateMode.Update, CFSConfiguration.Default);
+				storage = cf.RootStorage.GetStorage("GameStg");
+				var hash = ComputeChecksum(cf);
+				_logger.Info("Setting new checksum {0}...", BitConverter.ToString(hash));
+				storage.GetStream("MAC").SetData(hash);
+				cf.Commit();
+				cf.Close();
+				_logger.Info("Done!");
+
+			} catch (CFItemNotFound e) {
+				_logger.Error(e, "Error patching file!");
+			}
+
 			return this;
 		}
 
-		public byte[] ComputeChecksum(string path)
+		/// <summary>
+		/// Computes the checksum of a given VTP file.
+		/// </summary>
+		/// <param name="cf">The table file as compound file</param>
+		/// <returns>Checksum</returns>
+		private byte[] ComputeChecksum(CompoundFile cf)
 		{
 			var stopwatch = new Stopwatch();
 			stopwatch.Start();
 
-			_logger.Info("Reading file from {0}", path);
-
-			// load up the file through our OLE Compound lib
-			var cf = new CompoundFile(path);
-			var storage = cf.RootStorage.GetStorage("GameStg");
-			var info = cf.RootStorage.GetStorage("TableInfo");
-			var fileVersion = BitConverter.ToInt32(storage.GetStream("Version").GetData(), 0);
+			var gameStg = cf.RootStorage.GetStorage("GameStg");
+			var tableInfo = cf.RootStorage.GetStorage("TableInfo");
+			var fileVersion = BitConverter.ToInt32(gameStg.GetStream("Version").GetData(), 0);
 
 			_logger.Info("File version is {0}", fileVersion);
 
@@ -146,26 +175,26 @@ namespace VpdbAgent.VisualPinball
 			// retrieve data to hash from table file
 			_logger.Info("Adding streams...");
 			hashBuf.Add(Encoding.Default.GetBytes("Visual Pinball")); // for whatever reason, the hash data start with this constant
-			AddStream(hashBuf, "Version", storage);
-			AddStream(hashBuf, "TableName", info);
-			AddStream(hashBuf, "AuthorName", info);
-			AddStream(hashBuf, "TableVersion", info);
-			AddStream(hashBuf, "ReleaseDate", info);
-			AddStream(hashBuf, "AuthorEmail", info);
-			AddStream(hashBuf, "AuthorWebSite", info);
-			AddStream(hashBuf, "TableBlurb", info);
-			AddStream(hashBuf, "TableDescription", info);
-			AddStream(hashBuf, "TableRules", info);
-			AddStream(hashBuf, "Screenshot", info);
-			AddCustomStreams(hashBuf, "CustomInfoTags", storage, info, stats);
-			AddBiffData(hashBuf, "GameData", storage, 0, stats);
+			AddStream(hashBuf, "Version", gameStg);
+			AddStream(hashBuf, "TableName", tableInfo);
+			AddStream(hashBuf, "AuthorName", tableInfo);
+			AddStream(hashBuf, "TableVersion", tableInfo);
+			AddStream(hashBuf, "ReleaseDate", tableInfo);
+			AddStream(hashBuf, "AuthorEmail", tableInfo);
+			AddStream(hashBuf, "AuthorWebSite", tableInfo);
+			AddStream(hashBuf, "TableBlurb", tableInfo);
+			AddStream(hashBuf, "TableDescription", tableInfo);
+			AddStream(hashBuf, "TableRules", tableInfo);
+			AddStream(hashBuf, "Screenshot", tableInfo);
+			AddCustomStreams(hashBuf, "CustomInfoTags", gameStg, tableInfo, stats);
+			AddBiffData(hashBuf, "GameData", gameStg, 0, stats);
 
 			// see https://github.com/jsm174/vpinball/commit/396cdc89
 			// and https://github.com/jsm174/vpinball/commit/5fa43010
 			if (fileVersion < 1000) {
-				AddStreams(hashBuf, "GameItem", storage, stats.NumSubObjects, 4, stats);
+				AddStreams(hashBuf, "GameItem", gameStg, stats.NumSubObjects, 4, stats);
 			}
-			AddStreams(hashBuf, "Collection", storage, stats.NumCollections, 0, stats);
+			AddStreams(hashBuf, "Collection", gameStg, stats.NumCollections, 0, stats);
 
 			// now we have collected the hash data, flatten it
 			var hashBytes = hashBuf.SelectMany(list => list).ToArray();
@@ -178,7 +207,7 @@ namespace VpdbAgent.VisualPinball
 			var result = hash.ComputeBytes(hashBytes);
 
 			_logger.Info("Hash       = {0} ({1} ms)", BitConverter.ToString(result.GetBytes()), stopwatch.ElapsedMilliseconds);
-			_logger.Info("Hash (MAC) = {0}", BitConverter.ToString(ReadChecksum(storage)));
+			_logger.Info("Hash (MAC) = {0}", BitConverter.ToString(ReadChecksum(gameStg)));
 
 			return result.GetBytes();
 		}

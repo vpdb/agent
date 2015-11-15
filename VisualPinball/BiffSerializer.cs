@@ -55,13 +55,13 @@ namespace VpdbAgent.VisualPinball
 	/// 
 	/// So lzwreader.ccp is the only class that knows how to read the data
 	/// block after BITS, and even worse, it's the only class that knows
-	/// where to set the pointer after reading.
+	/// where to set the pointer after finishing reading.
 	/// 
 	/// We only need to understand how to write `GameData`, which up to date
-	/// contains two of these cases: `CODE` and `FONT`. In order to serialize
+	/// contains only one of these cases: `CODE`. In order to serialize
 	/// correctly, we use the <see cref="IBiffTagSerializer"/> interface, 
 	/// which delivers the correct block size depending on the tag name and 
-	/// must be provided for both `CODE` and `FONT`.
+	/// must be provided for `CODE`.
 	/// 
 	/// </summary>
 	public class BiffSerializer
