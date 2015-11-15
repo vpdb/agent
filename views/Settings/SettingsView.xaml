@@ -126,14 +126,14 @@
                 <Grid>
                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                     <TextBlock Text="Synchronize starred releases" Style="{StaticResource Label}" Grid.Column="0" Margin="15,0,0,0"/>
-                    <ToggleButton x:Name="SyncStarred" Grid.Column="1" Height="20" Margin="5,0,17,0"/>
+                    <ToggleButton IsChecked="{Binding SyncStarred}" x:Name="SyncStarred" Grid.Column="1" Height="20" Margin="5,0,17,0"/>
                 </Grid>
 
                 <!-- Check for new and updated games at startup -->
                 <Grid Margin="0,10,0,0">
                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                     <TextBlock Text="Check for new and updated games at startup" Style="{StaticResource Label}" Grid.Column="0" Margin="15,0,0,0"/>
-                    <ToggleButton x:Name="SyncOnStartup" Grid.Column="1" Height="20" Margin="5,0,17,0"/>
+                    <ToggleButton IsChecked="{Binding DownloadOnStartup}" x:Name="DownloadOnStartup" Grid.Column="1" Height="20" Margin="5,0,17,0"/>
                 </Grid>
 
                 <!-- Download Options -->

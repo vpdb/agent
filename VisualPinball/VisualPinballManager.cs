@@ -33,13 +33,8 @@ namespace VpdbAgent.VisualPinball
 	///   - MAC (the checksum)
 	/// 
 	/// All of these contain binary data in another structure called "BIFF" 
-	/// (nothing to do with the Excel format). No idea where this brainfuck comes
-	/// from, but generally it contains blocks that have the following structure:
-	/// 
-	///   - [4 bytes] size of block (blockSize)
-	///   - [blockSize bytes] data, which is:
-	///       - [4 bytes] tag name
-	///       - [blockSize - 4 bytes] real data
+	/// (nothing to do with the Excel format). For more info, see 
+	/// <see cref="BiffSerializer"/>.
 	/// 
 	/// GameData is the stream that also contains the table script (under the
 	/// "CODE" tag).
@@ -50,8 +45,8 @@ namespace VpdbAgent.VisualPinball
 	/// changing the script.
 	/// 
 	/// Hashing means collecting data everywhere in the file. Apart from images
-	/// and sounds, everything is hashed. The hash function is MD2. See 
-	/// <see cref="VisualPinballManager.ComputeChecksum"/> for more details.
+	/// and sounds, pretty much everything is hashed. The hash function is MD2.
+	/// See <see cref="VisualPinballManager.ComputeChecksum"/> for more details.
 	/// 
 	/// The implemented algorithm in this class is not fail-safe, because the 
 	/// VP team could at any point add additional data to be hashed. Therefore, 
@@ -62,6 +57,12 @@ namespace VpdbAgent.VisualPinball
 	/// </remarks>
 	public interface IVisualPinballManager
 	{
+		/// <summary>
+		/// Replaces the table script of a given table with a new one.
+		/// </summary>
+		/// <param name="path">Path of the table with the script to replace</param>
+		/// <param name="tableScript">Contents of the new table script</param>
+		/// <returns></returns>
 		IVisualPinballManager SetTableScript(string path, string tableScript);
 	}
 

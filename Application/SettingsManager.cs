@@ -33,6 +33,8 @@ namespace VpdbAgent.Application
 	/// </remarks>
 	public interface ISettingsManager
 	{
+		#region Read/Write Settings
+
 		/// <summary>
 		/// VPDB's API key
 		/// </summary>
@@ -58,6 +60,12 @@ namespace VpdbAgent.Application
 		/// </summary>
 		string PbxFolder { get; set; }
 
+		bool SyncStarred { get; set; }
+		bool DownloadOnStartup { get; set; }
+
+		#endregion
+		#region Read-only Settings
+
 		/// <summary>
 		/// True if the app is starting for the first time
 		/// </summary>
@@ -73,6 +81,8 @@ namespace VpdbAgent.Application
 		/// The currently authenticated user at VPDB
 		/// </summary>
 		UserFull AuthenticatedUser { get; }
+
+		#endregion
 
 		/// <summary>
 		/// Produces a value each time settings are updated or available
@@ -117,6 +127,8 @@ namespace VpdbAgent.Application
 		public string AuthPass { get; set; }
 		public string Endpoint { get; set; }
 		public string PbxFolder { get; set; }
+		public bool SyncStarred { get; set; }
+		public bool DownloadOnStartup { get; set; }
 		public bool IsFirstRun { get { return _isFirstRun; } set { this.RaiseAndSetIfChanged(ref _isFirstRun, value); } }
 		public bool CanCancel { get { return _canCancel; } set { this.RaiseAndSetIfChanged(ref _canCancel, value); } }
 		public UserFull AuthenticatedUser { get { return _authenticatedUser; } set { this.RaiseAndSetIfChanged(ref _authenticatedUser, value); } }
@@ -147,6 +159,8 @@ namespace VpdbAgent.Application
 				AuthPass = await _storage.GetOrCreateObject("AuthPass", () => "");
 				Endpoint = await _storage.GetOrCreateObject("Endpoint", () => "https://staging.vpdb.io");
 				PbxFolder = await _storage.GetOrCreateObject("PbxFolder", () => "");
+				SyncStarred = await _storage.GetOrCreateObject("SyncStarred", () => true);
+				DownloadOnStartup = await _storage.GetOrCreateObject("DownloadOnStartup", () => false);
 				IsFirstRun = await _storage.GetOrCreateObject("IsFirstRun", () => true);
 
 				_settingsAvailable.OnNext(this);
@@ -235,6 +249,8 @@ namespace VpdbAgent.Application
 				await _storage.InsertObject("AuthPass", AuthPass);
 				await _storage.InsertObject("Endpoint", Endpoint);
 				await _storage.InsertObject("PbxFolder", PbxFolder);
+				await _storage.InsertObject("SyncStarred", SyncStarred);
+				await _storage.InsertObject("DownloadOnStartup", DownloadOnStartup);
 				await _storage.InsertObject("IsFirstRun", false);
 
 			});

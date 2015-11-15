@@ -26,6 +26,8 @@ namespace VpdbAgent.ViewModels.Settings
 		public string AuthPass { get { return _authPass; } set { this.RaiseAndSetIfChanged(ref _authPass, value); } }
 		public string Endpoint { get { return _endpoint; } set { this.RaiseAndSetIfChanged(ref _endpoint, value); } }
 		public string PbxFolder { get { return _pbxFolder; } set { this.RaiseAndSetIfChanged(ref _pbxFolder, value); } }
+		public bool SyncStarred { get { return _syncStarred; } set { this.RaiseAndSetIfChanged(ref _syncStarred, value); } }
+		public bool DownloadOnStartup { get { return _downloadOnStartup; } set { this.RaiseAndSetIfChanged(ref _downloadOnStartup, value); } }
 
 		// other props
 		public string PbxFolderLabel => string.IsNullOrEmpty(_pbxFolder) ? "No folder set." : "Location:";
@@ -50,6 +52,8 @@ namespace VpdbAgent.ViewModels.Settings
 		private string _endpoint;
 		private string _authUser;
 		private string _authPass;
+		private bool _syncStarred;
+		private bool _downloadOnStartup;
 		private bool _showAdvancedOptions;
 		private Dictionary<string, string> _errors;
 		private readonly ObservableAsPropertyHelper<bool> _isValidating;
@@ -67,6 +71,8 @@ namespace VpdbAgent.ViewModels.Settings
 			AuthPass = _settingsManager.AuthPass;
 			Endpoint = _settingsManager.Endpoint;
 			PbxFolder = _settingsManager.PbxFolder;
+			SyncStarred = _settingsManager.SyncStarred;
+			DownloadOnStartup = _settingsManager.DownloadOnStartup;
 
 			SaveSettings = ReactiveCommand.CreateAsyncTask(_ => Save());
 			SaveSettings.IsExecuting.ToProperty(this, vm => vm.IsValidating, out _isValidating);
@@ -115,12 +121,13 @@ namespace VpdbAgent.ViewModels.Settings
 			_settingsManager.AuthPass = _authPass;
 			_settingsManager.Endpoint = _endpoint;
 			_settingsManager.PbxFolder = _pbxFolder;
+			_settingsManager.SyncStarred = _syncStarred;
+			_settingsManager.DownloadOnStartup = _downloadOnStartup;
 
 			var errors = await _settingsManager.Validate();
 
 			if (errors.Count == 0) {
 
-				var firstRun = _settingsManager.IsFirstRun;
 				_settingsManager.Save();
 				Logger.Info("Settings saved.");
 
