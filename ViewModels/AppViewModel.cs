@@ -115,6 +115,7 @@ namespace VpdbAgent.ViewModels
 			locator.RegisterLazySingleton(() => new DownloadManager(
 				locator.GetService<IVpdbClient>(),
 				locator.GetService<IDatabaseManager>(),
+				locator.GetService<ISettingsManager>(),
 				locator.GetService<NLog.Logger>()
 			), typeof(IDownloadManager));
 

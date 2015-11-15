@@ -514,40 +514,41 @@ namespace VpdbAgent.Application
 			});
 
 			// star
-			star.ObserveOn(RxApp.MainThreadScheduler).Subscribe(data =>
-			{
+			star.ObserveOn(RxApp.MainThreadScheduler).Subscribe(data => {
+				var id = data.GetValue("id").Value<string>();
 				if ("release".Equals(data.GetValue("type").Value<string>())) {
-					var id = data.GetValue("id").Value<string>();
-					var game = Games.FirstOrDefault(g => !string.IsNullOrEmpty(g.ReleaseId) && g.ReleaseId.Equals(id));
-					if (game != null) {
-						var release = _databaseManager.Database.Releases[id];
-						release.Starred = true;
-						game.Release.Starred = true;
-						_databaseManager.Save();
-						_logger.Info("Toggled star on release {0} [on]", release.Name);
-					} else {
-						_downloadManager.DownloadRelease(id);
+					var game = OnStarRelease(id, true);
+					if (game == null) {
+						if (_settingsManager.SyncStarred) {
+							_downloadManager.DownloadRelease(id);
+						} else {
+							_logger.Info("Sync starred not enabled, ignoring starred release.");
+						}
 					}
 				}
 			});
 
 			// unstar
-			unstar.ObserveOn(RxApp.MainThreadScheduler).Subscribe(data =>
-			{
+			unstar.ObserveOn(RxApp.MainThreadScheduler).Subscribe(data => {
 				if ("release".Equals(data.GetValue("type").Value<string>())) {
-					var id = data.GetValue("id").Value<string>();
-					var game = Games.FirstOrDefault(g => !string.IsNullOrEmpty(g.ReleaseId) && g.ReleaseId.Equals(id));
-					if (game != null) {
-						var release = _databaseManager.Database.Releases[id];
-						release.Starred = false;
-						game.Release.Starred = false;
-						_databaseManager.Save();
-						_logger.Info("Toggled star on release {0} [off]", release.Name);
-					} else {
-						_logger.Info("Ignoring star for id {0}", id);
-					}
+					OnStarRelease(data.GetValue("id").Value<string>(), false);
 				}
 			});
+		}
+
+		private Game OnStarRelease(string id, bool star) {
+			var game = Games.FirstOrDefault(g => !string.IsNullOrEmpty(g.ReleaseId) && g.ReleaseId.Equals(id));
+			if (game != null) {
+				var release = _databaseManager.Database.Releases[id];
+				release.Starred = star;
+				game.Release.Starred = star;
+				if (_settingsManager.SyncStarred) {
+					game.IsSynced = star;
+				}
+				_databaseManager.Save();
+				_logger.Info("Toggled star on release {0} [{1}]", release.Name, star ? "on" : "off");
+			}
+			return game;
 		}
 
 	}

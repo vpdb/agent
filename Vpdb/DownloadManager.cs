@@ -88,6 +88,7 @@ namespace VpdbAgent.Vpdb
 		// dependencies
 		private readonly IVpdbClient _vpdbClient;
 		private readonly IDatabaseManager _databaseManager;
+		private readonly ISettingsManager _settingsManager;
 		private readonly Logger _logger;
 
 		// props
@@ -110,12 +111,13 @@ namespace VpdbAgent.Vpdb
 		/// <summary>
 		/// Constructor sets up queue and creates download folder if non-existing.
 		/// </summary>
-		public DownloadManager(IVpdbClient vpdbClient, IDatabaseManager databaseManager, Logger logger)
+		public DownloadManager(IVpdbClient vpdbClient, IDatabaseManager databaseManager, ISettingsManager settingsManager, Logger logger)
 		{
 			CurrentJobs = databaseManager.Database.DownloadJobs;
 
 			_vpdbClient = vpdbClient;
 			_databaseManager = databaseManager;
+			_settingsManager = settingsManager;
 			_logger = logger;
 
 			// setup transfer queue
