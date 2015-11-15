@@ -194,7 +194,7 @@ namespace VpdbAgent.Application
 				PbxFolder = await _storage.GetOrCreateObject("PbxFolder", () => "");
 				SyncStarred = await _storage.GetOrCreateObject("SyncStarred", () => true);
 				DownloadOnStartup = await _storage.GetOrCreateObject("DownloadOnStartup", () => false);
-				DownloadOrientation = await _storage.GetOrCreateObject("DownloadOrientation", () => Orientation.FS );
+				DownloadOrientation = await _storage.GetOrCreateObject("DownloadOrientation", () => Orientation.Portrait );
 				DownloadOrientationFallback = await _storage.GetOrCreateObject("DownloadOrientationFallback", () => Orientation.Same );
 				DownloadLighting = await _storage.GetOrCreateObject("DownloadLighting", () => Lighting.Day );
 				DownloadLightingFallback = await _storage.GetOrCreateObject("DownloadLightingFallback", () => Lighting.Any );
@@ -309,23 +309,20 @@ namespace VpdbAgent.Application
 
 		public enum Orientation
 		{
+			Portrait,
+			Landscape,
+			Universal,
 			Same,
-			FS,
-			DT,
-			Any,
-			Universal
+			Any
 		}
 
 		public enum Lighting
 		{
-			Same,
 			Day,
 			Night,
+			Universal,
+			Same,
 			Any,
-			Universal
 		}
-		
 	}
-
-	
 }

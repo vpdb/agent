@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.Design.Serialization;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -94,7 +96,6 @@ namespace VpdbAgent.Vpdb
 
 		// props
 		public ReactiveList<DownloadJob> CurrentJobs { get; }
-
 		public IObservable<DownloadJob.JobStatus> WhenStatusChanged => _whenStatusChanged;
 		public IObservable<DownloadJob> WhenDownloaded => _whenDownloaded;
 
@@ -108,6 +109,7 @@ namespace VpdbAgent.Vpdb
 			SettingsManager.DataFolder,
 			"Download"
 		);
+		private readonly List<IFlavorMatcher> _flavorMatchers = new List<IFlavorMatcher>();
 
 		/// <summary>
 		/// Constructor sets up queue and creates download folder if non-existing.
@@ -139,6 +141,12 @@ namespace VpdbAgent.Vpdb
 				_logger.Info("Creating non-existing download folder at {0}.", _downloadPath);
 				Directory.CreateDirectory(_downloadPath);
 			}
+
+			_settingsManager.SettingsAvailable.Subscribe(settings => {
+				_flavorMatchers.Clear();
+				_flavorMatchers.Add(new OrientationMatcher(settings));
+				_flavorMatchers.Add(new LightingMatcher(settings));
+			});
 		}
 
 		public IDownloadManager DownloadRelease(string id)
@@ -149,19 +157,18 @@ namespace VpdbAgent.Vpdb
 				.ObserveOn(Scheduler.Default)
 				.Subscribe(release => {
 
-					// match file based on settings todo use weights based on matches so we don't end up with 2 secondary hits trumping 1 primary and 1 secondary.
+					// match file based on settings
 					var file = release.Versions
 						.SelectMany(v => v.Files)
-						.FirstOrDefault(f =>
-							FlavorMatches(f.Flavor.Orientation, _settingsManager.DownloadOrientation) &&
-							FlavorMatches(f.Flavor.Lighting, _settingsManager.DownloadLighting)) ?? release.Versions
-								.SelectMany(v => v.Files)
-								.FirstOrDefault(f =>
-									FlavorMatches(f.Flavor.Orientation, _settingsManager.DownloadOrientationFallback) &&
-									FlavorMatches(f.Flavor.Lighting, _settingsManager.DownloadLightingFallback));
+						.Where(FlavorMatches)
+						.Select(f => new { f, weight = FlavorWeight(f) })
+						.OrderBy(x => x.weight)
+						.Select(x => x.f)
+						.LastOrDefault();
 
+					// check if match
 					if (file == null) {
-						_logger.Info("Release doesn't seem to have a FS release, aborting.");
+						_logger.Info("Nothing matched current flavor configuration, skipping.");
 						return;
 					}
 
@@ -171,42 +178,6 @@ namespace VpdbAgent.Vpdb
 				}, exception => _vpdbClient.HandleApiError(exception, "retrieving release details during download"));
 
 			return this;
-		}
-
-		private static bool FlavorMatches(Flavor.OrientationValue release, SettingsManager.Orientation setting)
-		{
-			switch (setting) {
-				case SettingsManager.Orientation.Any:
-					return true;
-				case SettingsManager.Orientation.DT:
-					return release == Flavor.OrientationValue.WS;
-				case SettingsManager.Orientation.FS:
-					return release == Flavor.OrientationValue.FS;
-				case SettingsManager.Orientation.Universal:
-					return release == Flavor.OrientationValue.Any;
-				case SettingsManager.Orientation.Same:
-					return false;
-				default:
-					throw new ArgumentOutOfRangeException(nameof(setting), setting, null);
-			}
-		}
-
-		private static bool FlavorMatches(Flavor.LightingValue release, SettingsManager.Lighting setting)
-		{
-			switch (setting) {
-				case SettingsManager.Lighting.Any:
-					return true;
-				case SettingsManager.Lighting.Day:
-					return release == Flavor.LightingValue.Day;
-				case SettingsManager.Lighting.Night:
-					return release == Flavor.LightingValue.Night;
-				case SettingsManager.Lighting.Universal:
-					return release == Flavor.LightingValue.Any;
-				case SettingsManager.Lighting.Same:
-					return false;
-				default:
-					throw new ArgumentOutOfRangeException(nameof(setting), setting, null);
-			}
 		}
 
 		public IDownloadManager DownloadRelease(Release release, File file)
@@ -272,26 +243,18 @@ namespace VpdbAgent.Vpdb
 			job.OnStart(token, dest);
 
 			// do the grunt work
-			try
-			{
+			try {
 				await job.Client.DownloadFileTaskAsync(job.Uri, dest);
 				job.OnSuccess();
 				_logger.Info("Finished downloading of {0}", job.Uri);
-			}
-			catch (WebException e)
-			{
-				if (e.Status == WebExceptionStatus.RequestCanceled)
-				{
+			} catch (WebException e) {
+				if (e.Status == WebExceptionStatus.RequestCanceled) {
 					job.OnCancelled();
-				}
-				else
-				{
+				} else {
 					job.OnFailure(e);
 					_logger.Error(e, "Error downloading file (server error): {0}", e.Message);
 				}
-			}
-			catch (Exception e)
-			{
+			} catch (Exception e) {
 				job.OnFailure(e);
 				_logger.Error(e, "Error downloading file: {0}", e.Message);
 			}
@@ -312,6 +275,26 @@ namespace VpdbAgent.Vpdb
 				_databaseManager.Database.DownloadJobs.Add(job);
 				_databaseManager.Save();
 			});
+		}
+
+		/// <summary>
+		/// Checks if the flavor of the file is acceptable by the user's flavor settings.
+		/// </summary>
+		/// <param name="file">File to check</param>
+		/// <returns>Returns true if the primary or secondary flavor setting of ALL flavors matches, false otherwise.</returns>
+		private bool FlavorMatches(File file)
+		{
+			return _flavorMatchers.TrueForAll(matcher => matcher.Matches(file));
+		}
+
+		/// <summary>
+		/// Calculates the total weight of a file based on flavor settings.
+		/// </summary>
+		/// <param name="file">File to check</param>
+		/// <returns>Total weight of the file based on the user's flavor settings</returns>
+		private int FlavorWeight(File file)
+		{
+			return _flavorMatchers.Sum(matcher => matcher.Weight(file));
 		}
 	}
 }

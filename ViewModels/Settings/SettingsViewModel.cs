@@ -108,16 +108,16 @@ namespace VpdbAgent.ViewModels.Settings
 				.StartWith(true)
 				.ToProperty(this, vm => vm.CanCancel, out _canCancel);
 			
-			OrientationSettings.Add(new OrientationSetting("Portrait", SettingsManager.Orientation.FS));
-			OrientationSettings.Add(new OrientationSetting("Landscape", SettingsManager.Orientation.DT));
+			OrientationSettings.Add(new OrientationSetting("Portrait", SettingsManager.Orientation.Portrait));
+			OrientationSettings.Add(new OrientationSetting("Landscape", SettingsManager.Orientation.Landscape));
 			OrientationSettings.Add(new OrientationSetting("Universal (VP10)", SettingsManager.Orientation.Universal));
 			LightingSettings.Add(new LightingSetting("Day", SettingsManager.Lighting.Day));
 			LightingSettings.Add(new LightingSetting("Night", SettingsManager.Lighting.Night));
 			LightingSettings.Add(new LightingSetting("Universal (VP10)", SettingsManager.Lighting.Universal));
 
 			OrientationFallbackSettings.Add(new OrientationSetting("Same *", SettingsManager.Orientation.Same));
-			OrientationFallbackSettings.Add(new OrientationSetting("Portrait", SettingsManager.Orientation.FS));
-			OrientationFallbackSettings.Add(new OrientationSetting("Landscape", SettingsManager.Orientation.DT));
+			OrientationFallbackSettings.Add(new OrientationSetting("Portrait", SettingsManager.Orientation.Portrait));
+			OrientationFallbackSettings.Add(new OrientationSetting("Landscape", SettingsManager.Orientation.Landscape));
 			OrientationFallbackSettings.Add(new OrientationSetting("Any", SettingsManager.Orientation.Any));
 			LightingFallbackSettings.Add(new LightingSetting("Same *", SettingsManager.Lighting.Same));
 			LightingFallbackSettings.Add(new LightingSetting("Day", SettingsManager.Lighting.Day));
