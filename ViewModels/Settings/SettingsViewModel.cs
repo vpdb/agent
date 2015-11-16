@@ -79,17 +79,17 @@ namespace VpdbAgent.ViewModels.Settings
 			_settingsManager = settingsManager;
 			_versionManager = versionManager;
 
-			ApiKey = _settingsManager.ApiKey;
-			AuthUser = _settingsManager.AuthUser;
-			AuthPass = _settingsManager.AuthPass;
-			Endpoint = _settingsManager.Endpoint;
-			PbxFolder = _settingsManager.PbxFolder;
-			SyncStarred = _settingsManager.SyncStarred;
-			DownloadOnStartup = _settingsManager.DownloadOnStartup;
-			DownloadOrientation = _settingsManager.DownloadOrientation;
-			DownloadOrientationFallback = _settingsManager.DownloadOrientationFallback;
-			DownloadLighting = _settingsManager.DownloadLighting;
-			DownloadLightingFallback = _settingsManager.DownloadLightingFallback;
+			ApiKey = _settingsManager.Settings.ApiKey;
+			AuthUser = _settingsManager.Settings.AuthUser;
+			AuthPass = _settingsManager.Settings.AuthPass;
+			Endpoint = _settingsManager.Settings.Endpoint;
+			PbxFolder = _settingsManager.Settings.PbxFolder;
+			SyncStarred = _settingsManager.Settings.SyncStarred;
+			DownloadOnStartup = _settingsManager.Settings.DownloadOnStartup;
+			DownloadOrientation = _settingsManager.Settings.DownloadOrientation;
+			DownloadOrientationFallback = _settingsManager.Settings.DownloadOrientationFallback;
+			DownloadLighting = _settingsManager.Settings.DownloadLighting;
+			DownloadLightingFallback = _settingsManager.Settings.DownloadLightingFallback;
 
 			SaveSettings = ReactiveCommand.CreateAsyncTask(_ => Save());
 			SaveSettings.IsExecuting.ToProperty(this, vm => vm.IsValidating, out _isValidating);
@@ -101,7 +101,7 @@ namespace VpdbAgent.ViewModels.Settings
 			ChooseFolder.Subscribe(_ => OpenFolderDialog());
 			CloseSettings.InvokeCommand(HostScreen.Router, r => r.NavigateBack);
 
-			_settingsManager.WhenAnyValue(sm => sm.IsFirstRun).ToProperty(this, vm => vm.IsFirstRun, out _isFirstRun);
+			_settingsManager.WhenAnyValue(sm => sm.Settings.IsFirstRun).ToProperty(this, vm => vm.IsFirstRun, out _isFirstRun);
 			_settingsManager.WhenAnyValue(sm => sm.CanCancel)
 				.CombineLatest(screen.Router.NavigationStack.Changed, (canCancel, _) => canCancel || screen.Router.NavigationStack.Count > 1)
 				.DistinctUntilChanged()
@@ -149,23 +149,25 @@ namespace VpdbAgent.ViewModels.Settings
 
 		private async Task<Dictionary<string, string>> Save()
 		{
-			_settingsManager.ApiKey = _apiKey;
-			_settingsManager.AuthUser = _authUser;
-			_settingsManager.AuthPass = _authPass;
-			_settingsManager.Endpoint = _endpoint;
-			_settingsManager.PbxFolder = _pbxFolder;
-			_settingsManager.SyncStarred = _syncStarred;
-			_settingsManager.DownloadOnStartup = _downloadOnStartup;
-			_settingsManager.DownloadOrientation = _downloadOrientation;
-			_settingsManager.DownloadOrientationFallback = _downloadOrientationFallback;
-			_settingsManager.DownloadLighting = _downloadLighting;
-			_settingsManager.DownloadLightingFallback = _downloadLightingFallback;
+			var settings = _settingsManager.Settings.Copy();
 
-			var errors = await _settingsManager.Validate();
+			settings.ApiKey = _apiKey;
+			settings.AuthUser = _authUser;
+			settings.AuthPass = _authPass;
+			settings.Endpoint = _endpoint;
+			settings.PbxFolder = _pbxFolder;
+			settings.SyncStarred = _syncStarred;
+			settings.DownloadOnStartup = _downloadOnStartup;
+			settings.DownloadOrientation = _downloadOrientation;
+			settings.DownloadOrientationFallback = _downloadOrientationFallback;
+			settings.DownloadLighting = _downloadLighting;
+			settings.DownloadLightingFallback = _downloadLightingFallback;
 
-			if (errors.Count == 0) {
+			var errors = await _settingsManager.Validate(settings);
 
-				_settingsManager.Save();
+			if (settings.IsValidated) {
+
+				_settingsManager.Save(settings);
 				Logger.Info("Settings saved.");
 
 				if (HostScreen.Router.NavigationStack.Count == 1) {

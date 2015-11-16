@@ -175,23 +175,17 @@ namespace VpdbAgent.Application
 		public IGameManager Initialize()
 		{
 			// settings must be initialized before doing this.
-			if (string.IsNullOrEmpty(_settingsManager.ApiKey)) {
+			if (string.IsNullOrEmpty(_settingsManager.Settings.ApiKey)) {
 				throw new InvalidOperationException("Must initialize settings before game manager.");
 			}
 
-			// handle api authentication
-//			_settingsManager.ApiAuthenticated.Subscribe(user => {
-//				_logger.Info("Authenticated successfully.");
-//			}, exception => _vpdbClient.HandleApiError(exception, "subscribing to ApiAuthenticated for printing something"));
-
-			// initialize managers
 			_databaseManager.Initialize();
 			_menuManager.Initialize();
 			_vpdbClient.Initialize();
 			_versionManager.Initialize();
 
 			// validate settings and retrieve profile
-			Task.Run(async () => await _settingsManager.Validate());
+			Task.Run(async () => await _settingsManager.Validate(_settingsManager.Settings));
 
 			return this;
 		}
@@ -519,7 +513,7 @@ namespace VpdbAgent.Application
 				if ("release".Equals(data.GetValue("type").Value<string>())) {
 					var game = OnStarRelease(id, true);
 					if (game == null) {
-						if (_settingsManager.SyncStarred) {
+						if (_settingsManager.Settings.SyncStarred) {
 							_downloadManager.DownloadRelease(id);
 						} else {
 							_logger.Info("Sync starred not enabled, ignoring starred release.");
@@ -542,7 +536,7 @@ namespace VpdbAgent.Application
 				var release = _databaseManager.Database.Releases[id];
 				release.Starred = star;
 				game.Release.Starred = star;
-				if (_settingsManager.SyncStarred) {
+				if (_settingsManager.Settings.SyncStarred) {
 					game.IsSynced = star;
 				}
 				_databaseManager.Save();

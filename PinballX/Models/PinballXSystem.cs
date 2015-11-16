@@ -76,8 +76,8 @@ namespace VpdbAgent.PinballX.Models
 			Executable = data["Executable"];
 			Parameters = data["Parameters"];
 
-			DatabasePath = SettingsManager.PbxFolder + @"\Databases\" + Name;
-			MediaPath = SettingsManager.PbxFolder + @"\Media\" + Name;
+			DatabasePath = SettingsManager.Settings.PbxFolder + @"\Databases\" + Name;
+			MediaPath = SettingsManager.Settings.PbxFolder + @"\Media\" + Name;
 		}
 
 		public override string ToString()

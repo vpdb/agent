@@ -109,8 +109,8 @@ namespace VpdbAgent.PinballX
 	
 		public IMenuManager Initialize()
 		{
-			var iniPath = _settingsManager.PbxFolder + @"\Config\PinballX.ini";
-			var dbPath = _settingsManager.PbxFolder + @"\Databases\";
+			var iniPath = _settingsManager.Settings.PbxFolder + @"\Config\PinballX.ini";
+			var dbPath = _settingsManager.Settings.PbxFolder + @"\Databases\";
 
 			// update systems when ini changes (also, kick it off now)
 			_watcher.FileWatcher(iniPath)

@@ -9,6 +9,7 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Reactive.Threading.Tasks;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using Akavache;
 using Newtonsoft.Json;
 using NLog;
@@ -34,70 +35,10 @@ namespace VpdbAgent.Application
 	/// </remarks>
 	public interface ISettingsManager
 	{
-		#region Read/Write Settings
-
 		/// <summary>
-		/// VPDB's API key
+		/// The object where all the settings are stored.
 		/// </summary>
-		string ApiKey { get; set; }
-
-		/// <summary>
-		/// If HTTP Basic authentication is enabled on VPDB, this is the user name.
-		/// </summary>
-		string AuthUser { get; set; }
-
-		/// <summary>
-		/// If HTTP Basic authentication is enabled on VPDB, this is the password.
-		/// </summary>
-		string AuthPass { get; set; }
-
-		/// <summary>
-		/// The endpoint of the VPDB API.
-		/// </summary>
-		string Endpoint { get; set; }
-
-		/// <summary>
-		/// The local folder where the user installed PinballX
-		/// </summary>
-		string PbxFolder { get; set; }
-
-		/// <summary>
-		/// If true, starring a release on vpdb.io will make it synced here.
-		/// </summary>
-		bool SyncStarred { get; set; }
-
-		/// <summary>
-		/// If true, download all starred/synced releases on startup.
-		/// </summary>
-		bool DownloadOnStartup { get; set; }
-
-		/// <summary>
-		/// Primary orientation when downloading a release
-		/// </summary>
-		SettingsManager.Orientation DownloadOrientation { get; set; }
-
-		/// <summary>
-		/// If primary orientation is not available, use this if available (otherwise, ignore)
-		/// </summary>
-		SettingsManager.Orientation DownloadOrientationFallback { get; set; }
-
-		/// <summary>
-		/// Primary lighting flavor when downloading a release
-		/// </summary>
-		SettingsManager.Lighting DownloadLighting { get; set; }
-
-		/// <summary>
-		/// If primary lighting is not available, use this if available (otherwise, ignore)
-		/// </summary>
-		SettingsManager.Lighting DownloadLightingFallback { get; set; }
-
-		#endregion
-		#region Read-only Settings
-
-		/// <summary>
-		/// True if the app is starting for the first time
-		/// </summary>
-		bool IsFirstRun { get; }
+		Settings Settings { get; }
 
 		/// <summary>
 		/// False when currently saved settings are not valid, forcing the user
@@ -110,12 +51,10 @@ namespace VpdbAgent.Application
 		/// </summary>
 		UserFull AuthenticatedUser { get; }
 
-		#endregion
-
 		/// <summary>
 		/// Produces a value each time settings are updated or available
 		/// </summary>
-		IObservable<ISettingsManager> SettingsAvailable { get; }
+		IObservable<Settings> SettingsAvailable { get; }
 
 		/// <summary>
 		/// Produces a value each time the API tried to authenticate. Value is null
@@ -126,8 +65,9 @@ namespace VpdbAgent.Application
 		/// <summary>
 		/// Validates current settings and returns a list of errors.
 		/// </summary>
+		/// <param name="settings">Settings to validate</param>
 		/// <returns>List of validation errors or empty list if validation succeeded</returns>
-		Task<Dictionary<string, string>> Validate();
+		Task<Dictionary<string, string>> Validate(Settings settings);
 
 		/// <summary>
 		/// Persists current settings.
@@ -135,8 +75,9 @@ namespace VpdbAgent.Application
 		/// <remarks>
 		/// Only call this after <see cref="Validate"/>, since it doesn't validate on its own!
 		/// </remarks>
+		/// <param name="settings">Settings to save</param>
 		/// <returns>This instance</returns>
-		ISettingsManager Save();
+		ISettingsManager Save(Settings settings);
 
 		/// <summary>
 		/// Returns a list of validation errors based on a given exception
@@ -150,29 +91,18 @@ namespace VpdbAgent.Application
 	{
 		public const string DataFolder = "VPDB";
 
-		public string ApiKey { get; set; }
-		public string AuthUser { get; set; }
-		public string AuthPass { get; set; }
-		public string Endpoint { get; set; }
-		public string PbxFolder { get; set; }
-		public bool SyncStarred { get; set; }
-		public bool DownloadOnStartup { get; set; }
-		public Orientation DownloadOrientation { get; set; }
-		public Orientation DownloadOrientationFallback { get; set; }
-		public Lighting DownloadLighting { get; set; }
-		public Lighting DownloadLightingFallback { get; set; }
+		public Settings Settings { get; } = new Settings();
 
-		public bool IsFirstRun { get { return _isFirstRun; } set { this.RaiseAndSetIfChanged(ref _isFirstRun, value); } }
 		public bool CanCancel { get { return _canCancel; } set { this.RaiseAndSetIfChanged(ref _canCancel, value); } }
 		public UserFull AuthenticatedUser { get { return _authenticatedUser; } set { this.RaiseAndSetIfChanged(ref _authenticatedUser, value); } }
 
 		private readonly Subject<UserFull> _apiAuthenticated = new Subject<UserFull>();
-		private readonly BehaviorSubject<ISettingsManager> _settingsAvailable = new BehaviorSubject<ISettingsManager>(null); 
+		private readonly BehaviorSubject<Settings> _settingsAvailable = new BehaviorSubject<Settings>(null); 
 
 		public IObservable<UserFull> ApiAuthenticated => _apiAuthenticated;
-		public IObservable<ISettingsManager> SettingsAvailable => _settingsAvailable;
+		public IObservable<Settings> SettingsAvailable => _settingsAvailable;
 
-		private bool _isFirstRun;
+
 		private UserFull _authenticatedUser;
 		private bool _canCancel;
 
@@ -185,54 +115,41 @@ namespace VpdbAgent.Application
 			BlobCache.ApplicationName = DataFolder;
 			_storage = BlobCache.Secure;
 
-			Task.Run(async () => {
-
-				ApiKey = await _storage.GetOrCreateObject("ApiKey", () => "");
-				AuthUser = await _storage.GetOrCreateObject("AuthUser", () => "");
-				AuthPass = await _storage.GetOrCreateObject("AuthPass", () => "");
-				Endpoint = await _storage.GetOrCreateObject("Endpoint", () => "https://staging.vpdb.io");
-				PbxFolder = await _storage.GetOrCreateObject("PbxFolder", () => "");
-				SyncStarred = await _storage.GetOrCreateObject("SyncStarred", () => true);
-				DownloadOnStartup = await _storage.GetOrCreateObject("DownloadOnStartup", () => false);
-				DownloadOrientation = await _storage.GetOrCreateObject("DownloadOrientation", () => Orientation.Portrait );
-				DownloadOrientationFallback = await _storage.GetOrCreateObject("DownloadOrientationFallback", () => Orientation.Same );
-				DownloadLighting = await _storage.GetOrCreateObject("DownloadLighting", () => Lighting.Day );
-				DownloadLightingFallback = await _storage.GetOrCreateObject("DownloadLightingFallback", () => Lighting.Any );
-				IsFirstRun = await _storage.GetOrCreateObject("IsFirstRun", () => true);
-
-				_settingsAvailable.OnNext(this);
+			Task.Run(async () =>
+			{
+				await Settings.ReadFromStorage(_storage);
+				_settingsAvailable.OnNext(Settings);
 			});
 			_logger = logger;
 		}
 
-		public async Task<Dictionary<string, string>> Validate()
+		public async Task<Dictionary<string, string>> Validate(Settings settings)
 		{
-
 			_logger.Info("Validating settings...");
 			var errors = new Dictionary<string, string>();
 
 			// pinballx folder
-			if (string.IsNullOrEmpty(PbxFolder)) {
+			if (string.IsNullOrEmpty(settings.PbxFolder)) {
 				errors.Add("PbxFolder", "The folder where PinballX is installed must be set.");
-			} else if (!Directory.Exists(PbxFolder) || !Directory.Exists(PbxFolder + @"\Config")) {
-				errors.Add("PbxFolder", "The folder \"" + PbxFolder + "\" is not a valid PinballX folder.");
+			} else if (!Directory.Exists(settings.PbxFolder) || !Directory.Exists(settings.PbxFolder + @"\Config")) {
+				errors.Add("PbxFolder", "The folder \"" + settings.PbxFolder + "\" is not a valid PinballX folder.");
 			}
 
 			// network params
-			if (string.IsNullOrEmpty(ApiKey)) {
+			if (string.IsNullOrEmpty(settings.ApiKey)) {
 				errors.Add("ApiKey", "The API key is mandatory and needed in order to communicate with VPDB.");
 			}
-			if (string.IsNullOrEmpty(Endpoint)) {
+			if (string.IsNullOrEmpty(settings.Endpoint)) {
 				errors.Add("Endpoint", "The endpoint is mandatory. In doubt, put \"https://vpdb.io\".");
 			}
 
 			// test params if set
-			if (!string.IsNullOrEmpty(ApiKey) && !string.IsNullOrEmpty(Endpoint)) {
+			if (!string.IsNullOrEmpty(settings.ApiKey) && !string.IsNullOrEmpty(settings.Endpoint)) {
 				try {
-					var handler = new AuthenticatedHttpClientHandler(ApiKey, AuthUser, AuthPass);
-					var client = new HttpClient(handler) {BaseAddress = new Uri(Endpoint)};
-					var settings = new RefitSettings { JsonSerializerSettings = new JsonSerializerSettings {ContractResolver = new SnakeCasePropertyNamesContractResolver()} };
-					var api = RestService.For<IVpdbApi>(client, settings);
+					var handler = new AuthenticatedHttpClientHandler(settings.ApiKey, settings.AuthUser, settings.AuthPass);
+					var client = new HttpClient(handler) {BaseAddress = new Uri(settings.Endpoint)};
+					var s = new RefitSettings { JsonSerializerSettings = new JsonSerializerSettings {ContractResolver = new SnakeCasePropertyNamesContractResolver()} };
+					var api = RestService.For<IVpdbApi>(client, s);
 					var user = await api.GetProfile().SubscribeOn(Scheduler.Default).ToTask();
 
 					_logger.Info("Logged as <{0}>", user.Email);
@@ -247,6 +164,8 @@ namespace VpdbAgent.Application
 					OnValidationResult(null);
 				}
 			}
+			settings.IsValidated = errors.Count == 0;
+
 			return errors;
 		}
 
@@ -277,27 +196,18 @@ namespace VpdbAgent.Application
 			return errors;
 		}
 
-		public ISettingsManager Save()
+		public ISettingsManager Save(Settings settings)
 		{
+			if (!settings.IsValidated) {
+				throw new InvalidOperationException("Settings must be validated before saved.");
+			}
 
 			Task.Run(async () => {
-				await _storage.InsertObject("ApiKey", ApiKey);
-				await _storage.InsertObject("AuthUser", AuthUser);
-				await _storage.InsertObject("AuthPass", AuthPass);
-				await _storage.InsertObject("Endpoint", Endpoint);
-				await _storage.InsertObject("PbxFolder", PbxFolder);
-				await _storage.InsertObject("SyncStarred", SyncStarred);
-				await _storage.InsertObject("DownloadOnStartup", DownloadOnStartup);
-				await _storage.InsertObject("DownloadOrientation", DownloadOrientation);
-				await _storage.InsertObject("DownloadOrientationFallback", DownloadOrientationFallback);
-				await _storage.InsertObject("DownloadLighting", DownloadLighting);
-				await _storage.InsertObject("DownloadLightingFallback", DownloadLightingFallback);
-				await _storage.InsertObject("IsFirstRun", false);
-
+				Settings.Copy(settings, Settings);
+				await Settings.WriteToStorage(_storage);
 			});
 
 			CanCancel = true;
-			IsFirstRun = false;
 			return this;
 		}
 

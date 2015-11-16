@@ -211,6 +211,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Application\DatabaseManager.cs" />
+    <Compile Include="Application\Settings.cs" />
     <Compile Include="Application\VersionManager.cs" />
     <Compile Include="VisualPinball\BiffSerializer.cs" />
     <Compile Include="VisualPinball\VisualPinballManager.cs" />

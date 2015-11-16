@@ -60,7 +60,7 @@ namespace VpdbAgent.Application
 
 		public IDatabaseManager Initialize()
 		{
-			_dbPath = Path.Combine(_settingsManager.PbxFolder, @"Databases\vpdb.json");
+			_dbPath = Path.Combine(_settingsManager.Settings.PbxFolder, @"Databases\vpdb.json");
 			Database.Update(UnmarshallDatabase());
 			_logger.Info("Global database with {0} release(s) loaded.", Database.Releases.Count);
 

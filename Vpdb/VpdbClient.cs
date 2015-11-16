@@ -100,12 +100,12 @@ namespace VpdbAgent.Vpdb
 		public IVpdbClient Initialize()
 		{
 			// setup rest client
-			var handler = new AuthenticatedHttpClientHandler(_settingsManager.ApiKey, _settingsManager.AuthUser, _settingsManager.AuthPass);
+			var handler = new AuthenticatedHttpClientHandler(_settingsManager.Settings.ApiKey, _settingsManager.Settings.AuthUser, _settingsManager.Settings.AuthPass);
 			// todo enable gzip in api!!
 			// AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
 
 			var client = new HttpClient(handler) {
-				BaseAddress = new Uri(_settingsManager.Endpoint)
+				BaseAddress = new Uri(_settingsManager.Settings.Endpoint)
 			};
 			var settings = new RefitSettings {
 				JsonSerializerSettings = new JsonSerializerSettings {
@@ -149,7 +149,7 @@ namespace VpdbAgent.Vpdb
 
 		public Uri GetUri(string path)
 		{
-			return new Uri(_settingsManager.Endpoint + path);
+			return new Uri(_settingsManager.Settings.Endpoint + path);
 		}
 
 		public void HandleApiError(Exception e, string origin)
@@ -168,13 +168,13 @@ namespace VpdbAgent.Vpdb
 		/// <param name="headers">Current headers</param>
 		private void AddHeaders(NameValueCollection headers)
 		{
-			if (!string.IsNullOrEmpty(_settingsManager.ApiKey)) {
-				if (!string.IsNullOrEmpty(_settingsManager.AuthUser)) {
-					var authHeader = Encoding.ASCII.GetBytes(_settingsManager.AuthUser + ":" + _settingsManager.AuthPass);
+			if (!string.IsNullOrEmpty(_settingsManager.Settings.ApiKey)) {
+				if (!string.IsNullOrEmpty(_settingsManager.Settings.AuthUser)) {
+					var authHeader = Encoding.ASCII.GetBytes(_settingsManager.Settings.AuthUser + ":" + _settingsManager.Settings.AuthPass);
 					headers.Add("Authorization", "Basic " + Convert.ToBase64String(authHeader));
-					headers.Add("X-Authorization", "Bearer " + _settingsManager.ApiKey.Trim());
+					headers.Add("X-Authorization", "Bearer " + _settingsManager.Settings.ApiKey.Trim());
 				} else {
-					headers.Add("Authorization", "Bearer " + _settingsManager.ApiKey.Trim());
+					headers.Add("Authorization", "Bearer " + _settingsManager.Settings.ApiKey.Trim());
 				}
 			} else {
 				_logger.Warn("You probably shouldn't do requests if settings are not initialized.");
@@ -208,7 +208,7 @@ namespace VpdbAgent.Vpdb
 		{
 
 			var isNewConnection = _connectedApiEndpoint == null;
-			var isSameConnection = !isNewConnection && _connectedApiEndpoint.Equals(_settingsManager.Endpoint);
+			var isSameConnection = !isNewConnection && _connectedApiEndpoint.Equals(_settingsManager.Settings.Endpoint);
 			var isDifferentConnection = !isNewConnection && !isSameConnection;
 
 			if (isNewConnection) {
@@ -231,7 +231,7 @@ namespace VpdbAgent.Vpdb
 				_userChannel.Subscribed += PusherSubscribed;
 			}
 			
-			_connectedApiEndpoint = _settingsManager.Endpoint;
+			_connectedApiEndpoint = _settingsManager.Settings.Endpoint;
 		}
 
 		private void PusherConnectionStateChanged(object sender, ConnectionState state)

@@ -60,7 +60,7 @@ namespace VpdbAgent.ViewModels
 			Locator.CurrentMutable.GetService<NLog.Logger>().Info("Waiting for settings...");
 
 			// Navigate to the opening page of the application
-			settingsManager.SettingsAvailable.ObserveOn(Scheduler.CurrentThread).SubscribeOn(Scheduler.CurrentThread).Subscribe(settings => {
+			settingsManager.SettingsAvailable.Subscribe(settings => {
 				if (settings == null) {
 					return;
 				}

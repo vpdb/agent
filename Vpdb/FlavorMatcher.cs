@@ -115,10 +115,10 @@ namespace VpdbAgent.Vpdb
 		protected override SettingsManager.Orientation PrimarySetting { get; }
 		protected override SettingsManager.Orientation FallbackSetting { get; }
 
-		public OrientationMatcher(ISettingsManager settingsManager)
+		public OrientationMatcher(Settings settings)
 		{
-			PrimarySetting = settingsManager.DownloadOrientation;
-			FallbackSetting = settingsManager.DownloadOrientationFallback;
+			PrimarySetting = settings.DownloadOrientation;
+			FallbackSetting = settings.DownloadOrientationFallback;
 		}
 
 		protected override bool Matches(Flavor fileFlavor, SettingsManager.Orientation setting)
@@ -161,10 +161,10 @@ namespace VpdbAgent.Vpdb
 		protected override SettingsManager.Lighting PrimarySetting { get; }
 		protected override SettingsManager.Lighting FallbackSetting { get; }
 
-		public LightingMatcher(ISettingsManager settingsManager)
+		public LightingMatcher(Settings settings)
 		{
-			PrimarySetting = settingsManager.DownloadLighting;
-			FallbackSetting = settingsManager.DownloadLightingFallback;
+			PrimarySetting = settings.DownloadLighting;
+			FallbackSetting = settings.DownloadLightingFallback;
 		}
 
 		protected override bool Matches(Flavor fileFlavor, SettingsManager.Lighting setting)
@@ -175,9 +175,7 @@ namespace VpdbAgent.Vpdb
 				case Flavor.LightingValue.Night:
 					return setting == SettingsManager.Lighting.Night;
 				case Flavor.LightingValue.Any:
-					return setting == SettingsManager.Lighting.Universal
-						|| setting == SettingsManager.Lighting.Day
-						|| setting == SettingsManager.Lighting.Night;
+					return IsExactMatch(setting);
 				default:
 					throw new ArgumentOutOfRangeException();
 			}
@@ -185,7 +183,9 @@ namespace VpdbAgent.Vpdb
 
 		protected override bool IsExactMatch(SettingsManager.Lighting setting)
 		{
-			return setting == SettingsManager.Lighting.Day || setting == SettingsManager.Lighting.Night || setting == SettingsManager.Lighting.Universal;
+			return setting == SettingsManager.Lighting.Day 
+				|| setting == SettingsManager.Lighting.Night 
+				|| setting == SettingsManager.Lighting.Universal;
 		}
 
 		protected override bool IsSameMatch(SettingsManager.Lighting setting)
