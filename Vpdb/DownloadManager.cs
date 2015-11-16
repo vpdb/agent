@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
@@ -130,7 +131,10 @@ namespace VpdbAgent.Vpdb
 				.Merge(MaximalSimultaneousDownloads)
 				.Subscribe(job => {
 					_databaseManager.Save();
-					_whenDownloaded.OnNext(job);
+
+					if (job.Status != DownloadJob.JobStatus.Aborted) {
+						_whenDownloaded.OnNext(job);
+					}
 				}, error => {
 					_databaseManager.Save();
 					// todo treat error in ui
@@ -142,11 +146,18 @@ namespace VpdbAgent.Vpdb
 				Directory.CreateDirectory(_downloadPath);
 			}
 
-			_settingsManager.SettingsAvailable.Subscribe(settings => {
-				_flavorMatchers.Clear();
-				_flavorMatchers.Add(new OrientationMatcher(settings));
-				_flavorMatchers.Add(new LightingMatcher(settings));
-			});
+			// setup flavor matchers as soon as settings are available.
+			_settingsManager.Settings.WhenAny(
+				s => s.DownloadOrientation,
+				s => s.DownloadOrientationFallback,
+				s => s.DownloadLighting,
+				s => s.DownloadLightingFallback,
+				(a, b, c, d) => Unit.Default).Subscribe(_ => {
+					_logger.Info("Setting up flavor matchers.");
+					_flavorMatchers.Clear();
+					_flavorMatchers.Add(new OrientationMatcher(_settingsManager.Settings));
+					_flavorMatchers.Add(new LightingMatcher(_settingsManager.Settings));
+				});
 		}
 
 		public IDownloadManager DownloadRelease(string id)

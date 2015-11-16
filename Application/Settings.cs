@@ -134,20 +134,18 @@ namespace VpdbAgent.Application
 
 		protected internal static Settings Copy(Settings from, Settings to)
 		{
-			using (to.SuppressChangeNotifications()) {
-				to.ApiKey = from.ApiKey;
-				to.AuthUser = from.AuthUser;
-				to.AuthPass = from.AuthPass;
-				to.Endpoint = from.Endpoint;
-				to.PbxFolder = from.PbxFolder;
-				to.SyncStarred = from.SyncStarred;
-				to.DownloadOnStartup = from.DownloadOnStartup;
-				to.DownloadOrientation = from.DownloadOrientation;
-				to.DownloadOrientationFallback = from.DownloadOrientationFallback;
-				to.DownloadLighting = from.DownloadLighting;
-				to.DownloadLightingFallback = from.DownloadLightingFallback;
-				return to;
-			}
+			to.ApiKey = from.ApiKey;
+			to.AuthUser = from.AuthUser;
+			to.AuthPass = from.AuthPass;
+			to.Endpoint = from.Endpoint;
+			to.PbxFolder = from.PbxFolder;
+			to.SyncStarred = from.SyncStarred;
+			to.DownloadOnStartup = from.DownloadOnStartup;
+			to.DownloadOrientation = from.DownloadOrientation;
+			to.DownloadOrientationFallback = from.DownloadOrientationFallback;
+			to.DownloadLighting = from.DownloadLighting;
+			to.DownloadLightingFallback = from.DownloadLightingFallback;
+			return to;
 		}
 	}
 }
