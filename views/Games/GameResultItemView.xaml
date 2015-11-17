@@ -15,7 +15,7 @@
         </Grid.ColumnDefinitions>
 
         <!-- image -->
-        <c:UrlImage x:Name="Thumb"  Grid.Column="0" Width="50" Height="50" HorizontalAlignment="Left"/>
+        <c:CachedImage x:Name="Thumb"  Grid.Column="0" Width="50" Height="50" HorizontalAlignment="Left"/>
 
         <!-- data -->
         <StackPanel Grid.Column="1" Orientation="Vertical">

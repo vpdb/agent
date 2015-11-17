@@ -213,6 +213,7 @@
     <Compile Include="Application\DatabaseManager.cs" />
     <Compile Include="Application\Settings.cs" />
     <Compile Include="Application\VersionManager.cs" />
+    <Compile Include="Controls\CachedImage.cs" />
     <Compile Include="VisualPinball\BiffSerializer.cs" />
     <Compile Include="VisualPinball\VisualPinballManager.cs" />
     <Compile Include="Common\FilesystemWatchCache.cs" />
@@ -252,7 +253,6 @@
     <Compile Include="Views\Games\GameResultItemView.xaml.cs">
       <DependentUpon>GameResultItemView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Controls\UrlImage.cs" />
     <Compile Include="Application\GameManager.cs" />
     <Compile Include="Models\Game.cs" />
     <Compile Include="Models\Platform.cs" />

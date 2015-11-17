@@ -1,11 +1,11 @@
-﻿using System;
-using System.ComponentModel;
+﻿
+using System;
 using System.IO;
+using System.Net;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
-using System.Windows.Threading;
 using NLog;
 using Splat;
 using VpdbAgent.Application;
@@ -13,93 +13,74 @@ using VpdbAgent.Vpdb;
 
 namespace VpdbAgent.Controls
 {
-	/// <summary>
-	/// An image that can be loaded by an URL.
-	/// 
-	/// Includes primitive caching (no date check, just checks if image is in
-	/// cache folder).
-	/// </summary>
-	public class UrlImage : Image
+	public class CachedImage : Image
 	{
-		static UrlImage() { }
-
 		// dependencies
 		private static readonly IVpdbClient VpdbClient = Locator.Current.GetService<IVpdbClient>();
 		private static readonly Logger Logger = Locator.Current.GetService<Logger>();
 
-		public static readonly DependencyProperty UrlSourceProperty =
-			DependencyProperty.Register("UrlSource", typeof(string), typeof(UrlImage), new FrameworkPropertyMetadata(string.Empty, Changed));
-
-		private static void Changed(DependencyObject d, DependencyPropertyChangedEventArgs e)
+		static CachedImage()
 		{
-			if (e.Property.Equals(UrlSourceProperty)) {
-				var image = d as UrlImage;
-				image?.LoadImage();
-			}
+			DefaultStyleKeyProperty.OverrideMetadata(typeof(CachedImage), new FrameworkPropertyMetadata(typeof(CachedImage)));
 		}
 
-		public string UrlSource
+		public readonly static DependencyProperty ImageUrlProperty = DependencyProperty.Register("ImageUrl", typeof(string), typeof(CachedImage), new PropertyMetadata("", ImageUrlPropertyChanged));
+
+		public string ImageUrl
 		{
-			get { return (string)GetValue(UrlSourceProperty); }
-			set
-			{
-				SetValue(UrlSourceProperty, value);
-				LoadImage();
-			}
+			get { return (string)GetValue(ImageUrlProperty); }
+			set { SetValue(ImageUrlProperty, value); }
 		}
 
-		/// <summary>
-		/// If not cached, downloads and fades-in the image. Otherwise just loads
-		/// it into the view.
-		/// </summary>
-		private void LoadImage()
+		private static void ImageUrlPropertyChanged(DependencyObject obj, DependencyPropertyChangedEventArgs e)
 		{
-			// reset image
-			Source = null;
-			var urlSource = UrlSource;
-
-			// if not set, ignore
-			if (string.IsNullOrEmpty(urlSource)) {
+			var url = (string)e.NewValue;
+			if (string.IsNullOrEmpty(url)) {
+				SetSource((CachedImage)obj, null);
 				return;
 			}
 
-			// in design mode, ignore
-			if (LicenseManager.UsageMode == LicenseUsageMode.Designtime) {
-				return;
-			}
+			var localPath = GetLocalPath(url);
+			if (IsCached(url)) {
+				SetSource((CachedImage)obj, localPath);
 
-			// on worker thread
-			Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(delegate
-			{
-				var localPath = GetLocalPath(urlSource);
-
-				// if cached, set from cache
-				if (IsCached(urlSource)) {
-					Opacity = 1;
-					Source = new BitmapImage(new Uri(localPath));
-					return;
-				}
-
-				// remote, so make it transparent for fading animation
-				Opacity = 0;
-
-				// download
+			} else {
 				var webClient = VpdbClient.GetWebClient();
-				var uri = VpdbClient.GetUri(urlSource);
-				MakeLocalPath(urlSource);
-				Logger.Info("Downloading image from {0}", uri.ToString());
-				webClient.DownloadFile(uri, localPath);
+				var uri = VpdbClient.GetUri(url);
 
-				// animate into view
-				Source = new BitmapImage(new Uri(localPath));
+				webClient.DownloadFileCompleted += (sender, args) => {
+					if (args.Error != null) {
+						File.Delete(localPath);
+						return;
+					}
+
+					SetSource((CachedImage)obj, localPath, true);
+				};
+
+				MakeLocalPath(url);
+				Logger.Info("Downloading image from {0}", uri.ToString());
+				webClient.DownloadFileAsync(uri, localPath);
+			}
+		}
+
+		private static void SetSource(Image img, string path, bool fadeIn = false)
+		{
+			if (fadeIn) {
+				img.Opacity = 0;
+			}
+
+			img.Source = path != null ? new BitmapImage(new Uri(path)) : null;
+
+			if (fadeIn) {
 				var da = new DoubleAnimation {
 					From = 0,
 					To = 1,
 					Duration = new Duration(TimeSpan.FromMilliseconds(300))
 				};
-				BeginAnimation(OpacityProperty, da);
-			}));
+				img.BeginAnimation(OpacityProperty, da);
+			}
 		}
+
 
 		/// <summary>
 		/// Checks if the image is locally cached.
