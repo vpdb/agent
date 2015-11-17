@@ -19,9 +19,9 @@
                        Text="Not logged." TextAlignment="Right" FontSize="12"/>
         </DockPanel>
         <DockPanel x:Name="UpdateNotice" DockPanel.Dock="Bottom" Margin="0,5,0,10" Background="{StaticResource PrimaryColorBrush}">
-            <c:IconControl Height="15" Width="15" Foreground="{StaticResource WhiteBrush}" Data="{StaticResource IconStar}" Margin="10,0,10,0" VerticalAlignment="Center"/>
-            <TextBlock DockPanel.Dock="Left" Style="{StaticResource Label}" Foreground="{StaticResource WhiteBrush}" VerticalAlignment="Center">
-                <TextBlock Text="A new version of VPDB Agent is available."/>
+            <c:IconControl Height="14" Width="14" Foreground="{StaticResource WhiteBrush}" Data="{StaticResource IconStar}" Margin="10,0,10,0" VerticalAlignment="Center"/>
+            <TextBlock FontSize="16" DockPanel.Dock="Left" Style="{StaticResource Label}" Foreground="{StaticResource WhiteBrush}" VerticalAlignment="Center" Margin="0,-1,0,0">
+                <TextBlock Text="Hello. We've released a new version of VPDB client for you."/>
                 <Hyperlink x:Name="RestartApp" Foreground="{StaticResource WhiteBrush}" FontWeight="Bold">Restart the app</Hyperlink>
                 <TextBlock Text="to make it yours!"></TextBlock>
             </TextBlock>
