@@ -44,6 +44,16 @@ namespace VpdbAgent.Application
 		public bool SyncStarred { get { return _syncStarred; } set { this.RaiseAndSetIfChanged(ref _syncStarred, value); } }
 
 		/// <summary>
+		/// If true, the app window mininized to the system tray instead of the application toolbar.
+		/// </summary>
+		public bool MinimizeToTray { get { return _minimizeToTray; } set { this.RaiseAndSetIfChanged(ref _minimizeToTray, value); } }
+
+		/// <summary>
+		/// If set, VPDB Agent puts itself into the Windows startup folder.
+		/// </summary>
+		public bool StartWithWindows { get { return _startWithWindows; } set { this.RaiseAndSetIfChanged(ref _startWithWindows, value); } }
+
+		/// <summary>
 		/// If true, download all starred/synced releases on startup.
 		/// </summary>
 		public bool DownloadOnStartup { get { return _downloadOnStartup; } set { this.RaiseAndSetIfChanged(ref _downloadOnStartup, value); } }
@@ -87,6 +97,8 @@ namespace VpdbAgent.Application
 		private string _endpoint;
 		private string _pbxFolder;
 		private bool _syncStarred;
+		private bool _minimizeToTray;
+		private bool _startWithWindows;
 		private bool _downloadOnStartup;
 		private SettingsManager.Orientation _downloadOrientation;
 		private SettingsManager.Orientation _downloadOrientationFallback;
@@ -107,6 +119,8 @@ namespace VpdbAgent.Application
 			Endpoint = await storage.GetOrCreateObject("Endpoint", () => "https://staging.vpdb.io");
 			PbxFolder = await storage.GetOrCreateObject("PbxFolder", () => "");
 			SyncStarred = await storage.GetOrCreateObject("SyncStarred", () => true);
+			MinimizeToTray = await storage.GetOrCreateObject("MinimizeToTray", () => false);
+			StartWithWindows = await storage.GetOrCreateObject("StartWithWindows", () => false);
 			DownloadOnStartup = await storage.GetOrCreateObject("DownloadOnStartup", () => false);
 			DownloadOrientation = await storage.GetOrCreateObject("DownloadOrientation", () => SettingsManager.Orientation.Portrait);
 			DownloadOrientationFallback = await storage.GetOrCreateObject("DownloadOrientationFallback", () => SettingsManager.Orientation.Same);
@@ -123,6 +137,8 @@ namespace VpdbAgent.Application
 			await storage.InsertObject("Endpoint", Endpoint);
 			await storage.InsertObject("PbxFolder", PbxFolder);
 			await storage.InsertObject("SyncStarred", SyncStarred);
+			await storage.InsertObject("MinimizeToTray", MinimizeToTray);
+			await storage.InsertObject("StartWithWindows", StartWithWindows);
 			await storage.InsertObject("DownloadOnStartup", DownloadOnStartup);
 			await storage.InsertObject("DownloadOrientation", DownloadOrientation);
 			await storage.InsertObject("DownloadOrientationFallback", DownloadOrientationFallback);
@@ -140,6 +156,8 @@ namespace VpdbAgent.Application
 			to.Endpoint = from.Endpoint;
 			to.PbxFolder = from.PbxFolder;
 			to.SyncStarred = from.SyncStarred;
+			to.MinimizeToTray = from.MinimizeToTray;
+			to.StartWithWindows = from.StartWithWindows;
 			to.DownloadOnStartup = from.DownloadOnStartup;
 			to.DownloadOrientation = from.DownloadOrientation;
 			to.DownloadOrientationFallback = from.DownloadOrientationFallback;

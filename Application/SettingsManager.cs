@@ -8,9 +8,11 @@ using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Reactive.Threading.Tasks;
+using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Akavache;
+using Microsoft.Win32;
 using Newtonsoft.Json;
 using NLog;
 using ReactiveUI;
@@ -18,6 +20,7 @@ using Refit;
 using VpdbAgent.Vpdb;
 using VpdbAgent.Vpdb.Models;
 using VpdbAgent.Vpdb.Network;
+using File = System.IO.File;
 
 namespace VpdbAgent.Application
 {
@@ -97,7 +100,8 @@ namespace VpdbAgent.Application
 		public UserFull AuthenticatedUser { get { return _authenticatedUser; } set { this.RaiseAndSetIfChanged(ref _authenticatedUser, value); } }
 
 		private readonly Subject<UserFull> _apiAuthenticated = new Subject<UserFull>();
-		private readonly BehaviorSubject<Settings> _settingsAvailable = new BehaviorSubject<Settings>(null); 
+		private readonly BehaviorSubject<Settings> _settingsAvailable = new BehaviorSubject<Settings>(null);
+		private readonly RegistryKey _registryKey = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", true);
 
 		public IObservable<UserFull> ApiAuthenticated => _apiAuthenticated;
 		public IObservable<Settings> SettingsAvailable => _settingsAvailable;
@@ -205,6 +209,17 @@ namespace VpdbAgent.Application
 			Task.Run(async () => {
 				Settings.Copy(settings, Settings);
 				await Settings.WriteToStorage(_storage);
+
+				// handle startup settings (to test!)
+				if (Settings.StartWithWindows)
+				{
+					// todo check how to add --minimized arg through .lnk (probably best to read data from .lnk and use cmd.exe with working dir param)
+					var link = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Microsoft", "Windows", "Start Menu", "Programs", "VPDB", "VPDB Agent.lnk");
+					var cmd = File.Exists(link) ? link : Assembly.GetEntryAssembly().Location;
+					_registryKey.SetValue("VPDB Agent", "\"" + cmd + "\"");
+				} else {
+					_registryKey.DeleteValue("VPDB Agent");
+				}
 			});
 
 			CanCancel = true;

@@ -54,9 +54,6 @@ namespace VpdbAgent.ViewModels.Games
 			Games = _allGames.CreateDerivedCollection(
 				gameViewModel => gameViewModel, 
 				gameViewModel => gameViewModel.IsVisible);
-
-			// start the initialization
-			_gameManager.Initialize();
 		}
 
 		private void SetupSubscriptions()

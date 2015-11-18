@@ -6,6 +6,7 @@
              xmlns:rx="clr-namespace:ReactiveUI;assembly=ReactiveUI"
              xmlns:vm="clr-namespace:VpdbAgent.ViewModels"
              xmlns:c="clr-namespace:VpdbAgent.Controls"
+             xmlns:tb="http://www.hardcodet.net/taskbar"
              mc:Ignorable="d" 
              d:DesignHeight="300" 
              d:DesignWidth="900" 

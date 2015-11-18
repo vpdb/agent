@@ -17,7 +17,7 @@
         <typeConverters:BooleanToVisibilityConverter x:Key="TrueToCollapsed" True="Collapsed" False="Visible" />
         <valueConverters:InverseBooleanConverter x:Key="InverseBoolean" />
     </UserControl.Resources>
-    
+
     <Grid Margin="20,20,10,20">
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
@@ -87,7 +87,7 @@
                     <TextBlock x:Name="ApiKeyError" Style="{StaticResource Label}" Foreground="{StaticResource LightRedBrush}" 
                                Grid.Column="1" Text="Error message" TextWrapping="Wrap"/>
                 </Grid>
-                
+
                 <!-- [X] Advanced Options -->
                 <CheckBox IsChecked="{Binding ShowAdvancedOptions}"  Content="Show Advanced Options" FontSize="18" Margin="0,20,0,0"/>
 
@@ -110,7 +110,9 @@
                     <TextBox x:Name="AuthPass" Height="23" Grid.Column="2" ToolTip="In the beta phase, VPDB has an additional layer of authentication. Put the password here."/>
                 </Grid>
                 <Grid x:Name="AuthErrorPanel">
-                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
                     <c:IconControl Foreground="{StaticResource LightRedBrush}" Data="{StaticResource IconWarning}"
                                    Grid.Column="0" Height="18" Width="18" VerticalAlignment="Top" Margin="0,3,10,0" />
@@ -118,20 +120,51 @@
                                Grid.Column="1" Text="Error message" TextWrapping="Wrap"/>
                 </Grid>
 
+                <!-- Startup -->
+                <Label Content="Startup" Style="{StaticResource Header1}" Margin="0,20,0,0"/>
+                <Separator/>
+
+                <!-- Launch on startup -->
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="Run VPDB Agent on system startup" Style="{StaticResource Label}" Grid.Column="0" Margin="15,0,0,0"/>
+                    <ToggleButton IsChecked="{Binding StartWithWindows}" x:Name="StartWithWindows" Grid.Column="1" Height="20" Margin="5,0,17,0"/>
+                </Grid>
+
+                <!-- Minimize to tray -->
+                <Grid Margin="0,10,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="65*"/>
+                        <ColumnDefinition Width="287*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="Minimize to system tray" Style="{StaticResource Label}" Grid.Column="0" Margin="15,0,0,0" Grid.ColumnSpan="2"/>
+                    <ToggleButton IsChecked="{Binding MinimizeToTray}" x:Name="MinimizeToTray" Grid.Column="2" Height="20" Margin="5,2,17,2"/>
+                </Grid>
+
                 <!-- Download Options -->
                 <Label Content="Download Options" Style="{StaticResource Header1}" Margin="0,20,0,0"/>
                 <Separator/>
-                
+
                 <!-- Synchronize starred releases -->
                 <Grid>
-                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
                     <TextBlock Text="Synchronize starred releases" Style="{StaticResource Label}" Grid.Column="0" Margin="15,0,0,0"/>
                     <ToggleButton IsChecked="{Binding SyncStarred}" x:Name="SyncStarred" Grid.Column="1" Height="20" Margin="5,0,17,0"/>
                 </Grid>
 
                 <!-- Check for new and updated games at startup -->
                 <Grid Margin="0,10,0,0">
-                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
                     <TextBlock Text="Check for new and updated games at startup" Style="{StaticResource Label}" Grid.Column="0" Margin="15,0,0,0"/>
                     <ToggleButton IsChecked="{Binding DownloadOnStartup}" x:Name="DownloadOnStartup" Grid.Column="1" Height="20" Margin="5,0,17,0"/>
                 </Grid>
@@ -139,7 +172,7 @@
                 <!-- Download Options -->
                 <Label Content="Flavor Preferences" Style="{StaticResource Header1}" Margin="0,20,0,0"/>
                 <Separator/>
-                
+
                 <!-- First flavor choice -->
                 <TextBlock Style="{StaticResource Label}" Margin="15,0,0,0">
                     <TextBlock.Inlines>
@@ -148,7 +181,10 @@
                     </TextBlock.Inlines>
                 </TextBlock>
                 <Grid Margin="0,10,0,0">
-                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
                     <TextBlock Text="Orientation should be:" Style="{StaticResource Label}" Grid.Column="0" Margin="40,0,0,0"/>
                     <ComboBox ItemsSource="{Binding OrientationSettings}" SelectedValue="{Binding DownloadOrientation}"
                               DisplayMemberPath="Label" SelectedValuePath="Orientation" Grid.Column="1" Margin="5,0,10,0" />
@@ -171,19 +207,28 @@
                     </TextBlock.Inlines>
                 </TextBlock>
                 <Grid Margin="0,10,0,0">
-                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
                     <TextBlock Text="Orientation must be:" Style="{StaticResource Label}" Grid.Column="0" Margin="40,0,0,0"/>
                     <ComboBox ItemsSource="{Binding OrientationFallbackSettings}" SelectedValue="{Binding DownloadOrientationFallback}"
                               DisplayMemberPath="Label" SelectedValuePath="Orientation" Grid.Column="1" Margin="5,0,10,0" />
                 </Grid>
                 <Grid Margin="0,10,0,0">
-                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
                     <TextBlock Text="Lighting must be:" Style="{StaticResource Label}" Grid.Column="0" Margin="40,0,0,0"/>
                     <ComboBox ItemsSource="{Binding LightingFallbackSettings}" SelectedValue="{Binding DownloadLightingFallback}"
                               DisplayMemberPath="Label" SelectedValuePath="Lighting" Grid.Column="1" Margin="5,0,10,0" />
                 </Grid>
                 <Grid Margin="0,10,0,0">
-                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
                     <TextBlock Style="{StaticResource Label}" FontSize="15" TextWrapping="Wrap" 
                                Grid.Column="1" TextAlignment="Right" Margin="5,0,10,0" >
                         <TextBlock.Inlines>
@@ -196,7 +241,7 @@
 
             </StackPanel>
         </ScrollViewer>
-        
+
         <!-- footer -->
         <Grid Grid.Row="1" Margin="0,10,0,0">
             <Grid.ColumnDefinitions>
@@ -205,7 +250,7 @@
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            
+
             <!-- progress spinner -->
             <Viewbox Grid.Column="0" StretchDirection="Both" Stretch="Uniform" 
                          Height="24" Width="24" HorizontalAlignment="Right" Margin="0,0,10,0">
@@ -213,7 +258,7 @@
                          Foreground="{StaticResource PrimaryColorBrush}" SpeedRatio="1"
                          Style="{DynamicResource LoadingIndicatorArcsStyle}"/>
             </Viewbox>
-            
+
             <!-- buttons -->
             <Button Grid.Column="2" x:Name="CancelButton" Content="CANCEL" Margin="0,0,10,0" 
                     Visibility="{Binding Path=IsFirstRun, Converter={StaticResource TrueToCollapsed}}"

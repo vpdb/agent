@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
+using CommandLine;
 using ReactiveUI;
 using Splat;
 using VpdbAgent.Application;
@@ -40,11 +41,11 @@ namespace VpdbAgent.ViewModels
 	{
 		public RoutingState Router { get; }
 
-
 		public AppViewModel(IMutableDependencyResolver dependencyResolver = null, RoutingState testRouter = null)
 		{
 			Router = testRouter ?? new RoutingState();
 			dependencyResolver = dependencyResolver ?? Locator.CurrentMutable;
+			var options = ((App) System.Windows.Application.Current).CommandLineOptions;
 
 			//var canGoBack = this.WhenAnyValue(vm => vm.Router.NavigationStack.Count).Select(count => count > 0);
 			//BackCommand =  ReactiveCommand.Create(canGoBack);
@@ -56,6 +57,7 @@ namespace VpdbAgent.ViewModels
 			// startup tasks, like setting the logging level
 			LogHost.Default.Level = LogLevel.Debug;
 			var settingsManager = Locator.Current.GetService<ISettingsManager>();
+			var gameManager = Locator.Current.GetService<IGameManager>();
 
 			Locator.CurrentMutable.GetService<NLog.Logger>().Info("Waiting for settings...");
 
@@ -65,11 +67,20 @@ namespace VpdbAgent.ViewModels
 					return;
 				}
 				System.Windows.Application.Current.Dispatcher.Invoke(delegate {
+
+					// start the initialization
+					gameManager.Initialize();
+
 					Locator.CurrentMutable.GetService<NLog.Logger>().Info("Got settings!");
-					if (!settings.IsFirstRun) {
-						Router.Navigate.Execute(new MainViewModel(this, Locator.Current.GetService<ISettingsManager>(), Locator.Current.GetService<IVersionManager>()));
-					} else {
+					if (settings.IsFirstRun) {
+						System.Windows.Application.Current.MainWindow = new MainWindow(this);
+						System.Windows.Application.Current.MainWindow.Show();
 						Router.Navigate.Execute(new SettingsViewModel(this, Locator.Current.GetService<ISettingsManager>(), Locator.Current.GetService<IVersionManager>()));
+
+					} else if (!options.Minimized) {
+						System.Windows.Application.Current.MainWindow = new MainWindow(this);
+						System.Windows.Application.Current.MainWindow.Show();
+						Router.Navigate.Execute(new MainViewModel(this, Locator.Current.GetService<ISettingsManager>(), Locator.Current.GetService<IVersionManager>()));
 					}
 				});
 			});

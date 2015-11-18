@@ -29,6 +29,8 @@ namespace VpdbAgent.ViewModels.Settings
 		public string PbxFolder { get { return _pbxFolder; } set { this.RaiseAndSetIfChanged(ref _pbxFolder, value); } }
 		public bool SyncStarred { get { return _syncStarred; } set { this.RaiseAndSetIfChanged(ref _syncStarred, value); } }
 		public bool DownloadOnStartup { get { return _downloadOnStartup; } set { this.RaiseAndSetIfChanged(ref _downloadOnStartup, value); } }
+		public bool MinimizeToTray { get { return _minimizeToTray; } set { this.RaiseAndSetIfChanged(ref _minimizeToTray, value); } }
+		public bool StartWithWindows { get { return _startWithWindows; } set { this.RaiseAndSetIfChanged(ref _startWithWindows, value); } }
 		public SettingsManager.Orientation DownloadOrientation { get { return _downloadOrientation; } set { this.RaiseAndSetIfChanged(ref _downloadOrientation, value); } }
 		public SettingsManager.Orientation DownloadOrientationFallback { get { return _downloadOrientationFallback; } set { this.RaiseAndSetIfChanged(ref _downloadOrientationFallback, value); } }
 		public SettingsManager.Lighting DownloadLighting { get { return _downloadLighting; } set { this.RaiseAndSetIfChanged(ref _downloadLighting, value); } }
@@ -63,6 +65,8 @@ namespace VpdbAgent.ViewModels.Settings
 		private string _authPass;
 		private bool _syncStarred;
 		private bool _downloadOnStartup;
+		private bool _minimizeToTray;
+		private bool _startWithWindows;
 		private SettingsManager.Orientation _downloadOrientation;
 		private SettingsManager.Orientation _downloadOrientationFallback;
 		private SettingsManager.Lighting _downloadLighting;
@@ -86,6 +90,8 @@ namespace VpdbAgent.ViewModels.Settings
 			PbxFolder = _settingsManager.Settings.PbxFolder;
 			SyncStarred = _settingsManager.Settings.SyncStarred;
 			DownloadOnStartup = _settingsManager.Settings.DownloadOnStartup;
+			MinimizeToTray = _settingsManager.Settings.MinimizeToTray;
+			StartWithWindows = _settingsManager.Settings.StartWithWindows;
 			DownloadOrientation = _settingsManager.Settings.DownloadOrientation;
 			DownloadOrientationFallback = _settingsManager.Settings.DownloadOrientationFallback;
 			DownloadLighting = _settingsManager.Settings.DownloadLighting;
@@ -158,6 +164,8 @@ namespace VpdbAgent.ViewModels.Settings
 			settings.PbxFolder = _pbxFolder;
 			settings.SyncStarred = _syncStarred;
 			settings.DownloadOnStartup = _downloadOnStartup;
+			settings.MinimizeToTray = _minimizeToTray;
+			settings.StartWithWindows = _startWithWindows;
 			settings.DownloadOrientation = _downloadOrientation;
 			settings.DownloadOrientationFallback = _downloadOrientationFallback;
 			settings.DownloadLighting = _downloadLighting;

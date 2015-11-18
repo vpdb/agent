@@ -21,13 +21,13 @@ namespace VpdbAgent
 	{
 		public AppViewModel AppViewModel { get; protected set; }
 
-		public MainWindow()
+		public MainWindow(AppViewModel appViewModel)
 		{
 			RestoreWindowPlacement();
 			InitializeComponent();
 
-			AppViewModel = new AppViewModel();
-			DataContext = AppViewModel;
+			AppViewModel = appViewModel;
+			DataContext = appViewModel;
 
 			CompositionTarget.Rendering += OnRendering;
 
@@ -67,6 +67,9 @@ namespace VpdbAgent
 			Properties.Settings.Default.WindowWidth = Width;
 			Properties.Settings.Default.WindowMax = WindowState == WindowState.Maximized;
 			Properties.Settings.Default.Save();
+
+			// todo move to close button command instead of window close
+			System.Windows.Application.Current.Shutdown();
 		}
 
 
