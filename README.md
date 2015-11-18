@@ -65,18 +65,20 @@ current ones.
 We're using [Squirrel](https://github.com/Squirrel/Squirrel.Windows) for 
 packaging the builds. In order to release a new version:
 
-1. Bump to release version at `AssemblyInfo.cs` AND `vpdb-agent.nuspec`
+1. Bump to release version at `AssemblyInfo.cs` AND `vpdb-agent.nuspec`. Also 
+   update release in the NU specs.
 2. **Build Release**
-3. In the *Package Manager Console*, type: 
+3. Add new `.dll`s to `vpdb-agent.nuspec` if necessary.
+4. In the *Package Manager Console*, type: 
 
    ```
    PM> nuget pack .\vpdb-agent.nuspec
    PM> squirrel --releasify .\VpdbAgent.0.0.x.nupkg
    ```
-4. Commit, tag and push
-5. Package `setup.exe` as `vpdb-agent-0.0.x.zip`
-6. Create release on GitHub and attach zip
-7. Bump to snapshot version.
+5. Commit, tag and push
+6. Package `setup.exe` as `vpdb-agent-0.0.x.zip`
+7. Create release on GitHub and attach zip
+8. Bump to snapshot version.
 
 ## License
 

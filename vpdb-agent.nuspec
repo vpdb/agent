@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
     <metadata>
         <id>VpdbAgent</id>
-        <version>0.0.2.1</version>
+        <version>0.0.3</version>
         <authors>freezy</authors>
         <owners>freezy</owners>
         <licenseUrl>https://raw.githubusercontent.com/freezy/vpdb-agent/master/LICENSE</licenseUrl>
@@ -21,9 +21,14 @@
         <file src="bin\Release\Akavache.Sqlite3.dll" target="lib\net45\Akavache.Sqlite3.dll" />
         <file src="bin\Release\Akavache.Sqlite3.xml" target="lib\net45\Akavache.Sqlite3.xml" />
         <file src="bin\Release\Akavache.xml" target="lib\net45\Akavache.xml" />
+        <file src="bin\Release\CommandLine.dll" target="lib\net45\CommandLine.dll" />
+        <file src="bin\Release\CommandLine.xml" target="lib\net45\CommandLine.xml" />
         <file src="bin\Release\DeltaCompressionDotNet.dll" target="lib\net45\DeltaCompressionDotNet.dll" />
         <file src="bin\Release\DeltaCompressionDotNet.MsDelta.dll" target="lib\net45\DeltaCompressionDotNet.MsDelta.dll" />
         <file src="bin\Release\DeltaCompressionDotNet.PatchApi.dll" target="lib\net45\DeltaCompressionDotNet.PatchApi.dll" />
+        <file src="bin\Release\Hardcodet.Wpf.TaskbarNotification.dll" target="lib\net45\Hardcodet.Wpf.TaskbarNotification.dll" />
+        <file src="bin\Release\Hardcodet.Wpf.TaskbarNotification.xml" target="lib\net45\Hardcodet.Wpf.TaskbarNotification.xml" />
+        <file src="bin\Release\HashLib.dll" target="lib\net45\HashLib.dll" />
         <file src="bin\Release\Humanizer.dll" target="lib\net45\Humanizer.dll" />
         <file src="bin\Release\Humanizer.xml" target="lib\net45\Humanizer.xml" />
         <file src="bin\Release\ICSharpCode.SharpZipLib.dll" target="lib\net45\ICSharpCode.SharpZipLib.dll" />
@@ -43,6 +48,8 @@
         <file src="bin\Release\NLog.dll" target="lib\net45\NLog.dll" />
         <file src="bin\Release\NLog.xml" target="lib\net45\NLog.xml" />
         <file src="bin\Release\NuGet.Squirrel.dll" target="lib\net45\NuGet.Squirrel.dll" />
+        <file src="bin\Release\OpenMcdf.dll" target="lib\net45\OpenMcdf.dll" />
+        <file src="bin\Release\OpenMcdf.xml" target="lib\net45\OpenMcdf.xml" />
         <file src="bin\Release\PusherClient.dll" target="lib\net45\PusherClient.dll" />
         <file src="bin\Release\PusherClient.xml" target="lib\net45\PusherClient.xml" />
         <file src="bin\Release\ReactiveUI.dll" target="lib\net45\ReactiveUI.dll" />
