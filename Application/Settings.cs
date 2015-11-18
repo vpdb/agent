@@ -76,7 +76,12 @@ namespace VpdbAgent.Application
 		/// <summary>
 		/// If primary lighting is not available, use this if available (otherwise, ignore)
 		/// </summary>
-		public SettingsManager.Lighting DownloadLightingFallback { get { return _dDownloadLightingFallback; } set { this.RaiseAndSetIfChanged(ref _dDownloadLightingFallback, value); } }
+		public SettingsManager.Lighting DownloadLightingFallback { get { return _downloadLightingFallback; } set { this.RaiseAndSetIfChanged(ref _downloadLightingFallback, value); } }
+
+		/// <summary>
+		/// If primary lighting is not available, use this if available (otherwise, ignore)
+		/// </summary>
+		public Position WindowPosition { get { return _position; } set { this.RaiseAndSetIfChanged(ref _position, value); } }
 
 		/// <summary>
 		/// Only true until settings are saved for the first time.
@@ -103,7 +108,8 @@ namespace VpdbAgent.Application
 		private SettingsManager.Orientation _downloadOrientation;
 		private SettingsManager.Orientation _downloadOrientationFallback;
 		private SettingsManager.Lighting _downloadLighting;
-		private SettingsManager.Lighting _dDownloadLightingFallback;
+		private SettingsManager.Lighting _downloadLightingFallback;
+		private Position _position;
 		private bool _isFirstRun;
 
 		public Settings Copy()
@@ -126,6 +132,7 @@ namespace VpdbAgent.Application
 			DownloadOrientationFallback = await storage.GetOrCreateObject("DownloadOrientationFallback", () => SettingsManager.Orientation.Same);
 			DownloadLighting = await storage.GetOrCreateObject("DownloadLighting", () => SettingsManager.Lighting.Day);
 			DownloadLightingFallback = await storage.GetOrCreateObject("DownloadLightingFallback", () => SettingsManager.Lighting.Any);
+			WindowPosition = await storage.GetOrCreateObject("WindowPosition", () => new Position());
 			IsFirstRun = await storage.GetOrCreateObject("IsFirstRun", () => true);
 		}
 
@@ -144,8 +151,11 @@ namespace VpdbAgent.Application
 			await storage.InsertObject("DownloadOrientationFallback", DownloadOrientationFallback);
 			await storage.InsertObject("DownloadLighting", DownloadLighting);
 			await storage.InsertObject("DownloadLightingFallback", DownloadLightingFallback);
-			await storage.InsertObject("IsFirstRun", false);
 			IsFirstRun = false;
+		}
+
+		public async Task WriteInternalToStorage(IBlobCache storage) {
+			await storage.InsertObject("WindowPosition", WindowPosition);
 		}
 
 		protected internal static Settings Copy(Settings from, Settings to)
@@ -163,7 +173,17 @@ namespace VpdbAgent.Application
 			to.DownloadOrientationFallback = from.DownloadOrientationFallback;
 			to.DownloadLighting = from.DownloadLighting;
 			to.DownloadLightingFallback = from.DownloadLightingFallback;
+			to.WindowPosition = from.WindowPosition;
 			return to;
+		}
+
+		public class Position
+		{
+			public double Top { get; set; } = -1;
+			public double Left { get; set; } = -1;
+			public double Height { get; set; } = 730;
+			public double Width { get; set; } = 900;
+			public bool Max { get; set; } = false;
 		}
 	}
 }

@@ -1,13 +1,18 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Reactive.Concurrency;
+using System.Reactive.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Forms;
 using System.Windows.Interop;
 using System.Windows.Media;
+using NLog;
 using PusherClient;
 using ReactiveUI;
+using Splat;
+using VpdbAgent.Application;
 using VpdbAgent.ViewModels;
 using VpdbAgent.Views;
 using VpdbAgent.Vpdb;
@@ -20,6 +25,8 @@ namespace VpdbAgent
 	public partial class MainWindow
 	{
 		public AppViewModel AppViewModel { get; protected set; }
+
+		private static readonly ISettingsManager SettingsManager = Locator.CurrentMutable.GetService<ISettingsManager>();
 
 		public MainWindow(AppViewModel appViewModel)
 		{
@@ -36,42 +43,53 @@ namespace VpdbAgent
 
 		private void RestoreWindowPlacement()
 		{
-			Height = Properties.Settings.Default.WindowHeight;
-			Width = Properties.Settings.Default.WindowWidth;
-			double top, left;
-			var screen = Screen.FromHandle(new WindowInteropHelper(this).Handle);
-			if (Properties.Settings.Default.WindowMax) {
-				WindowState = WindowState.Maximized;
-			}
-			if (Properties.Settings.Default.WindowTop > 0) {
-				top = Properties.Settings.Default.WindowTop;
-				left = Properties.Settings.Default.WindowLeft;
-			} else {
-				top = (screen.Bounds.Height - Height) / 2;
-				left = (screen.Bounds.Width - Width) / 2;
-			}
+			SettingsManager.SettingsAvailable.Subscribe(settings => {
+				Height = settings.WindowPosition.Height;
+				Width = settings.WindowPosition.Width;
+				double top, left;
+				var screen = Screen.FromHandle(new WindowInteropHelper(this).Handle);
+				if (settings.WindowPosition.Max) {
+					WindowState = WindowState.Maximized;
+				}
+				if (settings.WindowPosition.Top > 0) {
+					top = settings.WindowPosition.Top;
+					left = settings.WindowPosition.Left;
+				} else {
+					top = (screen.Bounds.Height - Height) / 2;
+					left = (screen.Bounds.Width - Width) / 2;
+				}
 
-			// don't clip
-			Top = Math.Max(0, top);
-			Left = Math.Max(0, left);
+				// don't clip
+				Top = Math.Max(0, top);
+				Left = Math.Max(0, left);
+			});
 
-			// add save handler
+			// add handlers
 			Closing += Window_Closing;
+			StateChanged += Window_StateChanged;
+		}
+
+		private void Window_StateChanged(object sender, EventArgs e)
+		{
+			Console.WriteLine("Window state changed.");
 		}
 
 		public void Window_Closing(object sender, CancelEventArgs e)
 		{
-			Properties.Settings.Default.WindowTop = Top;
-			Properties.Settings.Default.WindowLeft = Left;
-			Properties.Settings.Default.WindowHeight = Height;
-			Properties.Settings.Default.WindowWidth = Width;
-			Properties.Settings.Default.WindowMax = WindowState == WindowState.Maximized;
-			Properties.Settings.Default.Save();
-
-			// todo move to close button command instead of window close
-			System.Windows.Application.Current.Shutdown();
+			var settings = SettingsManager.Settings.Copy();
+			settings.WindowPosition = new Settings.Position {
+				Top = Top,
+				Left = Left,
+				Height = Height,
+				Width = Width,
+				Max = WindowState == WindowState.Maximized
+			};
+			SettingsManager.SaveInternal(settings).Subscribe(_ => {
+				System.Windows.Application.Current.Dispatcher.Invoke(delegate {
+					System.Windows.Application.Current.Shutdown();
+				});
+			});
 		}
-
 
 		#region Performance Measurements
 

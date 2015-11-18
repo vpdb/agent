@@ -55,7 +55,8 @@ namespace VpdbAgent.Application
 		UserFull AuthenticatedUser { get; }
 
 		/// <summary>
-		/// Produces a value each time settings are updated or available
+		/// Produces a value each time settings are updated or available.
+		/// Immediately sends the current settings on subscription if available.
 		/// </summary>
 		IObservable<Settings> SettingsAvailable { get; }
 
@@ -81,6 +82,13 @@ namespace VpdbAgent.Application
 		/// <param name="settings">Settings to save</param>
 		/// <returns>This instance</returns>
 		ISettingsManager Save(Settings settings);
+
+		/// <summary>
+		/// Persists internal (non-validated) settings.
+		/// </summary>
+		/// <param name="settings">Settings to save</param>
+		/// <returns>An observable returning the result after successfully saving.</returns>
+		IObservable<Settings> SaveInternal(Settings settings);
 
 		/// <summary>
 		/// Returns a list of validation errors based on a given exception
@@ -224,6 +232,18 @@ namespace VpdbAgent.Application
 
 			CanCancel = true;
 			return this;
+		}
+
+		public IObservable<Settings> SaveInternal(Settings settings)
+		{
+			var result = new Subject<Settings>();
+			Task.Run(async () => {
+				Settings.Copy(settings, Settings);
+				await Settings.WriteInternalToStorage(_storage);
+				result.OnNext(settings);
+				result.OnCompleted();
+			});
+			return result;
 		}
 
 		public Dictionary<string, string> OnApiFailed(ApiException apiException)
