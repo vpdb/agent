@@ -28,6 +28,8 @@ namespace VpdbAgent
 
 		private static readonly ISettingsManager SettingsManager = Locator.CurrentMutable.GetService<ISettingsManager>();
 
+		private bool _minimizing = false;
+
 		public MainWindow(AppViewModel appViewModel)
 		{
 			RestoreWindowPlacement();
@@ -71,7 +73,10 @@ namespace VpdbAgent
 
 		private void Window_StateChanged(object sender, EventArgs e)
 		{
-			Console.WriteLine("Window state changed.");
+			if (WindowState == WindowState.Minimized && SettingsManager.Settings.MinimizeToTray) {
+				_minimizing = true;
+				Close();
+			}
 		}
 
 		public void Window_Closing(object sender, CancelEventArgs e)
@@ -86,7 +91,9 @@ namespace VpdbAgent
 			};
 			SettingsManager.SaveInternal(settings).Subscribe(_ => {
 				System.Windows.Application.Current.Dispatcher.Invoke(delegate {
-					System.Windows.Application.Current.Shutdown();
+					if (!_minimizing) {
+						System.Windows.Application.Current.Shutdown();
+					}
 				});
 			});
 		}

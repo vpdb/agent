@@ -226,7 +226,10 @@ namespace VpdbAgent.Application
 					var cmd = File.Exists(link) ? link : Assembly.GetEntryAssembly().Location;
 					_registryKey.SetValue("VPDB Agent", "\"" + cmd + "\"");
 				} else {
-					_registryKey.DeleteValue("VPDB Agent");
+					if (_registryKey.GetValue("VPDB Agent") != null) {
+						_registryKey.DeleteValue("VPDB Agent");
+					}
+					
 				}
 			});
 
