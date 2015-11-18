@@ -17,6 +17,7 @@ using Newtonsoft.Json;
 using NLog;
 using ReactiveUI;
 using Refit;
+using VpdbAgent.Libs.ShellLink;
 using VpdbAgent.Vpdb;
 using VpdbAgent.Vpdb.Models;
 using VpdbAgent.Vpdb.Network;
@@ -221,10 +222,16 @@ namespace VpdbAgent.Application
 				// handle startup settings (to test!)
 				if (Settings.StartWithWindows)
 				{
-					// todo check how to add --minimized arg through .lnk (probably best to read data from .lnk and use cmd.exe with working dir param)
-					var link = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Microsoft", "Windows", "Start Menu", "Programs", "VPDB", "VPDB Agent.lnk");
-					var cmd = File.Exists(link) ? link : Assembly.GetEntryAssembly().Location;
-					_registryKey.SetValue("VPDB Agent", "\"" + cmd + "\"");
+					var linkPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Microsoft", "Windows", "Start Menu", "Programs", "VPDB", "VPDB Agent.lnk");
+					string cmd;
+					if (File.Exists(linkPath)) {
+						var lnk = new ShellShortcut(linkPath);
+						cmd = $"cmd /c \"cd /d {lnk.WorkingDirectory} && {lnk.Path} {lnk.Arguments} --process-start-args \\\"--minimized\\\"\"";
+					} else {
+						cmd = File.Exists(linkPath) ? linkPath : Assembly.GetEntryAssembly().Location;
+					}
+
+					_registryKey.SetValue("VPDB Agent", cmd);
 				} else {
 					if (_registryKey.GetValue("VPDB Agent") != null) {
 						_registryKey.DeleteValue("VPDB Agent");
