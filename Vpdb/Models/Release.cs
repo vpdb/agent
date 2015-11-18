@@ -51,15 +51,13 @@ namespace VpdbAgent.Vpdb.Models
 			Game = release.Game;
 			Starred = release.Starred;
 
-			// todo fix wrong thread exception when canceling a download
-			release.Versions.ForEach(version =>
-			{
+			foreach (var version in release.Versions.ToList()) {
 				var existingVersion = Versions.FirstOrDefault(v => version.Name.Equals(v.Name));
 				if (existingVersion != null) {
 					Versions.Remove(existingVersion);
 				}
 				Versions.Add(version);
-			});
+			}
 		}
 
 		public override string ToString()

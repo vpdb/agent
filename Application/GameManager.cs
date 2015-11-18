@@ -168,7 +168,7 @@ namespace VpdbAgent.Application
 			downloadManager.WhenDownloaded.Subscribe(OnReleaseDownloaded);
 
 			// link games if new games are added 
-			Games.Changed.Subscribe(_ => SetupGameLinker());
+			Games.Changed.Subscribe(_ => CheckGameLinks());
 
 		}
 
@@ -265,7 +265,7 @@ namespace VpdbAgent.Application
 		/// games change.
 		/// </summary>
 		/// See <see cref="AddGame"/> for an explanation.
-		private void SetupGameLinker()
+		private void CheckGameLinks()
 		{
 			if (_gamesToLink.Count > 0) {
 				for (var i = _gamesToLink.Count - 1; i >= 0; i--) {
@@ -392,9 +392,6 @@ namespace VpdbAgent.Application
 
 		private void OnReleaseDownloaded(DownloadJob job)
 		{
-			// add release to database
-			AddRelease(job.Release);
-
 			// find release locally
 			var game = Games.FirstOrDefault(g => job.Release.Id.Equals(g.ReleaseId));
 
@@ -403,6 +400,7 @@ namespace VpdbAgent.Application
 				AddGame(job);
 
 			} else {
+				AddRelease(job.Release);
 				UpdateGame(game, job);
 			}
 		}
