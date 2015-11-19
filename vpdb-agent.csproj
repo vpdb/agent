@@ -294,6 +294,7 @@
     </Compile>
     <Compile Include="Vpdb\DownloadJob.cs" />
     <Compile Include="Vpdb\DownloadManager.cs" />
+    <Compile Include="Vpdb\JobManager.cs" />
     <Compile Include="Vpdb\FlavorMatcher.cs" />
     <Compile Include="Vpdb\Models\Author.cs" />
     <Compile Include="Vpdb\Models\File.cs" />

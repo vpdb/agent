@@ -47,7 +47,7 @@ namespace VpdbAgent.ViewModels.Downloads
 		private ObservableCollection<Inline> _statusPanelLabel;
 
 		// deps
-		private static readonly IDownloadManager DownloadManager = Locator.CurrentMutable.GetService<IDownloadManager>();
+		private static readonly IJobManager JobManager = Locator.CurrentMutable.GetService<IJobManager>();
 
 		// brushes
 		private static readonly Brush RedBrush = (Brush)System.Windows.Application.Current.FindResource("LightRedBrush");
@@ -114,10 +114,10 @@ namespace VpdbAgent.ViewModels.Downloads
 			CancelJob.Subscribe(_ => { Job.Cancel(); });
 
 			// retry job
-			RetryJob.Subscribe(_ => { DownloadManager.RetryJob(Job); });
+			RetryJob.Subscribe(_ => { JobManager.RetryJob(Job); });
 			
 			// delete job
-			DeleteJob.Subscribe(_ => { DownloadManager.DeleteJob(Job); });
+			DeleteJob.Subscribe(_ => { JobManager.DeleteJob(Job); });
 		}
 
 		private void OnStatusUpdated()

@@ -123,9 +123,14 @@ namespace VpdbAgent.ViewModels
 				locator.GetService<NLog.Logger>()
 			), typeof(IVpdbClient));
 
-			locator.RegisterLazySingleton(() => new DownloadManager(
-				locator.GetService<IVpdbClient>(),
+			locator.RegisterLazySingleton(() => new JobManager(
 				locator.GetService<IDatabaseManager>(),
+				locator.GetService<NLog.Logger>()
+			), typeof(IJobManager));			
+			
+			locator.RegisterLazySingleton(() => new DownloadManager(
+				locator.GetService<IJobManager>(),
+				locator.GetService<IVpdbClient>(),
 				locator.GetService<ISettingsManager>(),
 				locator.GetService<NLog.Logger>()
 			), typeof(IDownloadManager));
@@ -135,6 +140,7 @@ namespace VpdbAgent.ViewModels
 				locator.GetService<IVpdbClient>(),
 				locator.GetService<ISettingsManager>(),
 				locator.GetService<IDownloadManager>(),
+				locator.GetService<IJobManager>(),
 				locator.GetService<IDatabaseManager>(),
 				locator.GetService<IVersionManager>(),
 				locator.GetService<IVisualPinballManager>(),

@@ -13,18 +13,18 @@ namespace VpdbAgent.ViewModels.Downloads
 	public class DownloadsViewModel : ReactiveObject
 	{
 		// deps
-		private static readonly IDownloadManager DownloadManager = Locator.CurrentMutable.GetService<IDownloadManager>();
+		private static readonly IJobManager JobManager = Locator.CurrentMutable.GetService<IJobManager>();
 
 		// props
 		public IReactiveDerivedList<DownloadItemViewModel> Jobs { get; }
 
 		public DownloadsViewModel()
 		{
-			Jobs = DownloadManager.CurrentJobs.CreateDerivedCollection(
+			Jobs = JobManager.CurrentJobs.CreateDerivedCollection(
 				job => new DownloadItemViewModel(job),
 				x => true, 
 				(x, y) => x.Job.CompareTo(y.Job),
-				DownloadManager.WhenStatusChanged
+				JobManager.WhenStatusChanged
 			);
 		}
 	}

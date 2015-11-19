@@ -109,6 +109,7 @@ namespace VpdbAgent.Application
 		private readonly IVpdbClient _vpdbClient;
 		private readonly ISettingsManager _settingsManager;
 		private readonly IDownloadManager _downloadManager;
+		private readonly IJobManager _jobManager;
 		private readonly IDatabaseManager _databaseManager;
 		private readonly IVersionManager _versionManager;
 		private readonly IVisualPinballManager _visualPinballManager;
@@ -126,12 +127,14 @@ namespace VpdbAgent.Application
 		private IDisposable _gamesSubscription;
 
 		public GameManager(IMenuManager menuManager, IVpdbClient vpdbClient, ISettingsManager 
-			settingsManager, IDownloadManager downloadManager, IDatabaseManager databaseManager,
-			IVersionManager versionManager, IVisualPinballManager visualPinballManager, Logger logger)
+			settingsManager, IDownloadManager downloadManager, IJobManager jobManager, 
+			IDatabaseManager databaseManager, IVersionManager versionManager, 
+			IVisualPinballManager visualPinballManager, Logger logger)
 		{
 			_menuManager = menuManager;
 			_vpdbClient = vpdbClient;
 			_settingsManager = settingsManager;
+			_jobManager = jobManager;
 			_downloadManager = downloadManager;
 			_databaseManager = databaseManager;
 			_versionManager = versionManager;
@@ -165,7 +168,7 @@ namespace VpdbAgent.Application
 			vpdbClient.UserChannel.Subscribe(OnChannelJoined);
 
 			// subscribe to downloaded releases
-			downloadManager.WhenDownloaded.Subscribe(OnReleaseDownloaded);
+			jobManager.WhenDownloaded.Subscribe(OnDownloadFinished);
 
 			// link games if new games are added 
 			Games.Changed.Subscribe(_ => CheckGameLinks());
@@ -213,7 +216,7 @@ namespace VpdbAgent.Application
 				var latestFile = game.FindUpdate(release);
 				if (latestFile != null) {
 					_logger.Info("Found updated file {0} for {1}, adding to download queue.", latestFile, release);
-					_downloadManager.DownloadRelease(release, latestFile);
+					_jobManager.DownloadRelease(release, latestFile);
 				} else {
 					_logger.Info("No update found for {0}", release);
 				}
@@ -390,7 +393,22 @@ namespace VpdbAgent.Application
 			}
 		}
 
-		private void OnReleaseDownloaded(DownloadJob job)
+		private void DownloadRelease(string releaseId)
+		{
+			// check if backglass image needs to be downloaded
+			// check if backglass image needs to be downloaded
+			//var gameName = release.Game.DisplayName;
+
+
+			// check if wheel image needs to be downloaded 
+
+			// todo check for ROM to be downloaded
+
+			// download release
+			_downloadManager.DownloadRelease(releaseId);
+		}
+
+		private void OnDownloadFinished(DownloadJob job)
 		{
 			// find release locally
 			var game = Games.FirstOrDefault(g => job.Release.Id.Equals(g.ReleaseId));
@@ -512,7 +530,7 @@ namespace VpdbAgent.Application
 					var game = OnStarRelease(id, true);
 					if (game == null) {
 						if (_settingsManager.Settings.SyncStarred) {
-							_downloadManager.DownloadRelease(id);
+							DownloadRelease(id);
 						} else {
 							_logger.Info("Sync starred not enabled, ignoring starred release.");
 						}
