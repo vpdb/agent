@@ -219,6 +219,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Application\DatabaseManager.cs" />
+    <Compile Include="Application\PlatformManager.cs" />
     <Compile Include="Application\Settings.cs" />
     <Compile Include="Application\VersionManager.cs" />
     <Compile Include="Controls\CachedImage.cs" />
@@ -292,12 +293,13 @@
     <Compile Include="Views\Games\GameItemView.xaml.cs">
       <DependentUpon>GameItemView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Vpdb\DownloadJob.cs" />
-    <Compile Include="Vpdb\DownloadManager.cs" />
-    <Compile Include="Vpdb\JobManager.cs" />
-    <Compile Include="Vpdb\FlavorMatcher.cs" />
+    <Compile Include="Vpdb\Download\FileType.cs" />
+    <Compile Include="Vpdb\Download\Job.cs" />
+    <Compile Include="Vpdb\Download\DownloadManager.cs" />
+    <Compile Include="Vpdb\Download\JobManager.cs" />
+    <Compile Include="Vpdb\Download\FlavorMatcher.cs" />
     <Compile Include="Vpdb\Models\Author.cs" />
-    <Compile Include="Vpdb\Models\File.cs" />
+    <Compile Include="Vpdb\Models\TableFile.cs" />
     <Compile Include="Vpdb\Models\FileReference.cs" />
     <Compile Include="Vpdb\Models\Flavor.cs" />
     <Compile Include="Vpdb\Models\Game.cs" />

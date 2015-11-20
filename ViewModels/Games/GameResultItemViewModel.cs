@@ -17,21 +17,21 @@ namespace VpdbAgent.ViewModels.Games
 		public readonly Game Game;
 		public readonly Release Release;
 		public readonly Version Version;
-		public readonly File File;
+		public readonly TableFile TableFile;
 
 		// commands
 		public ReactiveCommand<object> SelectResult { get; protected set; } = ReactiveCommand.Create();
 
-		public GameResultItemViewModel(Game game, Release release, Version version, File file, ICommand closeCommand)
+		public GameResultItemViewModel(Game game, Release release, Version version, TableFile tableFile, ICommand closeCommand)
 		{
 			Game = game;
 			Version = version;
 			Release = release;
-			File = file;
+			TableFile = tableFile;
 
 			SelectResult.Subscribe(_ =>
 			{
-				GameManager.LinkRelease(Game, release, file.Reference.Id);
+				GameManager.LinkRelease(Game, release, tableFile.Reference.Id);
 				closeCommand.Execute(null);
 			});
 		}

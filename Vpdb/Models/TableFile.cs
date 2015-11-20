@@ -9,7 +9,7 @@ using ReactiveUI;
 
 namespace VpdbAgent.Vpdb.Models
 {
-	public class File : ReactiveObject
+	public class TableFile : ReactiveObject
 	{
 		private Image _thumb;
 
@@ -29,7 +29,7 @@ namespace VpdbAgent.Vpdb.Models
 		{
 			public string Id { get; set; }
 			public string Label { get; set; }
-			public string Platform { get; set; }
+			public Platform Platform { get; set; }
 			public string MajorVersion { get; set; }
 			public string DownloadUrl { get; set; }
 			public DateTime BuiltAt { get; set; }
@@ -37,8 +37,16 @@ namespace VpdbAgent.Vpdb.Models
 
 			public override string ToString()
 			{
-				return Label;
+				return $"{Label} ({Platform})";
 			}
+		}
+
+		/// <summary>
+		/// Platform as defined in the file's build at VPDB.
+		/// </summary>
+		public enum Platform
+		{
+			VP, FP
 		}
 	}
 }

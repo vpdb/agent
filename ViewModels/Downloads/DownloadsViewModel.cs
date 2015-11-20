@@ -7,6 +7,7 @@ using NLog;
 using ReactiveUI;
 using Splat;
 using VpdbAgent.Vpdb;
+using VpdbAgent.Vpdb.Download;
 
 namespace VpdbAgent.ViewModels.Downloads
 {

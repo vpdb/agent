@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Reactive.Concurrency;
 using System.Reactive.Linq;
-using CommandLine;
 using ReactiveUI;
 using Splat;
 using VpdbAgent.Application;
@@ -16,6 +14,7 @@ using VpdbAgent.Views.Games;
 using VpdbAgent.Views.Settings;
 using VpdbAgent.VisualPinball;
 using VpdbAgent.Vpdb;
+using VpdbAgent.Vpdb.Download;
 
 namespace VpdbAgent.ViewModels
 {
@@ -116,6 +115,12 @@ namespace VpdbAgent.ViewModels
 				locator.GetService<NLog.Logger>()
 			), typeof(IMenuManager));
 
+			locator.RegisterLazySingleton(() => new PlatformManager(
+				locator.GetService<IMenuManager>(),
+				locator.GetService<IDatabaseManager>(),
+				locator.GetService<NLog.Logger>()
+			), typeof(IPlatformManager));
+
 			locator.RegisterLazySingleton(() => new VpdbClient(
 				locator.GetService<ISettingsManager>(),
 				locator.GetService<IVersionManager>(),
@@ -129,6 +134,7 @@ namespace VpdbAgent.ViewModels
 			), typeof(IJobManager));			
 			
 			locator.RegisterLazySingleton(() => new DownloadManager(
+				locator.GetService<IPlatformManager>(),
 				locator.GetService<IJobManager>(),
 				locator.GetService<IVpdbClient>(),
 				locator.GetService<ISettingsManager>(),
@@ -140,10 +146,9 @@ namespace VpdbAgent.ViewModels
 				locator.GetService<IVpdbClient>(),
 				locator.GetService<ISettingsManager>(),
 				locator.GetService<IDownloadManager>(),
-				locator.GetService<IJobManager>(),
 				locator.GetService<IDatabaseManager>(),
 				locator.GetService<IVersionManager>(),
-				locator.GetService<IVisualPinballManager>(),
+				locator.GetService<IPlatformManager>(),
 				locator.GetService<NLog.Logger>()
 			), typeof(IGameManager));
 

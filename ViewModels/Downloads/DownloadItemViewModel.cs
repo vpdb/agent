@@ -9,13 +9,14 @@ using Humanizer;
 using ReactiveUI;
 using Splat;
 using VpdbAgent.Vpdb;
+using VpdbAgent.Vpdb.Download;
 
 namespace VpdbAgent.ViewModels.Downloads
 {
 	public class DownloadItemViewModel : ReactiveObject
 	{
 		// status props
-		public DownloadJob Job { get; }
+		public Job Job { get; }
 		public bool Transferring { get { return _transferring; } set { this.RaiseAndSetIfChanged(ref _transferring, value); } }
 		public bool Retryable { get { return _retryable; } set { this.RaiseAndSetIfChanged(ref _retryable, value); } }
 		public Brush StatusPanelForeground { get { return _statusPanelForeground; } set { this.RaiseAndSetIfChanged(ref _statusPanelForeground, value); } }
@@ -60,7 +61,7 @@ namespace VpdbAgent.ViewModels.Downloads
 		private static readonly string CheckIcon = (string)System.Windows.Application.Current.FindResource("IconCheck");
 		private static readonly string CloseIcon = (string)System.Windows.Application.Current.FindResource("IconClose");
 
-		public DownloadItemViewModel(DownloadJob job)
+		public DownloadItemViewModel(Job job)
 		{
 			Job = job;
 			Job.WhenStatusChanges.Subscribe(status => { OnStatusUpdated(); });
@@ -73,7 +74,7 @@ namespace VpdbAgent.ViewModels.Downloads
 				.Subscribe(progress => {
 					// on main thread
 					System.Windows.Application.Current.Dispatcher.Invoke(delegate {
-						DownloadPercent = (double)progress.BytesReceived / Job.File.Reference.Bytes * 100;
+						DownloadPercent = (double)progress.BytesReceived / Job.File.Bytes * 100;
 						DownloadPercentFormatted = $"{Math.Round(DownloadPercent)}%";
 					});
 				});
@@ -106,7 +107,7 @@ namespace VpdbAgent.ViewModels.Downloads
 				.Subscribe(progress => {
 					// on main thread
 					System.Windows.Application.Current.Dispatcher.Invoke(delegate {
-						DownloadSizeFormatted = (progress.TotalBytesToReceive > 0 ? progress.TotalBytesToReceive : Job.File.Reference.Bytes).Bytes().ToString("#.0");
+						DownloadSizeFormatted = (progress.TotalBytesToReceive > 0 ? progress.TotalBytesToReceive : Job.File.Bytes).Bytes().ToString("#.0");
 					});
 				});
 
@@ -123,7 +124,7 @@ namespace VpdbAgent.ViewModels.Downloads
 		private void OnStatusUpdated()
 		{
 			switch (Job.Status) {
-				case DownloadJob.JobStatus.Aborted:
+				case Job.JobStatus.Aborted:
 					StatusPanelForeground = RedBrush;
 					StatusPanelIcon = CloseIcon;
 					StatusPanelIconSize = 12;
@@ -132,7 +133,7 @@ namespace VpdbAgent.ViewModels.Downloads
 					OnFinished();
 					break;
 
-				case DownloadJob.JobStatus.Completed:
+				case Job.JobStatus.Completed:
 					StatusPanelForeground = GreenBrush;
 					StatusPanelIcon = CheckIcon;
 					StatusPanelIconSize = 16;
@@ -147,7 +148,7 @@ namespace VpdbAgent.ViewModels.Downloads
 					OnFinished();
 					break;
 
-				case DownloadJob.JobStatus.Failed:
+				case Job.JobStatus.Failed:
 					StatusPanelForeground = RedBrush;
 					StatusPanelIcon = WarningIcon;
 					StatusPanelIconSize = 18;
@@ -159,7 +160,7 @@ namespace VpdbAgent.ViewModels.Downloads
 					OnFinished();
 					break;
 
-				case DownloadJob.JobStatus.Queued:
+				case Job.JobStatus.Queued:
 					StatusPanelForeground = GreyBrush;
 					StatusPanelIcon = ClockIcon;
 					StatusPanelIconSize = 16;
@@ -168,7 +169,7 @@ namespace VpdbAgent.ViewModels.Downloads
 					Transferring = false;
 					break;
 
-				case DownloadJob.JobStatus.Transferring:
+				case Job.JobStatus.Transferring:
 					StatusPanelForeground = Brushes.Transparent;
 					Transferring = true;
 					Retryable = false;

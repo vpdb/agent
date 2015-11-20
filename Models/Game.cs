@@ -9,7 +9,6 @@ using static System.String;
 using System.Reactive.Linq;
 using NLog;
 using VpdbAgent.Vpdb.Models;
-using File = VpdbAgent.Vpdb.Models.File;
 
 namespace VpdbAgent.Models
 {
@@ -29,7 +28,7 @@ namespace VpdbAgent.Models
 		private Release _release;
 		private readonly ObservableAsPropertyHelper<bool> _hasRelease;
 		private readonly ObservableAsPropertyHelper<bool> _hasUpdate;
-		private readonly ObservableAsPropertyHelper<File> _updatedRelease;
+		private readonly ObservableAsPropertyHelper<TableFile> _updatedRelease;
 
 		// serialized properties
 		[DataMember] public string Id { get; set; }
@@ -45,7 +44,7 @@ namespace VpdbAgent.Models
 		public bool Exists { get { return _exists; } set { this.RaiseAndSetIfChanged(ref _exists, value); } }
 		public bool HasRelease => _hasRelease.Value;
 		public bool HasUpdate => _hasUpdate.Value;
-		public File UpdatedRelease => _updatedRelease.Value;
+		public TableFile UpdatedRelease => _updatedRelease.Value;
 		public long FileSize { get; set; }
 		public Platform Platform { get; private set; }
 
@@ -87,7 +86,7 @@ namespace VpdbAgent.Models
 		/// </summary>
 		/// <param name="release">Freshly obtained release from VPDB</param>
 		/// <returns>The newer file if available, null if no update available</returns>
-		public File FindUpdate(Release release)
+		public TableFile FindUpdate(Release release)
 		{
 			if (FileId == null || release == null) {
 				return null;

@@ -15,7 +15,7 @@ namespace VpdbAgent.ViewModels.Games
 	public class GamesViewModel : ReactiveObject
 	{
 		// dependencies
-		private readonly IGameManager _gameManager;
+		private readonly IPlatformManager _platformManager;
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		// data
@@ -29,22 +29,22 @@ namespace VpdbAgent.ViewModels.Games
 		private readonly ReactiveList<string> _platformFilter = new ReactiveList<string>();
 		private readonly IReactiveDerivedList<GameItemViewModel> _allGames;
 
-		public GamesViewModel(IGameManager gameManager)
+		public GamesViewModel(IGameManager gameManager, IPlatformManager platformManager)
 		{
-			_gameManager = gameManager;
+			_platformManager = platformManager;
 
 			// setup init listener
-			_gameManager.Initialized.Subscribe(_ => SetupSubscriptions());
+			gameManager.Initialized.Subscribe(_ => SetupSubscriptions());
 
 			// create platforms, filtered and sorted
-			Platforms = _gameManager.Platforms.CreateDerivedCollection(
+			Platforms = _platformManager.Platforms.CreateDerivedCollection(
 				platform => platform,
 				platform => platform.IsEnabled,
 				(x, y) => string.Compare(x.Name, y.Name, StringComparison.Ordinal)
 			);
 
 			// push all games into AllGames as view models and sorted
-			_allGames = _gameManager.Games.CreateDerivedCollection(
+			_allGames = gameManager.Games.CreateDerivedCollection(
 				game => new GameItemViewModel(game),
 				gameViewModel => true,
 				(x, y) => string.Compare(x.Game.Id, y.Game.Id, StringComparison.Ordinal)
@@ -120,7 +120,7 @@ namespace VpdbAgent.ViewModels.Games
 				_platformFilter.Clear();
 				_platformFilter.AddRange(Platforms.Select(p => p.Name));
 			};
-			Logger.Info("We've got {0} platforms, {2} visible, {1} in total.", Platforms.Count, _gameManager.Platforms.Count, _platformFilter.Count);
+			Logger.Info("We've got {0} platforms, {2} visible, {1} in total.", Platforms.Count, _platformManager.Platforms.Count, _platformFilter.Count);
 
 		}
 	}

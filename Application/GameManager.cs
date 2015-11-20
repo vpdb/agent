@@ -21,6 +21,7 @@ using VpdbAgent.PinballX;
 using VpdbAgent.PinballX.Models;
 using VpdbAgent.VisualPinball;
 using VpdbAgent.Vpdb;
+using VpdbAgent.Vpdb.Download;
 using VpdbAgent.Vpdb.Models;
 using File = System.IO.File;
 using Game = VpdbAgent.Models.Game;
@@ -50,13 +51,6 @@ namespace VpdbAgent.Application
 	/// </summary>
 	public interface IGameManager
 	{
-		/// <summary>
-		/// Platforms are 1-way mapped to <see cref="IMenuManager.Systems"/>,
-		/// meaning that if systems change (e.g. <c>PinballX.ini</c> is 
-		/// manually updated), they are updated but not vice versa.
-		/// </summary>
-		ReactiveList<Platform> Platforms { get; }
-
 		/// <summary>
 		/// Games are 2-way mapped to <see cref="Game"/>, where downstream 
 		/// changes (e.g. XMLs in PinballX's database folder change) come from
@@ -109,14 +103,12 @@ namespace VpdbAgent.Application
 		private readonly IVpdbClient _vpdbClient;
 		private readonly ISettingsManager _settingsManager;
 		private readonly IDownloadManager _downloadManager;
-		private readonly IJobManager _jobManager;
 		private readonly IDatabaseManager _databaseManager;
 		private readonly IVersionManager _versionManager;
-		private readonly IVisualPinballManager _visualPinballManager;
+		private readonly IPlatformManager _platformManager;
 		private readonly Logger _logger;
 
 		// props
-		public ReactiveList<Platform> Platforms { get; } = new ReactiveList<Platform>();
 		public ReactiveList<Game> Games { get; } = new ReactiveList<Game>();
 		public IObservable<Unit> Initialized => _initialized;
 
@@ -127,35 +119,17 @@ namespace VpdbAgent.Application
 		private IDisposable _gamesSubscription;
 
 		public GameManager(IMenuManager menuManager, IVpdbClient vpdbClient, ISettingsManager 
-			settingsManager, IDownloadManager downloadManager, IJobManager jobManager, 
-			IDatabaseManager databaseManager, IVersionManager versionManager, 
-			IVisualPinballManager visualPinballManager, Logger logger)
+			settingsManager, IDownloadManager downloadManager, IDatabaseManager databaseManager,
+			IVersionManager versionManager, IPlatformManager platformManager, Logger logger)
 		{
 			_menuManager = menuManager;
 			_vpdbClient = vpdbClient;
 			_settingsManager = settingsManager;
-			_jobManager = jobManager;
 			_downloadManager = downloadManager;
 			_databaseManager = databaseManager;
 			_versionManager = versionManager;
-			_visualPinballManager = visualPinballManager;
+			_platformManager = platformManager;
 			_logger = logger;
-
-			var systems = _menuManager.Systems;
-
-			// populate platforms when system change
-			systems.Changed
-				.Skip(1)
-				.ObserveOn(Scheduler.Default)
-				.Subscribe(UpdatePlatforms);
-
-			// populate platform when games change
-			systems.Changed
-				.ObserveOn(Scheduler.Default)
-				.SelectMany(_ => systems
-					.Select(system => system.Games.Changed.Select(__ => system))
-				.Merge())
-			.Subscribe(UpdatePlatform);
 
 			// setup game change listener once all games are fetched.
 			_menuManager.Initialized.Subscribe(_ => SetupGameChanges());
@@ -165,14 +139,13 @@ namespace VpdbAgent.Application
 			_menuManager.Initialized.Delay(TimeSpan.FromSeconds(2)).Subscribe(_ => UpdateReleases());
 
 			// subscribe to pusher
-			vpdbClient.UserChannel.Subscribe(OnChannelJoined);
+			_vpdbClient.UserChannel.Subscribe(OnChannelJoined);
 
 			// subscribe to downloaded releases
-			jobManager.WhenDownloaded.Subscribe(OnDownloadFinished);
+			_downloadManager.WhenReleaseDownloaded.Subscribe(OnReleaseDownloaded);
 
 			// link games if new games are added 
 			Games.Changed.Subscribe(_ => CheckGameLinks());
-
 		}
 
 		public IGameManager Initialize()
@@ -216,7 +189,7 @@ namespace VpdbAgent.Application
 				var latestFile = game.FindUpdate(release);
 				if (latestFile != null) {
 					_logger.Info("Found updated file {0} for {1}, adding to download queue.", latestFile, release);
-					_jobManager.DownloadRelease(release, latestFile);
+					_downloadManager.DownloadRelease(release, latestFile);
 				} else {
 					_logger.Info("No update found for {0}", release);
 				}
@@ -236,14 +209,14 @@ namespace VpdbAgent.Application
 		{
 			// here we push all games in all platforms into the Games list.
 			var whenPlatformsOrGamesInThosePlatformsChange = Observable.Merge(
-				Platforms.Changed                                                      // one of the games changes
-					.SelectMany(_ => Platforms.Select(x => x.Games.Changed).Merge())
+				_platformManager.Platforms.Changed                                                      // one of the games changes
+					.SelectMany(_ => _platformManager.Platforms.Select(x => x.Games.Changed).Merge())
 					.Select(_ => Unit.Default),
-				Platforms.Changed.Select(_ => Unit.Default));                          // one of the platforms changes
+				_platformManager.Platforms.Changed.Select(_ => Unit.Default));                          // one of the platforms changes
 
 			_gamesSubscription = whenPlatformsOrGamesInThosePlatformsChange
 				.StartWith(Unit.Default)
-				.Select(_ => Platforms.SelectMany(x => x.Games).ToList())
+				.Select(_ => _platformManager.Platforms.SelectMany(x => x.Games).ToList())
 				.Where(games => games.Count > 0)
 				.Subscribe(games => {
 					System.Windows.Application.Current.Dispatcher.Invoke(delegate {
@@ -297,68 +270,6 @@ namespace VpdbAgent.Application
 		}
 
 		/// <summary>
-		/// Updates platform and games for a given system. <br/>
-		/// 
-		/// This takes changed data from a system, updates platform and
-		/// games, and writes back the result to the json file.
-		/// </summary>
-		/// <remarks>
-		/// Triggered by changes of any of the system's games.
-		/// </remarks>
-		/// <param name="system"></param>
-		private void UpdatePlatform(PinballXSystem system)
-		{
-			_logger.Info("Updating games for {0}", system);
-
-			// create new platform and find old
-			var newPlatform = new Platform(system, _databaseManager.Database);
-			var oldPlatform = Platforms.FirstOrDefault(p => p.Name.Equals(system.Name));
-
-			// save vpdb.json for updated platform
-			newPlatform.Save();
-			
-			// update platforms back on main thread
-			System.Windows.Application.Current.Dispatcher.Invoke(delegate {
-				using (Platforms.SuppressChangeNotifications()) {
-					if (oldPlatform != null) {
-						Platforms.Remove(oldPlatform);
-					}
-					Platforms.Add(newPlatform);
-				}
-			});
-		}
-
-		/// <summary>
-		/// Updates all platforms and games. <br/>
-		/// 
-		/// This takes all available systems, re-creates platforms
-		/// and games, and writes back the results to the json files.
-		/// </summary>
-		/// <remarks>
-		/// Triggered by any system changes.
-		/// </remarks>
-		/// <param name="args"></param>
-		private void UpdatePlatforms(NotifyCollectionChangedEventArgs args)
-		{
-			_logger.Info("Updating all games for all platforms");
-
-			// create platforms from games
-			var platforms = _menuManager.Systems.Select(system => new Platform(system, _databaseManager.Database)).ToList();
-
-			// write vpdb.json
-			platforms.ForEach(p => p.Save());
-
-			// update platforms back on main thread
-			System.Windows.Application.Current.Dispatcher.Invoke(delegate {
-				using (Platforms.SuppressChangeNotifications()) {
-					// todo make this more intelligent by diff'ing and changing instead of drop-and-create
-					Platforms.Clear();
-					Platforms.AddRange(platforms);
-				}
-			});
-		}
-
-		/// <summary>
 		/// Retrieves all known releases from VPDB and updates them locally.
 		/// 
 		/// todo include file id when searching. (also needs update on backend.)
@@ -393,22 +304,7 @@ namespace VpdbAgent.Application
 			}
 		}
 
-		private void DownloadRelease(string releaseId)
-		{
-			// check if backglass image needs to be downloaded
-			// check if backglass image needs to be downloaded
-			//var gameName = release.Game.DisplayName;
-
-
-			// check if wheel image needs to be downloaded 
-
-			// todo check for ROM to be downloaded
-
-			// download release
-			_downloadManager.DownloadRelease(releaseId);
-		}
-
-		private void OnDownloadFinished(DownloadJob job)
+		private void OnReleaseDownloaded(Job job)
 		{
 			// find release locally
 			var game = Games.FirstOrDefault(g => job.Release.Id.Equals(g.ReleaseId));
@@ -427,25 +323,22 @@ namespace VpdbAgent.Application
 		/// Adds a downloaded game to the PinballX database.
 		/// </summary>
 		/// <param name="job">Job of the downloaded game</param>
-		private void AddGame(DownloadJob job)
+		private void AddGame(Job job)
 		{
 			_logger.Info("Adding {0} to PinballX database...", job.Release);
 
-			// todo make this more sophisticated based on settings.
-			var platform = Platforms.FirstOrDefault(p => "Visual Pinball".Equals(p.Name));
+			var platform = _platformManager.FindPlatform(job.TableFile);
 			if (platform == null) {
-				_logger.Error("Cannot retrieve default platform \"Visual Pinball\".");
+				_logger.Warn("Cannot find platform for release {0} ({1}), aborting.", job.Release.Id, string.Join(",", job.TableFile.Compatibility));
 				return;
 			}
-
-			MoveDownloadedFile(job, platform);
 			var newGame = _menuManager.NewGame(job);
 
 			// adding the game (updating the xml) forces a new rescan. but it's
 			// async so in order to avoid race conditions, we put this into a 
 			// "linking" queue, meaning on the next update, it will also get 
 			// linked.
-			_gamesToLink.Add(new Tuple<string, string, string>(newGame.Description, job.Release.Id, job.File.Reference.Id));
+			_gamesToLink.Add(new Tuple<string, string, string>(newGame.Description, job.Release.Id, job.File.Id));
 
 			// save new game to Vpdb.xml (and trigger rescan)
 			_menuManager.AddGame(newGame, platform.DatabasePath);
@@ -459,45 +352,17 @@ namespace VpdbAgent.Application
 		/// </remarks>
 		/// <param name="game">Game to be updated</param>
 		/// <param name="job">Job of downloaded game</param>
-		private void UpdateGame(Game game, DownloadJob job)
+		private void UpdateGame(Game game, Job job)
 		{
-			var oldFileName = Path.GetFileNameWithoutExtension(game.Filename);
-
 			_logger.Info("Updating {0} in PinballX database...", job.Release);
-			MoveDownloadedFile(job, game.Platform);
+
+			var oldFileName = Path.GetFileNameWithoutExtension(game.Filename);
 				
 			// update and save json
 			game.FileId = Path.GetFileNameWithoutExtension(job.FilePath);
 
 			// update and save xml
 			_menuManager.UpdateGame(oldFileName, game);
-		}
-
-		/// <summary>
-		/// Moves a downloaded file to the table folder of the platform.
-		/// </summary>
-		/// <param name="job">Job of downloaded file</param>
-		/// <param name="platform">Platform of the downloaded file</param>
-		private void MoveDownloadedFile(DownloadJob job, Platform platform)
-		{
-			// move downloaded file to table folder
-			if (job.FilePath != null && File.Exists(job.FilePath)) {
-				
-				try {
-					var dest = Path.Combine(platform.TablePath, Path.GetFileName(job.FilePath));
-					if (!File.Exists(dest)) {
-						_logger.Info("Moving downloaded file from {0} to {1}...", job.FilePath, dest);
-						File.Move(job.FilePath, dest);
-					} else {
-						// todo see how to handle, probably name it differently.
-						_logger.Warn("File {0} already exists at destination!", dest);
-					}
-				} catch (Exception e) {
-					_logger.Error(e, "Error moving downloaded file.");
-				}
-			} else {
-				_logger.Error("Downloaded file {0} does not exist.", job.FilePath);
-			}
 		}
 
 		/// <summary>
@@ -530,7 +395,7 @@ namespace VpdbAgent.Application
 					var game = OnStarRelease(id, true);
 					if (game == null) {
 						if (_settingsManager.Settings.SyncStarred) {
-							DownloadRelease(id);
+							_downloadManager.DownloadRelease(id);
 						} else {
 							_logger.Info("Sync starred not enabled, ignoring starred release.");
 						}

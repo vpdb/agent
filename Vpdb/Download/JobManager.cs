@@ -1,11 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.Design.Serialization;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Net;
-using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
@@ -14,12 +9,9 @@ using System.Threading.Tasks;
 using NLog;
 using ReactiveUI;
 using VpdbAgent.Application;
-using VpdbAgent.Vpdb.Models;
-using File = VpdbAgent.Vpdb.Models.File;
 
-namespace VpdbAgent.Vpdb
+namespace VpdbAgent.Vpdb.Download
 {
-
 	/// <summary>
 	/// Manages a download queue supporting parallel processing of downloads
 	/// on multiple worker threads.
@@ -28,45 +20,43 @@ namespace VpdbAgent.Vpdb
 	{
 
 		/// <summary>
-		/// Downloads or upgrades a release, including table image, ROMs and other
-		/// media, based on the user's settings.
+		/// Adds a new job to be processed.
 		/// </summary>
-		/// <param name="release">Release to download or upgrade</param>
-		/// <param name="file">File of the release to download</param>
+		/// <param name="job">Job to add</param>
 		/// <returns>This instance</returns>
-		IJobManager DownloadRelease(Release release, File file);
+		IJobManager AddJob(Job job);
 
 		/// <summary>
 		/// Deletes a job from the database.
 		/// </summary>
 		/// <param name="job"></param>
-		/// <returns></returns>
-		IJobManager DeleteJob(DownloadJob job);
+		/// <returns>This instance</returns>
+		IJobManager DeleteJob(Job job);
 
 		/// <summary>
 		/// Retries a failed or aborted job.
 		/// </summary>
 		/// <param name="job"></param>
-		/// <returns></returns>
-		IJobManager RetryJob(DownloadJob job);
+		/// <returns>This instance</returns>
+		IJobManager RetryJob(Job job);
 
 		/// <summary>
 		/// An observable that produces values as when any job in the queue
 		/// (active or not) changes status.
 		/// </summary>
-		IObservable<DownloadJob.JobStatus> WhenStatusChanged { get; }
+		IObservable<Job.JobStatus> WhenStatusChanged { get; }
 
 		/// <summary>
 		/// An observable that produces a value when a job finished downloading
 		/// successfully.
 		/// </summary>
-		IObservable<DownloadJob> WhenDownloaded { get; }
+		IObservable<Job> WhenDownloaded { get; }
 
 		/// <summary>
 		/// A list of all current, future and past jobs (i.e. independent of their 
 		/// status)
 		/// </summary>
-		ReactiveList<DownloadJob> CurrentJobs { get; }
+		ReactiveList<Job> CurrentJobs { get; }
 	}
 
 	/// <summary>
@@ -82,14 +72,14 @@ namespace VpdbAgent.Vpdb
 		private readonly Logger _logger;
 
 		// props
-		public ReactiveList<DownloadJob> CurrentJobs { get; }
-		public IObservable<DownloadJob.JobStatus> WhenStatusChanged => _whenStatusChanged;
-		public IObservable<DownloadJob> WhenDownloaded => _whenDownloaded;
+		public ReactiveList<Job> CurrentJobs { get; }
+		public IObservable<Job.JobStatus> WhenStatusChanged => _whenStatusChanged;
+		public IObservable<Job> WhenDownloaded => _whenDownloaded;
 
 		// members
-		private readonly Subject<DownloadJob> _jobs = new Subject<DownloadJob>();
-		private readonly Subject<DownloadJob.JobStatus> _whenStatusChanged = new Subject<DownloadJob.JobStatus>();
-		private readonly Subject<DownloadJob> _whenDownloaded = new Subject<DownloadJob>();
+		private readonly Subject<Job> _jobs = new Subject<Job>();
+		private readonly Subject<Job.JobStatus> _whenStatusChanged = new Subject<Job.JobStatus>();
+		private readonly Subject<Job> _whenDownloaded = new Subject<Job>();
 		private readonly IDisposable _queue;
 		private readonly string _downloadPath = Path.Combine(
 			Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), 
@@ -115,7 +105,7 @@ namespace VpdbAgent.Vpdb
 				.Subscribe(job => {
 					_databaseManager.Save();
 
-					if (job.Status != DownloadJob.JobStatus.Aborted) {
+					if (job.Status != Job.JobStatus.Aborted) {
 						_whenDownloaded.OnNext(job);
 					}
 				}, error => {
@@ -130,25 +120,16 @@ namespace VpdbAgent.Vpdb
 			}
 		}
 
-
-		public IJobManager DownloadRelease(Release release, File file)
+		public IJobManager AddJob(Job job)
 		{
-
-			// todo also queue all remaining non-table files of the release.
-			// todo also queue media & roms if available, based on settings
-
-			// queue for download
-			var job = new DownloadJob(release, file);
 			AddToCurrentJobs(job);
 			_jobs.OnNext(job);
-
 			return this;
 		}
 
-		public IJobManager RetryJob(DownloadJob job)
+		public IJobManager RetryJob(Job job)
 		{
-			System.Windows.Application.Current.Dispatcher.Invoke(delegate
-			{
+			System.Windows.Application.Current.Dispatcher.Invoke(delegate {
 				job.Initialize();
 				job.WhenStatusChanges.Subscribe(status => _whenStatusChanged.OnNext(status));
 				_databaseManager.Save();
@@ -156,12 +137,11 @@ namespace VpdbAgent.Vpdb
 			});
 			return this;
 		}
-
-		public IJobManager DeleteJob(DownloadJob job)
+	
+		public IJobManager DeleteJob(Job job)
 		{
 			// update jobs back on main thread
-			System.Windows.Application.Current.Dispatcher.Invoke(delegate
-			{
+			System.Windows.Application.Current.Dispatcher.Invoke(delegate {
 				_databaseManager.Database.DownloadJobs.Remove(job);
 				_databaseManager.Save();
 			});
@@ -182,7 +162,7 @@ namespace VpdbAgent.Vpdb
 		/// <param name="job">Job to start</param>
 		/// <param name="token">Cancelation token</param>
 		/// <returns>Job</returns>
-		private async Task<DownloadJob> ProcessDownload(DownloadJob job, CancellationToken token)
+		private async Task<Job> ProcessDownload(Job job, CancellationToken token)
 		{
 			var dest = Path.Combine(_downloadPath, job.FileName);
 
@@ -218,11 +198,10 @@ namespace VpdbAgent.Vpdb
 		/// global one.
 		/// </summary>
 		/// <param name="job">Job to add</param>
-		private void AddToCurrentJobs(DownloadJob job)
+		private void AddToCurrentJobs(Job job)
 		{
 			// update jobs back on main thread
-			System.Windows.Application.Current.Dispatcher.Invoke(delegate
-			{
+			System.Windows.Application.Current.Dispatcher.Invoke(delegate {
 				job.WhenStatusChanges.Subscribe(status => _whenStatusChanged.OnNext(status));
 				_databaseManager.Database.DownloadJobs.Add(job);
 				_databaseManager.Save();

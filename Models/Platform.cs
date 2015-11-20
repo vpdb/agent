@@ -254,7 +254,7 @@ namespace VpdbAgent.Models
 		}
 
 		/// <summary>
-		/// Different types of platforms ("systems")
+		/// Different types of platforms ("systems"), as defined by PinballX.
 		/// </summary>
 		public enum PlatformType
 		{

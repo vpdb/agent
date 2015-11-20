@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reactive.Subjects;
@@ -9,11 +10,11 @@ using Newtonsoft.Json.Converters;
 using NLog;
 using ReactiveUI;
 using Splat;
+using VpdbAgent.Models;
 using VpdbAgent.Vpdb.Models;
-using File = VpdbAgent.Vpdb.Models.File;
 using Version = VpdbAgent.Vpdb.Models.Version;
 
-namespace VpdbAgent.Vpdb
+namespace VpdbAgent.Vpdb.Download
 {
 	/// <summary>
 	/// A transfer from Vpdb to the local disk.
@@ -29,7 +30,7 @@ namespace VpdbAgent.Vpdb
 	/// Jobs are saved in the global database. In the future, the user might be
 	/// able to clean up finished jobs, but currently they are kept indefinitely.
 	/// </summary>
-	public class DownloadJob : ReactiveObject, IComparable<DownloadJob>
+	public class Job : ReactiveObject, IComparable<Job>
 	{
 		// persisted properties
 		[DataMember]
@@ -37,29 +38,39 @@ namespace VpdbAgent.Vpdb
 			get { return _release; }
 			set {
 				_release = value;
-				if (_file != null) {
-					Version = _release.Versions.FirstOrDefault(version => version.Files.Contains(_file));
+				if (_tableFile != null) {
+					Version = _release.Versions.FirstOrDefault(version => version.Files.Contains(_tableFile));
 				}
 		} }
 		[DataMember]
-		public File File {
+		public TableFile TableFile {
+			get { return _tableFile; }
+			set {
+				_tableFile = value;
+				File = value.Reference;
+				if (_release != null) {
+					Version = _release.Versions.FirstOrDefault(version => version.Files.Contains(_tableFile));
+				}
+		} }
+		[DataMember]
+		public FileReference File
+		{
 			get { return _file; }
 			set {
 				_file = value;
-				Uri = VpdbClient.GetUri(value.Reference.Url);
-				FileName = value.Reference.Name;
-				if (_release != null) {
-					Version = _release.Versions.FirstOrDefault(version => version.Files.Contains(_file));
-				}
-		} }
-
-		[DataMember] [JsonConverter(typeof(StringEnumConverter))]
-		public JobStatus Status { get; private set; } = JobStatus.Queued;
-		[DataMember] public DateTime QueuedAt { get; private set; } = DateTime.Now;
-		[DataMember] public DateTime StartedAt { get; private set; }
-		[DataMember] public DateTime FinishedAt { get; private set; }
-		[DataMember] public long TransferredBytes { get; private set; }
-		[DataMember] public string ErrorMessage { get; private set; }
+				Uri = VpdbClient.GetUri(value.Url);
+				FileName = value.Name;
+			}
+		}
+		[DataMember] public DateTime QueuedAt { get; set; } = DateTime.Now;
+		[DataMember] public DateTime StartedAt { get; set; }
+		[DataMember] public DateTime FinishedAt { get; set; }
+		[DataMember] public long TransferredBytes { get; set; }
+		[DataMember] public string ErrorMessage { get; set; }
+		[DataMember] public Image Thumb { get; private set; }
+		[DataMember] [JsonConverter(typeof(StringEnumConverter))] public JobStatus Status { get; set; } = JobStatus.Queued;
+		[DataMember] [JsonConverter(typeof(StringEnumConverter))] public FileType FileType { get; set; }
+		[DataMember] [JsonConverter(typeof(StringEnumConverter))] public TableFile.Platform Platform { get; set; }
 
 		// business props
 		public Uri Uri { get; private set; }
@@ -78,7 +89,8 @@ namespace VpdbAgent.Vpdb
 		public IObservable<DownloadProgressChangedEventArgs> WhenDownloadProgresses => _whenDownloadProgresses;
 
 		// fields
-		private File _file;
+		private TableFile _tableFile;
+		private FileReference _file;
 		private Release _release;
 		private readonly Subject<JobStatus> _whenStatusChanges = new Subject<JobStatus>();
 		private readonly Subject<DownloadProgressChangedEventArgs> _whenDownloadProgresses = new Subject<DownloadProgressChangedEventArgs>();
@@ -91,7 +103,7 @@ namespace VpdbAgent.Vpdb
 		/// <summary>
 		/// Constructor called when de-serializing
 		/// </summary>
-		public DownloadJob()
+		public Job()
 		{
 			_whenStatusChanges.Subscribe(status => {
 				Status = status;
@@ -103,12 +115,34 @@ namespace VpdbAgent.Vpdb
 		/// Constructor called when creating new job through the application
 		/// </summary>
 		/// <param name="release">Release to be downloaded</param>
-		/// <param name="file">File of the release to be downloaded</param>
-		public DownloadJob(Release release, File file) : this()
+		/// <param name="tableFile">File of the release to be downloaded</param>
+		/// <param name="filetype">File type</param>
+		/// <param name="platform">Platform the file belongs to</param>
+		public Job(Release release, TableFile tableFile, FileType filetype, TableFile.Platform platform) : this()
 		{
-			File = file;
+			TableFile = tableFile;
 			Release = release;
-			Logger.Info("Creating new download job for {0}.", Uri.AbsoluteUri);
+			FileType = filetype;
+			Thumb = tableFile.Thumb;
+			Platform = platform;
+			Logger.Info("Creating new download job for {0} {1}.", filetype, Uri.AbsoluteUri);
+		}
+
+		/// <summary>
+		/// Constructor called when creating new job through the application
+		/// </summary>
+		/// <param name="release">Release to be downloaded</param>
+		/// <param name="file">File to be downloaded</param>
+		/// <param name="filetype">File type</param>
+		/// <param name="platform">Platform the file belongs to</param>
+		public Job(Release release, FileReference file, FileType filetype, TableFile.Platform platform) : this()
+		{
+			Release = release;
+			File = file;
+			FileType = filetype;
+			Platform = platform;
+			Thumb = release.Thumb.Image;
+			Logger.Info("Creating new download job for {0} {1}.", filetype, Uri.AbsoluteUri);
 		}
 
 		/// <summary>
@@ -132,14 +166,7 @@ namespace VpdbAgent.Vpdb
 			});
 
 			// update transfer size
-			WhenDownloadProgresses
-				.Subscribe(progress => {
-					TransferredBytes = progress.BytesReceived;
-					// on main thread
-					//System.Windows.Application.Current.Dispatcher.Invoke(delegate {
-					//	TransferredBytes = progress.BytesReceived;
-					//});
-				});
+			WhenDownloadProgresses.Subscribe(progress => { TransferredBytes = progress.BytesReceived; });
 		}
 
 		public void Initialize()
@@ -150,11 +177,11 @@ namespace VpdbAgent.Vpdb
 
 		public void Cancel()
 		{
-			if (_cancellationToken != null && _cancellationToken.CanBeCanceled) {
+			if (_cancellationToken.CanBeCanceled) {
 				Client.CancelAsync();
 
 			} else {
-				Logger.Info("Transfer cannot be cancelled.");
+				Logger.Warn("Transfer cannot be cancelled.");
 			}
 		}
 
@@ -203,6 +230,32 @@ namespace VpdbAgent.Vpdb
 			Client.DownloadProgressChanged -= OnProgressChanged;
 		}
 
+		public string GetFileDestination(Platform platform)
+		{
+			switch (FileType)
+			{
+				case FileType.TableFile:
+					return FilePath == null ? null : Path.Combine(platform.TablePath, Path.GetFileName(FilePath));
+				case FileType.TableScript:
+					break;
+				case FileType.TableAuxiliary:
+					break;
+				case FileType.TableMusic:
+					break;
+				case FileType.TableShot:
+					break;
+				case FileType.TableVideo:
+					break;
+				case FileType.BackglassShot:
+					break;
+				case FileType.GameLogo:
+					return Path.Combine(platform.MediaPath, "Wheel Images", Release.Game.DisplayName + Path.GetExtension(FilePath));
+				default:
+					throw new ArgumentOutOfRangeException();
+			}
+			return null;
+		}
+
 		/// <summary>
 		/// Transfer progress has changed
 		/// </summary>
@@ -216,21 +269,18 @@ namespace VpdbAgent.Vpdb
 		/// </summary>
 		/// <param name="other"></param>
 		/// <returns></returns>
-		public int CompareTo(DownloadJob other)
+		public int CompareTo(Job other)
 		{
-			var byStatus = Array.IndexOf(StatusOrder, this.Status) - Array.IndexOf(StatusOrder, other.Status);
+			var byStatus = Array.IndexOf(StatusOrder, Status) - Array.IndexOf(StatusOrder, other.Status);
 			return byStatus != 0 ? byStatus : ((other.QueuedAt - QueuedAt).TotalMilliseconds > 0 ? 1 : -1);
 		}
 
 		/// <summary>
 		/// Defines the order in which statuses are sorted by.
 		/// </summary>
-		private static readonly JobStatus[] StatusOrder = {
-			JobStatus.Transferring,
-			JobStatus.Queued,
-			JobStatus.Aborted,
-			JobStatus.Failed,
-			JobStatus.Completed
+		private static readonly JobStatus[] StatusOrder =
+		{
+			JobStatus.Transferring, JobStatus.Queued, JobStatus.Aborted, JobStatus.Failed, JobStatus.Completed
 		};
 
 		/// <summary>
@@ -241,23 +291,23 @@ namespace VpdbAgent.Vpdb
 			/// <summary>
 			/// Job is about to be transferred but still waiting for a slot to be freed
 			/// </summary>
-			Queued, 
-			
+			Queued,
+
 			/// <summary>
 			/// Job is currently transferring
 			/// </summary>
-			Transferring, 
-			
+			Transferring,
+
 			/// <summary>
 			/// Job has successfully terminated
 			/// </summary>
-			Completed, 
-			
+			Completed,
+
 			/// <summary>
 			/// Job terminated but failed
 			/// </summary>
-			Failed, 
-			
+			Failed,
+
 			/// <summary>
 			/// Job was aborted
 			/// </summary>

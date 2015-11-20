@@ -18,11 +18,11 @@ namespace VpdbAgent.Views.Games
 
 				d(this.OneWayBind(ViewModel, vm => vm.Release.Game.DisplayName, v => v.GameName.Text));
 				d(this.OneWayBind(ViewModel, vm => vm.Release.Name, v => v.ReleaseName.Text));
-				d(this.OneWayBind(ViewModel, vm => vm.File.Reference.Name, v => v.ItemBlock.ToolTip));
+				d(this.OneWayBind(ViewModel, vm => vm.TableFile.Reference.Name, v => v.ItemBlock.ToolTip));
 				d(this.OneWayBind(ViewModel, vm => vm.Version.Name, v => v.VersionName.Text));
-				d(this.OneWayBind(ViewModel, vm => vm.File.Flavor.Orientation, v => v.Orientation.Content));
-				d(this.OneWayBind(ViewModel, vm => vm.File.Flavor.Lighting, v => v.Lighting.Content));
-				d(this.OneWayBind(ViewModel, vm => vm.File.Thumb, v => v.Thumb.ImageUrl));
+				d(this.OneWayBind(ViewModel, vm => vm.TableFile.Flavor.Orientation, v => v.Orientation.Content));
+				d(this.OneWayBind(ViewModel, vm => vm.TableFile.Flavor.Lighting, v => v.Lighting.Content));
+				d(this.OneWayBind(ViewModel, vm => vm.TableFile.Thumb, v => v.Thumb.ImageUrl));
 				d(this.BindCommand(ViewModel, vm => vm.SelectResult, v => v.SelectButton));
 			});
 		}

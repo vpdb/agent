@@ -2,7 +2,7 @@
 using VpdbAgent.Application;
 using VpdbAgent.Vpdb.Models;
 
-namespace VpdbAgent.Vpdb
+namespace VpdbAgent.Vpdb.Download
 {
 	/// <summary>
 	/// An interface that helps matching and sorting files based on their 
@@ -17,16 +17,16 @@ namespace VpdbAgent.Vpdb
 		/// <summary>
 		/// Returns true if either the primary or fallback flavor setting matches a given file.
 		/// </summary>
-		/// <param name="file">File to check</param>
+		/// <param name="tableFile">File to check</param>
 		/// <returns>True if file qualifies for download for given flavor</returns>
-		bool Matches(File file);
+		bool Matches(TableFile tableFile);
 
 		/// <summary>
 		/// Returns a weight depending on if the primary or fallback flavor setting was matched for a given file.
 		/// </summary>
-		/// <param name="file">File to weight</param>
+		/// <param name="tableFile">File to weight</param>
 		/// <returns>Weight relative to if the primary or fallback flavor setting was hit</returns>
-		int Weight(File file);
+		int Weight(TableFile tableFile);
 	}
 
 	/// <summary>
@@ -38,16 +38,16 @@ namespace VpdbAgent.Vpdb
 		protected abstract TSettingFlavor PrimarySetting { get; }
 		protected abstract TSettingFlavor FallbackSetting { get; }
 
-		public bool Matches(File file)
+		public bool Matches(TableFile tableFile)
 		{
-			return Weight(file) > 0;
+			return Weight(tableFile) > 0;
 		}
 
-		public int Weight(File file)
+		public int Weight(TableFile tableFile)
 		{
-			var weight = Weight(file.Flavor, PrimarySetting) * 100;
+			var weight = Weight(tableFile.Flavor, PrimarySetting) * 100;
 			if (weight == 0) {
-				weight = Weight(file.Flavor, FallbackSetting);
+				weight = Weight(tableFile.Flavor, FallbackSetting);
 			}
 			return weight;
 		}

@@ -14,7 +14,7 @@ namespace VpdbAgent.Vpdb.Models
 	{
 		[JsonProperty(PropertyName = "version")]
 		[DataMember] public string Name { get; set; }
-		[DataMember] public List<File> Files { get; set; }
+		[DataMember] public List<TableFile> Files { get; set; }
 
 		public override string ToString()
 		{

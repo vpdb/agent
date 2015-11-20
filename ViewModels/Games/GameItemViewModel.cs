@@ -31,7 +31,7 @@ namespace VpdbAgent.ViewModels.Games
 		// data
 		public Game Game { get; }
 		public Version Version => _version.Value;
-		public File File => _file.Value;
+		public TableFile TableFile => _file.Value;
 
 		// needed for filters
 		private bool _isVisible = true;
@@ -50,7 +50,7 @@ namespace VpdbAgent.ViewModels.Games
 		private readonly ObservableAsPropertyHelper<bool> _showIdentifyButton;
 		private readonly ObservableAsPropertyHelper<bool> _isExecuting;
 		private readonly ObservableAsPropertyHelper<Version> _version;
-		private readonly ObservableAsPropertyHelper<File> _file;
+		private readonly ObservableAsPropertyHelper<TableFile> _file;
 		private bool _hasExecuted;
 		private bool _hasResults;
 
@@ -64,7 +64,7 @@ namespace VpdbAgent.ViewModels.Games
 				.SelectMany(r => r.Versions)
 				.SelectMany(v => v.Files)
 				.Where(f => f.Reference.Id.Equals(Game.FileId))
-				.ToProperty(this, vm => vm.File, out _file);
+				.ToProperty(this, vm => vm.TableFile, out _file);
 
 			// find version object in release
 			this.WhenAnyValue(vm => vm.Game.Release)
@@ -87,7 +87,7 @@ namespace VpdbAgent.ViewModels.Games
 				var numMatches = 0;
 				GameResultItemViewModel match = null;
 				foreach (var vm in releases) {
-					if (game.Filename.Equals(vm.File.Reference.Name) && game.FileSize == vm.File.Reference.Bytes) {
+					if (game.Filename.Equals(vm.TableFile.Reference.Name) && game.FileSize == vm.TableFile.Reference.Bytes) {
 						numMatches++;
 						match = vm;
 					}
@@ -95,7 +95,7 @@ namespace VpdbAgent.ViewModels.Games
 
 				// if file name and file size are identical, directly match.
 				if (numMatches == 1 && match != null) {
-					GameManager.LinkRelease(match.Game, match.Release, match.File.Reference.Id);
+					GameManager.LinkRelease(match.Game, match.Release, match.TableFile.Reference.Id);
 
 				} else {
 					IdentifiedReleases = releases;

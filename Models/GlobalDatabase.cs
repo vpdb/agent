@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ReactiveUI;
 using VpdbAgent.Vpdb;
+using VpdbAgent.Vpdb.Download;
 using VpdbAgent.Vpdb.Models;
 
 namespace VpdbAgent.Models
@@ -25,12 +26,12 @@ namespace VpdbAgent.Models
 		[DataMember]
 		public Dictionary<string, Release> Releases { set; get; } = new Dictionary<string, Release>();
 		[DataMember]
-		private List<DownloadJob> _downloadJobs = new List<DownloadJob>();
+		private List<Job> _downloadJobs = new List<Job>();
 
 		/// <summary>
 		/// Contains all download jobs, current and previous, aborted, successful and erroneous.
 		/// </summary>
-		public ReactiveList<DownloadJob> DownloadJobs = new ReactiveList<DownloadJob>();
+		public ReactiveList<Job> DownloadJobs = new ReactiveList<Job>();
 
 		public GlobalDatabase()
 		{

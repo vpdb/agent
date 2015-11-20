@@ -1,5 +1,6 @@
 ﻿using IniParser.Model;
 using System;
+using System.IO;
 using ReactiveUI;
 using VpdbAgent.Models;
 using Splat;
@@ -76,8 +77,8 @@ namespace VpdbAgent.PinballX.Models
 			Executable = data["Executable"];
 			Parameters = data["Parameters"];
 
-			DatabasePath = SettingsManager.Settings.PbxFolder + @"\Databases\" + Name;
-			MediaPath = SettingsManager.Settings.PbxFolder + @"\Media\" + Name;
+			DatabasePath = Path.Combine(SettingsManager.Settings.PbxFolder, "Databases", Name);
+			MediaPath = Path.Combine(SettingsManager.Settings.PbxFolder, "Media", Name);
 		}
 
 		public override string ToString()

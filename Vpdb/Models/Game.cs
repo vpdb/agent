@@ -14,6 +14,7 @@ namespace VpdbAgent.Vpdb.Models
 		public string Title { get; set; }
 		public string Manufacturer { get; set; }
 		public int Year { get; set; }
+		public Dictionary<string, FileReference> Media { get; set; }
 
 		[JsonIgnore]
 		public string DisplayName => Manufacturer != null ? $"{Title} ({Manufacturer} {Year})" : Title;

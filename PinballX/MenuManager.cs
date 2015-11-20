@@ -15,6 +15,7 @@ using System.Reactive.Subjects;
 using System.Windows;
 using VpdbAgent.Application;
 using VpdbAgent.Vpdb;
+using VpdbAgent.Vpdb.Download;
 
 namespace VpdbAgent.PinballX
 {
@@ -52,7 +53,7 @@ namespace VpdbAgent.PinballX
 		/// </summary>
 		/// <param name="job">Download job</param>
 		/// <returns></returns>
-		Game NewGame(DownloadJob job);
+		Game NewGame(Job job);
 
 		/// <summary>
 		/// Updates a game. If the game is not found, an exception is thrown.
@@ -150,7 +151,7 @@ namespace VpdbAgent.PinballX
 			return game;
 		}
 
-		public Game NewGame(DownloadJob job)
+		public Game NewGame(Job job)
 		{
 			return new Game() {
 				Filename = Path.GetFileNameWithoutExtension(job.FilePath),
