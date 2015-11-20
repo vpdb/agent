@@ -19,10 +19,13 @@ namespace VpdbAgent.ViewModels.Downloads
 		public Job Job { get; }
 		public bool Transferring { get { return _transferring; } set { this.RaiseAndSetIfChanged(ref _transferring, value); } }
 		public bool Retryable { get { return _retryable; } set { this.RaiseAndSetIfChanged(ref _retryable, value); } }
+		public string FileIcon { get { return _fileIcon; } set { this.RaiseAndSetIfChanged(ref _fileIcon, value); } }
+		public int FileIconSize { get { return _fileIconSize; } set { this.RaiseAndSetIfChanged(ref _fileIconSize, value); } }
 		public Brush StatusPanelForeground { get { return _statusPanelForeground; } set { this.RaiseAndSetIfChanged(ref _statusPanelForeground, value); } }
 		public string StatusPanelIcon { get { return _statusPanelIcon; } set { this.RaiseAndSetIfChanged(ref _statusPanelIcon, value); } }
 		public int StatusPanelIconSize { get { return _statusPanelIconSize; } set { this.RaiseAndSetIfChanged(ref _statusPanelIconSize, value); } }
 		public double DownloadPercent { get { return _downloadPercent; } set { this.RaiseAndSetIfChanged(ref _downloadPercent, value); } }
+
 
 		// commands
 		public ReactiveCommand<object> CancelJob { get; protected set; } = ReactiveCommand.Create();
@@ -38,6 +41,8 @@ namespace VpdbAgent.ViewModels.Downloads
 		// privates
 		private bool _transferring;
 		private bool _retryable;
+		private string _fileIcon;
+		private int _fileIconSize;
 		private Brush _statusPanelForeground;
 		private string _statusPanelIcon;
 		private int _statusPanelIconSize;
@@ -60,6 +65,11 @@ namespace VpdbAgent.ViewModels.Downloads
 		private static readonly string ClockIcon = (string)System.Windows.Application.Current.FindResource("IconClock");
 		private static readonly string CheckIcon = (string)System.Windows.Application.Current.FindResource("IconCheck");
 		private static readonly string CloseIcon = (string)System.Windows.Application.Current.FindResource("IconClose");
+		private static readonly string VideoIcon = (string)System.Windows.Application.Current.FindResource("IconVideo");
+		private static readonly string AudioIcon = (string)System.Windows.Application.Current.FindResource("IconAudio");
+		private static readonly string RomIcon = (string)System.Windows.Application.Current.FindResource("IconRom");
+		private static readonly string CameraIcon = (string)System.Windows.Application.Current.FindResource("IconCamera");
+		private static readonly string DefaultFileIcon = (string)System.Windows.Application.Current.FindResource("IconFile");
 
 		public DownloadItemViewModel(Job job)
 		{
@@ -119,6 +129,9 @@ namespace VpdbAgent.ViewModels.Downloads
 			
 			// delete job
 			DeleteJob.Subscribe(_ => { JobManager.DeleteJob(Job); });
+
+			// setup icon
+			SetupFileIcon();
 		}
 
 		private void OnStatusUpdated()
@@ -190,5 +203,40 @@ namespace VpdbAgent.ViewModels.Downloads
 			Job.RaisePropertyChanged();
 		}
 
+		private void SetupFileIcon()
+		{
+			switch (Job.FileType)
+			{
+				case FileType.TableMusic:
+					FileIcon = AudioIcon;
+					FileIconSize = 16;
+					break;
+
+				case FileType.WheelImage:
+				case FileType.BackglassImage:
+				case FileType.TableImage:
+					FileIcon = CameraIcon;
+					FileIconSize = 16;
+					break;
+
+				case FileType.TableVideo:
+					FileIcon = VideoIcon;
+					FileIconSize = 16;
+					break;
+
+				case FileType.Rom:
+					FileIcon = RomIcon;
+					FileIconSize = 16;
+					break;
+
+				case FileType.TableFile:
+				case FileType.TableScript:
+				case FileType.TableAuxiliary:
+				default:
+					FileIcon = DefaultFileIcon;
+					FileIconSize = 16;
+					break;
+			}
+		}
 	}
 }

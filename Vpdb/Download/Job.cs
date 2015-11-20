@@ -281,6 +281,7 @@ namespace VpdbAgent.Vpdb.Download
 				case FileType.WheelImage:
 					return Path.Combine(platform.MediaPath, MediaWheelImages, Release.Game.DisplayName + Path.GetExtension(FilePath));
 
+				case FileType.Rom: // todo
 				default:
 					throw new ArgumentOutOfRangeException();
 			}

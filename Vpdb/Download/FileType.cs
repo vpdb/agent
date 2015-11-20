@@ -46,6 +46,11 @@ namespace VpdbAgent.Vpdb.Download
 		/// <summary>
 		/// A game logo (wheel image)
 		/// </summary>
-		WheelImage
+		WheelImage,
+			
+		/// <summary>
+		/// A ROM file, zipped
+		/// </summary>
+		Rom
 	}
 }
