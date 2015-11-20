@@ -208,6 +208,5 @@ namespace VpdbAgent.Vpdb.Download
 			});
 		}
 
-	
 	}
 }

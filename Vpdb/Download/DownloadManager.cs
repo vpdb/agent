@@ -14,6 +14,12 @@ using VpdbAgent.Vpdb.Models;
 
 namespace VpdbAgent.Vpdb.Download
 {
+	/// <summary>
+	/// Manages how to download stuff, e.g. which files are needed, which flavor
+	/// for a release and moves files to the right place after download.
+	/// 
+	/// Note that the download itself is handled by <see cref="JobManager"/>.
+	/// </summary>
 	public interface IDownloadManager
 	{
 		/// <summary>
@@ -23,7 +29,7 @@ namespace VpdbAgent.Vpdb.Download
 		/// <remarks>
 		/// File selection is based on the user's preferences. This is typically
 		/// called when the user stars a release, where we have no more data
-		/// than the release. 
+		/// than the release ID. 
 		/// </remarks>
 		/// <param name="releaseId">ID of the release</param>
 		/// <returns>This instance</returns>
@@ -91,7 +97,7 @@ namespace VpdbAgent.Vpdb.Download
 		{
 			// retrieve release details
 			_logger.Info("Retrieving details for release {0}...", id);
-			_vpdbClient.Api.GetRelease(id).ObserveOn(Scheduler.Default).Subscribe(release => {
+			_vpdbClient.Api.GetFullRelease(id).ObserveOn(Scheduler.Default).Subscribe(release => {
 
 				// match file based on settings
 				var file = release.Versions
@@ -126,18 +132,24 @@ namespace VpdbAgent.Vpdb.Download
 				var vpdbPlatform = tableFile.Compatibility[0].Platform;
 
 				// check if backglass image needs to be downloaded
+				var backglassImagePath = Path.Combine(pbxPlatform.MediaPath, Job.MediaBackglassImages);
+				if (!FileBaseExists(backglassImagePath, gameName)) {
+					_jobManager.AddJob(new Job(release, game.Media["backglass"], FileType.BackglassImage, vpdbPlatform));
+				}
 
 				// check if wheel image needs to be downloaded
-				var wheelImagePath = Path.Combine(pbxPlatform.MediaPath, "Wheel Images");
-				if (!Directory.EnumerateFiles(wheelImagePath, gameName + ".*").Any()) {
-					_jobManager.AddJob(new Job(release, game.Media["logo"], FileType.GameLogo, vpdbPlatform));
+				var wheelImagePath = Path.Combine(pbxPlatform.MediaPath, Job.MediaWheelImages);
+				if (!FileBaseExists(wheelImagePath, gameName)) {
+					_jobManager.AddJob(new Job(release, game.Media["logo"], FileType.WheelImage, vpdbPlatform));
 				}
 
 				// queue table shot
+				var tableImage = Path.Combine(pbxPlatform.MediaPath, Job.MediaTableImages);
+				if (!FileBaseExists(tableImage, gameName)) {
+					_jobManager.AddJob(new Job(release, tableFile.Media["playfield_image"], FileType.TableImage, vpdbPlatform));
+				}
 
 				// todo check for ROM to be downloaded
-
-
 				// todo also queue all remaining non-table files of the release.
 
 				// queue for download
@@ -147,32 +159,23 @@ namespace VpdbAgent.Vpdb.Download
 			return this;
 		}
 
+		private static bool FileBaseExists(string path, string name)
+		{
+			return Directory.EnumerateFiles(path, name + ".*").Any();
+		}
+
+		/// <summary>
+		/// Executed for every file after successful download.
+		/// </summary>
+		/// <param name="job">The job that finished download</param>
 		private void OnDownloadCompleted(Job job)
 		{
 			// move file to the right place
 			MoveDownloadedFile(job, _platformManager.FindPlatform(job.Platform));
 
 			// do other stuff depending on file type
-			switch (job.FileType) {
-				case FileType.TableFile:
-					_whenReleaseDownloaded.OnNext(job);
-					break;
-				case FileType.TableScript:
-					break;
-				case FileType.TableAuxiliary:
-					break;
-				case FileType.TableMusic:
-					break;
-				case FileType.TableShot:
-					break;
-				case FileType.TableVideo:
-					break;
-				case FileType.BackglassShot:
-					break;
-				case FileType.GameLogo:
-					break;
-				default:
-					throw new ArgumentOutOfRangeException();
+			if (job.FileType == FileType.TableFile) {
+				_whenReleaseDownloaded.OnNext(job);
 			}
 		}
 
@@ -201,7 +204,6 @@ namespace VpdbAgent.Vpdb.Download
 				_logger.Error("Downloaded file {0} does not exist.", job.FilePath);
 			}
 		}
-
 
 		/// <summary>
 		/// Checks if the flavor of the file is acceptable by the user's flavor settings.

@@ -31,7 +31,7 @@ namespace VpdbAgent.Vpdb.Download
 		/// <summary>
 		/// A table screenshot
 		/// </summary>
-		TableShot,
+		TableImage,
 
 		/// <summary>
 		/// A table video
@@ -41,11 +41,11 @@ namespace VpdbAgent.Vpdb.Download
 		/// <summary>
 		/// A backglass screenshot
 		/// </summary>
-		BackglassShot,
+		BackglassImage,
 
 		/// <summary>
 		/// A game logo (wheel image)
 		/// </summary>
-		GameLogo
+		WheelImage
 	}
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -32,6 +33,7 @@ namespace VpdbAgent.Vpdb.Download
 	/// </summary>
 	public class Job : ReactiveObject, IComparable<Job>
 	{
+
 		// persisted properties
 		[DataMember]
 		public Release Release {
@@ -141,7 +143,7 @@ namespace VpdbAgent.Vpdb.Download
 			File = file;
 			FileType = filetype;
 			Platform = platform;
-			Thumb = release.Thumb.Image;
+			Thumb = release.Thumb?.Image;
 			Logger.Info("Creating new download job for {0} {1}.", filetype, Uri.AbsoluteUri);
 		}
 
@@ -206,6 +208,9 @@ namespace VpdbAgent.Vpdb.Download
 			Client.DownloadProgressChanged -= OnProgressChanged;
 		}
 
+		/// <summary>
+		/// Transfer has been cancelled
+		/// </summary>
 		public void OnCancelled()
 		{
 			System.Windows.Application.Current.Dispatcher.Invoke(delegate {
@@ -230,30 +235,55 @@ namespace VpdbAgent.Vpdb.Download
 			Client.DownloadProgressChanged -= OnProgressChanged;
 		}
 
-		public string GetFileDestination(Platform platform)
+		/// <summary>
+		/// Returns the absolute path of where the file should moved to after
+		/// downloading.
+		/// </summary>
+		/// <param name="platform">Platform of the table file belonging to the download</param>
+		/// <returns>Absolute path to local download location</returns>
+		public string GetFileDestination(Platform platform = null)
 		{
-			switch (FileType)
-			{
+			if (platform == null) {
+				Logger.Error("Platform not provided when it should have ({0})", FileType);
+				return null;
+			}
+
+			switch (FileType) {
 				case FileType.TableFile:
-					return FilePath == null ? null : Path.Combine(platform.TablePath, Path.GetFileName(FilePath));
+					return Path.Combine(platform.TablePath, File.Name);
+
 				case FileType.TableScript:
-					break;
+					var scriptsFolder = Path.Combine(Path.GetDirectoryName(platform.TablePath), "Scripts");
+					return Path.Combine(Directory.Exists(scriptsFolder) ? scriptsFolder : platform.TablePath, File.Name);
+
 				case FileType.TableAuxiliary:
-					break;
+					
+					return Path.Combine(platform.TablePath, File.Name);
+
 				case FileType.TableMusic:
-					break;
-				case FileType.TableShot:
-					break;
+					var musicFolder = Path.Combine(Path.GetDirectoryName(platform.TablePath), "Music");
+					if (!Directory.Exists(musicFolder)) {
+						Directory.CreateDirectory(musicFolder);
+					}
+					return Path.Combine(musicFolder, File.Name);
+
+				case FileType.TableImage:
+					// todo handle desktop media (goes to "Table Images Desktop" folder)
+					return Path.Combine(platform.MediaPath, MediaTableImages, Release.Game.DisplayName + Path.GetExtension(FilePath));
+
 				case FileType.TableVideo:
-					break;
-				case FileType.BackglassShot:
-					break;
-				case FileType.GameLogo:
-					return Path.Combine(platform.MediaPath, "Wheel Images", Release.Game.DisplayName + Path.GetExtension(FilePath));
+					// todo handle desktop media (goes to "Table Videos Desktop" folder)
+					return Path.Combine(platform.MediaPath, MediaTableVideos, Release.Game.DisplayName + Path.GetExtension(FilePath));
+
+				case FileType.BackglassImage:
+					return Path.Combine(platform.MediaPath, MediaBackglassImages, Release.Game.DisplayName + Path.GetExtension(FilePath));
+
+				case FileType.WheelImage:
+					return Path.Combine(platform.MediaPath, MediaWheelImages, Release.Game.DisplayName + Path.GetExtension(FilePath));
+
 				default:
 					throw new ArgumentOutOfRangeException();
 			}
-			return null;
 		}
 
 		/// <summary>
@@ -313,5 +343,19 @@ namespace VpdbAgent.Vpdb.Download
 			/// </summary>
 			Aborted
 		}
+
+		// media folder names
+		public static readonly string MediaBackglassImages = "Backglass Images";
+		public const string MediaBackglassVideos = "Backglass Videos";
+		public const string MediaDmdImages = "DMD Images";
+		public const string MediaDmdVideos = "DMD Videos";
+		public const string MediaRealDmdImages = "Real DMD Images";
+		public const string MediaRealDmdVideos = "Real DMD Videos";
+		public const string MediaTableAudio = "Table Audio";
+		public const string MediaTableImages = "Table Images";
+		public const string MediaTableImagesDesktop = "Table Images Desktop";
+		public const string MediaTableVideos = "Table Videos";
+		public const string MediaTableVideosDesktop = "Table Videos Desktop";
+		public const string MediaWheelImages = "Wheel Images";
 	}
 }
