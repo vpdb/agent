@@ -70,7 +70,11 @@ namespace VpdbAgent.ViewModels
 					if (settings.IsFirstRun || string.IsNullOrEmpty(settings.ApiKey)) {
 						System.Windows.Application.Current.MainWindow = new MainWindow(this);
 						System.Windows.Application.Current.MainWindow.Show();
-						Router.Navigate.Execute(new SettingsViewModel(this, Locator.Current.GetService<ISettingsManager>(), Locator.Current.GetService<IVersionManager>()));
+						Router.Navigate.Execute(new SettingsViewModel(this, 
+							Locator.Current.GetService<ISettingsManager>(),
+							Locator.Current.GetService<IVersionManager>(),
+							Locator.Current.GetService<IGameManager>())
+						);
 
 					} else if (!options.Minimized) {
 						// start the initialization

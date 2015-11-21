@@ -157,7 +157,7 @@ namespace VpdbAgent.Vpdb
 			var apiException = e as ApiException;
 			if (apiException?.StatusCode == HttpStatusCode.Unauthorized) {
 				var errors = _settingsManager.OnApiFailed(apiException);
-				_screen.Router.Navigate.Execute(new SettingsViewModel(_screen, _settingsManager, _versionManager, errors));
+				_screen.Router.Navigate.Execute(new SettingsViewModel(_screen, _settingsManager, _versionManager, null, errors));
 			}
 			_logger.Error(e, "API error while {0}:", origin);
 		}

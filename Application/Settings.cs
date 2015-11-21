@@ -151,6 +151,7 @@ namespace VpdbAgent.Application
 			await storage.InsertObject("DownloadOrientationFallback", DownloadOrientationFallback);
 			await storage.InsertObject("DownloadLighting", DownloadLighting);
 			await storage.InsertObject("DownloadLightingFallback", DownloadLightingFallback);
+			await storage.InsertObject("IsFirstRun", false);
 			IsFirstRun = false;
 		}
 

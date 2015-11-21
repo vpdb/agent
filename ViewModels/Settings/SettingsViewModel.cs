@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.Eventing;
 using System.Linq;
+using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -20,6 +21,7 @@ namespace VpdbAgent.ViewModels.Settings
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 		private readonly ISettingsManager _settingsManager;
 		private readonly IVersionManager _versionManager;
+		private readonly IGameManager _gameManager;
 
 		// setting props
 		public string ApiKey { get { return _apiKey; } set { this.RaiseAndSetIfChanged(ref _apiKey, value); } }
@@ -77,11 +79,12 @@ namespace VpdbAgent.ViewModels.Settings
 		private readonly ObservableAsPropertyHelper<bool> _isFirstRun;
 		private readonly ObservableAsPropertyHelper<bool> _canCancel;
 
-		public SettingsViewModel(IScreen screen, ISettingsManager settingsManager, IVersionManager versionManager)
+		public SettingsViewModel(IScreen screen, ISettingsManager settingsManager, IVersionManager versionManager, IGameManager gameManager)
 		{
 			HostScreen = screen;
 			_settingsManager = settingsManager;
 			_versionManager = versionManager;
+			_gameManager = gameManager;
 
 			ApiKey = _settingsManager.Settings.ApiKey;
 			AuthUser = _settingsManager.Settings.AuthUser;
@@ -132,7 +135,7 @@ namespace VpdbAgent.ViewModels.Settings
 
 		}
 
-		public SettingsViewModel(IScreen screen, ISettingsManager settingsManager, IVersionManager versionManager, Dictionary<string, string> errors) : this(screen, settingsManager, versionManager)
+		public SettingsViewModel(IScreen screen, ISettingsManager settingsManager, IVersionManager versionManager, IGameManager gameManager, Dictionary<string, string> errors) : this(screen, settingsManager, versionManager, gameManager)
 		{
 			Errors = errors;
 		}
@@ -174,16 +177,19 @@ namespace VpdbAgent.ViewModels.Settings
 			var errors = await _settingsManager.Validate(settings);
 
 			if (settings.IsValidated) {
+				_settingsManager.Save(settings).SubscribeOn(Scheduler.CurrentThread).ObserveOn(Scheduler.CurrentThread).Subscribe(_ =>
+				{
+					Logger.Info("Settings saved.");
+					System.Windows.Application.Current.Dispatcher.Invoke(delegate {
+						if (HostScreen.Router.NavigationStack.Count == 1) {
+							_gameManager.Initialize();
+							HostScreen.Router.NavigateAndReset.Execute(new MainViewModel(HostScreen, _settingsManager, _versionManager));
 
-				_settingsManager.Save(settings);
-				Logger.Info("Settings saved.");
-
-				if (HostScreen.Router.NavigationStack.Count == 1) {
-					HostScreen.Router.NavigateAndReset.Execute(new MainViewModel(HostScreen, _settingsManager, _versionManager));
-				} else {
-					HostScreen.Router.NavigateBack.Execute(null);
-				}
-
+						} else {
+							HostScreen.Router.NavigateBack.Execute(null);
+						}
+					});
+				});
 			} else {
 				Errors = errors;
 				if (errors.ContainsKey("Auth")) {

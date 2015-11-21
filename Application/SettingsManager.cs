@@ -81,8 +81,8 @@ namespace VpdbAgent.Application
 		/// Only call this after <see cref="Validate"/>, since it doesn't validate on its own!
 		/// </remarks>
 		/// <param name="settings">Settings to save</param>
-		/// <returns>This instance</returns>
-		ISettingsManager Save(Settings settings);
+		/// <returns>An observable that returns one value when settings are saved and completes.</returns>
+		IObservable<Settings> Save(Settings settings);
 
 		/// <summary>
 		/// Persists internal (non-validated) settings.
@@ -209,11 +209,12 @@ namespace VpdbAgent.Application
 			return errors;
 		}
 
-		public ISettingsManager Save(Settings settings)
+		public IObservable<Settings> Save(Settings settings)
 		{
 			if (!settings.IsValidated) {
 				throw new InvalidOperationException("Settings must be validated before saved.");
 			}
+			var result = new Subject<Settings>();
 
 			Task.Run(async () => {
 				Settings.Copy(settings, Settings);
@@ -236,12 +237,14 @@ namespace VpdbAgent.Application
 					if (_registryKey.GetValue("VPDB Agent") != null) {
 						_registryKey.DeleteValue("VPDB Agent");
 					}
-					
 				}
+
+				result.OnNext(Settings);
+				result.OnCompleted();
 			});
 
 			CanCancel = true;
-			return this;
+			return result;
 		}
 
 		public IObservable<Settings> SaveInternal(Settings settings)

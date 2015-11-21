@@ -52,7 +52,7 @@ namespace VpdbAgent.ViewModels
 			Games = new GamesViewModel(Locator.Current.GetService<IGameManager>(), Locator.Current.GetService<IPlatformManager>());
 			Downloads = new DownloadsViewModel();
 			Messsages = new MessagesViewModel();
-			GotoSettings = ReactiveCommand.CreateAsyncObservable(_ => screen.Router.Navigate.ExecuteAsync(new SettingsViewModel(screen, settingsManager, versionManager)));
+			GotoSettings = ReactiveCommand.CreateAsyncObservable(_ => screen.Router.Navigate.ExecuteAsync(new SettingsViewModel(screen, settingsManager, versionManager, Locator.Current.GetService<IGameManager>())));
 
 			// login status
 			settingsManager.WhenAnyValue(sm => sm.AuthenticatedUser)
