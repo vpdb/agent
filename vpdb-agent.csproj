@@ -219,12 +219,14 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Application\DatabaseManager.cs" />
+    <Compile Include="Application\MessageManager.cs" />
     <Compile Include="Application\PlatformManager.cs" />
     <Compile Include="Application\Settings.cs" />
     <Compile Include="Application\VersionManager.cs" />
     <Compile Include="Controls\CachedImage.cs" />
     <Compile Include="Libs\ShellLink\ShellLinkNative.cs" />
     <Compile Include="Libs\ShellLink\ShellShortcut.cs" />
+    <Compile Include="Models\Message.cs" />
     <Compile Include="ViewModels\Messages\MessagesViewModel.cs" />
     <Compile Include="ViewModels\NotifyIconViewModel.cs" />
     <Compile Include="Views\Messages\MessagesView.xaml.cs">
