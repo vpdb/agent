@@ -67,20 +67,24 @@ namespace VpdbAgent.ViewModels
 				}
 				System.Windows.Application.Current.Dispatcher.Invoke(delegate {
 
-					// start the initialization
-					gameManager.Initialize();
 
 					Locator.CurrentMutable.GetService<NLog.Logger>().Info("Got settings!");
-					if (settings.IsFirstRun) {
+					if (settings.IsFirstRun || !settings.IsValidated) {
 						System.Windows.Application.Current.MainWindow = new MainWindow(this);
 						System.Windows.Application.Current.MainWindow.Show();
 						Router.Navigate.Execute(new SettingsViewModel(this, Locator.Current.GetService<ISettingsManager>(), Locator.Current.GetService<IVersionManager>()));
 
 					} else if (!options.Minimized) {
-						System.Windows.Application.Current.MainWindow = new MainWindow(this);
-						System.Windows.Application.Current.MainWindow.Show();
-						Router.Navigate.Execute(new MainViewModel(this, Locator.Current.GetService<ISettingsManager>(), Locator.Current.GetService<IVersionManager>()));
-					}
+					    // start the initialization
+					    gameManager.Initialize();
+
+					    System.Windows.Application.Current.MainWindow = new MainWindow(this);
+					    System.Windows.Application.Current.MainWindow.Show();
+					    Router.Navigate.Execute(new MainViewModel(this, Locator.Current.GetService<ISettingsManager>(), Locator.Current.GetService<IVersionManager>()));
+					} else {
+                        // start the initialization
+                        gameManager.Initialize();
+                    }
 				});
 			});
 		}
