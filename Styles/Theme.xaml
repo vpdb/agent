@@ -185,18 +185,11 @@
             <Setter.Value>
                 <ControlTemplate TargetType="ToggleButton">
                     <Viewbox Stretch="Uniform">
-                        <Canvas Width="20" Height="20">
-                            <Ellipse  Canvas.Left="0" Width="20" Height="20" Stroke="{TemplateBinding Background}" StrokeThickness="2" Fill="Transparent">
-                                <Ellipse.Clip>
-                                    <RectangleGeometry Rect="0,0,10,20"/>
-                                </Ellipse.Clip>
-                            </Ellipse>
-                            <Ellipse Canvas.Left="10" Width="20" Height="20" Stroke="{TemplateBinding Background}" StrokeThickness="2" Fill="Transparent">
-                                <Ellipse.Clip>
-                                    <RectangleGeometry Rect="10,0,10,20"/>
-                                </Ellipse.Clip>
-                            </Ellipse>
-                            <Border Canvas.Left="10" Width="10" Height="20" Name="rect416927" Background="Transparent" BorderBrush="{TemplateBinding Background}" BorderThickness="0,2,0,2"/>
+                        <Canvas Width="30" Height="20">
+                            <!-- outer line -->
+                            <Border Canvas.Left="0" Width="30" Height="20" Background="Transparent" 
+                                    BorderBrush="{TemplateBinding Background}" CornerRadius="10" BorderThickness="2"/>
+                            <!-- knob -->
                             <Ellipse x:Name="Knob" Canvas.Top="4" Canvas.Left="4" Width="12" Height="12" Fill="{TemplateBinding Background}">
                                 <Ellipse.RenderTransform>
                                     <TranslateTransform X="0" Y="0" />

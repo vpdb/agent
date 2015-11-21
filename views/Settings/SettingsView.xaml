@@ -131,18 +131,17 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <TextBlock Text="Run VPDB Agent on system startup" Style="{StaticResource Label}" Grid.Column="0" Margin="15,0,0,0"/>
-                    <ToggleButton IsChecked="{Binding StartWithWindows}" x:Name="StartWithWindows" Grid.Column="1" Height="20" Margin="5,0,17,0"/>
+                    <ToggleButton IsChecked="{Binding StartWithWindows}" x:Name="StartWithWindows" Grid.Column="1" Height="20" Margin="5,0,0,0"/>
                 </Grid>
 
                 <!-- Minimize to tray -->
                 <Grid Margin="0,10,0,0">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="65*"/>
-                        <ColumnDefinition Width="287*"/>
+                        <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Text="Minimize to system tray" Style="{StaticResource Label}" Grid.Column="0" Margin="15,0,0,0" Grid.ColumnSpan="2"/>
-                    <ToggleButton IsChecked="{Binding MinimizeToTray}" x:Name="MinimizeToTray" Grid.Column="2" Height="20" Margin="5,2,17,2"/>
+                    <TextBlock Text="Minimize to system tray" Style="{StaticResource Label}" Grid.Column="0" Grid.ColumnSpan="4" Margin="15,0,0,0" />
+                    <ToggleButton IsChecked="{Binding MinimizeToTray}" x:Name="MinimizeToTray" Grid.Column="3" Height="20" Margin="5,0,0,0"/>
                 </Grid>
 
                 <!-- Download Options -->
@@ -156,7 +155,7 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <TextBlock Text="Synchronize starred releases" Style="{StaticResource Label}" Grid.Column="0" Margin="15,0,0,0"/>
-                    <ToggleButton IsChecked="{Binding SyncStarred}" x:Name="SyncStarred" Grid.Column="1" Height="20" Margin="5,0,17,0"/>
+                    <ToggleButton IsChecked="{Binding SyncStarred}" x:Name="SyncStarred" Grid.Column="1" Height="20" Margin="5,0,0,0"/>
                 </Grid>
 
                 <!-- Check for new and updated games at startup -->
@@ -166,7 +165,7 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <TextBlock Text="Check for new and updated games at startup" Style="{StaticResource Label}" Grid.Column="0" Margin="15,0,0,0"/>
-                    <ToggleButton IsChecked="{Binding DownloadOnStartup}" x:Name="DownloadOnStartup" Grid.Column="1" Height="20" Margin="5,0,17,0"/>
+                    <ToggleButton IsChecked="{Binding DownloadOnStartup}" x:Name="DownloadOnStartup" Grid.Column="1" Height="20" Margin="5,0,0,0"/>
                 </Grid>
 
                 <!-- Download Options -->
