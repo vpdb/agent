@@ -35,14 +35,7 @@
             Grid.Column="0" Grid.Row="0" Grid.RowSpan="2" Width="50" Height="50" HorizontalAlignment="Left" VerticalAlignment="Top"/>
 
         <!-- data -->
-        <TextBlock Style="{StaticResource Label}" Grid.Column="1" Grid.Row="0">
-            <TextBlock.Inlines>
-                <Run Text="{Binding Job.Release.Game.Title}" FontWeight="Bold"/>
-                <Run Text=" – "/>
-                <Run Text="{Binding Job.Release.Name}"/>
-                <Run Text="{Binding Job.Version.Name}"/>
-            </TextBlock.Inlines>
-        </TextBlock>
+        <c:RichTextBlock InlineList="{Binding TitleLabel}" Style="{StaticResource Label}" Grid.Column="1" Grid.Row="0" TextWrapping="Wrap" />
         <Grid Grid.Column="1" Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
@@ -51,7 +44,7 @@
             <c:IconControl Margin="0,0,8,0" Height="{Binding FileIconSize}" Width="{Binding FileIconSize}" Grid.Column="0"
                 HorizontalAlignment="Right" VerticalAlignment="Center"
                 Foreground="{DynamicResource LabelTextBrush}" Data="{Binding FileIcon}" />
-            <TextBlock Text="{Binding Job.FileName}" Style="{StaticResource Label}" Grid.Column="1" />
+            <c:RichTextBlock InlineList="{Binding SubtitleLabel}" Style="{StaticResource Label}" Grid.Column="1" />
         </Grid>
 
         <!-- right side -->
@@ -97,8 +90,7 @@
                 HorizontalAlignment="Right" VerticalAlignment="Center"
                 Foreground="{Binding StatusPanelForeground}" Data="{Binding StatusPanelIcon}" />
             <c:RichTextBlock Style="{StaticResource Label}" Grid.Column="1" TextWrapping="Wrap" Margin="0,0,10,3" 
-                Foreground="{Binding StatusPanelForeground}" InlineList="{Binding StatusPanelLabel}">
-            </c:RichTextBlock>
+                Foreground="{Binding StatusPanelForeground}" InlineList="{Binding StatusPanelLabel}"/>
 
             <!-- retry button -->
             <Button Style="{StaticResource ButtonSolidSmall}" Command="{Binding RetryJob}"

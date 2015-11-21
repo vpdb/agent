@@ -36,6 +36,8 @@ namespace VpdbAgent.ViewModels.Downloads
 		public string DownloadSizeFormatted { get { return _downloadSizeFormatted; } set { this.RaiseAndSetIfChanged(ref _downloadSizeFormatted, value); } }
 		public string DownloadPercentFormatted { get { return _downloadPercentFormatted; } set { this.RaiseAndSetIfChanged(ref _downloadPercentFormatted, value); } }
 		public string DownloadSpeedFormatted { get { return _downloadSpeedFormatted; } set { this.RaiseAndSetIfChanged(ref _downloadSpeedFormatted, value); } }
+		public ObservableCollection<Inline> TitleLabel { get { return _titleLabel; } set { this.RaiseAndSetIfChanged(ref _titleLabel, value); } }
+		public ObservableCollection<Inline> SubtitleLabel { get { return _subtitleLabel; } set { this.RaiseAndSetIfChanged(ref _subtitleLabel, value); } }
 		public ObservableCollection<Inline> StatusPanelLabel { get { return _statusPanelLabel; } set { this.RaiseAndSetIfChanged(ref _statusPanelLabel, value); } }
 
 		// privates
@@ -50,6 +52,8 @@ namespace VpdbAgent.ViewModels.Downloads
 		private string _downloadSizeFormatted;
 		private string _downloadPercentFormatted;
 		private string _downloadSpeedFormatted;
+		private ObservableCollection<Inline> _titleLabel;
+		private ObservableCollection<Inline> _subtitleLabel;
 		private ObservableCollection<Inline> _statusPanelLabel;
 
 		// deps
@@ -208,23 +212,51 @@ namespace VpdbAgent.ViewModels.Downloads
 			switch (Job.FileType)
 			{
 				case FileType.TableMusic:
+					TitleLabel = new ObservableCollection<Inline> {
+						new Run(Job.Release.Game.DisplayName) {FontWeight = FontWeights.Bold},
+						new Run(" – "),
+						new Run(Job.Release.Name),
+						new Run(Job.Version.Name),
+					};
+					SubtitleLabel = new ObservableCollection<Inline> { new Run(Job.FileName) };
 					FileIcon = AudioIcon;
 					FileIconSize = 16;
 					break;
 
 				case FileType.WheelImage:
+					TitleLabel = new ObservableCollection<Inline> { new Run(Job.Release.Game.DisplayName) { FontWeight = FontWeights.Bold } };
+					SubtitleLabel = new ObservableCollection<Inline> { new Run("Wheel Image") };
+					FileIcon = CameraIcon;
+					FileIconSize = 16;
+					break;
+
 				case FileType.BackglassImage:
+					TitleLabel = new ObservableCollection<Inline> { new Run(Job.Release.Game.DisplayName) { FontWeight = FontWeights.Bold } };
+					SubtitleLabel = new ObservableCollection<Inline> { new Run("Backglass Image") };
+					FileIcon = CameraIcon;
+					FileIconSize = 16;
+					break;
+
 				case FileType.TableImage:
+					TitleLabel = new ObservableCollection<Inline> { new Run(Job.Release.Game.DisplayName) { FontWeight = FontWeights.Bold } };
+					SubtitleLabel = new ObservableCollection<Inline> { new Run("Table Image") };
 					FileIcon = CameraIcon;
 					FileIconSize = 16;
 					break;
 
 				case FileType.TableVideo:
+					TitleLabel = new ObservableCollection<Inline> { new Run(Job.Release.Game.DisplayName) { FontWeight = FontWeights.Bold } };
+					SubtitleLabel = new ObservableCollection<Inline> { new Run("Table Video") };
 					FileIcon = VideoIcon;
 					FileIconSize = 16;
 					break;
 
 				case FileType.Rom:
+					TitleLabel = new ObservableCollection<Inline> { new Run(Job.Release.Game.DisplayName) { FontWeight = FontWeights.Bold } };
+					SubtitleLabel = new ObservableCollection<Inline> {
+						new Run("ROM: "),
+						new Run(Job.FileName) {FontWeight = FontWeights.Bold}
+					};
 					FileIcon = RomIcon;
 					FileIconSize = 16;
 					break;
@@ -233,6 +265,12 @@ namespace VpdbAgent.ViewModels.Downloads
 				case FileType.TableScript:
 				case FileType.TableAuxiliary:
 				default:
+					TitleLabel = new ObservableCollection<Inline> {
+						new Run(Job.Release.Game.DisplayName) {FontWeight = FontWeights.Bold},
+						new Run(" – "),
+						new Run(Job.Release.Name)
+					};
+					SubtitleLabel = new ObservableCollection<Inline> { new Run(Job.FileName) };
 					FileIcon = DefaultFileIcon;
 					FileIconSize = 16;
 					break;

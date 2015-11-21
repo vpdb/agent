@@ -46,9 +46,6 @@ namespace VpdbAgent.ViewModels
 			dependencyResolver = dependencyResolver ?? Locator.CurrentMutable;
 			var options = ((App) System.Windows.Application.Current).CommandLineOptions;
 
-			//var canGoBack = this.WhenAnyValue(vm => vm.Router.NavigationStack.Count).Select(count => count > 0);
-			//BackCommand =  ReactiveCommand.Create(canGoBack);
-
 			// Bind 
 			RegisterParts(dependencyResolver);
 
@@ -67,24 +64,23 @@ namespace VpdbAgent.ViewModels
 				}
 				System.Windows.Application.Current.Dispatcher.Invoke(delegate {
 
-
 					Locator.CurrentMutable.GetService<NLog.Logger>().Info("Got settings!");
-					if (settings.IsFirstRun || !settings.IsValidated) {
+					if (settings.IsFirstRun || string.IsNullOrEmpty(settings.ApiKey)) {
 						System.Windows.Application.Current.MainWindow = new MainWindow(this);
 						System.Windows.Application.Current.MainWindow.Show();
 						Router.Navigate.Execute(new SettingsViewModel(this, Locator.Current.GetService<ISettingsManager>(), Locator.Current.GetService<IVersionManager>()));
 
 					} else if (!options.Minimized) {
-					    // start the initialization
-					    gameManager.Initialize();
+						// start the initialization
+						gameManager.Initialize();
 
-					    System.Windows.Application.Current.MainWindow = new MainWindow(this);
-					    System.Windows.Application.Current.MainWindow.Show();
-					    Router.Navigate.Execute(new MainViewModel(this, Locator.Current.GetService<ISettingsManager>(), Locator.Current.GetService<IVersionManager>()));
+						System.Windows.Application.Current.MainWindow = new MainWindow(this);
+						System.Windows.Application.Current.MainWindow.Show();
+						Router.Navigate.Execute(new MainViewModel(this, Locator.Current.GetService<ISettingsManager>(), Locator.Current.GetService<IVersionManager>()));
 					} else {
-                        // start the initialization
-                        gameManager.Initialize();
-                    }
+						// start the initialization
+						gameManager.Initialize();
+					}
 				});
 			});
 		}
