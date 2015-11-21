@@ -12,6 +12,7 @@ using Squirrel;
 using VpdbAgent.Application;
 using VpdbAgent.ViewModels.Downloads;
 using VpdbAgent.ViewModels.Games;
+using VpdbAgent.ViewModels.Messages;
 using VpdbAgent.ViewModels.Settings;
 using VpdbAgent.Vpdb;
 
@@ -42,6 +43,7 @@ namespace VpdbAgent.ViewModels
 		// tabs
 		public GamesViewModel Games { get; }
 		public DownloadsViewModel Downloads { get; }
+		public MessagesViewModel Messsages { get; }
 
 		public MainViewModel(IScreen screen, ISettingsManager settingsManager, IVersionManager versionManager)
 		{
@@ -49,6 +51,7 @@ namespace VpdbAgent.ViewModels
 
 			Games = new GamesViewModel(Locator.Current.GetService<IGameManager>(), Locator.Current.GetService<IPlatformManager>());
 			Downloads = new DownloadsViewModel();
+			Messsages = new MessagesViewModel();
 			GotoSettings = ReactiveCommand.CreateAsyncObservable(_ => screen.Router.Navigate.ExecuteAsync(new SettingsViewModel(screen, settingsManager, versionManager)));
 
 			// login status
