@@ -155,6 +155,7 @@ namespace VpdbAgent.ViewModels
 				locator.GetService<IDatabaseManager>(),
 				locator.GetService<IVersionManager>(),
 				locator.GetService<IPlatformManager>(),
+                locator.GetService<IMessageManager>(),
 				locator.GetService<NLog.Logger>()
 			), typeof(IGameManager));
 

@@ -9,12 +9,30 @@ namespace VpdbAgent.Models
 	public class Message
 	{
 		public DateTime CreatedAt { get; set; }
-		public MessageType Type;
+		public MessageLevel Level;
 		public bool WasRead;
+	    public dynamic Data;
+	    public MessageType Type;
+
+        public Message() { }
+
+	    public Message(MessageType type, dynamic data, MessageLevel level)
+	    {
+	        CreatedAt = DateTime.Now;
+	        Type = type;
+	        Data = data;
+	        Level = level;
+	        WasRead = false;
+	    }
 	}
 
-	public enum MessageType
+    public enum MessageType
+    {
+        ReleaseLinked
+    }
+
+	public enum MessageLevel
 	{
-		Info, Error
+		Info, Warning, Error
 	}
 }

@@ -106,6 +106,7 @@ namespace VpdbAgent.Application
 		private readonly IDatabaseManager _databaseManager;
 		private readonly IVersionManager _versionManager;
 		private readonly IPlatformManager _platformManager;
+	    private readonly IMessageManager _messageManager;
 		private readonly Logger _logger;
 
 		// props
@@ -120,7 +121,8 @@ namespace VpdbAgent.Application
 
 		public GameManager(IMenuManager menuManager, IVpdbClient vpdbClient, ISettingsManager 
 			settingsManager, IDownloadManager downloadManager, IDatabaseManager databaseManager,
-			IVersionManager versionManager, IPlatformManager platformManager, Logger logger)
+			IVersionManager versionManager, IPlatformManager platformManager, IMessageManager messageManager,
+            Logger logger)
 		{
 			_menuManager = menuManager;
 			_vpdbClient = vpdbClient;
@@ -128,7 +130,8 @@ namespace VpdbAgent.Application
 			_downloadManager = downloadManager;
 			_databaseManager = databaseManager;
 			_versionManager = versionManager;
-			_platformManager = platformManager;
+		    _platformManager = platformManager;
+		    _messageManager = messageManager;
 			_logger = logger;
 
 			// setup game change listener once all games are fetched.
@@ -179,6 +182,8 @@ namespace VpdbAgent.Application
 				AddRelease(updatedRelease);
 				game.Release = updatedRelease;
 			}, exception => _vpdbClient.HandleApiError(exception, "retrieving release details during linking"));
+
+		    _messageManager.LogReleaseLinked(game, release, fileId);
 
 			return this;
 		}
