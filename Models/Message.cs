@@ -8,7 +8,9 @@ namespace VpdbAgent.Models
 {
 	public class Message
 	{
+		public DateTime CreatedAt { get; set; }
 		public MessageType Type;
+		public bool WasRead;
 	}
 
 	public enum MessageType
