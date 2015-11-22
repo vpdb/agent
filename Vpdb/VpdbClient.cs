@@ -2,7 +2,9 @@
 using NLog;
 using Refit;
 using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Reactive.Subjects;
@@ -59,7 +61,10 @@ namespace VpdbAgent.Vpdb
 		/// <returns>Authenticated web client object</returns>
 		WebClient GetWebClient();
 
-		/// <summary>
+
+		IDictionary<string, string> GetAuthHeaders();
+
+			/// <summary>
 		/// Returns a full Uri based on a given absolute path.
 		/// </summary>
 		/// <param name="path">Absolute path</param>
@@ -147,6 +152,12 @@ namespace VpdbAgent.Vpdb
 			return client;
 		}
 
+		public IDictionary<string, string> GetAuthHeaders()
+		{
+			var headers = AddHeaders(new NameValueCollection());
+			return headers.AllKeys.ToDictionary(key => key, key => headers[key]);
+		}
+
 		public Uri GetUri(string path)
 		{
 			return new Uri(_settingsManager.Settings.Endpoint + path);
@@ -166,7 +177,7 @@ namespace VpdbAgent.Vpdb
 		/// Adds authentication headers based on the user's settings.
 		/// </summary>
 		/// <param name="headers">Current headers</param>
-		private void AddHeaders(NameValueCollection headers)
+		private NameValueCollection AddHeaders(NameValueCollection headers)
 		{
 			if (!string.IsNullOrEmpty(_settingsManager.Settings.ApiKey)) {
 				if (!string.IsNullOrEmpty(_settingsManager.Settings.AuthUser)) {
@@ -180,6 +191,7 @@ namespace VpdbAgent.Vpdb
 				_logger.Warn("You probably shouldn't do requests if settings are not initialized.");
 			}
 //			headers.Add("Accept-Encoding", "gzip,deflate");
+			return headers;
 		}
 
 		/// <summary>

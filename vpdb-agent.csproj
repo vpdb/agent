@@ -223,6 +223,7 @@
     <Compile Include="Application\PlatformManager.cs" />
     <Compile Include="Application\Settings.cs" />
     <Compile Include="Application\VersionManager.cs" />
+    <Compile Include="Common\Extensions\AkavacheAuthBitmapImageMixin.cs" />
     <Compile Include="Controls\CachedImage.cs" />
     <Compile Include="Libs\ShellLink\ShellLinkNative.cs" />
     <Compile Include="Libs\ShellLink\ShellShortcut.cs" />

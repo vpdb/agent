@@ -2,13 +2,17 @@
 using System;
 using System.IO;
 using System.Net;
+using System.Reactive.Linq;
+using System.Reactive.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
+using Akavache;
 using NLog;
 using Splat;
 using VpdbAgent.Application;
+using VpdbAgent.Common.Extensions;
 using VpdbAgent.Vpdb;
 
 namespace VpdbAgent.Controls
@@ -18,6 +22,7 @@ namespace VpdbAgent.Controls
 		// dependencies
 		private static readonly IVpdbClient VpdbClient = Locator.Current.GetService<IVpdbClient>();
 		private static readonly Logger Logger = Locator.Current.GetService<Logger>();
+		private static readonly IBlobCache Storage = BlobCache.LocalMachine;
 
 		static CachedImage()
 		{
@@ -35,12 +40,22 @@ namespace VpdbAgent.Controls
 		private static void ImageUrlPropertyChanged(DependencyObject obj, DependencyPropertyChangedEventArgs e)
 		{
 			var url = (string)e.NewValue;
+
+			// clear if nothing set
 			if (string.IsNullOrEmpty(url)) {
 				SetSource((CachedImage)obj, null);
 				return;
 			}
 
-			var localPath = GetLocalPath(url);
+			Storage.LoadImageFromVpdb(url).Subscribe(bmp => {
+				System.Windows.Application.Current.Dispatcher.Invoke(delegate {
+					((CachedImage)obj).Source = bmp.ToNative();
+				});
+			}, err => {
+				Logger.Error(err, "Error downloading {0}.", url);
+			});
+
+			/*var localPath = GetLocalPath(url);
 			if (IsCached(url)) {
 				SetSource((CachedImage)obj, localPath);
 
@@ -60,7 +75,7 @@ namespace VpdbAgent.Controls
 				MakeLocalPath(url);
 				Logger.Info("Downloading image from {0}", uri.ToString());
 				webClient.DownloadFileAsync(uri, localPath);
-			}
+			}*/
 		}
 
 		private static void SetSource(Image img, string path, bool fadeIn = false)
@@ -81,43 +96,5 @@ namespace VpdbAgent.Controls
 			}
 		}
 
-
-		/// <summary>
-		/// Checks if the image is locally cached.
-		/// </summary>
-		/// <param name="path">Absolute remote path without host and schema</param>
-		/// <returns>True if cached, False otherwise.</returns>
-		private static bool IsCached(string path)
-		{
-			return File.Exists(GetLocalPath(path));
-		}
-
-		/// <summary>
-		/// Returns the local cache path on the disk based on the URL path of
-		/// the image.
-		/// </summary>
-		/// <param name="path">Absolute remote path without host and schema</param>
-		/// <returns></returns>
-		private static string GetLocalPath(string path)
-		{
-			return Path.Combine(
-				Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-				SettingsManager.DataFolder,
-				"Cache",
-				path.Replace("/", @"\").Substring(1)
-			);
-		}
-
-		/// <summary>
-		/// Creates the cache folder of the path to cache.
-		/// </summary>
-		/// <param name="path">Absolute remote path without host and schema</param>
-		private static void MakeLocalPath(string path)
-		{
-			var localDir = Path.GetDirectoryName(GetLocalPath(path));
-			if (localDir != null && !Directory.Exists(localDir)) {
-				Directory.CreateDirectory(localDir);
-			}
-		}
 	}
 }
