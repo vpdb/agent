@@ -124,7 +124,8 @@ namespace VpdbAgent.ViewModels.Games
 			this.WhenAny(
 				vm => vm.HasExecuted, 
 				vm => vm.Game.HasRelease,
-				(hasExecuted, hasRelease) => !hasExecuted.Value && !hasRelease.Value
+				vm => vm.IsExecuting,
+				(hasExecuted, hasRelease, isExecuting) => !hasExecuted.Value && !hasRelease.Value && !isExecuting.Value
 			).ToProperty(this, vm => vm.ShowIdentifyButton, out _showIdentifyButton);
 		}
 
