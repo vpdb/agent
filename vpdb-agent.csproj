@@ -111,6 +111,14 @@
       <HintPath>packages\MahApps.Metro.1.1.2.0\lib\net45\MahApps.Metro.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Mindscape.Raygun4Net, Version=5.1.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\Mindscape.Raygun4Net.5.1.1\lib\net40\Mindscape.Raygun4Net.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Mindscape.Raygun4Net4, Version=5.1.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\Mindscape.Raygun4Net.5.1.1\lib\net40\Mindscape.Raygun4Net4.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Mono.Cecil, Version=0.9.6.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
       <HintPath>packages\Mono.Cecil.0.9.6.1\lib\net45\Mono.Cecil.dll</HintPath>
       <Private>True</Private>
@@ -275,7 +283,7 @@
     <Compile Include="Application\GameManager.cs" />
     <Compile Include="Models\Game.cs" />
     <Compile Include="Models\Platform.cs" />
-    <Compile Include="ViewModels\AppViewModel.cs" />
+    <Compile Include="Bootstrapper.cs" />
     <Compile Include="ViewModels\Games\GameItemViewModel.cs" />
     <Compile Include="ViewModels\Settings\SettingsViewModel.cs" />
     <Compile Include="Common\TypeConverters\ReactiveUI\ImageToUrlTypeConverter.cs" />

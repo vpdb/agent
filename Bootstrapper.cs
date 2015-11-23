@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reactive.Linq;
+using Mindscape.Raygun4Net.Messages;
 using ReactiveUI;
 using Splat;
 using VpdbAgent.Application;
@@ -21,7 +22,7 @@ using VpdbAgent.Vpdb.Download;
 namespace VpdbAgent.ViewModels
 {
 
-	/* The AppViewModel is a ViewModel for the WPF Application class.
+	/* The Bootstrapper is a ViewModel for the WPF Application class.
      * Since Application isn't very testable (just like Window / UserControl), 
      * we want to create a class we can test. Since our application only has
      * one "screen" (i.e. a place we present Routed Views), we can also use 
@@ -33,16 +34,16 @@ namespace VpdbAgent.ViewModels
      * but there isn't much benefit to split those up unless you've got multiple
      * windows.
      * 
-     * AppViewModel is a good place to implement a lot of the "global 
+     * Bootstrapper is a good place to implement a lot of the "global 
      * variable" type things in your application. It's also the place where
      * you should configure your IoC container. And finally, it's the place 
      * which decides which View to Navigate to when the application starts.
      */
-	public class AppViewModel : ReactiveObject, IScreen
+	public class Bootstrapper : ReactiveObject, IScreen
 	{
 		public RoutingState Router { get; }
 
-		public AppViewModel(IMutableDependencyResolver dependencyResolver = null, RoutingState testRouter = null)
+		public Bootstrapper(IMutableDependencyResolver dependencyResolver = null, RoutingState testRouter = null)
 		{
 			Router = testRouter ?? new RoutingState();
 			dependencyResolver = dependencyResolver ?? Locator.CurrentMutable;
@@ -58,6 +59,14 @@ namespace VpdbAgent.ViewModels
 			var gameManager = Locator.Current.GetService<IGameManager>();
 
 			Locator.CurrentMutable.GetService<NLog.Logger>().Info("Waiting for settings...");
+
+			settingsManager.ApiAuthenticated.Subscribe(user => {
+				((App) System.Windows.Application.Current).Raygun.UserInfo = new RaygunIdentifierMessage(user.Id) {
+					IsAnonymous = false,
+					FullName = user.Name,
+					Email = user.Email
+				};
+			});
 
 			// Navigate to the opening page of the application
 			settingsManager.SettingsAvailable.Subscribe(settings => {
@@ -155,7 +164,7 @@ namespace VpdbAgent.ViewModels
 				locator.GetService<IDatabaseManager>(),
 				locator.GetService<IVersionManager>(),
 				locator.GetService<IPlatformManager>(),
-                locator.GetService<IMessageManager>(),
+				locator.GetService<IMessageManager>(),
 				locator.GetService<NLog.Logger>()
 			), typeof(IGameManager));
 

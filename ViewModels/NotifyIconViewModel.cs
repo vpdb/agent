@@ -26,7 +26,7 @@ namespace VpdbAgent.ViewModels
 				return new DelegateCommand {
 					CanExecuteFunc = () => System.Windows.Application.Current.MainWindow == null,
 					CommandAction = () => {
-						var appViewModel = ((App) System.Windows.Application.Current).AppViewModel;
+						var appViewModel = ((App) System.Windows.Application.Current).Bootstrapper;
 						System.Windows.Application.Current.MainWindow = new MainWindow(appViewModel);
 						System.Windows.Application.Current.MainWindow.Show();
 						appViewModel.Router.Navigate.Execute(new MainViewModel(appViewModel, Locator.Current.GetService<ISettingsManager>(), Locator.Current.GetService<IVersionManager>()));

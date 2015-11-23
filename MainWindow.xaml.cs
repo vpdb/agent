@@ -24,19 +24,19 @@ namespace VpdbAgent
 	/// </summary>
 	public partial class MainWindow
 	{
-		public AppViewModel AppViewModel { get; protected set; }
+		public Bootstrapper Bootstrapper { get; protected set; }
 
 		private static readonly ISettingsManager SettingsManager = Locator.CurrentMutable.GetService<ISettingsManager>();
 
 		private bool _minimizing = false;
 
-		public MainWindow(AppViewModel appViewModel)
+		public MainWindow(Bootstrapper bootstrapper)
 		{
 			RestoreWindowPlacement();
 			InitializeComponent();
 
-			AppViewModel = appViewModel;
-			DataContext = appViewModel;
+			Bootstrapper = bootstrapper;
+			DataContext = bootstrapper;
 
 			CompositionTarget.Rendering += OnRendering;
 

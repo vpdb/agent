@@ -33,7 +33,7 @@ namespace VpdbAgent.Common.Extensions
 		{
 			return This.DownloadUrl(VpdbClient.GetUri(url).AbsoluteUri, VpdbClient.GetAuthHeaders(), fetchAlways, absoluteExpiration)
 				.SelectMany(ThrowOnBadImageBuffer)
-				.SelectMany(x => bytesToImage(x, desiredWidth, desiredHeight));
+				.SelectMany(x => BytesToImage(x, desiredWidth, desiredHeight));
 		}
 
 		/// <summary>
@@ -48,7 +48,7 @@ namespace VpdbAgent.Common.Extensions
 				Observable.Return(compressedImage);
 		}
 
-		static IObservable<IBitmap> bytesToImage(byte[] compressedImage, float? desiredWidth, float? desiredHeight)
+		static IObservable<IBitmap> BytesToImage(byte[] compressedImage, float? desiredWidth, float? desiredHeight)
 		{
 			return BitmapLoader.Current.Load(new MemoryStream(compressedImage), desiredWidth, desiredHeight).ToObservable();
 		}

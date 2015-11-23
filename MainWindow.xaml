@@ -17,7 +17,7 @@
         GlowBrush="#40000000"
         RenderOptions.ClearTypeHint="Enabled"
         Icon="vpdb-agent.ico" 
-        d:DataContext="{d:DesignInstance Type=vm:AppViewModel}">
+        d:DataContext="{d:DesignInstance Type=vm:Bootstrapper}">
 
     <Controls:MetroWindow.Resources>
         <SolidColorBrush x:Key="TransparentBrush" Color="Transparent" />
