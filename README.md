@@ -36,6 +36,9 @@ For more details, see [FEATURES](FEATURES.md).
 - [INI File Parser](https://github.com/rickyah/ini-parser) for parsing PinballX config
 - [Humanizer](https://github.com/MehdiK/Humanizer) for all kind of formatting tricks
 - [NLog](http://nlog-project.org/) for our logging needs
+- [Akavache](https://github.com/akavache/Akavache) for settings storage and image caching
+- [NotifyIcon](http://www.hardcodet.net/wpf-notifyicon) for tray features
+- [OpenMcdf](http://sourceforge.net/projects/openmcdf/) for reading and writing VP's OLE Compound format
 
 
 ## Database
