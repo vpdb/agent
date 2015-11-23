@@ -31,7 +31,7 @@
   - ROMs
 - Only download `N` (currently 2) files at the same time
 - Show download status of all current, future and past files in the app's *Downloads* tab
-- Be able to remove items from the downloads tab
+- **[TODO]** Be able to remove items from the downloads tab
 - Be able to clear all processed items from the downloads tab with one button
 - **[WIP]** Apply script changes to updates: When updating a release, apply a diff from the user's script changes to the script of the updated release.
 - Automatically choose correct flavor based on user's settings (see FAQ)
