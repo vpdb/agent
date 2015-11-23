@@ -15,7 +15,7 @@ namespace VpdbAgent.Controls
 	{
 		// constants
 		private static readonly TimeSpan FadeInDuration = TimeSpan.FromMilliseconds(300);
-		private static readonly TimeSpan WaitForFadeInDuration = TimeSpan.FromMilliseconds(150);
+		private static readonly TimeSpan WaitForFadeInDuration = TimeSpan.FromMilliseconds(50);
 		private static readonly DoubleAnimation FadeInAnimation = new DoubleAnimation {
 			From = 0,
 			To = 1,

@@ -1,29 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using NLog;
-using OpenMcdf;
 using PusherClient;
 using ReactiveUI;
-using Squirrel;
-using SuperSocket.ClientEngine;
-using VpdbAgent.Models;
 using VpdbAgent.PinballX;
-using VpdbAgent.PinballX.Models;
-using VpdbAgent.VisualPinball;
 using VpdbAgent.Vpdb;
 using VpdbAgent.Vpdb.Download;
 using VpdbAgent.Vpdb.Models;
-using File = System.IO.File;
 using Game = VpdbAgent.Models.Game;
 
 namespace VpdbAgent.Application
@@ -106,7 +97,7 @@ namespace VpdbAgent.Application
 		private readonly IDatabaseManager _databaseManager;
 		private readonly IVersionManager _versionManager;
 		private readonly IPlatformManager _platformManager;
-	    private readonly IMessageManager _messageManager;
+		private readonly IMessageManager _messageManager;
 		private readonly Logger _logger;
 
 		// props
@@ -117,12 +108,11 @@ namespace VpdbAgent.Application
 		private readonly Subject<Unit> _initialized = new Subject<Unit>();
 		private bool _isInitialized;
 		private readonly List<Tuple<string, string, string>> _gamesToLink = new List<Tuple<string, string, string>>();
-		private IDisposable _gamesSubscription;
 
 		public GameManager(IMenuManager menuManager, IVpdbClient vpdbClient, ISettingsManager 
 			settingsManager, IDownloadManager downloadManager, IDatabaseManager databaseManager,
 			IVersionManager versionManager, IPlatformManager platformManager, IMessageManager messageManager,
-            Logger logger)
+			Logger logger)
 		{
 			_menuManager = menuManager;
 			_vpdbClient = vpdbClient;
@@ -130,8 +120,8 @@ namespace VpdbAgent.Application
 			_downloadManager = downloadManager;
 			_databaseManager = databaseManager;
 			_versionManager = versionManager;
-		    _platformManager = platformManager;
-		    _messageManager = messageManager;
+			_platformManager = platformManager;
+			_messageManager = messageManager;
 			_logger = logger;
 
 			// setup game change listener once all games are fetched.
@@ -219,7 +209,7 @@ namespace VpdbAgent.Application
 					.Select(_ => Unit.Default),
 				_platformManager.Platforms.Changed.Select(_ => Unit.Default));                          // one of the platforms changes
 
-			_gamesSubscription = whenPlatformsOrGamesInThosePlatformsChange
+			whenPlatformsOrGamesInThosePlatformsChange
 				.StartWith(Unit.Default)
 				.Select(_ => _platformManager.Platforms.SelectMany(x => x.Games).ToList())
 				.Where(games => games.Count > 0)

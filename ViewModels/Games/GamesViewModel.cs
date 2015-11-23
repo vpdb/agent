@@ -34,7 +34,7 @@ namespace VpdbAgent.ViewModels.Games
 			_platformManager = platformManager;
 
 			// setup init listener
-			gameManager.Initialized.Subscribe(_ => SetupSubscriptions());
+			gameManager.Initialized.Subscribe(_ => SetupTracking());
 
 			// create platforms, filtered and sorted
 			Platforms = _platformManager.Platforms.CreateDerivedCollection(
@@ -45,7 +45,7 @@ namespace VpdbAgent.ViewModels.Games
 
 			// push all games into AllGames as view models and sorted
 			_allGames = gameManager.Games.CreateDerivedCollection(
-				game => new GameItemViewModel(game),
+				game => new GameItemViewModel(game) { IsVisible = IsGameVisible(game) },
 				gameViewModel => true,
 				(x, y) => string.Compare(x.Game.Id, y.Game.Id, StringComparison.Ordinal)
 			);
@@ -56,7 +56,11 @@ namespace VpdbAgent.ViewModels.Games
 				gameViewModel => gameViewModel.IsVisible);
 		}
 
-		private void SetupSubscriptions()
+		/// <summary>
+		/// Sets up the triggers that refresh the lists. Run this once
+		/// the origial (i.e. non-derived) lists are populated.
+		/// </summary>
+		private void SetupTracking()
 		{
 			// update platform filter when platforms change
 			Platforms.Changed
@@ -67,8 +71,7 @@ namespace VpdbAgent.ViewModels.Games
 			_allGames.ChangeTrackingEnabled = true;
 
 			// just print that we're happy
-			_allGames.Changed.Subscribe(_ =>
-			{
+			_allGames.Changed.Subscribe(_ => {
 				Logger.Info("We've got {0} games, {1} in total.", Games.Count, _allGames.Count);
 			});
 
@@ -76,7 +79,7 @@ namespace VpdbAgent.ViewModels.Games
 			_platformFilter.Changed
 				.Select(_ => Unit.Default)
 				.StartWith(Unit.Default)
-				.Subscribe(UpdatePlatformFilter);
+				.Subscribe(RefreshGameVisibility);
 		}
 
 		/// <summary>
@@ -98,15 +101,26 @@ namespace VpdbAgent.ViewModels.Games
 		/// depending on the selected platforms.
 		/// </summary>
 		/// <param name="args">Change arguments from ReactiveList</param>
-		private void UpdatePlatformFilter(Unit args)
+		private void RefreshGameVisibility(Unit args)
 		{
 			using (_allGames.SuppressChangeNotifications()) {
 				foreach (var gameViewModel in _allGames) {
-					gameViewModel.IsVisible =
-						gameViewModel.Game.Platform.IsEnabled &&
-						_platformFilter.Contains(gameViewModel.Game.Platform.Name);
+					gameViewModel.IsVisible = IsGameVisible(gameViewModel.Game);
 				}
 			}
+		}
+
+		/// <summary>
+		/// Returns true if a given game should be displayed or false otherwise.
+		/// 
+		/// Visibility is determined in function of platform filters and enabled
+		/// platforms.
+		/// </summary>
+		/// <param name="game">Game</param>
+		/// <returns>True if visible, false otherwise</returns>
+		private bool IsGameVisible(Game game)
+		{
+			return game.Platform.IsEnabled && _platformFilter.Contains(game.Platform.Name);
 		}
 
 		/// <summary>
