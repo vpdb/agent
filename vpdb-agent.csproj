@@ -457,6 +457,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <SubType>Designer</SubType>
     </Content>
+    <None Include="FEATURES.md" />
     <None Include="NLog.xsd">
       <SubType>Designer</SubType>
     </None>

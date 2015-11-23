@@ -31,7 +31,7 @@ namespace VpdbAgent.Views
 				// tab content
 				d(this.OneWayBind(ViewModel, vm => vm.Games, v => v.GamesContent.ViewModel));
 				d(this.OneWayBind(ViewModel, vm => vm.Downloads, v => v.DownloadsContent.ViewModel));
-				d(this.OneWayBind(ViewModel, vm => vm.Messsages, v => v.MessagesContent.ViewModel));
+				//d(this.OneWayBind(ViewModel, vm => vm.Messsages, v => v.MessagesContent.ViewModel));
 
 				// status fields
 				d(this.OneWayBind(ViewModel, vm => vm.LoginStatus, v => v.LoginStatus.Text));

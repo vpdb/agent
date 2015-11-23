@@ -61,11 +61,13 @@ namespace VpdbAgent.ViewModels
 			Locator.CurrentMutable.GetService<NLog.Logger>().Info("Waiting for settings...");
 
 			settingsManager.ApiAuthenticated.Subscribe(user => {
-				((App) System.Windows.Application.Current).Raygun.UserInfo = new RaygunIdentifierMessage(user.Id) {
-					IsAnonymous = false,
-					FullName = user.Name,
-					Email = user.Email
-				};
+				if (user != null) {
+					((App)System.Windows.Application.Current).Raygun.UserInfo = new RaygunIdentifierMessage(user.Id) {
+						IsAnonymous = false,
+						FullName = user.Name,
+						Email = user.Email
+					};
+				}
 			});
 
 			// Navigate to the opening page of the application
