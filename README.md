@@ -23,18 +23,7 @@ following features:
 From there, we can imaginate more features such as media management, browsing,
 rating and so forth.
 
-
-## Implementation
-
-The above implicates:
-
-- Initial setup where user is asked for PinballX folder and VPDB API key
-- Advanced setup for VPDB end point and basic auth
-- Filtering by system while listing games would be useful
-- Try matching by file size and see how it turns out
-- Use pusher.com for realtime sync between VPDB
-- Watch folders so data gets updated when files do
-- Be pessimistic on shit, i.e. don't crash if something unexpected happens
+For more details, see [FEATURES](FEATURES.md).
 
 
 ## Tech Stack / Dependencies
