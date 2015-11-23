@@ -1,29 +1,35 @@
 ﻿
 using System;
-using System.IO;
-using System.Net;
 using System.Reactive.Linq;
-using System.Reactive.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Animation;
-using System.Windows.Media.Imaging;
 using Akavache;
 using NLog;
 using Splat;
-using VpdbAgent.Application;
 using VpdbAgent.Common.Extensions;
-using VpdbAgent.Vpdb;
 
 namespace VpdbAgent.Controls
 {
 	public class CachedImage : Image
 	{
+		// constants
+		private static readonly TimeSpan FadeInDuration = TimeSpan.FromMilliseconds(300);
+		private static readonly TimeSpan WaitForFadeInDuration = TimeSpan.FromMilliseconds(150);
+		private static readonly DoubleAnimation FadeInAnimation = new DoubleAnimation {
+			From = 0,
+			To = 1,
+			Duration = new Duration(FadeInDuration)
+		};
+
 		// dependencies
-		private static readonly IVpdbClient VpdbClient = Locator.Current.GetService<IVpdbClient>();
 		private static readonly Logger Logger = Locator.Current.GetService<Logger>();
 		private static readonly IBlobCache Storage = BlobCache.LocalMachine;
 
+		// members
+		public bool Animate;
+
+		#region ImageUrl Property
 		static CachedImage()
 		{
 			DefaultStyleKeyProperty.OverrideMetadata(typeof(CachedImage), new FrameworkPropertyMetadata(typeof(CachedImage)));
@@ -36,65 +42,35 @@ namespace VpdbAgent.Controls
 			get { return (string)GetValue(ImageUrlProperty); }
 			set { SetValue(ImageUrlProperty, value); }
 		}
+		#endregion
 
 		private static void ImageUrlPropertyChanged(DependencyObject obj, DependencyPropertyChangedEventArgs e)
 		{
 			var url = (string)e.NewValue;
+			var image = (CachedImage) obj;
 
 			// clear if nothing set
 			if (string.IsNullOrEmpty(url)) {
-				SetSource((CachedImage)obj, null);
+				image.Source = null;
 				return;
 			}
 
+			image.Animate = false;
 			Storage.LoadImageFromVpdb(url).Subscribe(bmp => {
+				// process on main thread
 				System.Windows.Application.Current.Dispatcher.Invoke(delegate {
-					((CachedImage)obj).Source = bmp.ToNative();
+					if (image.Animate) {
+						image.Opacity = 0;
+					}
+					image.Source = bmp.ToNative();
+					if (image.Animate) {
+						image.BeginAnimation(OpacityProperty, FadeInAnimation);
+					}
 				});
 			}, err => {
 				Logger.Error(err, "Error downloading {0}.", url);
 			});
-
-			/*var localPath = GetLocalPath(url);
-			if (IsCached(url)) {
-				SetSource((CachedImage)obj, localPath);
-
-			} else {
-				var webClient = VpdbClient.GetWebClient();
-				var uri = VpdbClient.GetUri(url);
-
-				webClient.DownloadFileCompleted += (sender, args) => {
-					if (args.Error != null) {
-						File.Delete(localPath);
-						return;
-					}
-
-					SetSource((CachedImage)obj, localPath, true);
-				};
-
-				MakeLocalPath(url);
-				Logger.Info("Downloading image from {0}", uri.ToString());
-				webClient.DownloadFileAsync(uri, localPath);
-			}*/
+			Observable.Timer(WaitForFadeInDuration).Subscribe(_ => image.Animate = true);
 		}
-
-		private static void SetSource(Image img, string path, bool fadeIn = false)
-		{
-			if (fadeIn) {
-				img.Opacity = 0;
-			}
-
-			img.Source = path != null ? new BitmapImage(new Uri(path)) : null;
-
-			if (fadeIn) {
-				var da = new DoubleAnimation {
-					From = 0,
-					To = 1,
-					Duration = new Duration(TimeSpan.FromMilliseconds(300))
-				};
-				img.BeginAnimation(OpacityProperty, da);
-			}
-		}
-
 	}
 }

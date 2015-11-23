@@ -183,7 +183,7 @@ namespace VpdbAgent.Application
 				game.Release = updatedRelease;
 			}, exception => _vpdbClient.HandleApiError(exception, "retrieving release details during linking"));
 
-		    _messageManager.LogReleaseLinked(game, release, fileId);
+			_messageManager.LogReleaseLinked(game, release, fileId);
 
 			return this;
 		}
@@ -314,12 +314,14 @@ namespace VpdbAgent.Application
 			// find release locally
 			var game = Games.FirstOrDefault(g => job.Release.Id.Equals(g.ReleaseId));
 
+			// add release
+			AddRelease(job.Release);
+
 			// add or update depending if found or not
 			if (game == null) {
 				AddGame(job);
 
 			} else {
-				AddRelease(job.Release);
 				UpdateGame(game, job);
 			}
 		}
