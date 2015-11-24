@@ -56,7 +56,10 @@ namespace VpdbAgent
 
 		void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
 		{
+			_logger.Error(e.Exception, "Uncatched error!");
+#if !DEBUG
 			Raygun.Send(e.Exception);
+#endif
 		}
 	}
 }
