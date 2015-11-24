@@ -72,6 +72,15 @@ packaging the builds. In order to release a new version:
 7. Create release on GitHub and attach zip
 8. Bump to snapshot version.
 
+## Credits
+
+- Error and crash reporting for VPDB Agent has kindly been provided by 
+  [Raygun](https://raygun.io/?ref=vpdb-agent). And by the way, it also 
+  works with a ton of other platforms!
+
+  <a href="https://raygun.io/?ref=vpdb-agent"><img src="https://raw.githubusercontent.com/freezy/vpdb-agent/master/Resources/raygun.png" width="200"></a>
+- @andreaskoepf for some really helpful Rx suggestions
+
 ## License
 
 GPLv2, see [LICENSE](LICENSE).
