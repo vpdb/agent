@@ -23,7 +23,12 @@
         <GridSplitter Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" ResizeBehavior="PreviousAndNext" Width="3" Background="Transparent"/>
 
         <!-- RIGHT PANEL -->
-        <ItemsControl Grid.Column="2" x:Name="DownloadList" Style="{StaticResource SmoothPanel}" Background="{StaticResource WhiterBrush}" />
-        
+        <ItemsControl Grid.Column="2" x:Name="DownloadList" 
+                      Style="{StaticResource SmoothPanel}" Background="{StaticResource WhiterBrush}" />
+        <!-- EMPTY LABEL -->
+        <Label Grid.Column="2" x:Name="EmptyLabel" Content="You haven't downloaded anything yet." 
+               HorizontalAlignment="Stretch" VerticalAlignment="Stretch" 
+               HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+
     </Grid>
 </UserControl>
