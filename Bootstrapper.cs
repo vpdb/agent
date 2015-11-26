@@ -109,8 +109,6 @@ namespace VpdbAgent.ViewModels
 			// services
 			locator.RegisterLazySingleton(NLog.LogManager.GetCurrentClassLogger, typeof(NLog.Logger));
 
-			locator.RegisterLazySingleton(() => new MessageManager(
-			), typeof(IMessageManager));
 			locator.RegisterLazySingleton(() => new SettingsManager(
 				locator.GetService<NLog.Logger>()
 			), typeof(ISettingsManager));
@@ -128,6 +126,10 @@ namespace VpdbAgent.ViewModels
 				locator.GetService<ISettingsManager>(),
 				locator.GetService<NLog.Logger>()
 			), typeof(IDatabaseManager));
+
+			locator.RegisterLazySingleton(() => new MessageManager(
+				locator.GetService<IDatabaseManager>()
+			), typeof(IMessageManager));
 
 			locator.RegisterLazySingleton(() => new MenuManager(
 				locator.GetService<IFileSystemWatcher>(),

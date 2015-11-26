@@ -236,8 +236,12 @@
     <Compile Include="Libs\ShellLink\ShellLinkNative.cs" />
     <Compile Include="Libs\ShellLink\ShellShortcut.cs" />
     <Compile Include="Models\Message.cs" />
+    <Compile Include="ViewModels\Messages\MessageItemViewModel.cs" />
     <Compile Include="ViewModels\Messages\MessagesViewModel.cs" />
     <Compile Include="ViewModels\NotifyIconViewModel.cs" />
+    <Compile Include="Views\Messages\MessageItemView.xaml.cs">
+      <DependentUpon>MessageItemView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\Messages\MessagesView.xaml.cs">
       <DependentUpon>MessagesView.xaml</DependentUpon>
     </Compile>
@@ -373,6 +377,10 @@
     <Page Include="Views\MainView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\Messages\MessageItemView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="Views\Messages\MessagesView.xaml">
       <Generator>MSBuild:Compile</Generator>

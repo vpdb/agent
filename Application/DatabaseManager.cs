@@ -39,6 +39,8 @@ namespace VpdbAgent.Application
 		/// </summary>
 		/// <returns></returns>
 		IDatabaseManager Save();
+
+		IDatabaseManager Log(Message msg);
 	}
 
 	public class DatabaseManager : IDatabaseManager
@@ -71,6 +73,12 @@ namespace VpdbAgent.Application
 		{
 			MarshallDatabase();
 			return this;
+		}
+
+		public IDatabaseManager Log(Message msg)
+		{
+			Database.Messages.Add(msg);
+			return Save();
 		}
 
 		/// <summary>

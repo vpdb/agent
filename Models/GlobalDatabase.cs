@@ -23,19 +23,26 @@ namespace VpdbAgent.Models
 		/// updated at every application start as well as during runtime through
 		/// push messages.
 		/// </summary>
-		[DataMember]
-		public Dictionary<string, Release> Releases { set; get; } = new Dictionary<string, Release>();
-		[DataMember]
-		private List<Job> _downloadJobs = new List<Job>();
+		[DataMember] public Dictionary<string, Release> Releases { set; get; } = new Dictionary<string, Release>();
 
 		/// <summary>
 		/// Contains all download jobs, current and previous, aborted, successful and erroneous.
 		/// </summary>
 		public ReactiveList<Job> DownloadJobs = new ReactiveList<Job>();
 
+		/// <summary>
+		/// Log messages
+		/// </summary>
+		public ReactiveList<Message> Messages = new ReactiveList<Message>();
+			
+		// private members
+		[DataMember(Name = "jobs")] private List<Job> _downloadJobs = new List<Job>();
+		[DataMember(Name = "messages")] private List<Message> _messages = new List<Message>();
+
 		public GlobalDatabase()
 		{
 			DownloadJobs.Changed.Subscribe(_ => { _downloadJobs = DownloadJobs.ToList(); });
+			Messages.Changed.Subscribe(_ => { _messages = Messages.ToList(); });
 		}
 
 		public GlobalDatabase Update(GlobalDatabase db)
@@ -48,6 +55,10 @@ namespace VpdbAgent.Models
 			using (DownloadJobs.SuppressChangeNotifications()) {
 				DownloadJobs.RemoveRange(0, DownloadJobs.Count);
 				DownloadJobs.AddRange(db._downloadJobs);
+			}
+			using (Messages.SuppressChangeNotifications()) {
+				Messages.RemoveRange(0, Messages.Count);
+				Messages.AddRange(db._messages);
 			}
 			return this;
 		}

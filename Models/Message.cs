@@ -3,33 +3,37 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace VpdbAgent.Models
 {
 	public class Message
 	{
-		public DateTime CreatedAt { get; set; }
+		[JsonConverter(typeof(StringEnumConverter))]
 		public MessageLevel Level;
+		[JsonConverter(typeof(StringEnumConverter))]
+		public MessageType Type;
+		public DateTime CreatedAt { get; set; }
 		public bool WasRead;
-	    public dynamic Data;
-	    public MessageType Type;
+		public dynamic Data;
 
-        public Message() { }
+		public Message() { }
 
-	    public Message(MessageType type, dynamic data, MessageLevel level)
-	    {
-	        CreatedAt = DateTime.Now;
-	        Type = type;
-	        Data = data;
-	        Level = level;
-	        WasRead = false;
-	    }
+		public Message(MessageType type, dynamic data, MessageLevel level)
+		{
+			CreatedAt = DateTime.Now;
+			Type = type;
+			Data = data;
+			Level = level;
+			WasRead = false;
+		}
 	}
 
-    public enum MessageType
-    {
-        ReleaseLinked
-    }
+	public enum MessageType
+	{
+		ReleaseLinked
+	}
 
 	public enum MessageLevel
 	{

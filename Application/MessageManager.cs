@@ -19,6 +19,14 @@ namespace VpdbAgent.Application
 
 	public class MessageManager : IMessageManager
 	{
+
+		private readonly IDatabaseManager _databaseManager;
+
+		public MessageManager(IDatabaseManager databaseManager)
+		{
+			_databaseManager = databaseManager;
+		}
+
 		public Message LogReleaseLinked(Game game, Release release, string fileId)
 		{
 			var msg = new Message(MessageType.ReleaseLinked, new {
@@ -26,6 +34,8 @@ namespace VpdbAgent.Application
 				Release = release.Id,
 				file = fileId
 			}, MessageLevel.Info);
+
+			_databaseManager.Log(msg);
 
 			return msg;
 		}
@@ -44,7 +54,6 @@ namespace VpdbAgent.Application
 				default:
 					throw new ArgumentOutOfRangeException();
 			}
-			return null;
 		}
 	}
 }

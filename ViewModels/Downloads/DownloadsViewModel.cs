@@ -35,6 +35,7 @@ namespace VpdbAgent.ViewModels.Downloads
 
 			Jobs.CountChanged
 				.Select(_ => Jobs.Count == 0)
+				.StartWith(true)
 				.ToProperty(this, x => x.IsEmpty, out _isEmpty);
 		}
 	}
