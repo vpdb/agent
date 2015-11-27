@@ -1,5 +1,6 @@
 ﻿using ReactiveUI;
 using Splat;
+using VpdbAgent.Application;
 using VpdbAgent.ViewModels.Downloads;
 using VpdbAgent.Vpdb.Download;
 
@@ -8,18 +9,17 @@ namespace VpdbAgent.ViewModels.Messages
 	public class MessagesViewModel : ReactiveObject
 	{
 		// deps
-		private static readonly IJobManager JobManager = Locator.CurrentMutable.GetService<IJobManager>();
+		private static readonly IMessageManager MessageManager = Locator.CurrentMutable.GetService<IMessageManager>();
 
 		// props
-		public IReactiveDerivedList<DownloadItemViewModel> Jobs { get; }
+		public IReactiveDerivedList<MessageItemViewModel> Messages { get; }
 
 		public MessagesViewModel()
 		{
-			Jobs = JobManager.CurrentJobs.CreateDerivedCollection(
-				job => new DownloadItemViewModel(job),
+			Messages = MessageManager.Messages.CreateDerivedCollection(
+				msg => new MessageItemViewModel(msg),
 				x => true, 
-				(x, y) => x.Job.CompareTo(y.Job),
-				JobManager.WhenStatusChanged
+				(x, y) => x.Message.CompareTo(y.Message)
 			);
 		}
 	}

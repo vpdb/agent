@@ -4,12 +4,12 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:c="clr-namespace:VpdbAgent.Controls"
-             xmlns:vm="clr-namespace:VpdbAgent.ViewModels.Downloads"
              xmlns:typeConverters="clr-namespace:VpdbAgent.Common.TypeConverters"
+             xmlns:vm="clr-namespace:VpdbAgent.ViewModels.Messages"
              mc:Ignorable="d" 
              d:DesignHeight="150"
              d:DesignWidth="900"
-             d:DataContext="{d:DesignInstance Type=vm:DownloadItemViewModel}">
+             d:DataContext="{d:DesignInstance Type=vm:MessageItemViewModel}">
 
     <!-- type converters -->
     <UserControl.Resources>
@@ -19,86 +19,16 @@
 
     <Grid Margin="20,20,20,-5">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="65" />
-            <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!-- image -->
-        <c:CachedImage ImageUrl="{Binding Job.Thumb.Url}" 
-            Grid.Column="0" Grid.Row="0" Grid.RowSpan="2" Width="50" Height="50" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+        <c:RichTextBlock InlineList="{Binding TextLabel}" Style="{StaticResource Label}" Grid.Column="0" Grid.Row="0" TextWrapping="Wrap" />
 
-        <!-- data -->
-        <c:RichTextBlock InlineList="{Binding TitleLabel}" Style="{StaticResource Label}" Grid.Column="1" Grid.Row="0" TextWrapping="Wrap" />
-        <Grid Grid.Column="1" Grid.Row="1">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-            <c:IconControl Margin="0,0,8,0" Height="{Binding FileIconSize}" Width="{Binding FileIconSize}" Grid.Column="0"
-                HorizontalAlignment="Right" VerticalAlignment="Center"
-                Foreground="{DynamicResource LabelTextBrush}" Data="{Binding FileIcon}" />
-            <c:RichTextBlock InlineList="{Binding SubtitleLabel}" Style="{StaticResource Label}" Grid.Column="1" />
-        </Grid>
-
-        <!-- right side -->
-        <Label Content="{Binding Path=DownloadSpeedFormatted}" Padding="0" HorizontalAlignment="Right" 
-                Grid.Column="2" Grid.Row="0"/>
-        <Button Command="{Binding DeleteJob}" Style="{StaticResource IconButton}" Width="40" Height="40" 
-                Grid.Column="2" Grid.Row="0" Margin="0,-15,-20,0" VerticalAlignment="Center" HorizontalAlignment="Center"
-                Visibility="{Binding Path=Transferring, Converter={StaticResource TrueToCollapsed}}">
-            <c:IconControl Height="12" Width="12" Foreground="{StaticResource LabelTextBrush}" Data="{StaticResource IconClose}" />
-        </Button>
-        <TextBlock Style="{StaticResource Label}" HorizontalAlignment="Right"
-                Grid.Column="2" Grid.Row="1">
-            <TextBlock.Inlines>
-                <Run Text="{Binding Path=DownloadSizeFormatted, Mode=OneWay}" />
-                <Run Text="{Binding Path=DownloadPercentFormatted, Mode=OneWay}" FontWeight="Bold" Foreground="{StaticResource PrimaryColorBrush}"/>
-            </TextBlock.Inlines>
-        </TextBlock>
-
-        <!-- progress bar -->
-        <Grid Visibility="{Binding Path=Transferring, Converter={StaticResource TrueToVisible}}"
-              Grid.ColumnSpan="3" Grid.Row="2" Grid.Column="0" Margin="65,15,0,10">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-            <ProgressBar Value="{Binding Path=DownloadPercent, Mode=OneWay}" Style="{StaticResource BlehProgressBar}" 
-                Grid.Column="0" Margin="0,0,15,0" IsIndeterminate="False"/>
-            <Button x:Name="SelectButton" Style="{StaticResource ButtonSolidSmall}" 
-                Content="CANCEL" Command="{Binding CancelJob}"
-                Grid.Column="1" HorizontalAlignment="Right"/>
-        </Grid>
-
-        <!-- status message -->
-        <Grid x:Name="StatusSuccess" Visibility="{Binding Path=Transferring, Converter={StaticResource TrueToCollapsed}}"
-              Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" >
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="65" />
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-
-            <c:IconControl Margin="0,0,15,0" Height="{Binding StatusPanelIconSize}" Width="{Binding StatusPanelIconSize}" Grid.Column="0"
-                HorizontalAlignment="Right" VerticalAlignment="Center"
-                Foreground="{Binding StatusPanelForeground}" Data="{Binding StatusPanelIcon}" />
-            <c:RichTextBlock Style="{StaticResource Label}" Grid.Column="1" TextWrapping="Wrap" Margin="0,0,10,3" 
-                Foreground="{Binding StatusPanelForeground}" InlineList="{Binding StatusPanelLabel}"/>
-
-            <!-- retry button -->
-            <Button Style="{StaticResource ButtonSolidSmall}" Command="{Binding RetryJob}"
-                    Visibility="{Binding Path=Retryable, Converter={StaticResource TrueToVisible}}"
-                    Grid.Column="2" HorizontalAlignment="Right" Margin="0,-5,0,0" Content="RETRY">
-            </Button>
-        </Grid>
-
-        <Separator Grid.ColumnSpan="3" Grid.Row="3" Grid.Column="0" Margin="0,5,-20,0"/>
     </Grid>
+
 </UserControl>

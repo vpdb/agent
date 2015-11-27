@@ -6,7 +6,9 @@
                     xmlns:vmgame="clr-namespace:VpdbAgent.ViewModels.Games"
                     xmlns:vgame="clr-namespace:VpdbAgent.Views.Games"
                     xmlns:vmdl="clr-namespace:VpdbAgent.ViewModels.Downloads"
-                    xmlns:vdl="clr-namespace:VpdbAgent.Views.Downloads">
+                    xmlns:vmmsg="clr-namespace:VpdbAgent.ViewModels.Messages"
+                    xmlns:vdl="clr-namespace:VpdbAgent.Views.Downloads"
+                    xmlns:vmsg="clr-namespace:VpdbAgent.Views.Messages">
 
     <!--FontFamily x:Key="Black">/Resources/Fonts/#Montserrat Black</-->
 
@@ -250,6 +252,7 @@
                         <dc:SmoothPanel.Templates>
                             <dc:SmoothPanelTemplate ViewModel="{x:Type vmgame:GameItemViewModel}" View="{x:Type vgame:GameItemView}" />
                             <dc:SmoothPanelTemplate ViewModel="{x:Type vmdl:DownloadItemViewModel}" View="{x:Type vdl:DownloadItemView}" />
+                            <dc:SmoothPanelTemplate ViewModel="{x:Type vmmsg:MessageItemViewModel}" View="{x:Type vmsg:MessageItemView}" />
                         </dc:SmoothPanel.Templates>
                     </dc:SmoothPanel>
                 </ItemsPanelTemplate>

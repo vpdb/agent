@@ -28,6 +28,11 @@ namespace VpdbAgent.Models
 			Level = level;
 			WasRead = false;
 		}
+
+		public int CompareTo(Message message)
+		{
+			return -CreatedAt.CompareTo(message.CreatedAt);
+		}
 	}
 
 	public enum MessageType

@@ -16,7 +16,7 @@ namespace VpdbAgent.Views.Messages
 			InitializeComponent();
 
 			this.WhenActivated(d => {
-				d(this.OneWayBind(ViewModel, vm => vm.Jobs, v => v.DownloadList.ItemsSource));
+				d(this.OneWayBind(ViewModel, vm => vm.Messages, v => v.DownloadList.ItemsSource));
 			});
 		}
 
