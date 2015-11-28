@@ -1,4 +1,5 @@
-﻿using ReactiveUI;
+﻿using System.Reactive.Linq;
+using ReactiveUI;
 using Splat;
 using VpdbAgent.Application;
 using VpdbAgent.ViewModels.Downloads;
@@ -13,6 +14,10 @@ namespace VpdbAgent.ViewModels.Messages
 
 		// props
 		public IReactiveDerivedList<MessageItemViewModel> Messages { get; }
+		
+		// output props
+		private readonly ObservableAsPropertyHelper<bool> _isEmpty;
+		public bool IsEmpty => _isEmpty.Value;
 
 		public MessagesViewModel()
 		{
@@ -21,6 +26,11 @@ namespace VpdbAgent.ViewModels.Messages
 				x => true, 
 				(x, y) => x.Message.CompareTo(y.Message)
 			);
+
+			Messages.CountChanged
+				.Select(_ => Messages.Count == 0)
+				.StartWith(Messages.Count == 0)
+				.ToProperty(this, x => x.IsEmpty, out _isEmpty);
 		}
 	}
 }

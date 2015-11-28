@@ -24,6 +24,12 @@
 
         <!-- RIGHT PANEL -->
         <ItemsControl Grid.Column="2" x:Name="DownloadList" Style="{StaticResource SmoothPanel}" Background="{StaticResource WhiterBrush}" />
-        
+    
+        <!-- EMPTY LABEL -->
+        <Label Grid.Column="2" x:Name="EmptyLabel" Content="There are no messages yet." 
+               HorizontalAlignment="Stretch" VerticalAlignment="Stretch" 
+               HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+
+    
     </Grid>
 </UserControl>

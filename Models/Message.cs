@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,11 +17,11 @@ namespace VpdbAgent.Models
 		public MessageType Type;
 		public DateTime CreatedAt { get; set; }
 		public bool WasRead;
-		public dynamic Data;
+		public Dictionary<string, object> Data;
 
 		public Message() { }
 
-		public Message(MessageType type, dynamic data, MessageLevel level)
+		public Message(MessageType type, Dictionary<string, object> data, MessageLevel level)
 		{
 			CreatedAt = DateTime.Now;
 			Type = type;

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,7 +15,6 @@ namespace VpdbAgent.Application
 	{
 		Message LogReleaseLinked(Game game, Release release, string fileId);
 		IMessageManager LogError(Exception e, string message);
-		string GetText(Message message);
 		ReactiveList<Message> Messages { get; }
 	}
 
@@ -32,31 +32,19 @@ namespace VpdbAgent.Application
 
 		public Message LogReleaseLinked(Game game, Release release, string fileId)
 		{
-			var msg = new Message(MessageType.ReleaseLinked, new {
-				GameName = game.Id,
-				Release = release.Id,
-				file = fileId
+			var msg = new Message(MessageType.ReleaseLinked, new Dictionary<string, object> {
+				{ "game_name", game.Id },
+				{ "release", release.Id },
+				{ "file", fileId }
 			}, MessageLevel.Info);
 
 			_databaseManager.Log(msg);
-
 			return msg;
 		}
 
 		public IMessageManager LogError(Exception e, string message)
 		{
 			throw new NotImplementedException();
-		}
-
-		public string GetText(Message message)
-		{
-			switch (message.Type)
-			{
-				case MessageType.ReleaseLinked:
-					return $"Linked release {message.Data["release"]} to game {message.Data["game_name"]}."; 
-                default:
-					throw new ArgumentOutOfRangeException();
-			}
 		}
 	}
 }

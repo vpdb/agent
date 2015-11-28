@@ -26,7 +26,6 @@ namespace VpdbAgent.ViewModels.Messages
 		public MessageItemViewModel(Message message)
 		{
 			Message = message;
-
 			SetupText();
 		}
 
