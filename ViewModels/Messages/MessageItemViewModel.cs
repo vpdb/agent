@@ -35,9 +35,9 @@ namespace VpdbAgent.ViewModels.Messages
 				case MessageType.ReleaseLinked:
 					TextLabel = new ObservableCollection<Inline> {
 						new Run("Linked game "),
-						new Run(Message.Data["game_name"].ToString()) { FontWeight = FontWeights.Bold },
+						new Run(Message.Data[MessageManager.DataGameName].ToString()) { FontWeight = FontWeights.Bold },
 						new Run(" to release "),
-						new Run(Message.Data["release"].ToString()) { FontWeight = FontWeights.Bold },
+						new Run(Message.Data[MessageManager.DataRelease].ToString()) { FontWeight = FontWeights.Bold },
 						new Run("."),
 					};
 					break;
