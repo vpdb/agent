@@ -154,7 +154,7 @@ namespace VpdbAgent.Application
 			_versionManager.Initialize();
 
 			// validate settings and retrieve profile
-			Task.Run(async () => await _settingsManager.Validate(_settingsManager.Settings));
+			Task.Run(async () => await _settingsManager.Validate(_settingsManager.Settings, _messageManager));
 
 			return this;
 		}

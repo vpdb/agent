@@ -71,8 +71,9 @@ namespace VpdbAgent.Application
 		/// Validates current settings and returns a list of errors.
 		/// </summary>
 		/// <param name="settings">Settings to validate</param>
+		/// <param name="messageManager">If given, log to messages on error</param>
 		/// <returns>List of validation errors or empty list if validation succeeded</returns>
-		Task<Dictionary<string, string>> Validate(Settings settings);
+		Task<Dictionary<string, string>> Validate(Settings settings, IMessageManager messageManager = null);
 
 		/// <summary>
 		/// Persists current settings.
@@ -124,7 +125,6 @@ namespace VpdbAgent.Application
 
 		public SettingsManager(Logger logger)
 		{
-
 			BlobCache.ApplicationName = DataFolder;
 			_storage = BlobCache.Secure;
 
@@ -136,7 +136,7 @@ namespace VpdbAgent.Application
 			_logger = logger;
 		}
 
-		public async Task<Dictionary<string, string>> Validate(Settings settings)
+		public async Task<Dictionary<string, string>> Validate(Settings settings, IMessageManager messageManager = null)
 		{
 			_logger.Info("Validating settings...");
 			var errors = new Dictionary<string, string>();
@@ -171,10 +171,12 @@ namespace VpdbAgent.Application
 				} catch (ApiException e) {
 					HandleApiError(errors, e);
 					OnValidationResult(null);
+					messageManager?.LogApiError(e, "Error while logging in");
 
 				} catch (Exception e) {
 					errors.Add("ApiKey", e.Message);
 					OnValidationResult(null);
+					messageManager?.LogError(e, "Error while logging in");
 				}
 			}
 			settings.IsValidated = errors.Count == 0;

@@ -10,11 +10,9 @@
              d:DesignHeight="50"
              d:DesignWidth="900"
              d:DataContext="{d:DesignInstance Type=vm:MessageItemViewModel}">
-
     <!-- type converters -->
     <UserControl.Resources>
         <typeConverters:BooleanToVisibilityConverter x:Key="TrueToVisible" True="Visible" False="Collapsed" />
-        <typeConverters:BooleanToVisibilityConverter x:Key="TrueToCollapsed" True="Collapsed" False="Visible" />
     </UserControl.Resources>
 
     <Grid Margin="20,20,20,-5">
@@ -29,17 +27,23 @@
         </Grid.RowDefinitions>
 
         <!-- icon -->
-        <c:IconControl Foreground="{DynamicResource LabelTextBrush}" Data="{Binding Icon}"
+        <c:IconControl Data="{Binding Icon}" Foreground="{Binding Foreground}"
                        Grid.Column="0" Grid.Row="0" Height="18" Width="18" 
                        HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,5,15,0" />
 
         <!-- message -->
-        <c:RichTextBlock InlineList="{Binding TextLabel}" Style="{StaticResource Label}" 
+        <c:RichTextBlock InlineList="{Binding TextLabel}" Style="{StaticResource Label}" Foreground="{Binding Foreground}"
                          Grid.Column="1" Grid.Row="0" TextWrapping="Wrap" />
         
         <!-- time -->
-        <Label Content="{Binding CreatedAt}" FontStyle="Italic"
+        <Label Content="{Binding CreatedAt}" FontStyle="Italic" Foreground="{Binding Foreground}"
                 Grid.Column="2" Grid.Row="0" Margin="0,-5,0,0"/>
+
+        <!-- error message -->
+        <c:RichTextBlock InlineList="{Binding ErrorLabel}" Style="{StaticResource Label}" 
+                         Foreground="{Binding Foreground}" Visibility="{Binding Path=ShowError, Converter={StaticResource TrueToVisible}}"
+                         Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="2" TextWrapping="Wrap" />
+
 
     </Grid>
 </UserControl>

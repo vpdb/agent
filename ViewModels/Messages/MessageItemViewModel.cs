@@ -17,12 +17,16 @@ namespace VpdbAgent.ViewModels.Messages
 	{
 		// status props
 		public Message Message { get; }
-		public ObservableCollection<Inline> TextLabel { get { return _textLabel; } set { this.RaiseAndSetIfChanged(ref _textLabel, value); } }
+		public ObservableCollection<Inline> TextLabel { get; private set; }
+		public ObservableCollection<Inline> ErrorLabel { get; private set; }
+		public Brush Foreground { get; private set; }
 		public string CreatedAt { get; private set; }
 		public string Icon { get; private set; }
+		public bool ShowError { get; private set; }
 
-		// privates
-		private ObservableCollection<Inline> _textLabel;
+		// brushes
+		private static readonly Brush RedBrush = (Brush)System.Windows.Application.Current.FindResource("LightRedBrush");
+		private static readonly Brush GreyBrush = (Brush)System.Windows.Application.Current.FindResource("LabelTextBrush");
 
 		// icons
 		private static readonly string WarningIcon = (string)System.Windows.Application.Current.FindResource("IconWarning");
@@ -32,6 +36,9 @@ namespace VpdbAgent.ViewModels.Messages
 		{
 			Message = message;
 			CreatedAt = message.CreatedAt.Humanize(false);
+			ShowError = message.Data.ContainsKey(MessageManager.DataInnerExceptionMessage);
+			Foreground = message.Level == MessageLevel.Error ? RedBrush : GreyBrush;
+
 			SetupText();
 		}
 
@@ -67,14 +74,20 @@ namespace VpdbAgent.ViewModels.Messages
 
 				case MessageType.Error:
 					TextLabel = new ObservableCollection<Inline> {
-						new Run(Message.Data[MessageManager.DataMessage].ToString()) { FontWeight = FontWeights.Bold }
+						new Run(Message.Data[MessageManager.DataMessage]) { FontWeight = FontWeights.Bold }
+					};
+					ErrorLabel = new ObservableCollection<Inline> {
+						new Run(Message.Data[MessageManager.DataInnerExceptionMessage])
 					};
 					Icon = WarningIcon;
 					break;
 
 				case MessageType.ApiError:
 					TextLabel = new ObservableCollection<Inline> {
-						new Run(Message.Data[MessageManager.DataMessage].ToString()) { FontWeight = FontWeights.Bold }
+						new Run(Message.Data[MessageManager.DataMessage]) { FontWeight = FontWeights.Bold }
+					};
+					ErrorLabel = new ObservableCollection<Inline> {
+						new Run(Message.Data[MessageManager.DataInnerExceptionMessage])
 					};
 					Icon = WarningIcon;
 					break;
