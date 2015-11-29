@@ -1,63 +1,72 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Dynamic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ReactiveUI;
+using Humanizer;
 using Refit;
 using VpdbAgent.Models;
 using VpdbAgent.Vpdb.Models;
 using Game = VpdbAgent.Models.Game;
+using Version = VpdbAgent.Vpdb.Models.Version;
 
 namespace VpdbAgent.Application
 {
 	public interface IMessageManager
 	{
+		Message LogReleaseDownloaded(Release release, Version version, FileReference file, double bytesPerSecond);
 		Message LogReleaseLinked(Game game, Release release, string fileId);
 		Message LogError(Exception e, string message);
 		Message LogApiError(ApiException e, string message);
-		ReactiveList<Message> Messages { get; }
 	}
 
 	public class MessageManager : IMessageManager
 	{
-		public ReactiveList<Message> Messages { get; }
 		private readonly IDatabaseManager _databaseManager;
 
 		public MessageManager(IDatabaseManager databaseManager)
 		{
 			_databaseManager = databaseManager;
-			Messages = databaseManager.Database.Messages;
+		}
+
+		public Message LogReleaseDownloaded(Release release, Version version, FileReference file, double bytesPerSecond)
+		{
+			var msg = new Message(MessageType.ReleaseDownloaded, MessageLevel.Info, new Dictionary<string, string> {
+				{ DataRelease, release.Id },
+				{ DataReleaseName, release.Name },
+				{ DataVersion, version.Name },
+				{ DataFile, file.Id },
+				{ DataSubject, release.Game.DisplayName },
+				{ DownloadSpeed, $"{bytesPerSecond.Bytes().ToString("#.0")}/s" },
+			});
+			return Log(msg);
 		}
 
 		public Message LogReleaseLinked(Game game, Release release, string fileId)
 		{
-			var msg = new Message(MessageType.ReleaseLinked, new Dictionary<string, object> {
+			var msg = new Message(MessageType.ReleaseLinked, MessageLevel.Info, new Dictionary<string, string> {
 				{ DataGameName, game.Id },
 				{ DataRelease, release.Id },
 				{ DataFile, fileId }
-			}, MessageLevel.Info);
-
-			_databaseManager.Log(msg);
-			return msg;
+			});
+			return Log(msg);
 		}
 
 		public Message LogError(Exception exception, string message)
 		{
 			var msg = CreateError(exception, message, MessageType.Error);
-			_databaseManager.Log(msg);
-			return msg;
+			return Log(msg);
 		}
 
 		public Message LogApiError(ApiException exception, string message)
 		{
 			var msg = CreateError(exception, message, MessageType.ApiError);
-			msg.Data.Add(DataStatusCode, exception.StatusCode);
+			msg.Data.Add(DataStatusCode, exception.StatusCode.ToString());
 			msg.Data.Add(DataContent, exception.Content);
+			return Log(msg);
+		}
 
-			_databaseManager.Log(msg);
-			return msg;
+		private Message Log(Message message)
+		{
+			_databaseManager.Log(message);
+			return message;
 		}
 
 		private static Message CreateError(Exception exception, string message, MessageType type)
@@ -66,18 +75,22 @@ namespace VpdbAgent.Application
 			while (innerException.InnerException != null) {
 				innerException = innerException.InnerException;
 			}
-			return new Message(type, new Dictionary<string, object> {
+			return new Message(type, MessageLevel.Error, new Dictionary<string, string> {
 				{ DataMessage, message },
 				{ DataExceptionMessage, exception.Message },
 				{ DataInnerExceptionMessage, innerException.Message }
-			}, MessageLevel.Error);
+			});
 		}
 
 		public const string DataGameName = "game_name";
 		public const string DataRelease = "release";
+		public const string DataReleaseName = "release_name";
+		public const string DataVersion = "version";
 		public const string DataFile = "file";
 		public const string DataStatusCode = "status_code";
+		public const string DownloadSpeed = "download_speed";
 		public const string DataContent = "content";
+		public const string DataSubject = "subject";
 		public const string DataMessage = "message";
 		public const string DataExceptionMessage = "exception_message";
 		public const string DataInnerExceptionMessage = "inner_exception_message";

@@ -42,9 +42,24 @@ namespace VpdbAgent.ViewModels.Messages
 				case MessageType.ReleaseLinked:
 					TextLabel = new ObservableCollection<Inline> {
 						new Run("Linked game "),
-						new Run(Message.Data[MessageManager.DataGameName].ToString()) { FontWeight = FontWeights.Bold },
+						new Run(Message.Data[MessageManager.DataGameName]) { FontWeight = FontWeights.Bold },
 						new Run(" to release "),
-						new Run(Message.Data[MessageManager.DataRelease].ToString()) { FontWeight = FontWeights.Bold },
+						new Run(Message.Data[MessageManager.DataRelease]) { FontWeight = FontWeights.Bold },
+						new Run("."),
+					};
+					Icon = InfoIcon;
+					break;
+
+				case MessageType.ReleaseDownloaded:
+					TextLabel = new ObservableCollection<Inline> {
+						new Run("Downloaded "),
+						new Run(Message.Data[MessageManager.DataReleaseName]) { FontWeight = FontWeights.Bold },
+						new Run(" "),
+						new Run(Message.Data[MessageManager.DataVersion]) { FontWeight = FontWeights.Bold },
+						new Run(" of "),
+						new Run(Message.Data[MessageManager.DataSubject]) { FontWeight = FontWeights.Bold },
+						new Run(" at "),
+						new Run(Message.Data[MessageManager.DownloadSpeed]) { FontWeight = FontWeights.Bold },
 						new Run("."),
 					};
 					Icon = InfoIcon;

@@ -40,7 +40,11 @@ namespace VpdbAgent.Application
 		/// <returns></returns>
 		IDatabaseManager Save();
 
-		IDatabaseManager Log(Message msg);
+		/// <summary>
+		/// Adds a new message and saves database.
+		/// </summary>
+		/// <param name="msg">Message to log</param>
+		void Log(Message msg);
 	}
 
 	public class DatabaseManager : IDatabaseManager
@@ -75,10 +79,12 @@ namespace VpdbAgent.Application
 			return this;
 		}
 
-		public IDatabaseManager Log(Message msg)
+		public void Log(Message msg)
 		{
-			Database.Messages.Add(msg);
-			return Save();
+			System.Windows.Application.Current.Dispatcher.Invoke(delegate {
+				Database.Messages.Add(msg);
+				Save();
+			});
 		}
 
 		/// <summary>

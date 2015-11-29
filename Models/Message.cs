@@ -17,11 +17,11 @@ namespace VpdbAgent.Models
 		public MessageType Type;
 		public DateTime CreatedAt { get; set; }
 		public bool WasRead;
-		public Dictionary<string, object> Data;
+		public Dictionary<string, string> Data;
 
 		public Message() { }
 
-		public Message(MessageType type, Dictionary<string, object> data, MessageLevel level)
+		public Message(MessageType type, MessageLevel level, Dictionary<string, string> data)
 		{
 			CreatedAt = DateTime.Now;
 			Type = type;
@@ -38,7 +38,7 @@ namespace VpdbAgent.Models
 
 	public enum MessageType
 	{
-		ReleaseLinked, Error, ApiError
+		ReleaseDownloaded, ReleaseLinked, Error, ApiError
 	}
 
 	public enum MessageLevel

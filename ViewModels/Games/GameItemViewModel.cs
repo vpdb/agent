@@ -22,6 +22,7 @@ namespace VpdbAgent.ViewModels.Games
 		private static readonly Logger Logger = Locator.CurrentMutable.GetService<Logger>();
 		private static readonly IVpdbClient VpdbClient = Locator.CurrentMutable.GetService<IVpdbClient>();
 		private static readonly IGameManager GameManager = Locator.CurrentMutable.GetService<IGameManager>();
+		private static readonly IMessageManager MessageManager = Locator.CurrentMutable.GetService<IMessageManager>();
 
 		// commands
 		public ReactiveCommand<List<Release>> IdentifyRelease { get; protected set; }
@@ -96,6 +97,7 @@ namespace VpdbAgent.ViewModels.Games
 				// if file name and file size are identical, directly match.
 				if (numMatches == 1 && match != null) {
 					GameManager.LinkRelease(match.Game, match.Release, match.TableFile.Reference.Id);
+					MessageManager.LogReleaseLinked(match.Game, match.Release, match.TableFile.Reference.Id);
 
 				} else {
 					IdentifiedReleases = releases;

@@ -173,8 +173,6 @@ namespace VpdbAgent.Application
 				game.Release = updatedRelease;
 			}, exception => _vpdbClient.HandleApiError(exception, "retrieving release details during linking"));
 
-			_messageManager.LogReleaseLinked(game, release, fileId);
-
 			return this;
 		}
 

@@ -8,6 +8,7 @@
         xmlns:rx="clr-namespace:ReactiveUI;assembly=ReactiveUI"
         xmlns:vm="clr-namespace:VpdbAgent.ViewModels"
         xmlns:tb="http://www.hardcodet.net/taskbar"
+        xmlns:vpdbAgent="clr-namespace:VpdbAgent"
         mc:Ignorable="d"
         ResizeMode="CanResizeWithGrip"
         WindowTitleBrush="{DynamicResource TransparentBrush}"
@@ -17,7 +18,7 @@
         GlowBrush="#40000000"
         RenderOptions.ClearTypeHint="Enabled"
         Icon="vpdb-agent.ico" 
-        d:DataContext="{d:DesignInstance Type=vm:Bootstrapper}">
+        d:DataContext="{d:DesignInstance Type=vpdbAgent:Bootstrapper}">
 
     <Controls:MetroWindow.Resources>
         <SolidColorBrush x:Key="TransparentBrush" Color="Transparent" />

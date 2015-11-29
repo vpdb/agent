@@ -1,11 +1,11 @@
 ﻿using System;
-using System.Reactive.Linq;
 using Mindscape.Raygun4Net.Messages;
 using ReactiveUI;
 using Splat;
 using VpdbAgent.Application;
 using VpdbAgent.Common.TypeConverters.ReactiveUI;
 using VpdbAgent.PinballX;
+using VpdbAgent.ViewModels;
 using VpdbAgent.ViewModels.Downloads;
 using VpdbAgent.ViewModels.Games;
 using VpdbAgent.ViewModels.Messages;
@@ -19,7 +19,7 @@ using VpdbAgent.VisualPinball;
 using VpdbAgent.Vpdb;
 using VpdbAgent.Vpdb.Download;
 
-namespace VpdbAgent.ViewModels
+namespace VpdbAgent
 {
 
 	/* The Bootstrapper is a ViewModel for the WPF Application class.
@@ -161,6 +161,7 @@ namespace VpdbAgent.ViewModels
 				locator.GetService<IJobManager>(),
 				locator.GetService<IVpdbClient>(),
 				locator.GetService<ISettingsManager>(),
+				locator.GetService<IMessageManager>(),
 				locator.GetService<NLog.Logger>()
 			), typeof(IDownloadManager));
 

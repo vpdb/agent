@@ -18,7 +18,7 @@ namespace VpdbAgent.Vpdb.Download
 	/// Manages how to download stuff, e.g. which files are needed, which flavor
 	/// for a release and moves files to the right place after download.
 	/// 
-	/// Note that the download itself is handled by <see cref="JobManager"/>.
+	/// The download itself is handled by the <see cref="JobManager"/>.
 	/// </summary>
 	public interface IDownloadManager
 	{
@@ -58,6 +58,7 @@ namespace VpdbAgent.Vpdb.Download
 		private readonly IJobManager _jobManager;
 		private readonly IVpdbClient _vpdbClient;
 		private readonly ISettingsManager _settingsManager;
+		private readonly IMessageManager _messageManager;
 		private readonly Logger _logger;
 
 		// props
@@ -67,12 +68,14 @@ namespace VpdbAgent.Vpdb.Download
 		private readonly Subject<Job> _whenReleaseDownloaded = new Subject<Job>();
 		private readonly List<IFlavorMatcher> _flavorMatchers = new List<IFlavorMatcher>();
 
-		public DownloadManager(IPlatformManager platformManager, IJobManager jobManager, IVpdbClient vpdbClient, ISettingsManager settingsManager, Logger logger)
+		public DownloadManager(IPlatformManager platformManager, IJobManager jobManager, IVpdbClient vpdbClient, 
+			ISettingsManager settingsManager, IMessageManager messageManager, Logger logger)
 		{
 			_platformManager = platformManager;
 			_jobManager = jobManager;
 			_vpdbClient = vpdbClient;
 			_settingsManager = settingsManager;
+			_messageManager = messageManager;
 			_logger = logger;
 
 			// setup download callbacks
@@ -176,6 +179,7 @@ namespace VpdbAgent.Vpdb.Download
 			// do other stuff depending on file type
 			if (job.FileType == FileType.TableFile) {
 				_whenReleaseDownloaded.OnNext(job);
+				_messageManager.LogReleaseDownloaded(job.Release, job.Version, job.File, job.TransferredBytes / (job.FinishedAt - job.StartedAt).TotalMilliseconds * 1000);
 			}
 		}
 

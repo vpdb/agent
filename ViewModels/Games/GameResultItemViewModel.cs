@@ -12,6 +12,7 @@ namespace VpdbAgent.ViewModels.Games
 	public class GameResultItemViewModel : ReactiveObject
 	{
 		private static readonly IGameManager GameManager = Locator.CurrentMutable.GetService<IGameManager>();
+		private static readonly IMessageManager MessageManager = Locator.CurrentMutable.GetService<IMessageManager>();
 
 		// public members
 		public readonly Game Game;
@@ -32,6 +33,8 @@ namespace VpdbAgent.ViewModels.Games
 			SelectResult.Subscribe(_ =>
 			{
 				GameManager.LinkRelease(Game, release, tableFile.Reference.Id);
+				MessageManager.LogReleaseLinked(game, release, tableFile.Reference.Id);
+
 				closeCommand.Execute(null);
 			});
 		}
