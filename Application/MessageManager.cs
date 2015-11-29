@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Humanizer;
 using Refit;
 using VpdbAgent.Models;
@@ -15,6 +16,7 @@ namespace VpdbAgent.Application
 		Message LogReleaseLinked(Game game, Release release, string fileId);
 		Message LogError(Exception e, string message);
 		Message LogApiError(ApiException e, string message);
+		void MarkAllRead();
 	}
 
 	public class MessageManager : IMessageManager
@@ -61,6 +63,15 @@ namespace VpdbAgent.Application
 			msg.Data.Add(DataStatusCode, exception.StatusCode.ToString());
 			msg.Data.Add(DataContent, exception.Content);
 			return Log(msg);
+		}
+
+		public void MarkAllRead()
+		{
+			_databaseManager.Database.Messages
+				.Where(msg => !msg.WasRead)
+				.ToList()
+				.ForEach(msg => msg.WasRead = true);
+			_databaseManager.Save();
 		}
 
 		private Message Log(Message message)

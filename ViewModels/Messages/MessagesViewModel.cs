@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Reactive;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using ReactiveUI;
 using Splat;
 using VpdbAgent.Application;
@@ -9,7 +11,7 @@ namespace VpdbAgent.ViewModels.Messages
 	public class MessagesViewModel : ReactiveObject
 	{
 		// deps
-		private static readonly IDatabaseManager DatabaseManager = Locator.CurrentMutable.GetService<IDatabaseManager>();
+		private readonly IMessageManager _messageManager;
 
 		// props
 		public IReactiveDerivedList<MessageItemViewModel> Messages { get; }
@@ -18,18 +20,30 @@ namespace VpdbAgent.ViewModels.Messages
 		private readonly ObservableAsPropertyHelper<bool> _isEmpty;
 		public bool IsEmpty => _isEmpty.Value;
 
-		public MessagesViewModel()
+		// privates
+		private readonly Subject<Unit> _messagesRead = new Subject<Unit>();
+
+		public MessagesViewModel(IDatabaseManager databaseManager, IMessageManager messageManager)
 		{
-			Messages = DatabaseManager.Database.Messages.CreateDerivedCollection(
+			_messageManager = messageManager;
+
+			Messages = databaseManager.Database.Messages.CreateDerivedCollection(
 				msg => new MessageItemViewModel(msg),
 				x => true, 
-				(x, y) => x.Message.CompareTo(y.Message)
+				(x, y) => x.Message.CompareTo(y.Message),
+				_messagesRead
 			);
 
 			Messages.CountChanged
 				.Select(_ => Messages.Count == 0)
 				.StartWith(Messages.Count == 0)
 				.ToProperty(this, x => x.IsEmpty, out _isEmpty);
+		}
+
+		public void OnViewUnselected()
+		{
+			_messageManager.MarkAllRead();
+			_messagesRead.OnNext(Unit.Default); // refresh list
 		}
 	}
 }

@@ -45,7 +45,7 @@
                     <TabItem Header="Downloads">
                         <rx:ViewModelViewHost x:Name="DownloadsContent" VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch"/>
                     </TabItem>
-                    <TabItem Header="Messages">
+                    <TabItem Header="Messages" Selector.Unselected="OnMessagesUnselected">
                         <rx:ViewModelViewHost x:Name="MessagesContent" VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch"/>
                     </TabItem>
                 </TabControl>

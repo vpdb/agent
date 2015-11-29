@@ -15,6 +15,7 @@ using VpdbAgent.ViewModels.Games;
 using VpdbAgent.ViewModels.Messages;
 using VpdbAgent.ViewModels.Settings;
 using VpdbAgent.Vpdb;
+using VpdbAgent.Vpdb.Download;
 
 namespace VpdbAgent.ViewModels
 {
@@ -50,8 +51,8 @@ namespace VpdbAgent.ViewModels
 			HostScreen = screen;
 
 			Games = new GamesViewModel(Locator.Current.GetService<IGameManager>(), Locator.Current.GetService<IPlatformManager>());
-			Downloads = new DownloadsViewModel();
-			Messsages = new MessagesViewModel();
+			Downloads = new DownloadsViewModel(Locator.Current.GetService<IJobManager>());
+			Messsages = new MessagesViewModel(Locator.Current.GetService<IDatabaseManager>(), Locator.Current.GetService<IMessageManager>());
 			GotoSettings = ReactiveCommand.CreateAsyncObservable(_ => screen.Router.Navigate.ExecuteAsync(new SettingsViewModel(screen, settingsManager, versionManager, Locator.Current.GetService<IGameManager>())));
 
 			// login status

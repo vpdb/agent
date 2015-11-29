@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Text;
 using System.Threading.Tasks;
 using NLog;
@@ -14,9 +16,6 @@ namespace VpdbAgent.ViewModels.Downloads
 {
 	public class DownloadsViewModel : ReactiveObject
 	{
-		// deps
-		private static readonly IJobManager JobManager = Locator.CurrentMutable.GetService<IJobManager>();
-
 		// props
 		public IReactiveDerivedList<DownloadItemViewModel> Jobs { get; }
 
@@ -24,13 +23,13 @@ namespace VpdbAgent.ViewModels.Downloads
 		private readonly ObservableAsPropertyHelper<bool> _isEmpty;
 		public bool IsEmpty => _isEmpty.Value;
 
-		public DownloadsViewModel()
+		public DownloadsViewModel(IJobManager jobManager)
 		{
-			Jobs = JobManager.CurrentJobs.CreateDerivedCollection(
+			Jobs = jobManager.CurrentJobs.CreateDerivedCollection(
 				job => new DownloadItemViewModel(job),
 				x => true, 
 				(x, y) => x.Job.CompareTo(y.Job),
-				JobManager.WhenStatusChanged
+				jobManager.WhenStatusChanged
 			);
 
 			Jobs.CountChanged

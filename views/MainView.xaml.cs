@@ -46,6 +46,11 @@ namespace VpdbAgent.Views
 			});
 		}
 
+		private void OnMessagesUnselected(object sender, RoutedEventArgs e)
+		{
+			ViewModel.Messsages.OnViewUnselected();
+		}
+
 		#region ViewModel
 		public MainViewModel ViewModel
 		{
