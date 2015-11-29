@@ -17,21 +17,28 @@ namespace VpdbAgent.ViewModels.Messages
 	{
 		// status props
 		public Message Message { get; }
-
 		public ObservableCollection<Inline> TextLabel { get { return _textLabel; } set { this.RaiseAndSetIfChanged(ref _textLabel, value); } }
+		public string CreatedAt { get; private set; }
+		public string Icon { get; private set; }
 
 		// privates
 		private ObservableCollection<Inline> _textLabel;
 
+		// icons
+		private static readonly string WarningIcon = (string)System.Windows.Application.Current.FindResource("IconWarning");
+		private static readonly string InfoIcon = (string)System.Windows.Application.Current.FindResource("IconInfoCircle");
+
 		public MessageItemViewModel(Message message)
 		{
 			Message = message;
+			CreatedAt = message.CreatedAt.Humanize(false);
 			SetupText();
 		}
 
 		private void SetupText()
 		{
 			switch (Message.Type) {
+
 				case MessageType.ReleaseLinked:
 					TextLabel = new ObservableCollection<Inline> {
 						new Run("Linked game "),
@@ -40,7 +47,23 @@ namespace VpdbAgent.ViewModels.Messages
 						new Run(Message.Data[MessageManager.DataRelease].ToString()) { FontWeight = FontWeights.Bold },
 						new Run("."),
 					};
+					Icon = InfoIcon;
 					break;
+
+				case MessageType.Error:
+					TextLabel = new ObservableCollection<Inline> {
+						new Run(Message.Data[MessageManager.DataMessage].ToString()) { FontWeight = FontWeights.Bold }
+					};
+					Icon = WarningIcon;
+					break;
+
+				case MessageType.ApiError:
+					TextLabel = new ObservableCollection<Inline> {
+						new Run(Message.Data[MessageManager.DataMessage].ToString()) { FontWeight = FontWeights.Bold }
+					};
+					Icon = WarningIcon;
+					break;
+
 				default:
 					throw new ArgumentOutOfRangeException();
 			}

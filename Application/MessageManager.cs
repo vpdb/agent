@@ -22,16 +22,6 @@ namespace VpdbAgent.Application
 
 	public class MessageManager : IMessageManager
 	{
-
-		public const string DataGameName = "game_name";
-		public const string DataRelease = "release";
-		public const string DataFile = "file";
-		public const string DataStatusCode = "status_code";
-		public const string DataContent = "content";
-		public const string DataMessage = "message";
-		public const string DataExceptionMessage = "exception_message";
-		public const string DataInnerExceptionMessage = "inner_exception_message";
-
 		public ReactiveList<Message> Messages { get; }
 		private readonly IDatabaseManager _databaseManager;
 
@@ -82,5 +72,14 @@ namespace VpdbAgent.Application
 				{ DataInnerExceptionMessage, innerException.Message }
 			}, MessageLevel.Error);
 		}
+
+		public const string DataGameName = "game_name";
+		public const string DataRelease = "release";
+		public const string DataFile = "file";
+		public const string DataStatusCode = "status_code";
+		public const string DataContent = "content";
+		public const string DataMessage = "message";
+		public const string DataExceptionMessage = "exception_message";
+		public const string DataInnerExceptionMessage = "inner_exception_message";
 	}
 }

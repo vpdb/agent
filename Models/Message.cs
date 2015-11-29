@@ -38,7 +38,7 @@ namespace VpdbAgent.Models
 
 	public enum MessageType
 	{
-		ReleaseLinked
+		ReleaseLinked, Error, ApiError
 	}
 
 	public enum MessageLevel
