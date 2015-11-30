@@ -46,7 +46,7 @@ namespace VpdbAgent.Vpdb.Network
 			} else {
 				request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey.Trim());
 			}
-//			request.Headers.Add("Accept-Encoding", "gzip,deflate");
+			//			request.Headers.Add("Accept-Encoding", "gzip,deflate");
 
 			Logger.Debug("=> {0} {1}", request.Method, request.RequestUri);
 

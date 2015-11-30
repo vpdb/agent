@@ -1,14 +1,20 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Reactive;
+using System.Reactive.Concurrency;
 using System.Reactive.Linq;
+using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using System.Windows.Controls;
 using NLog;
 using ReactiveUI;
 using VpdbAgent.Application;
 using VpdbAgent.Models;
 using VpdbAgent.Vpdb;
+using VpdbAgent.Vpdb.Models;
+using Game = VpdbAgent.Models.Game;
 
 namespace VpdbAgent.ViewModels.Games
 {
@@ -23,7 +29,8 @@ namespace VpdbAgent.ViewModels.Games
 		public IReactiveDerivedList<GameItemViewModel> Games { get; }
 
 		// commands
-		public ReactiveCommand<object> FilterPlatforms { get; protected set; } = ReactiveCommand.Create();
+		public ReactiveCommand<object> FilterPlatforms { get; } = ReactiveCommand.Create();
+		public ReactiveCommand<object> IdentifyAll { get; } = ReactiveCommand.Create();
 
 		// privates
 		private readonly ReactiveList<string> _platformFilter = new ReactiveList<string>();
@@ -54,6 +61,17 @@ namespace VpdbAgent.ViewModels.Games
 			Games = _allGames.CreateDerivedCollection(
 				gameViewModel => gameViewModel, 
 				gameViewModel => gameViewModel.IsVisible);
+
+			IdentifyAll.Subscribe(_ => {
+				Games
+					.Where(g => g.ShowIdentifyButton)
+					.Select(g => g.IdentifyRelease)
+					.Select(cmd => Observable.DeferAsync(async token =>
+						Observable.Return(await System.Windows.Application.Current. // must be on main thread
+							Dispatcher.Invoke(async () => await cmd.ExecuteAsyncTask()))))
+					.Merge(1)
+					.Subscribe(x => { });
+			});
 		}
 
 		/// <summary>

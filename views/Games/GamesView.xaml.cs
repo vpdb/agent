@@ -22,6 +22,7 @@ namespace VpdbAgent.Views.Games
 			{
 				d(this.OneWayBind(ViewModel, vm => vm.Platforms, v => v.PlatformList.ItemsSource));
 				d(this.OneWayBind(ViewModel, vm => vm.Games, v => v.GameList.ItemsSource));
+				d(this.BindCommand(ViewModel, vm => vm.IdentifyAll, v => v.IdentifyAllButton));
 			});
 		}
 
