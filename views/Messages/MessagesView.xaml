@@ -21,9 +21,9 @@
             
             <!-- clear all -->
             <Button x:Name="ClearAllButton" Style="{StaticResource ButtonLink}" HorizontalAlignment="Left">
-                <StackPanel Orientation="Horizontal" Margin="25,0,0,0">
+                <StackPanel Orientation="Horizontal" Margin="15,0,0,0">
                     <ctrl:IconControl Data="{StaticResource IconClose}" Height="12" Width="12" 
-                       HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,10,0" />
+                       HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,11,0" />
                     <Label Content="Clear All" Foreground="{Binding Foreground, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}}"/>
                 </StackPanel>
             </Button>
