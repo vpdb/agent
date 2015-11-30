@@ -129,7 +129,11 @@ namespace VpdbAgent.Application
 
 			// update releases from VPDB on the first run, but delay it a bit so it 
 			// doesn't do all that shit at the same time!
-			_menuManager.Initialized.Delay(TimeSpan.FromSeconds(2)).Subscribe(_ => UpdateReleases());
+			_settingsManager.ApiAuthenticated
+				.Where(user => user != null)
+				.Take(1)
+				.Delay(TimeSpan.FromSeconds(2))
+				.Subscribe(_ => UpdateReleases());
 
 			// subscribe to pusher
 			_vpdbClient.UserChannel.Subscribe(OnChannelJoined);
@@ -291,7 +295,7 @@ namespace VpdbAgent.Application
 						}
 						// save
 						_databaseManager.Save();
-					}, exception => _vpdbClient.HandleApiError(exception, "retrieving all known releases by id"));
+					}, exception => _vpdbClient.HandleApiError(exception, "retrieving all known releases by ID"));
 			} else {
 				_logger.Info("Skipping release update, no linked releases found.");
 			}

@@ -61,16 +61,25 @@ namespace VpdbAgent.Vpdb
 		/// <returns>Authenticated web client object</returns>
 		WebClient GetWebClient();
 
-
+		/// <summary>
+		/// Returns a dictionary with the auth headers computed with the
+		/// user settings.
+		/// </summary>
+		/// <returns>Authorization headers</returns>
 		IDictionary<string, string> GetAuthHeaders();
 
-			/// <summary>
+		/// <summary>
 		/// Returns a full Uri based on a given absolute path.
 		/// </summary>
 		/// <param name="path">Absolute path</param>
 		/// <returns>Uri with including hostname</returns>
 		Uri GetUri(string path);
 
+		/// <summary>
+		/// Logs a message and sends it to the crash logger if necessary
+		/// </summary>
+		/// <param name="e"></param>
+		/// <param name="origin"></param>
 		void HandleApiError(Exception e, string origin);
 	}
 
