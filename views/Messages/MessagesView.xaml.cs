@@ -18,6 +18,8 @@ namespace VpdbAgent.Views.Messages
 			this.WhenActivated(d => {
 				d(this.OneWayBind(ViewModel, vm => vm.Messages, v => v.DownloadList.ItemsSource));
 				d(this.OneWayBind(ViewModel, vm => vm.IsEmpty, v => v.EmptyLabel.Visibility));
+
+				d(this.BindCommand(ViewModel, vm => vm.ClearAll, v => v.ClearAllButton));
 			});
 		}
 

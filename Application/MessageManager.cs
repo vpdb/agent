@@ -17,6 +17,7 @@ namespace VpdbAgent.Application
 		Message LogError(Exception e, string message);
 		Message LogApiError(ApiException e, string message);
 		void MarkAllRead();
+		void ClearAll();
 	}
 
 	public class MessageManager : IMessageManager
@@ -76,6 +77,11 @@ namespace VpdbAgent.Application
 				.ToList()
 				.ForEach(msg => msg.WasRead = true);
 			_databaseManager.Save();
+		}
+
+		public void ClearAll()
+		{
+			_databaseManager.ClearLog();
 		}
 
 		private Message Log(Message message)

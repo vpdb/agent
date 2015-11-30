@@ -15,6 +15,7 @@ namespace VpdbAgent.ViewModels.Messages
 
 		// props
 		public IReactiveDerivedList<MessageItemViewModel> Messages { get; }
+		public ReactiveCommand<object> ClearAll = ReactiveCommand.Create();
 		
 		// output props
 		private readonly ObservableAsPropertyHelper<bool> _isEmpty;
@@ -38,6 +39,10 @@ namespace VpdbAgent.ViewModels.Messages
 				.Select(_ => Messages.Count == 0)
 				.StartWith(Messages.Count == 0)
 				.ToProperty(this, x => x.IsEmpty, out _isEmpty);
+
+			ClearAll.Subscribe(_ => {
+				_messageManager.ClearAll();
+			});
 		}
 
 		public void OnViewUnselected()

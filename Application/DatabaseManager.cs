@@ -45,6 +45,11 @@ namespace VpdbAgent.Application
 		/// </summary>
 		/// <param name="msg">Message to log</param>
 		void Log(Message msg);
+
+		/// <summary>
+		/// Removes all messages from the database.
+		/// </summary>
+		void ClearLog();
 	}
 
 	public class DatabaseManager : IDatabaseManager
@@ -85,6 +90,14 @@ namespace VpdbAgent.Application
 		{
 			System.Windows.Application.Current.Dispatcher.Invoke(delegate {
 				Database.Messages.Add(msg);
+				Save();
+			});
+		}
+
+		public void ClearLog()
+		{
+			System.Windows.Application.Current.Dispatcher.Invoke(delegate {
+				Database.Messages.Clear();
 				Save();
 			});
 		}
