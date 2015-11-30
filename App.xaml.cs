@@ -8,6 +8,7 @@ using Hardcodet.Wpf.TaskbarNotification;
 using Mindscape.Raygun4Net;
 using NLog;
 using Squirrel;
+using VpdbAgent.Application;
 using VpdbAgent.ViewModels;
 
 namespace VpdbAgent
@@ -19,11 +20,12 @@ namespace VpdbAgent
 	{
 
 		private readonly Logger _logger = LogManager.GetCurrentClassLogger();
+		public readonly CrashManager CrashManager;
+
 		private TaskbarIcon _notifyIcon;
 		public Bootstrapper Bootstrapper { get; private set; }
 		public Options CommandLineOptions { get; }
 
-		public readonly RaygunClient Raygun = new RaygunClient("rDGC5mT6YBc77sU8bm5/Jw==");
 
 		public App()
 		{
@@ -32,7 +34,8 @@ namespace VpdbAgent
 			Parser.Default.ParseArguments(Environment.GetCommandLineArgs(), CommandLineOptions);
 
 			// crash handling
-			DispatcherUnhandledException += OnDispatcherUnhandledException;
+			CrashManager = new CrashManager(_logger);
+			DispatcherUnhandledException += CrashManager.OnDispatcherUnhandledException;
 		}
 
 		protected override void OnStartup(StartupEventArgs e)
@@ -54,12 +57,5 @@ namespace VpdbAgent
 			public bool Minimized { get; set; }
 		}
 
-		void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
-		{
-			_logger.Error(e.Exception, "Uncatched error!");
-#if !DEBUG
-			Raygun.Send(e.Exception);
-#endif
-		}
 	}
 }

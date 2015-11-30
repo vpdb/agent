@@ -1,4 +1,5 @@
 ﻿using System;
+using Mindscape.Raygun4Net;
 using Mindscape.Raygun4Net.Messages;
 using ReactiveUI;
 using Splat;
@@ -62,11 +63,7 @@ namespace VpdbAgent
 
 			settingsManager.ApiAuthenticated.Subscribe(user => {
 				if (user != null) {
-					((App)System.Windows.Application.Current).Raygun.UserInfo = new RaygunIdentifierMessage(user.Id) {
-						IsAnonymous = false,
-						FullName = user.Name,
-						Email = user.Email
-					};
+					((App)System.Windows.Application.Current).CrashManager.SetUser(user);
 				}
 			});
 
@@ -108,6 +105,7 @@ namespace VpdbAgent
 
 			// services
 			locator.RegisterLazySingleton(NLog.LogManager.GetCurrentClassLogger, typeof(NLog.Logger));
+			locator.RegisterLazySingleton(() => ((App)System.Windows.Application.Current).CrashManager, typeof(CrashManager));
 
 			locator.RegisterLazySingleton(() => new SettingsManager(
 				locator.GetService<NLog.Logger>()
@@ -128,7 +126,8 @@ namespace VpdbAgent
 			), typeof(IDatabaseManager));
 
 			locator.RegisterLazySingleton(() => new MessageManager(
-				locator.GetService<IDatabaseManager>()
+				locator.GetService<IDatabaseManager>(),
+				locator.GetService<CrashManager>()
 			), typeof(IMessageManager));
 
 			locator.RegisterLazySingleton(() => new MenuManager(

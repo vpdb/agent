@@ -22,10 +22,12 @@ namespace VpdbAgent.Application
 	public class MessageManager : IMessageManager
 	{
 		private readonly IDatabaseManager _databaseManager;
+		private readonly CrashManager _crashManager;
 
-		public MessageManager(IDatabaseManager databaseManager)
+		public MessageManager(IDatabaseManager databaseManager, CrashManager crashManager)
 		{
 			_databaseManager = databaseManager;
+			_crashManager = crashManager;
 		}
 
 		public Message LogReleaseDownloaded(Release release, Version version, FileReference file, double bytesPerSecond)
@@ -54,6 +56,7 @@ namespace VpdbAgent.Application
 		public Message LogError(Exception exception, string message)
 		{
 			var msg = CreateError(exception, message, MessageType.Error);
+			_crashManager.Report(exception);
 			return Log(msg);
 		}
 
@@ -62,6 +65,7 @@ namespace VpdbAgent.Application
 			var msg = CreateError(exception, message, MessageType.ApiError);
 			msg.Data.Add(DataStatusCode, exception.StatusCode.ToString());
 			msg.Data.Add(DataContent, exception.Content);
+			_crashManager.Report(exception, "api");
 			return Log(msg);
 		}
 
