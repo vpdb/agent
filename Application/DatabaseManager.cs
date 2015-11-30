@@ -51,6 +51,7 @@ namespace VpdbAgent.Application
 	{
 		// deps
 		private readonly ISettingsManager _settingsManager;
+		private readonly CrashManager _crashManager;
 		private readonly Logger _logger;
 
 		// props
@@ -58,9 +59,10 @@ namespace VpdbAgent.Application
 
 		private string _dbPath;
 
-		public DatabaseManager(ISettingsManager settingsManager, Logger logger)
+		public DatabaseManager(ISettingsManager settingsManager, CrashManager crashManager, Logger logger)
 		{
 			_settingsManager = settingsManager;
+			_crashManager = crashManager;
 			_logger = logger;
 		}
 
@@ -107,6 +109,7 @@ namespace VpdbAgent.Application
 						return db;
 					} catch (Exception e) {
 						_logger.Error(e, "Error parsing {0}, deleting and ignoring.", _dbPath);
+						_crashManager.Report(e, "json");
 						reader.Close();
 						File.Delete(_dbPath);
 						return null;
@@ -114,6 +117,7 @@ namespace VpdbAgent.Application
 				}
 			} catch (Exception e) {
 				_logger.Error(e, "Error reading {0}, deleting and ignoring.", _dbPath);
+				_crashManager.Report(e, "json");
 				return null;
 			}
 		}
@@ -137,6 +141,7 @@ namespace VpdbAgent.Application
 				_logger.Debug("Wrote vpdb.json back to {0}", _dbPath);
 			} catch (Exception e) {
 				_logger.Error(e, "Error writing database to {0}", _dbPath);
+				_crashManager.Report(e, "json");
 			}
 		}
 

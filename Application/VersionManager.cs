@@ -18,15 +18,17 @@ namespace VpdbAgent.Application
 		public const string UpdateFolder = "https://raw.githubusercontent.com/freezy/vpdb-agent/master/Releases"; // @"C:\dev\vpdb-agent\Releases";
 		public static readonly TimeSpan UpdateInterval = TimeSpan.FromDays(1);
 
+		private readonly Logger _logger;
+		private readonly CrashManager _crashManager;
+
 		public IObservable<ReleaseEntry> NewVersionAvailable => _newVersionAvailable;
 
 		private readonly BehaviorSubject<ReleaseEntry> _newVersionAvailable = new BehaviorSubject<ReleaseEntry>(null);
 
-		private readonly Logger _logger;
-
-		public VersionManager(Logger logger)
+		public VersionManager(CrashManager crashManager, Logger logger)
 		{
 			_logger = logger;
+			_crashManager = crashManager;
 		}
 
 		public IVersionManager Initialize()
@@ -39,12 +41,7 @@ namespace VpdbAgent.Application
 
 		private void CheckForUpdate(long x)
 		{
-#if DEBUG
-			_logger.Info("Not checking for updates in debug mode but we'll create one anyway ({0})", x);
-			if (x > 0) {
-				OnNewVersionAvailable(ReleaseEntry.ParseReleaseEntry("83E9F5BEB4079D5B01C573CA1DFC5CBFCB6899CF VpdbAgent-1.0.0-full.nupkg 2851039"));
-			}
-#else
+#if !DEBUG
 			Task.Run(async () => {
 				try {
 					using (var mgr = new UpdateManager(UpdateFolder)) {
@@ -55,6 +52,7 @@ namespace VpdbAgent.Application
 					}
 				} catch (Exception e) {
 					_logger.Error(e, "Failed checking for updates: {0}", e.Message);
+					_crashManager.Report(e, "squirrel");
 				}
 			});
 #endif

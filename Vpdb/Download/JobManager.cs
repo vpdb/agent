@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using NLog;
 using ReactiveUI;
 using VpdbAgent.Application;
+using VpdbAgent.PinballX;
 
 namespace VpdbAgent.Vpdb.Download
 {
@@ -69,6 +70,8 @@ namespace VpdbAgent.Vpdb.Download
 
 		// dependencies
 		private readonly IDatabaseManager _databaseManager;
+		private readonly IMessageManager _messageManager;
+		private readonly CrashManager _crashManager;
 		private readonly Logger _logger;
 
 		// props
@@ -90,11 +93,13 @@ namespace VpdbAgent.Vpdb.Download
 		/// <summary>
 		/// Constructor sets up queue and creates download folder if non-existing.
 		/// </summary>
-		public JobManager(IDatabaseManager databaseManager, Logger logger)
+		public JobManager(IDatabaseManager databaseManager, IMessageManager messageManager, CrashManager crashManager, Logger logger)
 		{
 			CurrentJobs = databaseManager.Database.DownloadJobs;
 
 			_databaseManager = databaseManager;
+			_messageManager = messageManager;
+			_crashManager = crashManager;
 			_logger = logger;
 
 			// setup transfer queue
@@ -185,10 +190,14 @@ namespace VpdbAgent.Vpdb.Download
 				} else {
 					job.OnFailure(e);
 					_logger.Error(e, "Error downloading file (server error): {0}", e.Message);
+					_crashManager.Report(e, "network");
+					_messageManager.LogError(e, "Error downloading file");
 				}
 			} catch (Exception e) {
 				job.OnFailure(e);
 				_logger.Error(e, "Error downloading file: {0}", e.Message);
+				_crashManager.Report(e, "network");
+				_messageManager.LogError(e, "Error downloading file");
 			}
 			return job;
 		}

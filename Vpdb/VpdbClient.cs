@@ -92,6 +92,7 @@ namespace VpdbAgent.Vpdb
 		private readonly ISettingsManager _settingsManager;
 		private readonly IVersionManager _versionManager;
 		private readonly IMessageManager _messageManager;
+		private readonly CrashManager _crashManager;
 		private readonly Logger _logger;
 		private readonly IScreen _screen;
 
@@ -105,11 +106,12 @@ namespace VpdbAgent.Vpdb
 		private Channel _userChannel;
 
 		public VpdbClient(ISettingsManager settingsManager, IVersionManager versionManager, IMessageManager messageManager, 
-			IScreen screen, Logger logger)
+			IScreen screen, CrashManager crashManager, Logger logger)
 		{
 			_settingsManager = settingsManager;
 			_versionManager = versionManager;
 			_messageManager = messageManager;
+			_crashManager = crashManager;
 			_logger = logger;
 			_screen = screen;
 		}
@@ -141,7 +143,7 @@ namespace VpdbAgent.Vpdb
 			// initialize pusher
 			_pusher = new Pusher("02ee40b62e1fb0696e02", new PusherOptions() {
 				Encrypted = true,
-				Authorizer = new PusherAuthorizer(this, _logger)
+				Authorizer = new PusherAuthorizer(this, _crashManager, _logger)
 			});
 
 			return this;

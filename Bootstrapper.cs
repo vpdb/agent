@@ -114,14 +114,17 @@ namespace VpdbAgent
 				locator.GetService<NLog.Logger>()
 			), typeof(IFileSystemWatcher));
 			locator.RegisterLazySingleton(() => new VersionManager(
+				locator.GetService<CrashManager>(),
 				locator.GetService<NLog.Logger>()
 			), typeof(IVersionManager));
 			locator.RegisterLazySingleton(() => new VisualPinballManager(
+				locator.GetService<CrashManager>(),
 				locator.GetService<NLog.Logger>()
 			), typeof(IVisualPinballManager));
 
 			locator.RegisterLazySingleton(() => new DatabaseManager(
 				locator.GetService<ISettingsManager>(),
+				locator.GetService<CrashManager>(),
 				locator.GetService<NLog.Logger>()
 			), typeof(IDatabaseManager));
 
@@ -133,6 +136,7 @@ namespace VpdbAgent
 			locator.RegisterLazySingleton(() => new MenuManager(
 				locator.GetService<IFileSystemWatcher>(),
 				locator.GetService<ISettingsManager>(),
+				locator.GetService<CrashManager>(),
 				locator.GetService<NLog.Logger>()
 			), typeof(IMenuManager));
 
@@ -147,11 +151,14 @@ namespace VpdbAgent
 				locator.GetService<IVersionManager>(),
 				locator.GetService<IMessageManager>(),
 				this,
+				locator.GetService<CrashManager>(),
 				locator.GetService<NLog.Logger>()
 			), typeof(IVpdbClient));
 
 			locator.RegisterLazySingleton(() => new JobManager(
 				locator.GetService<IDatabaseManager>(),
+				locator.GetService<IMessageManager>(),
+				locator.GetService<CrashManager>(),
 				locator.GetService<NLog.Logger>()
 			), typeof(IJobManager));			
 			
@@ -161,6 +168,7 @@ namespace VpdbAgent
 				locator.GetService<IVpdbClient>(),
 				locator.GetService<ISettingsManager>(),
 				locator.GetService<IMessageManager>(),
+				locator.GetService<CrashManager>(),
 				locator.GetService<NLog.Logger>()
 			), typeof(IDownloadManager));
 

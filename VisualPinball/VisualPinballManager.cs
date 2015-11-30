@@ -7,6 +7,7 @@ using System.Text;
 using HashLib;
 using NLog;
 using OpenMcdf;
+using VpdbAgent.Application;
 
 namespace VpdbAgent.VisualPinball
 {
@@ -70,9 +71,11 @@ namespace VpdbAgent.VisualPinball
 	{
 		// deps
 		private readonly Logger _logger;
+		private readonly CrashManager _crashManager;
 
-		public VisualPinballManager(Logger logger)
+		public VisualPinballManager(CrashManager crashManager, Logger logger)
 		{
+			_crashManager = crashManager;
 			_logger = logger;
 		}
 
@@ -148,6 +151,7 @@ namespace VpdbAgent.VisualPinball
 
 			} catch (CFItemNotFound e) {
 				_logger.Error(e, "Error patching file!");
+				_crashManager.Report(e, "vpt");
 			}
 
 			return this;
@@ -259,6 +263,7 @@ namespace VpdbAgent.VisualPinball
 
 			} catch (Exception e) {
 				_logger.Error(e, "Error reading data!");
+				_crashManager.Report(e, "vpt");
 			}
 		}
 

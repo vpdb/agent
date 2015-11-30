@@ -10,6 +10,7 @@ using Newtonsoft.Json;
 using NLog;
 using ReactiveUI;
 using Splat;
+using VpdbAgent.Application;
 using VpdbAgent.PinballX.Models;
 using VpdbAgent.Vpdb.Network;
 
@@ -86,6 +87,8 @@ namespace VpdbAgent.Models
 		public readonly Subject<Unit> GamePropertyChanged = new Subject<Unit>();
 		private readonly PlatformDatabase _database;
 		private readonly Logger _logger = Locator.CurrentMutable.GetService<Logger>();
+		private readonly CrashManager _crashManager = Locator.CurrentMutable.GetService<CrashManager>();
+
 		private readonly JsonSerializer _serializer = new JsonSerializer {
 			NullValueHandling = NullValueHandling.Ignore,
 			ContractResolver = new SnakeCasePropertyNamesContractResolver(),
@@ -214,6 +217,7 @@ namespace VpdbAgent.Models
 						return db ?? new PlatformDatabase();
 					} catch (Exception e) {
 						_logger.Error(e, "Error parsing vpdb.json, deleting and ignoring.");
+						_crashManager.Report(e, "json");
 						reader.Close();
 						File.Delete(DatabaseFile);
 						return new PlatformDatabase();
@@ -221,6 +225,7 @@ namespace VpdbAgent.Models
 				}
 			} catch (Exception e) {
 				_logger.Error(e, "Error reading vpdb.json, deleting and ignoring.");
+				_crashManager.Report(e, "json");
 				return new PlatformDatabase();
 			}
 		}
@@ -245,6 +250,7 @@ namespace VpdbAgent.Models
 				_logger.Debug("Wrote vpdb.json back to {0}", DatabaseFile);
 			} catch (Exception e) {
 				_logger.Error(e, "Error writing vpdb.json to {0}", DatabaseFile);
+				_crashManager.Report(e, "json");
 			}
 		}
 

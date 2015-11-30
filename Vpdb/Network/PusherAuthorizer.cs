@@ -9,6 +9,7 @@ using Newtonsoft.Json;
 using NLog;
 using NLog.LayoutRenderers;
 using PusherClient;
+using VpdbAgent.Application;
 using VpdbAgent.Vpdb.Models.Messages;
 
 namespace VpdbAgent.Vpdb.Network
@@ -20,16 +21,12 @@ namespace VpdbAgent.Vpdb.Network
 		// deps
 		private readonly IVpdbClient _vpdbClient;
 		private readonly Logger _logger;
+		private readonly CrashManager _crashManager;
 
-		private readonly static JsonSerializer Serializer = new JsonSerializer {
-			NullValueHandling = NullValueHandling.Ignore,
-			ContractResolver = new SnakeCasePropertyNamesContractResolver(),
-			Formatting = Formatting.Indented
-		};
-
-		public PusherAuthorizer(IVpdbClient vpdbClient, Logger logger)
+		public PusherAuthorizer(IVpdbClient vpdbClient, CrashManager crashManager, Logger logger)
 		{
 			_vpdbClient = vpdbClient;
+			_crashManager = crashManager;
 			_logger = logger;
 		}
 
@@ -59,6 +56,7 @@ namespace VpdbAgent.Vpdb.Network
 
 			} catch (Exception e) {
 				_logger.Error(e, "Error retrieving pusher auth token.");
+				_crashManager.Report(e, "pusher");
 
 			} finally {
 				reader?.Close();

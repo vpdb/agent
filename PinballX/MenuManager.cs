@@ -12,9 +12,7 @@ using VpdbAgent.PinballX.Models;
 using System.Reactive.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Subjects;
-using System.Windows;
 using VpdbAgent.Application;
-using VpdbAgent.Vpdb;
 using VpdbAgent.Vpdb.Download;
 
 namespace VpdbAgent.PinballX
@@ -99,12 +97,15 @@ namespace VpdbAgent.PinballX
 		// dependencies
 		private readonly IFileSystemWatcher _watcher;
 		private readonly ISettingsManager _settingsManager;
+		private readonly CrashManager _crashManager;
 		private readonly Logger _logger;
 
-		public MenuManager(IFileSystemWatcher fileSystemWatcher, ISettingsManager settingsManager, Logger logger)
+		public MenuManager(IFileSystemWatcher fileSystemWatcher, ISettingsManager settingsManager, 
+			CrashManager crashManager, Logger logger)
 		{
 			_watcher = fileSystemWatcher;
 			_settingsManager = settingsManager;
+			_crashManager = crashManager;
 			_logger = logger;
 		}
 	
@@ -351,6 +352,7 @@ namespace VpdbAgent.PinballX
 
 			} catch (Exception e) {
 				_logger.Error(e, "Error parsing {0}: {1}", filepath, e.Message);
+				_crashManager.Report(e, "xml");
 
 			} finally {
 				reader?.Close();
@@ -379,6 +381,7 @@ namespace VpdbAgent.PinballX
 				}
 			} catch (Exception e) {
 				_logger.Error(e, "Error writing XML to {0}: {1}", filepath, e.Message);
+				_crashManager.Report(e, "xml");
 			}
 
 		}

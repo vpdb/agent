@@ -59,6 +59,7 @@ namespace VpdbAgent.Vpdb.Download
 		private readonly IVpdbClient _vpdbClient;
 		private readonly ISettingsManager _settingsManager;
 		private readonly IMessageManager _messageManager;
+		private readonly CrashManager _crashManager;
 		private readonly Logger _logger;
 
 		// props
@@ -69,13 +70,14 @@ namespace VpdbAgent.Vpdb.Download
 		private readonly List<IFlavorMatcher> _flavorMatchers = new List<IFlavorMatcher>();
 
 		public DownloadManager(IPlatformManager platformManager, IJobManager jobManager, IVpdbClient vpdbClient, 
-			ISettingsManager settingsManager, IMessageManager messageManager, Logger logger)
+			ISettingsManager settingsManager, IMessageManager messageManager, CrashManager crashManager, Logger logger)
 		{
 			_platformManager = platformManager;
 			_jobManager = jobManager;
 			_vpdbClient = vpdbClient;
 			_settingsManager = settingsManager;
 			_messageManager = messageManager;
+			_crashManager = crashManager;
 			_logger = logger;
 
 			// setup download callbacks
@@ -158,7 +160,9 @@ namespace VpdbAgent.Vpdb.Download
 				// queue for download
 				var job = new Job(release, tableFile, FileType.TableFile, vpdbPlatform);
 				_jobManager.AddJob(job);
-			});
+
+			}, exception => _vpdbClient.HandleApiError(exception, "retrieving game details during download"));
+
 			return this;
 		}
 
@@ -203,6 +207,7 @@ namespace VpdbAgent.Vpdb.Download
 					}
 				} catch (Exception e) {
 					_logger.Error(e, "Error moving downloaded file.");
+					_crashManager.Report(e, "fs");
 				}
 			} else {
 				_logger.Error("Downloaded file {0} does not exist.", job.FilePath);
