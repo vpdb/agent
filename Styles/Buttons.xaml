@@ -11,7 +11,17 @@
                               TextBlock.Foreground="{Binding Foreground, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}}"/>
         </Border>
     </ControlTemplate>
-	
+
+    <!-- dimensions: transparent -->
+    <ControlTemplate x:Key="TransparentDimensions" TargetType="Button">
+        <Border Background="{Binding Background, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}}" 
+                CornerRadius="12" Padding="0">
+            <ContentPresenter TextBlock.FontWeight="{Binding FontWeight, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}}"
+                              TextBlock.Foreground="{Binding Foreground, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}}"/>
+        </Border>
+    </ControlTemplate>
+
+
     <!-- dimensions: line -->
     <ControlTemplate x:Key="LineDimensions" TargetType="Button">
         <Border BorderThickness="1" BorderBrush="{Binding Background, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}}" 
@@ -143,6 +153,28 @@
     <!-- rounded, line, large -->
     <Style x:Key="ButtonLineLarge" TargetType="Button" BasedOn="{StaticResource ButtonLine}">
         <Setter Property="Template" Value="{StaticResource LineLargeDimensions}"/>
+    </Style>
+
+    <!-- transparent (link) -->
+    <Style x:Key="ButtonLink" TargetType="Button">
+        <Style.Triggers>
+            <Trigger Property="IsEnabled" Value="False">
+                <Setter Property="Foreground" Value="#20ffffff" />
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="True">
+                <Setter Property="Foreground" Value="{StaticResource LabelTextBrush}" />
+            </Trigger>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Foreground" Value="{StaticResource PrimaryColor75Brush}" />
+                <Setter Property="Cursor" Value="Hand" />
+            </Trigger>
+            <Trigger Property="IsPressed" Value="True">
+                <Setter Property="Foreground" Value="{StaticResource PrimaryColorBrush}" />
+                <Setter Property="Cursor" Value="Hand" />
+            </Trigger>
+        </Style.Triggers>
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Template" Value="{StaticResource TransparentDimensions}"/>
     </Style>
 
     <Style x:Key="NavigationButton" TargetType="Button">

@@ -16,7 +16,7 @@
 
         <!-- LEFT PANEL -->
         <StackPanel Grid.Column="0" Orientation="Vertical">
-            <Label Content="Options" />
+            <Label Content="OPTIONS" Style="{StaticResource Header3}" />
         </StackPanel>
 
         <!-- SPLITTER -->

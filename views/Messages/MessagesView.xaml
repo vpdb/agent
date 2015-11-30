@@ -4,6 +4,7 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:rx="clr-namespace:ReactiveUI;assembly=ReactiveUI"
+      xmlns:ctrl="clr-namespace:VpdbAgent.Controls"
       mc:Ignorable="d" 
       d:DesignHeight="300" d:DesignWidth="900">
 
@@ -16,7 +17,16 @@
 
         <!-- LEFT PANEL -->
         <StackPanel Grid.Column="0" Orientation="Vertical">
-            <Label Content="Options" />
+            <Label Content="ACTIONS" Style="{StaticResource Header3}" Margin="0,0,0,5" />
+            
+            <!-- clear all -->
+            <Button x:Name="ClearAllButton" Style="{StaticResource ButtonLink}" HorizontalAlignment="Left">
+                <StackPanel Orientation="Horizontal" Margin="25,0,0,0">
+                    <ctrl:IconControl Data="{StaticResource IconClose}" Height="12" Width="12" 
+                       HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,10,0" />
+                    <Label Content="Clear All" Foreground="{Binding Foreground, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}}"/>
+                </StackPanel>
+            </Button>
         </StackPanel>
 
         <!-- SPLITTER -->

@@ -16,7 +16,7 @@
 
         <!-- LEFT PANEL -->
         <StackPanel Grid.Column="0" Orientation="Vertical">
-            <Label Content="Systems" />
+            <Label Content="ACTIONS" Style="{StaticResource Header3}" />
             <ItemsControl x:Name="PlatformList">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>

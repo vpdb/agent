@@ -23,7 +23,13 @@
         <Setter Property="Foreground" Value="{DynamicResource LabelTextBrush}" />
         <Setter Property="TextTrimming" Value="CharacterEllipsis" />
     </Style>
-    
+
+    <Style x:Key="Header3" TargetType="{x:Type Label}" >
+        <Setter Property="FontSize" Value="18" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Foreground" Value="{DynamicResource LabelTextBrush}" />
+    </Style>
+
     <Style x:Key="Tag" TargetType="{x:Type Label}">
         <Setter Property="Foreground" Value="#60ffffff" />
         <Setter Property="Background" Value="{StaticResource LabelTextBrush}" />
