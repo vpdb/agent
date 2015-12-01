@@ -5,12 +5,15 @@ using System.Linq;
 using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Controls;
 using NLog;
 using ReactiveUI;
 using VpdbAgent.Application;
+using VpdbAgent.Common.Extensions;
 using VpdbAgent.Models;
 using VpdbAgent.Vpdb;
 using VpdbAgent.Vpdb.Models;
@@ -63,10 +66,14 @@ namespace VpdbAgent.ViewModels.Games
 				gameViewModel => gameViewModel.IsVisible);
 
 
-			// todo check if we can simplify this
+			// todo check if we can simplify this.
 			IdentifyAll.Subscribe(_ => {
+
+				/*
 				Games
+					.ToObservable()
 					.Where(g => g.ShowIdentifyButton)
+					.StepInterval(TimeSpan.FromMilliseconds(200)) // don't DOS the server...
 					.Select(g => Observable.DeferAsync(async token =>
 						Observable.Return(await System.Windows.Application.Current. // must be on main thread
 							Dispatcher.Invoke(async () => new { game = g, result = await g.IdentifyRelease.ExecuteAsyncTask() }))))
@@ -77,9 +84,24 @@ namespace VpdbAgent.ViewModels.Games
 								x.game.CloseResults.Execute(null);
 							});
 						}
+					});*/
+
+				Games
+					.ToList()
+					.ToObservable()
+					.Where(g => !g.HasExecuted && !g.Game.HasRelease && !g.IsExecuting)
+					.StepInterval(TimeSpan.FromMilliseconds(200)) // don't DOS the server...
+					.Subscribe(g => {
+						System.Windows.Application.Current.Dispatcher.Invoke(async () => { 
+							var result = await g.IdentifyRelease.ExecuteAsyncTask();
+							if (result.Count == 0) {
+								g.CloseResults.Execute(null);
+							}
+						});
 					});
 			});
 		}
+
 
 		/// <summary>
 		/// Sets up the triggers that refresh the lists. Run this once
