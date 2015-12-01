@@ -62,15 +62,22 @@ namespace VpdbAgent.ViewModels.Games
 				gameViewModel => gameViewModel, 
 				gameViewModel => gameViewModel.IsVisible);
 
+
+			// todo check if we can simplify this
 			IdentifyAll.Subscribe(_ => {
 				Games
 					.Where(g => g.ShowIdentifyButton)
-					.Select(g => g.IdentifyRelease)
-					.Select(cmd => Observable.DeferAsync(async token =>
+					.Select(g => Observable.DeferAsync(async token =>
 						Observable.Return(await System.Windows.Application.Current. // must be on main thread
-							Dispatcher.Invoke(async () => await cmd.ExecuteAsyncTask()))))
+							Dispatcher.Invoke(async () => new { game = g, result = await g.IdentifyRelease.ExecuteAsyncTask() }))))
 					.Merge(1)
-					.Subscribe(x => { });
+					.Subscribe(x => {
+						if (x.result.Count == 0) {
+							System.Windows.Application.Current.Dispatcher.Invoke(delegate {
+								x.game.CloseResults.Execute(null);
+							});
+						}
+					});
 			});
 		}
 
