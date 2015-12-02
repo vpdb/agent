@@ -5,14 +5,14 @@
 
 - Watch `PinballX.ini` for changes. If the file changes, re-parse it and update UI if shown.
 - Watch XML files in PinballX's database folders for changes. If any file is changed, added or deleted, update the internal database and UI if shown.
-- **[TODO]** Watch table files. If files are renamed or deleted, update internal database. If files are added, check missing entries against added files.
+- Watch table files. If files are renamed or deleted, update internal database. If files are added, check missing entries against added files.
 - Be able to filter by "systems" and files
 
 
 ### Data
 
 - Receive realtime data through Pusher notifications. If a release is starred at vpdb.io, immediately start downloading (if setting is enabled).
-- **[TODO]** If a release is updated, immediately download update.
+- **[TODO]** If a release is updated at VPDB, immediately download update.
 - Refresh data on application startup. If a release was starred while VPDB Agent wasn't running, update UI accordingly and download release if setting is enabled.
 
 
@@ -21,7 +21,7 @@
 - Be able to identify previously downloaded tables among releases at vpdb.io. This makes it possible to get future updates for tables downloaded through other channels like VPF without having to re-download the table.
   - When file name and size of the local file are identical to a file at vpdb.io, assume a match and link directly.
   - When the size is within a threshold, display a list of matches for the user to confirm.
-  - **[TODO]** Try to match all local files with one click
+  - Try to match all local files with one click
 - When downloading a release, also check if media and ROMs are locally available and download if available on vpdb.io. Currently supported media:
   
   - Table images
