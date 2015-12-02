@@ -127,11 +127,11 @@ namespace VpdbAgent.Models
 
 			var oldFilename = Filename;
 
-			if (System.IO.File.Exists(tablePath + @"\" + xmlGame.Filename + ".vpt")) {
+			if (File.Exists(tablePath + @"\" + xmlGame.Filename + ".vpt")) {
 				Filename = xmlGame.Filename + ".vpt";
 				FileSize = new FileInfo(tablePath + @"\" + xmlGame.Filename + ".vpt").Length;
 				Exists = true;
-			} else if (System.IO.File.Exists(tablePath + @"\" + xmlGame.Filename + ".vpx")) {
+			} else if (File.Exists(tablePath + @"\" + xmlGame.Filename + ".vpx")) {
 				Filename = xmlGame.Filename + ".vpx";
 				FileSize = new FileInfo(tablePath + @"\" + xmlGame.Filename + ".vpx").Length;
 				Exists = true;

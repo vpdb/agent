@@ -77,6 +77,16 @@ namespace VpdbAgent.PinballX
 		/// games.
 		/// </summary>
 		IObservable<Unit> Initialized { get; }
+
+		/// <summary>
+		/// A table file has been changed or added (or renamed to given path).
+		/// </summary>
+		IObservable<string> TableFileChanged { get; }
+
+		/// <summary>
+		/// A table file has been deleted (or renamed from given path).
+		/// </summary>
+		IObservable<string> TableFileRemoved { get; }
 	}
 
 	/// <summary>
@@ -89,9 +99,13 @@ namespace VpdbAgent.PinballX
 		// publics
 		public ReactiveList<PinballXSystem> Systems { get; } = new ReactiveList<PinballXSystem>();
 		public IObservable<Unit> Initialized => _initialized;
+		public IObservable<string> TableFileChanged => _tableFileChanged;
+		public IObservable<string> TableFileRemoved => _tableFileRemoved;
 
 		// privates
 		private readonly Subject<Unit> _initialized = new Subject<Unit>();
+		private readonly Subject<string> _tableFileChanged = new Subject<string>();
+		private readonly Subject<string> _tableFileRemoved = new Subject<string>();
 		private bool _isInitialized;
 
 		// dependencies
@@ -127,12 +141,26 @@ namespace VpdbAgent.PinballX
 
 			// parse games when .xmls change
 			IDisposable xmlWatcher = null;
+			IDisposable tableWatcher = null;
 			Systems.Changed.Subscribe(systems => {
+
+				// database files
 				xmlWatcher?.Dispose();
 				xmlWatcher = _watcher.DatabaseWatcher(dbPath, Systems)
 					.ObserveOn(Scheduler.Default)
 					.Select(path => new { path, system = Systems.FirstOrDefault(s => s.DatabasePath.Equals(Path.GetDirectoryName(path))) })
 					.Subscribe(x => UpdateGames(x.system, Path.GetFileName(x.path)));
+
+				// table files
+				tableWatcher?.Dispose();
+				tableWatcher = _watcher.TablesWatcher(Systems)
+					.Subscribe(f => {
+						if (File.Exists(f)) {
+							_tableFileChanged.OnNext(f);
+						} else {
+							_tableFileRemoved.OnNext(f);
+						}
+					});
 			});
 			return this;
 		}

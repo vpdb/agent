@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -32,12 +33,17 @@ namespace VpdbAgent.Common
 				var allEvents = Observable.Merge(
 					Observable.FromEventPattern<FileSystemEventHandler, FileSystemEventArgs>(x => fsw.Changed += x, x => fsw.Changed -= x),
 					Observable.FromEventPattern<FileSystemEventHandler, FileSystemEventArgs>(x => fsw.Created += x, x => fsw.Created -= x),
-					Observable.FromEventPattern<FileSystemEventHandler, FileSystemEventArgs>(x => fsw.Deleted += x, x => fsw.Deleted -= x));
+					Observable.FromEventPattern<FileSystemEventHandler, FileSystemEventArgs>(x => fsw.Deleted += x, x => fsw.Deleted -= x),
+					Observable.FromEventPattern<RenamedEventHandler, FileSystemEventArgs>(x => fsw.Renamed += x, x => fsw.Renamed-= x));
 
-				disp.Add(allEvents.Throttle(TimeSpan.FromMilliseconds(250), RxApp.TaskpoolScheduler)
-					.Select(x => x.EventArgs.FullPath)
+				disp.Add(allEvents
+					.Throttle(TimeSpan.FromMilliseconds(250), RxApp.TaskpoolScheduler)
+					.SelectMany(x => x.EventArgs.ChangeType == WatcherChangeTypes.Renamed ? 
+						new List<string>() { ((RenamedEventArgs)x.EventArgs).OldFullPath, x.EventArgs.FullPath } : 
+						new List<string>() { x.EventArgs.FullPath })
 					.Synchronize(subj)
-					.Subscribe(subj));
+					.Subscribe(subj)
+				);
 
 				fsw.EnableRaisingEvents = true;
 				return disp;

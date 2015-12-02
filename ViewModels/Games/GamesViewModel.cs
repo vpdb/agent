@@ -87,7 +87,6 @@ namespace VpdbAgent.ViewModels.Games
 					});*/
 
 				Games
-					.ToList()
 					.ToObservable()
 					.Where(g => !g.HasExecuted && !g.Game.HasRelease && !g.IsExecuting)
 					.StepInterval(TimeSpan.FromMilliseconds(200)) // don't DOS the server...

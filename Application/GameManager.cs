@@ -143,6 +143,10 @@ namespace VpdbAgent.Application
 
 			// link games if new games are added 
 			Games.Changed.Subscribe(_ => CheckGameLinks());
+
+			// setup handlers for table file changes
+			_menuManager.TableFileChanged.Subscribe(OnTableFileChanged);
+			_menuManager.TableFileRemoved.Subscribe(OnTableFileRemoved);
 		}
 
 		public IGameManager Initialize()
@@ -316,6 +320,32 @@ namespace VpdbAgent.Application
 			} else {
 				UpdateGame(game, job);
 			}
+		}
+
+		/// <summary>
+		/// A table file has been changed or added (or renamed to given path).
+		/// </summary>
+		/// <param name="path">Absolute path of the file</param>
+		private void OnTableFileChanged(string path)
+		{
+			Games
+				.Where(g => g.Filename != null)
+				.Where(g => Path.GetFileNameWithoutExtension(g.Filename).Equals(Path.GetFileNameWithoutExtension(path)))
+				.ToList()
+				.ForEach(g => { g.Exists = true; });
+		}
+
+		/// <summary>
+		/// A table file has been deleted (or renamed from given path).
+		/// </summary>
+		/// <param name="path">Absolute path of the file</param>
+		private void OnTableFileRemoved(string path)
+		{
+			Games
+				.Where(g => g.Filename != null)
+				.Where(g => g.Filename.Equals(Path.GetFileName(path)))
+				.ToList()
+				.ForEach(g => { g.Exists = false; });
 		}
 
 		/// <summary>
