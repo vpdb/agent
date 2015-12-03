@@ -157,10 +157,14 @@ namespace VpdbAgent.Application
 			}
 
 			// xml file name
-			var badFilenameChars = new Regex("[" + Regex.Escape(new string(Path.GetInvalidPathChars())) + "]");
+			var badFilenameChars = new Regex("[\\\\" + Regex.Escape(new string(Path.GetInvalidPathChars())) + "]");
 			var filename = settings.XmlFile[Platform.PlatformType.VP];
-			if (string.IsNullOrWhiteSpace(filename) || badFilenameChars.IsMatch(filename)) {
+			if (string.IsNullOrWhiteSpace(filename)) {
+				errors.Add("XmlFileVP", "You need to provide a file name for the XML database.");
+			} else if (badFilenameChars.IsMatch(filename)) {
 				errors.Add("XmlFileVP", "That doesn't look like a valid file name!");
+			} else if (filename.EndsWith(".xml", StringComparison.OrdinalIgnoreCase)) {
+				errors.Add("XmlFileVP", "No need to provide the .xml extension, we'll do that!");
 			}
 
 			// test params if set
