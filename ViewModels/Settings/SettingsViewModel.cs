@@ -11,6 +11,7 @@ using ReactiveUI;
 using Refit;
 using Squirrel;
 using VpdbAgent.Application;
+using VpdbAgent.Models;
 using VpdbAgent.Vpdb.Models;
 
 namespace VpdbAgent.ViewModels.Settings
@@ -33,6 +34,8 @@ namespace VpdbAgent.ViewModels.Settings
 		public bool DownloadOnStartup { get { return _downloadOnStartup; } set { this.RaiseAndSetIfChanged(ref _downloadOnStartup, value); } }
 		public bool MinimizeToTray { get { return _minimizeToTray; } set { this.RaiseAndSetIfChanged(ref _minimizeToTray, value); } }
 		public bool StartWithWindows { get { return _startWithWindows; } set { this.RaiseAndSetIfChanged(ref _startWithWindows, value); } }
+		public bool ReformatXml { get { return _reformatXml; } set { this.RaiseAndSetIfChanged(ref _reformatXml, value); } }
+		public string XmlFileVP { get { return _xmlFileVP; } set { this.RaiseAndSetIfChanged(ref _xmlFileVP, value); } }
 		public SettingsManager.Orientation DownloadOrientation { get { return _downloadOrientation; } set { this.RaiseAndSetIfChanged(ref _downloadOrientation, value); } }
 		public SettingsManager.Orientation DownloadOrientationFallback { get { return _downloadOrientationFallback; } set { this.RaiseAndSetIfChanged(ref _downloadOrientationFallback, value); } }
 		public SettingsManager.Lighting DownloadLighting { get { return _downloadLighting; } set { this.RaiseAndSetIfChanged(ref _downloadLighting, value); } }
@@ -45,6 +48,7 @@ namespace VpdbAgent.ViewModels.Settings
 		public bool IsValidating => _isValidating.Value;
 		public bool IsFirstRun => _isFirstRun.Value;
 		public bool CanCancel => _canCancel.Value;
+		public List<string> XmlFilesVP { get; } = new List<string>();
 		public List<OrientationSetting> OrientationSettings { get; } = new List<OrientationSetting>();
 		public List<OrientationSetting> OrientationFallbackSettings { get; } = new List<OrientationSetting>();
 		public List<LightingSetting> LightingSettings { get; } = new List<LightingSetting>();
@@ -69,6 +73,8 @@ namespace VpdbAgent.ViewModels.Settings
 		private bool _downloadOnStartup;
 		private bool _minimizeToTray;
 		private bool _startWithWindows;
+		private bool _reformatXml;
+		private string _xmlFileVP;
 		private SettingsManager.Orientation _downloadOrientation;
 		private SettingsManager.Orientation _downloadOrientationFallback;
 		private SettingsManager.Lighting _downloadLighting;
@@ -94,6 +100,8 @@ namespace VpdbAgent.ViewModels.Settings
 			SyncStarred = _settingsManager.Settings.SyncStarred;
 			DownloadOnStartup = _settingsManager.Settings.DownloadOnStartup;
 			MinimizeToTray = _settingsManager.Settings.MinimizeToTray;
+			ReformatXml = _settingsManager.Settings.ReformatXml;
+			XmlFileVP = _settingsManager.Settings.XmlFile[Platform.PlatformType.VP];
 			StartWithWindows = _settingsManager.Settings.StartWithWindows;
 			DownloadOrientation = _settingsManager.Settings.DownloadOrientation;
 			DownloadOrientationFallback = _settingsManager.Settings.DownloadOrientationFallback;
@@ -123,7 +131,8 @@ namespace VpdbAgent.ViewModels.Settings
 			LightingSettings.Add(new LightingSetting("Day", SettingsManager.Lighting.Day));
 			LightingSettings.Add(new LightingSetting("Night", SettingsManager.Lighting.Night));
 			LightingSettings.Add(new LightingSetting("Universal (VP10)", SettingsManager.Lighting.Universal));
-
+			XmlFilesVP.Add("Visual Pinball");
+			XmlFilesVP.Add("Vpdb");
 			OrientationFallbackSettings.Add(new OrientationSetting("Same *", SettingsManager.Orientation.Same));
 			OrientationFallbackSettings.Add(new OrientationSetting("Portrait", SettingsManager.Orientation.Portrait));
 			OrientationFallbackSettings.Add(new OrientationSetting("Landscape", SettingsManager.Orientation.Landscape));
@@ -132,7 +141,6 @@ namespace VpdbAgent.ViewModels.Settings
 			LightingFallbackSettings.Add(new LightingSetting("Day", SettingsManager.Lighting.Day));
 			LightingFallbackSettings.Add(new LightingSetting("Night", SettingsManager.Lighting.Night));
 			LightingFallbackSettings.Add(new LightingSetting("Any", SettingsManager.Lighting.Any));
-
 		}
 
 		public SettingsViewModel(IScreen screen, ISettingsManager settingsManager, IVersionManager versionManager, IGameManager gameManager, Dictionary<string, string> errors) : this(screen, settingsManager, versionManager, gameManager)
@@ -168,6 +176,8 @@ namespace VpdbAgent.ViewModels.Settings
 			settings.SyncStarred = _syncStarred;
 			settings.DownloadOnStartup = _downloadOnStartup;
 			settings.MinimizeToTray = _minimizeToTray;
+			settings.ReformatXml = _reformatXml;
+			settings.XmlFile = new Dictionary<Platform.PlatformType, string> {{ Platform.PlatformType.VP, _xmlFileVP }};
 			settings.StartWithWindows = _startWithWindows;
 			settings.DownloadOrientation = _downloadOrientation;
 			settings.DownloadOrientationFallback = _downloadOrientationFallback;

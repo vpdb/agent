@@ -9,6 +9,7 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Reactive.Threading.Tasks;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Akavache;
@@ -18,6 +19,7 @@ using NLog;
 using ReactiveUI;
 using Refit;
 using VpdbAgent.Libs.ShellLink;
+using VpdbAgent.Models;
 using VpdbAgent.Vpdb;
 using VpdbAgent.Vpdb.Models;
 using VpdbAgent.Vpdb.Network;
@@ -154,6 +156,13 @@ namespace VpdbAgent.Application
 			}
 			if (string.IsNullOrEmpty(settings.Endpoint)) {
 				errors.Add("Endpoint", "The endpoint is mandatory. In doubt, put \"https://vpdb.io\".");
+			}
+
+			// xml file name
+			var badFilenameChars = new Regex("[" + Regex.Escape(new string(Path.GetInvalidPathChars())) + "]");
+			var filename = settings.XmlFile[Platform.PlatformType.VP];
+			if (string.IsNullOrWhiteSpace(filename) || badFilenameChars.IsMatch(filename)) {
+				errors.Add("XmlFileVP", "That doesn't look like a valid file name!");
 			}
 
 			// test params if set

@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Akavache;
 using ReactiveUI;
+using VpdbAgent.Models;
 using VpdbAgent.Vpdb.Models;
 
 namespace VpdbAgent.Application
@@ -54,6 +55,19 @@ namespace VpdbAgent.Application
 		public bool StartWithWindows { get { return _startWithWindows; } set { this.RaiseAndSetIfChanged(ref _startWithWindows, value); } }
 
 		/// <summary>
+		/// If set, XMLs are written by the serializer and pretty-printed. 
+		/// Otherwise, we string-replace stuff the ugly way.
+		/// </summary>
+		public bool ReformatXml { get { return _reformatXml; } set { this.RaiseAndSetIfChanged(ref _reformatXml, value); } }
+
+		/// <summary>
+		/// Which XML file should be updated. Key is name of the platform (see 
+		/// <see cref="Platform.PlatformType"/>), value is file name without 
+		/// extension.
+		/// </summary>
+		public Dictionary<Platform.PlatformType, string> XmlFile { get { return _xmlFile; } set { this.RaiseAndSetIfChanged(ref _xmlFile, value); } }
+
+		/// <summary>
 		/// If true, download all starred/synced releases on startup.
 		/// </summary>
 		public bool DownloadOnStartup { get { return _downloadOnStartup; } set { this.RaiseAndSetIfChanged(ref _downloadOnStartup, value); } }
@@ -96,6 +110,7 @@ namespace VpdbAgent.Application
 		/// </remarks>
 		public bool IsValidated { get; protected internal set; } = false;
 
+
 		private string _apiKey;
 		private string _authUser;
 		private string _authPass;
@@ -104,6 +119,8 @@ namespace VpdbAgent.Application
 		private bool _syncStarred;
 		private bool _minimizeToTray;
 		private bool _startWithWindows;
+		private bool _reformatXml;
+		private Dictionary<Platform.PlatformType, string> _xmlFile;
 		private bool _downloadOnStartup;
 		private SettingsManager.Orientation _downloadOrientation;
 		private SettingsManager.Orientation _downloadOrientationFallback;
@@ -127,6 +144,8 @@ namespace VpdbAgent.Application
 			SyncStarred = await storage.GetOrCreateObject("SyncStarred", () => true);
 			MinimizeToTray = await storage.GetOrCreateObject("MinimizeToTray", () => false);
 			StartWithWindows = await storage.GetOrCreateObject("StartWithWindows", () => false);
+			ReformatXml = await storage.GetOrCreateObject("ReformatXml", () => false);
+			XmlFile = await storage.GetOrCreateObject("XmlFile", () => new Dictionary<Platform.PlatformType, string> {{ Platform.PlatformType.VP, "Visual Pinball" }});
 			DownloadOnStartup = await storage.GetOrCreateObject("DownloadOnStartup", () => false);
 			DownloadOrientation = await storage.GetOrCreateObject("DownloadOrientation", () => SettingsManager.Orientation.Portrait);
 			DownloadOrientationFallback = await storage.GetOrCreateObject("DownloadOrientationFallback", () => SettingsManager.Orientation.Same);
@@ -146,6 +165,8 @@ namespace VpdbAgent.Application
 			await storage.InsertObject("SyncStarred", SyncStarred);
 			await storage.InsertObject("MinimizeToTray", MinimizeToTray);
 			await storage.InsertObject("StartWithWindows", StartWithWindows);
+			await storage.InsertObject("ReformatXml", ReformatXml);
+			await storage.InsertObject("XmlFile", XmlFile);
 			await storage.InsertObject("DownloadOnStartup", DownloadOnStartup);
 			await storage.InsertObject("DownloadOrientation", DownloadOrientation);
 			await storage.InsertObject("DownloadOrientationFallback", DownloadOrientationFallback);
@@ -169,6 +190,8 @@ namespace VpdbAgent.Application
 			to.SyncStarred = from.SyncStarred;
 			to.MinimizeToTray = from.MinimizeToTray;
 			to.StartWithWindows = from.StartWithWindows;
+			to.ReformatXml = from.ReformatXml;
+			to.XmlFile = new Dictionary<Platform.PlatformType, string>(from.XmlFile);
 			to.DownloadOnStartup = from.DownloadOnStartup;
 			to.DownloadOrientation = from.DownloadOrientation;
 			to.DownloadOrientationFallback = from.DownloadOrientationFallback;

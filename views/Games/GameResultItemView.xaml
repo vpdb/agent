@@ -23,7 +23,7 @@
                 <TextBlock x:Name="GameName" Text="Medieval Madness (Williams 1997)" TextTrimming="CharacterEllipsis" />
             </Label>
             <StackPanel Orientation="Horizontal">
-                <TextBlock Style="{StaticResource Label}" TextTrimming="CharacterEllipsis">
+                <TextBlock Style="{StaticResource Label}">
                     <TextBlock.Inlines>
                         <Run x:Name="ReleaseName" Text="Castle Crusher Edition"/>
                         <Run x:Name="VersionName" Text="1.2" FontWeight="Bold"/>

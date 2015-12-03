@@ -31,6 +31,8 @@ namespace VpdbAgent.Views.Settings
 				d(this.OneWayBind(ViewModel, vm => vm.Errors, v => v.ApiKeyError.Text, null, "ApiKey"));
 				d(this.OneWayBind(ViewModel, vm => vm.Errors, v => v.AuthErrorPanel.Visibility, null, "Auth"));
 				d(this.OneWayBind(ViewModel, vm => vm.Errors, v => v.AuthError.Text, null, "Auth"));
+				d(this.OneWayBind(ViewModel, vm => vm.Errors, v => v.XmlFileVpErrorPanel.Visibility, null, "XmlFileVP"));
+				d(this.OneWayBind(ViewModel, vm => vm.Errors, v => v.XmlFileVpError.Text, null, "XmlFileVP"));
 
 				// commands
 				d(this.BindCommand(ViewModel, vm => vm.ChooseFolder, v => v.PinballXFolderButton));
