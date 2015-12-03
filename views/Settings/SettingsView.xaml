@@ -120,80 +120,6 @@
                                Grid.Column="1" Text="Error message" TextWrapping="Wrap"/>
                 </Grid>
 
-                <!-- Startup -->
-                <Label Content="Startup" Style="{StaticResource Header1}" Margin="0,20,0,0"/>
-                <Separator/>
-
-                <!-- Launch on startup -->
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Text="Run VPDB Agent on system startup" Style="{StaticResource Label}" Grid.Column="0" Margin="15,0,0,0"/>
-                    <ToggleButton IsChecked="{Binding StartWithWindows}" x:Name="StartWithWindows" Grid.Column="1" Height="20" Margin="5,0,0,0"/>
-                </Grid>
-
-                <!-- Minimize to tray -->
-                <Grid Margin="0,10,0,0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Text="Minimize to system tray" Style="{StaticResource Label}" Grid.Column="0" Margin="15,0,0,0" />
-                    <ToggleButton IsChecked="{Binding MinimizeToTray}" x:Name="MinimizeToTray" Grid.Column="1" Height="20" Margin="5,0,0,0"/>
-                </Grid>
-
-
-                <!-- XML Database -->
-                <Label Content="XML Database" Style="{StaticResource Header1}" Margin="0,20,0,0"/>
-                <Separator/>
-
-                <!-- Reformat XMLs -->
-                <Grid Margin="0,10,0,0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Text="Reformat XMLs when saving" Style="{StaticResource Label}" 
-                               ToolTip="When reformatting, comments in the XML will be stripped."
-                               Grid.Column="0" Margin="15,0,0,0" />
-                    <ToggleButton IsChecked="{Binding MinimizeToTray}" x:Name="ReformatXmls" Grid.Column="1" Height="20" Margin="5,0,0,0"/>
-                </Grid>
-
-                <Grid Margin="0,10,0,0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
-                    <TextBlock Style="{StaticResource Label}" Grid.Column="0" Grid.Row="0" Margin="40,0,0,0">
-                        <TextBlock.Inlines>
-                            <Run Text="For"/>
-                            <Run Text="Visual Pinball," FontWeight="Bold"/>
-                            <Run Text="save new games to:"/>
-                        </TextBlock.Inlines>
-                    </TextBlock>
-                    <ComboBox ItemsSource="{Binding XmlFilesVP}" Text="{Binding XmlFileVP}" IsEditable="True"
-                              Grid.Column="1" Grid.Row="0" Margin="5,-4,0,0" />
-                    <TextBlock Text=".xml" Grid.Column="2"  Grid.Row="0" Style="{StaticResource Label}" Margin="5,0,0,0"/>
-                    <Grid x:Name="XmlFileVpErrorPanel" Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="3" Margin="40,0,0,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <c:IconControl Foreground="{StaticResource LightRedBrush}" Data="{StaticResource IconWarning}"
-                                   Grid.Column="0" Height="18" Width="18" VerticalAlignment="Top" Margin="0,3,10,0" />
-                        <TextBlock x:Name="XmlFileVpError" Style="{StaticResource Label}" Foreground="{StaticResource LightRedBrush}" 
-                               Grid.Column="1" Text="Error message" TextWrapping="Wrap"/>
-                    </Grid>
-                </Grid>
-
-
                 <!-- Download Options -->
                 <Label Content="Download Options" Style="{StaticResource Header1}" Margin="0,20,0,0"/>
                 <Separator/>
@@ -279,7 +205,7 @@
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
                     <TextBlock Style="{StaticResource Label}" FontSize="15" TextWrapping="Wrap" 
-                               Grid.Column="1" TextAlignment="Right" Margin="5,0,10,0" >
+                               Grid.Column="1" TextAlignment="Right" Margin="5,0,10,-50" >
                         <TextBlock.Inlines>
                             <Run Text="*"/>
                             <Run Text="Same" FontStyle="Italic"/>
@@ -288,11 +214,85 @@
                     </TextBlock>
                 </Grid>
 
+
+                <!-- Startup -->
+                <Label Content="Startup" Style="{StaticResource Header1}" Margin="0,20,0,0"/>
+                <Separator/>
+
+                <!-- Launch on startup -->
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="Run VPDB Agent on system startup" Style="{StaticResource Label}" Grid.Column="0" Margin="15,0,0,0"/>
+                    <ToggleButton IsChecked="{Binding StartWithWindows}" x:Name="StartWithWindows" Grid.Column="1" Height="20" Margin="5,0,0,0"/>
+                </Grid>
+
+                <!-- Minimize to tray -->
+                <Grid Margin="0,10,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="Minimize to system tray" Style="{StaticResource Label}" Grid.Column="0" Margin="15,0,0,0" />
+                    <ToggleButton IsChecked="{Binding MinimizeToTray}" x:Name="MinimizeToTray" Grid.Column="1" Height="20" Margin="5,0,0,0"/>
+                </Grid>
+
+
+                <!-- XML Database -->
+                <Label Content="XML Database" Style="{StaticResource Header1}" Margin="0,20,0,0"/>
+                <Separator/>
+
+                <!-- Reformat XMLs -->
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="Reformat XMLs when saving" Style="{StaticResource Label}" 
+                               ToolTip="When reformatting, comments in the XML will be stripped."
+                               Grid.Column="0" Margin="15,0,0,0" />
+                    <ToggleButton IsChecked="{Binding MinimizeToTray}" x:Name="ReformatXmls" Grid.Column="1" Height="20" Margin="5,0,0,0"/>
+                </Grid>
+
+                <Grid Margin="0,10,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Style="{StaticResource Label}" Grid.Column="0" Grid.Row="0" Margin="40,0,0,0">
+                        <TextBlock.Inlines>
+                            <Run Text="For"/>
+                            <Run Text="Visual Pinball," FontWeight="Bold"/>
+                            <Run Text="save new games to:"/>
+                        </TextBlock.Inlines>
+                    </TextBlock>
+                    <ComboBox ItemsSource="{Binding XmlFilesVP}" Text="{Binding XmlFileVP}" IsEditable="True"
+                              Grid.Column="1" Grid.Row="0" Margin="5,-4,0,0" />
+                    <TextBlock Text=".xml" Grid.Column="2"  Grid.Row="0" Style="{StaticResource Label}" Margin="5,0,0,0"/>
+                    <Grid x:Name="XmlFileVpErrorPanel" Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="3" Margin="40,0,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <c:IconControl Foreground="{StaticResource LightRedBrush}" Data="{StaticResource IconWarning}"
+                                   Grid.Column="0" Height="18" Width="18" VerticalAlignment="Top" Margin="0,3,10,0" />
+                        <TextBlock x:Name="XmlFileVpError" Style="{StaticResource Label}" Foreground="{StaticResource LightRedBrush}" 
+                               Grid.Column="1" Text="Error message" TextWrapping="Wrap"/>
+                    </Grid>
+                </Grid>
+
             </StackPanel>
         </ScrollViewer>
 
         <!-- footer -->
-        <Grid Grid.Row="1" Margin="0,10,0,0">
+        <Grid Grid.Row="1" Margin="0,20,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
