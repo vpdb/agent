@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -11,7 +10,6 @@ using System.Reactive.Threading.Tasks;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using Akavache;
 using Microsoft.Win32;
 using Newtonsoft.Json;

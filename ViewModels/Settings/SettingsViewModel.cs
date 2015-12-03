@@ -1,18 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.Eventing;
-using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using NLog;
 using ReactiveUI;
-using Refit;
-using Squirrel;
 using VpdbAgent.Application;
 using VpdbAgent.Models;
-using VpdbAgent.Vpdb.Models;
 
 namespace VpdbAgent.ViewModels.Settings
 {
@@ -112,6 +107,7 @@ namespace VpdbAgent.ViewModels.Settings
 			SaveSettings.IsExecuting.ToProperty(this, vm => vm.IsValidating, out _isValidating);
 			SaveSettings.ThrownExceptions.Subscribe(e =>
 			{
+				// todo either remove or treat correctly.
 				Console.WriteLine("Exception while saving settings.");
 			});
 

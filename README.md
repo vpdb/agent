@@ -49,8 +49,8 @@ each folder that contains the additional data we need to work with. This file
 basically serves as our local database is updated as the XMLs are changed 
 manually or by another application.
 
-As for adding new games, we'll be using a separate XML that sits besides the
-current ones.
+As for adding new games, the user can choose between a separate custom list or
+the original XML.
 
 ## Packaging
 

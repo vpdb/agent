@@ -12,7 +12,10 @@ using VpdbAgent.PinballX.Models;
 using System.Reactive.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Subjects;
+using System.Text.RegularExpressions;
+using System.Xml;
 using VpdbAgent.Application;
+using VpdbAgent.Models;
 using VpdbAgent.Vpdb.Download;
 
 namespace VpdbAgent.PinballX
@@ -26,7 +29,7 @@ namespace VpdbAgent.PinballX
 	/// 
 	/// <remarks>
 	/// Games are stored in the systems objects. This class really only does
-	/// read-only maintenance of the user's configuration. See <see cref="GameManager"/> for
+	/// read/write maintenance of the user's configuration. See <see cref="GameManager"/> for
 	/// data structures that are actually used in the application.
 	/// </remarks>
 	public interface IMenuManager
@@ -64,7 +67,7 @@ namespace VpdbAgent.PinballX
 		/// <param name="oldFileName">File ID ("name") of the game to update</param>
 		/// <param name="game">Game to update</param>
 		/// <returns>This instance</returns>
-		IMenuManager UpdateGame(string oldFileName, VpdbAgent.Models.Game game);
+		IMenuManager UpdateGame(string oldFileName, Game game);
 
 		/// <summary>
 		/// Systems parsed from <c>PinballX.ini</c>.
@@ -94,8 +97,6 @@ namespace VpdbAgent.PinballX
 	/// </summary>
 	public class MenuManager : IMenuManager
 	{
-		public const string VpdbXml = "Vpdb.xml";
-
 		// publics
 		public ReactiveList<PinballXSystem> Systems { get; } = new ReactiveList<PinballXSystem>();
 		public IObservable<Unit> Initialized => _initialized;
@@ -125,6 +126,7 @@ namespace VpdbAgent.PinballX
 	
 		public IMenuManager Initialize()
 		{
+			// todo if we want to support changing pxb folder in the app without restarting, make this dynamic.
 			var iniPath = _settingsManager.Settings.PbxFolder + @"\Config\PinballX.ini";
 			var dbPath = _settingsManager.Settings.PbxFolder + @"\Databases\";
 
@@ -168,15 +170,58 @@ namespace VpdbAgent.PinballX
 		public PinballXGame AddGame(PinballXGame game, string databasePath)
 		{
 			// read current xml
-			var vpdbXml = Path.Combine(databasePath, VpdbXml);
-			var menu = UnmarshallXml(vpdbXml);
+			var xmlPath = Path.Combine(databasePath, _settingsManager.Settings.XmlFile[Platform.PlatformType.VP] + ".xml"); // todo make platform dynamic
 
-			// add game
-			menu.Games.Add(game);
+			if (_settingsManager.Settings.ReformatXml || !File.Exists(xmlPath)) {
+				var menu = UnmarshallXml(xmlPath);
 
-			// save xml
-			MarshallXml(menu, vpdbXml);
+				// add game
+				menu.Games.Add(game);
 
+				// save xml
+				MarshallXml(menu, xmlPath);
+
+			} else {
+
+				var xml = File.ReadAllText(xmlPath);
+				var ns = new XmlSerializerNamespaces();
+				ns.Add("", "");
+
+				using (var writer = new StringWriter())
+				{
+					// find out how the xml is indented
+					var match = Regex.Match(xml, "[\n\r]([ \t]+)<", RegexOptions.Multiline | RegexOptions.IgnoreCase);
+					var indentChars = match.Success ? match.Groups[1].ToString() : "    ";
+						
+					// find the position where to insert game
+					if (xml.IndexOf("</menu", StringComparison.OrdinalIgnoreCase) < 0) {
+						xml = "<menu>\n\n</menu>";
+					}
+
+					// serialize game as xml
+					using (var xw = XmlWriter.Create(writer, new XmlWriterSettings { IndentChars = indentChars, Indent = true })) {
+
+						var serializer = new XmlSerializer(typeof(PinballXGame));
+						serializer.Serialize(xw, game, ns);
+						var xmlGame = string.Join("\n", writer
+							.ToString()
+							.Split('\n')
+							.Select(line => line.StartsWith("<?xml") ? "" : line)
+							.Select(line => indentChars + line)
+							.ToList()) + "\n";
+
+						var pos = xml.LastIndexOf("</menu", StringComparison.OrdinalIgnoreCase);
+
+						// insert game
+						xml = xml.Substring(0, pos) + xmlGame + xml.Substring(pos);
+
+						// write back to disk
+						File.WriteAllText(xmlPath, xml);
+
+						_logger.Info("Appended game \"{0}\" to {1}", game.Description, xmlPath);
+					}
+				}
+			}
 			return game;
 		}
 
@@ -190,30 +235,28 @@ namespace VpdbAgent.PinballX
 			};
 		}
 
-		public IMenuManager UpdateGame(string oldFileName, VpdbAgent.Models.Game jsonGame)
+		public IMenuManager UpdateGame(string oldFileName, Game jsonGame)
 		{
-			if (jsonGame.DatabaseFile.Equals(VpdbXml)) {
+			var xmlPath = Path.Combine(jsonGame.Platform.DatabasePath, jsonGame.DatabaseFile);
+
+			if (_settingsManager.Settings.ReformatXml) {
 
 				// read xml
-				var vpdbXml = Path.Combine(jsonGame.Platform.DatabasePath, VpdbXml);
-				var menu = UnmarshallXml(vpdbXml);
+				var menu = UnmarshallXml(xmlPath);
 
 				// get game
 				var game = menu.Games.FirstOrDefault(g => g.Filename.Equals(oldFileName));
 				if (game == null) {
-					throw new InvalidOperationException($"Cannot find game with ID {jsonGame.Id} in {vpdbXml}.");
+					throw new InvalidOperationException($"Cannot find game with ID {jsonGame.Id} in {xmlPath}.");
 				}
 
 				// update game
 				game.Filename = jsonGame.FileId;
 
 				// save xml
-				MarshallXml(menu, vpdbXml);
+				MarshallXml(menu, xmlPath);
 
 			} else {
-
-				// not our file, string replace.
-				var xmlPath = Path.Combine(jsonGame.Platform.DatabasePath, jsonGame.DatabaseFile);
 
 				var xml = File.ReadAllText(xmlPath);
 				xml = xml.Replace($"name=\"{oldFileName}\"", $"name=\"{jsonGame.FileId}\"");
@@ -306,8 +349,8 @@ namespace VpdbAgent.PinballX
 			if (File.Exists(iniPath)) {
 				var parser = new FileIniDataParser();
 				var data = parser.ReadFile(iniPath);
-				systems.Add(new PinballXSystem(VpdbAgent.Models.Platform.PlatformType.VP, data["VisualPinball"]));
-				systems.Add(new PinballXSystem(VpdbAgent.Models.Platform.PlatformType.FP, data["FuturePinball"]));
+				systems.Add(new PinballXSystem(Platform.PlatformType.VP, data["VisualPinball"]));
+				systems.Add(new PinballXSystem(Platform.PlatformType.FP, data["FuturePinball"]));
 				for (var i = 0; i < 20; i++) {
 					if (data["System_" + i] != null) {
 						systems.Add(new PinballXSystem(data["System_" + i]));
