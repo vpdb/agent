@@ -33,7 +33,7 @@ namespace VpdbAgent.PinballX.Models
 		public string MediaPath { get; set; }
 
 		// data props
-		public ReactiveList<Game> Games { get; } = new ReactiveList<Game>();
+		public ReactiveList<PinballXGame> Games { get; } = new ReactiveList<PinballXGame>();
 
 		public PinballXSystem(KeyDataCollection data)
 		{

@@ -44,14 +44,14 @@ namespace VpdbAgent.PinballX
 		/// <param name="game">Game to add</param>
 		/// <param name="databasePath">Full path to the database folder</param>
 		/// <returns></returns>
-		Game AddGame(Game game, string databasePath);
+		PinballXGame AddGame(PinballXGame game, string databasePath);
 
 		/// <summary>
 		/// Instantiates a new game from a given download job.
 		/// </summary>
 		/// <param name="job">Download job</param>
 		/// <returns></returns>
-		Game NewGame(Job job);
+		PinballXGame NewGame(Job job);
 
 		/// <summary>
 		/// Updates a game. If the game is not found, an exception is thrown.
@@ -165,7 +165,7 @@ namespace VpdbAgent.PinballX
 			return this;
 		}
 
-		public Game AddGame(Game game, string databasePath)
+		public PinballXGame AddGame(PinballXGame game, string databasePath)
 		{
 			// read current xml
 			var vpdbXml = Path.Combine(databasePath, VpdbXml);
@@ -180,9 +180,9 @@ namespace VpdbAgent.PinballX
 			return game;
 		}
 
-		public Game NewGame(Job job)
+		public PinballXGame NewGame(Job job)
 		{
-			return new Game() {
+			return new PinballXGame() {
 				Filename = Path.GetFileNameWithoutExtension(job.FilePath),
 				Description = job.Release.Game.DisplayName,
 				Manufacturer = job.Release.Game.Manufacturer,
@@ -331,15 +331,15 @@ namespace VpdbAgent.PinballX
 		/// <param name="system">System to parse games for</param>
 		/// <param name="databaseFile">If set, only parse games for given XML file</param>
 		/// <returns>Parsed games</returns>
-		private IEnumerable<Game> ParseGames(PinballXSystem system, string databaseFile = null)
+		private IEnumerable<PinballXGame> ParseGames(PinballXSystem system, string databaseFile = null)
 		{
 			if (system == null) {
 				_logger.Warn("Unknown system, not parsing games.");
-				return new List<Game>();
+				return new List<PinballXGame>();
 			}
 			_logger.Info("Parsing games at {0}", system.DatabasePath);
 
-			var games = new List<Game>();
+			var games = new List<PinballXGame>();
 			var fileCount = 0;
 			if (Directory.Exists(system.DatabasePath)) {
 				foreach (var filePath in Directory.GetFiles(system.DatabasePath).Where(filePath => ".xml".Equals(Path.GetExtension(filePath), StringComparison.InvariantCultureIgnoreCase)))
@@ -365,18 +365,18 @@ namespace VpdbAgent.PinballX
 		/// </summary>
 		/// <param name="filepath">Absolute path to the .XML file</param>
 		/// <returns></returns>
-		private Menu UnmarshallXml(string filepath)
+		private PinballXMenu UnmarshallXml(string filepath)
 		{
-			var menu = new Menu();
+			var menu = new PinballXMenu();
 
 			if (!File.Exists(filepath)) {
 				return menu;
 			}
 			Stream reader = null;
 			try {
-				var serializer = new XmlSerializer(typeof(Menu));
+				var serializer = new XmlSerializer(typeof(PinballXMenu));
 				reader = new FileStream(filepath, FileMode.Open);
-				menu = serializer.Deserialize(reader) as Menu;
+				menu = serializer.Deserialize(reader) as PinballXMenu;
 
 			} catch (Exception e) {
 				_logger.Error(e, "Error parsing {0}: {1}", filepath, e.Message);
@@ -399,10 +399,10 @@ namespace VpdbAgent.PinballX
 		/// </remarks>
 		/// <param name="menu"></param>
 		/// <param name="filepath"></param>
-		private void MarshallXml(Menu menu, string filepath)
+		private void MarshallXml(PinballXMenu menu, string filepath)
 		{
 			try {
-				var serializer = new XmlSerializer(typeof(Menu));
+				var serializer = new XmlSerializer(typeof(PinballXMenu));
 				using (TextWriter writer = new StreamWriter(filepath)) {
 					serializer.Serialize(writer, menu);
 					_logger.Info("Saved {0}.", filepath);

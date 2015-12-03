@@ -4,9 +4,9 @@ using System.Xml.Serialization;
 namespace VpdbAgent.PinballX.Models
 {
 	[XmlRoot("menu")]
-	public class Menu
+	public class PinballXMenu
 	{
 		[XmlElement("game")]
-		public List<Game> Games = new List<Game>();
+		public List<PinballXGame> Games = new List<PinballXGame>();
 	}
 }

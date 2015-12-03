@@ -176,13 +176,13 @@ namespace VpdbAgent.Models
 		/// <param name="jsonGames">Games read from the internal .json database</param>
 		/// <param name="db">Reference to global database</param>
 		/// <returns>List of merged games</returns>
-		private List<Game> MergeGames(IEnumerable<PinballX.Models.Game> xmlGames, IEnumerable<Game> jsonGames, GlobalDatabase db)
+		private List<Game> MergeGames(IEnumerable<PinballXGame> xmlGames, IEnumerable<Game> jsonGames, GlobalDatabase db)
 		{
 			_logger.Info("MergeGames() START");
 
 			var games = new List<Game>();
 			var enumerableGames = jsonGames as Game[] ?? jsonGames.ToArray();
-			var enumerableXmlGames = xmlGames as PinballX.Models.Game[] ?? xmlGames.ToArray();
+			var enumerableXmlGames = xmlGames as PinballXGame[] ?? xmlGames.ToArray();
 
 			// ReSharper disable once LoopCanBeConvertedToQuery
 			foreach (var xmlGame in enumerableXmlGames) {

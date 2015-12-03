@@ -8,6 +8,7 @@ using ReactiveUI;
 using static System.String;
 using System.Reactive.Linq;
 using NLog;
+using VpdbAgent.PinballX.Models;
 using VpdbAgent.Vpdb.Models;
 
 namespace VpdbAgent.Models
@@ -67,13 +68,13 @@ namespace VpdbAgent.Models
 				.ToProperty(this, game => game.HasUpdate, out _hasUpdate);
 		}
 
-		public Game(PinballX.Models.Game xmlGame, Platform platform, GlobalDatabase db) : this()
+		public Game(PinballXGame xmlGame, Platform platform, GlobalDatabase db) : this()
 		{
 			Update(platform, db);
 			UpdateFromGame(xmlGame, platform.TablePath);
 		}
 
-		internal Game Merge(PinballX.Models.Game xmlGame, Platform platform, GlobalDatabase db)
+		internal Game Merge(PinballXGame xmlGame, Platform platform, GlobalDatabase db)
 		{
 			Update(platform, db);
 			UpdateFromGame(xmlGame, platform.TablePath);
@@ -119,7 +120,7 @@ namespace VpdbAgent.Models
 			}
 		}
 
-		private void UpdateFromGame(PinballX.Models.Game xmlGame, string tablePath)
+		private void UpdateFromGame(PinballXGame xmlGame, string tablePath)
 		{
 			Id = xmlGame.Description;
 			Enabled = xmlGame.Enabled == null || "true".Equals(xmlGame.Enabled, StringComparison.InvariantCultureIgnoreCase);
@@ -158,7 +159,7 @@ namespace VpdbAgent.Models
 			return game?.Id != null && game.Id.Equals(Id);
 		}
 
-		public bool Equals(PinballX.Models.Game game)
+		public bool Equals(PinballXGame game)
 		{
 			return game?.Description != null && game.Description.Equals(Id);
 		}

@@ -12,6 +12,7 @@ using NLog;
 using PusherClient;
 using ReactiveUI;
 using VpdbAgent.PinballX;
+using VpdbAgent.PinballX.Models;
 using VpdbAgent.Vpdb;
 using VpdbAgent.Vpdb.Download;
 using VpdbAgent.Vpdb.Models;
@@ -45,7 +46,7 @@ namespace VpdbAgent.Application
 		/// <summary>
 		/// Games are 2-way mapped to <see cref="Game"/>, where downstream 
 		/// changes (e.g. XMLs in PinballX's database folder change) come from
-		/// <see cref="PinballX.Models.Game"/> and upstream changes are written
+		/// <see cref="PinballXGame"/> and upstream changes are written
 		/// to the .json file sitting in the system's database folder.
 		/// </summary>
 		ReactiveList<Game> Games { get; }

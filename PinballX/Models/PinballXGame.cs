@@ -3,7 +3,7 @@
 namespace VpdbAgent.PinballX.Models
 {
 	[XmlRoot("game")]
-	public class Game
+	public class PinballXGame
 	{
 	
 		// "official hyperpin" fields

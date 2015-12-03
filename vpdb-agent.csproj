@@ -303,8 +303,8 @@
     <Compile Include="PinballX\FileSystemWatcher.cs" />
     <Compile Include="PinballX\MenuManager.cs" />
     <Compile Include="Models\PlatformDatabase.cs" />
-    <Compile Include="PinballX\Models\Game.cs" />
-    <Compile Include="PinballX\Models\Menu.cs" />
+    <Compile Include="PinballX\Models\PinballXGame.cs" />
+    <Compile Include="PinballX\Models\PinballXMenu.cs" />
     <Compile Include="PinballX\Models\PinballXSystem.cs" />
     <Compile Include="RefitStubs.cs" />
     <Compile Include="Views\Games\GamesView.xaml.cs">
