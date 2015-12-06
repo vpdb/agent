@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace VpdbAgent.Vpdb.Models
 {
@@ -24,13 +27,14 @@ namespace VpdbAgent.Vpdb.Models
 
 	public class UserFull : User
 	{
-		public string Plan { get; set; }
+		public PlanDetails Plan { get; set; }
 		public string Provider { get; set; }
 		public string Email { get; set; }
 		public string CreatedAt { get; set; }
 		public bool IsActive { get; set; }
 		public List<string> Roles { get; set; }
 		public Permission Permissions { get; set; }
+		public QuotaDetails Quota { get; set; }
 
 		public class Permission
 		{
@@ -47,6 +51,27 @@ namespace VpdbAgent.Vpdb.Models
 			public List<string> Tokens { get; set; }
 			public List<string> User { get; set; }
 			public List<string> Messages { get; set; }
+		}
+
+		public class PlanDetails
+		{
+			public string Id { get; set; }
+			public bool AppTokensEnabled { get; set; }
+			public bool PushNotificationsEnabled { get; set; }
+		}
+
+		public class QuotaDetails
+		{
+			public int Limit { get; set; }
+			public Period Period { get; set; }
+			public int Remaining { get; set; }
+			public long Reset { get; set; }
+			public bool Unlimited { get; set; }
+		}
+
+		public enum Period
+		{
+			Minute, Hour, Day, Week, Never
 		}
 	}
 }
