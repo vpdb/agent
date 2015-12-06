@@ -67,10 +67,11 @@ packaging the builds. In order to release a new version:
    PM> nuget pack .\vpdb-agent.nuspec
    PM> squirrel --releasify .\VpdbAgent.0.0.x.nupkg
    ```
-5. Commit, tag and push
-6. Package `setup.exe` as `vpdb-agent-0.0.x.zip`
-7. Create release on GitHub and attach zip
-8. Bump to snapshot version.
+5. Run `.\Releases\Setup.exe` and test
+6. If all good, commit, tag and push
+7. Package `setup.exe` as `vpdb-agent-0.0.x.zip`
+8. Create release on GitHub and attach zip
+9. Bump to snapshot version.
 
 ## Credits
 
