@@ -253,7 +253,7 @@
                     <TextBlock Text="Reformat XMLs when saving" Style="{StaticResource Label}" 
                                ToolTip="When reformatting, comments in the XML will be stripped."
                                Grid.Column="0" Margin="15,0,0,0" />
-                    <ToggleButton IsChecked="{Binding MinimizeToTray}" x:Name="ReformatXmls" Grid.Column="1" Height="20" Margin="5,0,0,0"/>
+                    <ToggleButton IsChecked="{Binding ReformatXml}" x:Name="ReformatXmls" Grid.Column="1" Height="20" Margin="5,0,0,0"/>
                 </Grid>
 
                 <Grid Margin="0,10,0,0">
