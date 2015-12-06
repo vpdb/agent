@@ -140,12 +140,6 @@ namespace VpdbAgent.Vpdb
 				}
 			}, exception => HandleApiError(exception, "subscribing to ApiAuthenticated for Pusher"));
 
-			// initialize pusher
-			_pusher = new Pusher("02ee40b62e1fb0696e02", new PusherOptions() {
-				Encrypted = true,
-				Authorizer = new PusherAuthorizer(this, _crashManager, _logger)
-			});
-
 			return this;
 		}
 
@@ -236,8 +230,16 @@ namespace VpdbAgent.Vpdb
 		/// Connects to Pusher and subscribes to the user's private channel.
 		/// </summary>
 		/// <param name="user"></param>
-		private void SetupPusher(User user)
+		private void SetupPusher(UserFull user)
 		{
+
+			// initialize pusher
+			if (_pusher == null) {
+				_pusher = new Pusher(user.ChannelConfig.ApiKey, new PusherOptions() {
+					Encrypted = true,
+					Authorizer = new PusherAuthorizer(this, _crashManager, _logger)
+				});
+			}
 
 			var isNewConnection = _connectedApiEndpoint == null;
 			var isSameConnection = !isNewConnection && _connectedApiEndpoint.Equals(_settingsManager.Settings.Endpoint);

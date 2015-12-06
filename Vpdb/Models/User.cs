@@ -33,6 +33,7 @@ namespace VpdbAgent.Vpdb.Models
 		public string CreatedAt { get; set; }
 		public bool IsActive { get; set; }
 		public List<string> Roles { get; set; }
+		public ChannelConfigDetails ChannelConfig { get; set; }
 		public Permission Permissions { get; set; }
 		public QuotaDetails Quota { get; set; }
 
@@ -51,6 +52,13 @@ namespace VpdbAgent.Vpdb.Models
 			public List<string> Tokens { get; set; }
 			public List<string> User { get; set; }
 			public List<string> Messages { get; set; }
+		}
+
+		public class ChannelConfigDetails
+		{
+			public string ApiKey { get; set; }
+			public List<string> SubscribedReleases { get; set; }
+			public bool SubscribeToStarred { get; set; }
 		}
 
 		public class PlanDetails
