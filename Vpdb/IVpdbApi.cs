@@ -11,6 +11,9 @@ namespace VpdbAgent.Vpdb
 		[Get("/api/v1/user")]
 		IObservable<UserFull> GetProfile();
 
+		[Patch("/api/v1/user")]
+		IObservable<UserFull> UpdateProfile([Body] UserFull profile);
+
 		[Get("/api/v1/games/{id}")]
 		IObservable<Game> GetGame([AliasAs("id")] string gameId);
 

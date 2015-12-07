@@ -16,6 +16,7 @@ using Newtonsoft.Json;
 using NLog;
 using ReactiveUI;
 using Refit;
+using Splat;
 using VpdbAgent.Libs.ShellLink;
 using VpdbAgent.Models;
 using VpdbAgent.Vpdb;
@@ -233,7 +234,7 @@ namespace VpdbAgent.Application
 				Settings.Copy(settings, Settings);
 				await Settings.WriteToStorage(_storage);
 
-				// handle startup settings (to test!)
+				// handle startup settings todo test!
 				if (Settings.StartWithWindows)
 				{
 					var linkPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Microsoft", "Windows", "Start Menu", "Programs", "VPDB", "VPDB Agent.lnk");
@@ -244,7 +245,6 @@ namespace VpdbAgent.Application
 					} else {
 						cmd = File.Exists(linkPath) ? linkPath : Assembly.GetEntryAssembly().Location;
 					}
-
 					_registryKey.SetValue("VPDB Agent", cmd);
 				} else {
 					if (_registryKey.GetValue("VPDB Agent") != null) {

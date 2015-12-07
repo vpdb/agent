@@ -11,6 +11,7 @@ using Newtonsoft.Json.Linq;
 using NLog;
 using PusherClient;
 using ReactiveUI;
+using VpdbAgent.Models;
 using VpdbAgent.PinballX;
 using VpdbAgent.PinballX.Models;
 using VpdbAgent.Vpdb;
@@ -148,6 +149,19 @@ namespace VpdbAgent.Application
 			// setup handlers for table file changes
 			_menuManager.TableFileChanged.Subscribe(OnTableFileChanged);
 			_menuManager.TableFileRemoved.Subscribe(OnTableFileRemoved);
+
+			// when sync settings change, update profile with channel info
+			_settingsManager.Settings.Changed
+				.Where(x => x.PropertyName == "SyncStarred")
+				.Subscribe(_ => UpdateChannelProfile());
+			IDisposable gameSyncToggled = null;
+			Games.Changed.Subscribe(_ => {
+				gameSyncToggled?.Dispose();
+				gameSyncToggled = Games
+					.Select(g => g.Changed.Where(x => x.PropertyName == "IsSynced"))
+					.Merge()
+					.Subscribe(__ => UpdateChannelProfile());
+			});
 		}
 
 		public IGameManager Initialize()
@@ -187,7 +201,7 @@ namespace VpdbAgent.Application
 
 		public IGameManager Sync(Game game)
 		{
-			_vpdbClient.Api.GetRelease(game.ReleaseId).Subscribe(release => {
+			_vpdbClient.Api.GetFullRelease(game.ReleaseId).Subscribe(release => {
 				var latestFile = game.FindUpdate(release);
 				if (latestFile != null) {
 					_logger.Info("Found updated file {0} for {1}, adding to download queue.", latestFile, release);
@@ -236,6 +250,48 @@ namespace VpdbAgent.Application
 						}
 					});
 				});
+		}
+
+		/// <summary>
+		/// Updates the channel config of the user's profile at VPDB.
+		/// 
+		/// This basically tells the server to send release events through pusher
+		/// of non-starred releases or all releases if sync-starring is disabled.
+		/// </summary>
+		/// <remarks>
+		/// Executed if either a game's <see cref="Game.IsSynced"/> changes or the
+		/// setting's <see cref="Settings.SyncStarred"/>.
+		/// </remarks>
+		private void UpdateChannelProfile()
+		{	
+			// settings not initialized or other auth error
+			if (_settingsManager.AuthenticatedUser == null) {
+				return;
+			}
+
+			// server about sync preferences
+			if (_settingsManager.Settings.SyncStarred) {
+
+				// only add non-starred synced releases
+				_settingsManager.AuthenticatedUser.ChannelConfig.SubscribedReleases = Games
+					.Where(g => g.HasRelease)
+					.Where(g => g.IsSynced && !g.Release.Starred)
+					.Select(g => g.ReleaseId)
+					.ToList();
+
+			} else {
+				// add all synched releases
+				_settingsManager.AuthenticatedUser.ChannelConfig.SubscribedReleases = Games
+					.Where(g => g.HasRelease)
+					.Where(g => g.IsSynced)
+					.Select(g => g.ReleaseId)
+					.ToList();
+			}
+			_settingsManager.AuthenticatedUser.ChannelConfig.SubscribeToStarred = _settingsManager.Settings.SyncStarred;
+			_vpdbClient.Api.UpdateProfile(_settingsManager.AuthenticatedUser).Subscribe(user => {
+				_logger.Info("Updated channel profile: {0}, [{1}]", _settingsManager.Settings.SyncStarred,
+					string.Join(",", _settingsManager.AuthenticatedUser.ChannelConfig.SubscribedReleases));
+			}, exception => _vpdbClient.HandleApiError(exception, "updating profile with channel info"));
 		}
 
 		/// <summary>
