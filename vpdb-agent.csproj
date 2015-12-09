@@ -230,6 +230,7 @@
     <Compile Include="Application\DatabaseManager.cs" />
     <Compile Include="Application\MessageManager.cs" />
     <Compile Include="Application\PlatformManager.cs" />
+    <Compile Include="Vpdb\RealtimeManager.cs" />
     <Compile Include="Application\Settings.cs" />
     <Compile Include="Application\VersionManager.cs" />
     <Compile Include="Common\Extensions\AkavacheAuthBitmapImageMixin.cs" />

@@ -36,7 +36,7 @@ namespace VpdbAgent.Vpdb
 		/// <summary>
 		/// Access to Pusher's user channel
 		/// </summary>
-		Subject<Channel> UserChannel { get; }
+		IObservable<Channel> UserChannel { get; }
 
 		/// <summary>
 		/// Initializes the client.
@@ -98,7 +98,7 @@ namespace VpdbAgent.Vpdb
 
 		// api
 		public IVpdbApi Api { get; private set; }
-		public Subject<Channel> UserChannel { get; } = new Subject<Channel>();
+		public IObservable<Channel> UserChannel { get; } = new Subject<Channel>();
 
 		// private members
 		private Pusher _pusher;
@@ -276,14 +276,14 @@ namespace VpdbAgent.Vpdb
 		private void PusherError(object sender, PusherException error)
 		{
 			// todo handle
-			UserChannel.OnNext(null);
+			((Subject<Channel>)UserChannel).OnNext(null);
 			_logger.Error(error, "Pusher error: {0}", error.Message);
 		}
 
 		private void PusherSubscribed(object sender)
 		{
 			// todo handle
-			UserChannel.OnNext(_userChannel);
+			((Subject<Channel>)UserChannel).OnNext(_userChannel);
 			_logger.Info("Subscribed to channel.");
 		}
 		#endregion

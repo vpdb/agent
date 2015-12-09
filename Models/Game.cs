@@ -2,13 +2,13 @@
 using System.IO;
 using System.Linq;
 using System.Reactive;
-using System.Reactive.Concurrency;
 using System.Runtime.Serialization;
 using ReactiveUI;
 using static System.String;
 using System.Reactive.Linq;
-using NLog;
+using Splat;
 using VpdbAgent.PinballX.Models;
+using VpdbAgent.Vpdb.Download;
 using VpdbAgent.Vpdb.Models;
 
 namespace VpdbAgent.Models
@@ -21,6 +21,7 @@ namespace VpdbAgent.Models
 	/// </summary>
 	public class Game : ReactiveObject, IComparable<Game>
 	{
+
 		// read/write fields
 		private string _releaseId;
 		private string _fileId;
@@ -48,19 +49,26 @@ namespace VpdbAgent.Models
 		public TableFile UpdatedRelease => _updatedRelease.Value;
 		public long FileSize { get; set; }
 		public Platform Platform { get; private set; }
+		public TableFile File { get {
+			return FileId != null && Release != null
+				? Release.Versions.SelectMany(v => v.Files).FirstOrDefault(f => f.Reference.Id == FileId)
+				: null;
+		} }
 
 		/// <summary>
 		/// Sets up Output Properties
 		/// </summary>
 		public Game()
 		{
+			var downloadManager = Locator.Current.GetService<IDownloadManager>();
+
 			// update HasRelease
 			this.WhenAnyValue(game => game.ReleaseId)
 				.Select(releaseId => releaseId != null)
 				.ToProperty(this, game => game.HasRelease, out _hasRelease);
 
 			this.WhenAnyValue(game => game.Release, game => game.FileId, (release, fileId) => new { game = this, release })
-				.Select(x => x.game.FindUpdate(x.release))
+				.Select(x => downloadManager.FindLatestFile(x.release, x.game.File))
 				.ToProperty(this, game => game.UpdatedRelease, out _updatedRelease);
 
 			this.WhenAnyValue(game => game.UpdatedRelease)
@@ -87,7 +95,7 @@ namespace VpdbAgent.Models
 		/// </summary>
 		/// <param name="release">Freshly obtained release from VPDB</param>
 		/// <returns>The newer file if available, null if no update available</returns>
-		public TableFile FindUpdate(Release release)
+		public TableFile FindUpdate2(Release release)
 		{
 			if (FileId == null || release == null) {
 				return null;
@@ -128,11 +136,11 @@ namespace VpdbAgent.Models
 
 			var oldFilename = Filename;
 
-			if (File.Exists(tablePath + @"\" + xmlGame.Filename + ".vpt")) {
+			if (System.IO.File.Exists(tablePath + @"\" + xmlGame.Filename + ".vpt")) {
 				Filename = xmlGame.Filename + ".vpt";
 				FileSize = new FileInfo(tablePath + @"\" + xmlGame.Filename + ".vpt").Length;
 				Exists = true;
-			} else if (File.Exists(tablePath + @"\" + xmlGame.Filename + ".vpx")) {
+			} else if (System.IO.File.Exists(tablePath + @"\" + xmlGame.Filename + ".vpx")) {
 				Filename = xmlGame.Filename + ".vpx";
 				FileSize = new FileInfo(tablePath + @"\" + xmlGame.Filename + ".vpx").Length;
 				Exists = true;

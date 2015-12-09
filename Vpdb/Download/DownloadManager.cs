@@ -6,6 +6,7 @@ using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Runtime.Remoting.Messaging;
 using NLog;
 using ReactiveUI;
 using VpdbAgent.Application;
@@ -32,25 +33,33 @@ namespace VpdbAgent.Vpdb.Download
 		/// than the release ID. 
 		/// </remarks>
 		/// <param name="releaseId">ID of the release</param>
+		/// <param name="currentFile">The current/previous file of the release or null if new release</param>
 		/// <returns>This instance</returns>
-		IDownloadManager DownloadRelease(string releaseId);
-
-		/// <summary>
-		/// Downloads or upgrades a release, including table image, ROMs and other
-		/// media, based on the user's settings.
-		/// </summary>
-		/// <param name="release">Release to download or upgrade</param>
-		/// <param name="tableFile">File of the release to download</param>
-		/// <returns>This instance</returns>
-		IDownloadManager DownloadRelease(Release release, TableFile tableFile);
+		IDownloadManager DownloadRelease(string releaseId, TableFile currentFile = null);
 
 		/// <summary>
 		/// An observable that produces a value when a release finished 
 		/// downloading successfully.
 		/// </summary>
 		IObservable<Job> WhenReleaseDownloaded { get; }
+
+		/// <summary>
+		/// Returns the latest file of a release that matches the user's flavor
+		/// preferences or null if nothing found.
+		/// 
+		/// For existing releases, provide the file of the existing release. This 
+		/// makes it possible to match the "Same" rule.
+		/// </summary>
+		/// <remarks>
+		/// Note that if <see cref="currentFile"/> is provided and the lastest file
+		/// is the same as <see cref="currentFile"/>, <c>null</c> is returned.
+		/// </remarks>
+		/// <param name="release"></param>
+		/// <param name="currentFile"></param>
+		/// <returns>The most recent file that matches user's flavor prefs and is not the same as provided, or null if not found</returns>
+		TableFile FindLatestFile(Release release, TableFile currentFile = null);
 	}
-	
+
 	public class DownloadManager : IDownloadManager
 	{
 		// dependencies
@@ -98,20 +107,14 @@ namespace VpdbAgent.Vpdb.Download
 			});
 		}
 
-		public IDownloadManager DownloadRelease(string id)
+		public IDownloadManager DownloadRelease(string id, TableFile currentFile = null)
 		{
 			// retrieve release details
 			_logger.Info("Retrieving details for release {0}...", id);
 			_vpdbClient.Api.GetFullRelease(id).ObserveOn(Scheduler.Default).Subscribe(release => {
 
 				// match file based on settings
-				var file = release.Versions
-					.SelectMany(v => v.Files)
-					.Where(FlavorMatches)
-					.Select(f => new {f, weight = FlavorWeight(f)})
-					.OrderBy(x => x.weight)
-					.Select(x => x.f)
-					.LastOrDefault();
+				var file = FindLatestFile(release, currentFile);
 
 				// check if match
 				if (file == null) {
@@ -127,7 +130,29 @@ namespace VpdbAgent.Vpdb.Download
 			return this;
 		}
 
-		public IDownloadManager DownloadRelease(Release release, TableFile tableFile)
+		public TableFile FindLatestFile(Release release, TableFile currentFile = null)
+		{
+			if (release == null) {
+				return null;
+			}
+
+			var file = release.Versions
+					.SelectMany(v => v.Files)
+					.Where(f => FlavorMatches(f, currentFile))
+					.Select(f => new { f, weight = FlavorWeight(f, currentFile) })
+					.OrderBy(x => x.weight)
+					.Select(x => x.f)
+					.LastOrDefault();
+
+			return file != null && currentFile != null && file.Reference.Id == currentFile.Reference.Id ? null : file;
+		}
+
+		/// <summary>
+		/// Downloads a release including media and ROMs.
+		/// </summary>
+		/// <param name="release">Release to download</param>
+		/// <param name="tableFile">File of the release to download</param>
+		private void DownloadRelease(Release release, TableFile tableFile)
 		{
 			// also fetch game data for media & co
 			_vpdbClient.Api.GetGame(release.Game.Id).Subscribe(game => 
@@ -162,10 +187,14 @@ namespace VpdbAgent.Vpdb.Download
 				_jobManager.AddJob(job);
 
 			}, exception => _vpdbClient.HandleApiError(exception, "retrieving game details during download"));
-
-			return this;
 		}
 
+		/// <summary>
+		/// Checks whether any file for the given base name at the given path exists.
+		/// </summary>
+		/// <param name="path">Path to look for</param>
+		/// <param name="name">Base name to find</param>
+		/// <returns>True if exists, false otherwise</returns>
 		private static bool FileBaseExists(string path, string name)
 		{
 			return Directory.EnumerateFiles(path, name + ".*").Any();
@@ -218,20 +247,22 @@ namespace VpdbAgent.Vpdb.Download
 		/// Checks if the flavor of the file is acceptable by the user's flavor settings.
 		/// </summary>
 		/// <param name="tableFile">File to check</param>
+		/// <param name="currentFile">The current/previous file of the release or null if new release</param>
 		/// <returns>Returns true if the primary or secondary flavor setting of ALL flavors matches, false otherwise.</returns>
-		private bool FlavorMatches(TableFile tableFile)
+		private bool FlavorMatches(TableFile tableFile, TableFile currentFile)
 		{
-			return _flavorMatchers.TrueForAll(matcher => matcher.Matches(tableFile));
+			return _flavorMatchers.TrueForAll(matcher => matcher.Matches(tableFile, currentFile));
 		}
 
 		/// <summary>
 		/// Calculates the total weight of a file based on flavor settings.
 		/// </summary>
 		/// <param name="tableFile">File to check</param>
+		/// <param name="currentFile">The current/previous file of the release or null if new release</param>
 		/// <returns>Total weight of the file based on the user's flavor settings</returns>
-		private int FlavorWeight(TableFile tableFile)
+		private int FlavorWeight(TableFile tableFile, TableFile currentFile)
 		{
-			return _flavorMatchers.Sum(matcher => matcher.Weight(tableFile));
+			return _flavorMatchers.Sum(matcher => matcher.Weight(tableFile, currentFile));
 		}
 	}
 }

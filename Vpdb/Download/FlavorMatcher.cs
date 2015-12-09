@@ -18,15 +18,17 @@ namespace VpdbAgent.Vpdb.Download
 		/// Returns true if either the primary or fallback flavor setting matches a given file.
 		/// </summary>
 		/// <param name="tableFile">File to check</param>
+		/// <param name="currentFile">The current/previous file of the release or null if new release</param>
 		/// <returns>True if file qualifies for download for given flavor</returns>
-		bool Matches(TableFile tableFile);
+		bool Matches(TableFile tableFile, TableFile currentFile);
 
 		/// <summary>
 		/// Returns a weight depending on if the primary or fallback flavor setting was matched for a given file.
 		/// </summary>
 		/// <param name="tableFile">File to weight</param>
+		/// <param name="currentFile">The current/previous file of the release or null if new release</param>
 		/// <returns>Weight relative to if the primary or fallback flavor setting was hit</returns>
-		int Weight(TableFile tableFile);
+		int Weight(TableFile tableFile, TableFile currentFile);
 	}
 
 	/// <summary>
@@ -38,16 +40,16 @@ namespace VpdbAgent.Vpdb.Download
 		protected abstract TSettingFlavor PrimarySetting { get; }
 		protected abstract TSettingFlavor FallbackSetting { get; }
 
-		public bool Matches(TableFile tableFile)
+		public bool Matches(TableFile tableFile, TableFile currentFile)
 		{
-			return Weight(tableFile) > 0;
+			return Weight(tableFile, currentFile) > 0;
 		}
 
-		public int Weight(TableFile tableFile)
+		public int Weight(TableFile tableFile, TableFile currentFile)
 		{
-			var weight = Weight(tableFile.Flavor, PrimarySetting) * 100;
+			var weight = Weight(tableFile.Flavor, PrimarySetting, currentFile?.Flavor, null) * 100;
 			if (weight == 0) {
-				weight = Weight(tableFile.Flavor, FallbackSetting);
+				weight = Weight(tableFile.Flavor, FallbackSetting, currentFile?.Flavor, PrimarySetting);
 			}
 			return weight;
 		}
@@ -61,16 +63,24 @@ namespace VpdbAgent.Vpdb.Download
 		/// </remarks>
 		/// <param name="fileFlavor">Flavor of the file</param>
 		/// <param name="setting">Setting to match against</param>
+		/// <param name="previousFlavor">If an update, this is the flavor of the previous file</param>
+		/// <param name="primarySetting">If fallback, this is the primary setting. WTF C# why can't you accept null for a typed param?</param>
 		/// <returns>3 on exact match, 1 if matched by "any" and 0 if no match.</returns>
-		private int Weight(Flavor fileFlavor, TSettingFlavor setting)
+		private int Weight(Flavor fileFlavor, TSettingFlavor setting, Flavor previousFlavor, object primarySetting)
 		{
-			if (IsExactMatch(setting)) {
+			if (MustMatchExactly(setting)) {
 				return Matches(fileFlavor, setting) ? 3 : 0;
 			}
-			if (IsSameMatch(setting)) {
-				return 0; // todo support updates
+			if (MustMatchSame(setting)) {
+				if (previousFlavor != null) {
+					return Matches(fileFlavor, previousFlavor) ? 3 : 0;
+				}
+				if (primarySetting != null) {
+					return Matches(fileFlavor, (TSettingFlavor)primarySetting) ? 3 : 0;
+				}
+				return 0;
 			}
-			if (IsAnyMatch(setting)) {
+			if (MustMatchAny(setting)) {
 				return 1;
 			}
 			throw new ArgumentOutOfRangeException(nameof(setting), setting, null);
@@ -81,30 +91,38 @@ namespace VpdbAgent.Vpdb.Download
 		/// </summary>
 		/// <param name="setting">Setting to check</param>
 		/// <returns>True if "exact" setting, false otherwise.</returns>
-		protected abstract bool IsExactMatch(TSettingFlavor setting);
+		protected abstract bool MustMatchExactly(TSettingFlavor setting);
 
 		/// <summary>
 		/// Checks if the given setting is a "same" (i.e. same as previous file) matching setting.
 		/// </summary>
 		/// <param name="setting">Setting to check</param>
 		/// <returns>True if "same" setting, false otherwise.</returns>
-		protected abstract bool IsSameMatch(TSettingFlavor setting);
+		protected abstract bool MustMatchSame(TSettingFlavor setting);
 
 		/// <summary>
 		/// Checks if the given setting is an "any" (i.e. doesn't matter) matching setting.
 		/// </summary>
 		/// <param name="setting">Setting to check</param>
 		/// <returns>True if "any" setting, false otherwise.</returns>
-		protected abstract bool IsAnyMatch(TSettingFlavor setting);
+		protected abstract bool MustMatchAny(TSettingFlavor setting);
 
 		/// <summary>
 		/// Checks if a given file flavor matches a given setting.
 		/// </summary>
-		/// <seealso cref="IsExactMatch"/>
+		/// <seealso cref="MustMatchExactly"/>
 		/// <param name="fileFlavor">Flavor of the file to check</param>
-		/// <param name="setting">Setting to check against (only <see cref="IsExactMatch"/> setting given)</param>
+		/// <param name="setting">Setting to check against (only <see cref="MustMatchExactly"/> setting given)</param>
 		/// <returns>True if file flavor matches, false otherwise.</returns>
 		protected abstract bool Matches(Flavor fileFlavor, TSettingFlavor setting);
+
+		/// <summary>
+		/// Checks if two flavors are the same.
+		/// </summary>
+		/// <param name="firstFlavor">First flavor</param>
+		/// <param name="secondFlavor">Second flavpr</param>
+		/// <returns></returns>
+		protected abstract bool Matches(Flavor firstFlavor, Flavor secondFlavor);
 	}
 
 	/// <summary>
@@ -129,25 +147,30 @@ namespace VpdbAgent.Vpdb.Download
 				case Flavor.OrientationValue.WS:
 					return setting == SettingsManager.Orientation.Landscape;
 				case Flavor.OrientationValue.Any:
-					return IsExactMatch(setting);
+					return MustMatchExactly(setting);
 				default:
 					throw new ArgumentOutOfRangeException();
 			}
 		}
 
-		protected override bool IsExactMatch(SettingsManager.Orientation setting)
+		protected override bool Matches(Flavor firstFlavor, Flavor secondFlavor)
+		{
+			return firstFlavor.Orientation == secondFlavor.Orientation;
+		}
+
+		protected override bool MustMatchExactly(SettingsManager.Orientation setting)
 		{
 			return setting == SettingsManager.Orientation.Landscape 
 				|| setting == SettingsManager.Orientation.Portrait 
 				|| setting == SettingsManager.Orientation.Universal;
 		}
 
-		protected override bool IsSameMatch(SettingsManager.Orientation setting)
+		protected override bool MustMatchSame(SettingsManager.Orientation setting)
 		{
 			return setting == SettingsManager.Orientation.Same;
 		}
 
-		protected override bool IsAnyMatch(SettingsManager.Orientation setting)
+		protected override bool MustMatchAny(SettingsManager.Orientation setting)
 		{
 			return setting == SettingsManager.Orientation.Any;
 		}
@@ -175,25 +198,30 @@ namespace VpdbAgent.Vpdb.Download
 				case Flavor.LightingValue.Night:
 					return setting == SettingsManager.Lighting.Night;
 				case Flavor.LightingValue.Any:
-					return IsExactMatch(setting);
+					return MustMatchExactly(setting);
 				default:
 					throw new ArgumentOutOfRangeException();
 			}
 		}
 
-		protected override bool IsExactMatch(SettingsManager.Lighting setting)
+		protected override bool Matches(Flavor firstFlavor, Flavor secondFlavor)
+		{
+			return firstFlavor.Lighting == secondFlavor.Lighting;
+		}
+
+		protected override bool MustMatchExactly(SettingsManager.Lighting setting)
 		{
 			return setting == SettingsManager.Lighting.Day 
 				|| setting == SettingsManager.Lighting.Night 
 				|| setting == SettingsManager.Lighting.Universal;
 		}
 
-		protected override bool IsSameMatch(SettingsManager.Lighting setting)
+		protected override bool MustMatchSame(SettingsManager.Lighting setting)
 		{
 			return setting == SettingsManager.Lighting.Same;
 		}
 
-		protected override bool IsAnyMatch(SettingsManager.Lighting setting)
+		protected override bool MustMatchAny(SettingsManager.Lighting setting)
 		{
 			return setting == SettingsManager.Lighting.Any;
 		}

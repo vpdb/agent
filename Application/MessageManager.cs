@@ -10,13 +10,61 @@ using Version = VpdbAgent.Vpdb.Models.Version;
 
 namespace VpdbAgent.Application
 {
+	/// <summary>
+	/// Manages the internal messaging system.
+	/// 
+	/// Any "logworthy" event is logged as a message and appears in the messages
+	/// tab of the app. This is particularly important for errors.
+	/// </summary>
 	public interface IMessageManager
 	{
+		/// <summary>
+		/// Logs that a release has been downloaded successfully.
+		/// </summary>
+		/// <param name="release">Downloaded release</param>
+		/// <param name="version">Version downloaded</param>
+		/// <param name="file">File downloaded</param>
+		/// <param name="bytesPerSecond">Download speed in bytes per second</param>
+		/// <returns>Created message</returns>
 		Message LogReleaseDownloaded(Release release, Version version, FileReference file, double bytesPerSecond);
+
+		/// <summary>
+		/// Logs that a release has been linked to a local game
+		/// </summary>
+		/// <param name="game">Local game</param>
+		/// <param name="release">Release that has been linked to the game</param>
+		/// <param name="fileId">File ID of the file of the release that was linked</param>
+		/// <returns>Created message</returns>
 		Message LogReleaseLinked(Game game, Release release, string fileId);
+
+		/// <summary>
+		/// Logs a generic error.
+		/// </summary>
+		/// <remarks>
+		/// Note that running this method also creates an entry a raygun.io,
+		/// the crash logger, so you should only log seriouls problems here.
+		/// </remarks>
+		/// <param name="e">Exception of the error</param>
+		/// <param name="message">Message when it happened. Example: "Error downloading file"</param>
+		/// <returns>Created message</returns>
 		Message LogError(Exception e, string message);
+
+		/// <summary>
+		/// Logs an API related error.
+		/// </summary>
+		/// <param name="e">Exception of the error</param>
+		/// <param name="message">Message when it happened. Example: "Error while logging in"</param>
+		/// <returns></returns>
 		Message LogApiError(ApiException e, string message);
+
+		/// <summary>
+		/// Marks all messages as read.
+		/// </summary>
 		void MarkAllRead();
+
+		/// <summary>
+		/// Deletes all messages.
+		/// </summary>
 		void ClearAll();
 	}
 
@@ -84,12 +132,26 @@ namespace VpdbAgent.Application
 			_databaseManager.ClearLog();
 		}
 
+		/// <summary>
+		/// Persists a message.
+		/// </summary>
+		/// <param name="message">Message to add</param>
+		/// <returns></returns>
 		private Message Log(Message message)
 		{
 			_databaseManager.Log(message);
 			return message;
 		}
 
+		/// <summary>
+		/// Creates an error message from an exception.
+		/// 
+		/// Extracts the most-inner exception for the message.
+		/// </summary>
+		/// <param name="exception">Exception to log</param>
+		/// <param name="message">Additional message</param>
+		/// <param name="type">Type of the message</param>
+		/// <returns>New error message</returns>
 		private static Message CreateError(Exception exception, string message, MessageType type)
 		{
 			var innerException = exception;

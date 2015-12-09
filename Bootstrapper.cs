@@ -155,13 +155,18 @@ namespace VpdbAgent
 				locator.GetService<NLog.Logger>()
 			), typeof(IVpdbClient));
 
+			locator.RegisterLazySingleton(() => new RealtimeManager(
+				locator.GetService<IVpdbClient>(),
+				locator.GetService<NLog.Logger>()
+			), typeof(IRealtimeManager));
+
 			locator.RegisterLazySingleton(() => new JobManager(
 				locator.GetService<IDatabaseManager>(),
 				locator.GetService<IMessageManager>(),
 				locator.GetService<CrashManager>(),
 				locator.GetService<NLog.Logger>()
-			), typeof(IJobManager));			
-			
+			), typeof(IJobManager));
+
 			locator.RegisterLazySingleton(() => new DownloadManager(
 				locator.GetService<IPlatformManager>(),
 				locator.GetService<IJobManager>(),
@@ -181,6 +186,7 @@ namespace VpdbAgent
 				locator.GetService<IVersionManager>(),
 				locator.GetService<IPlatformManager>(),
 				locator.GetService<IMessageManager>(),
+				locator.GetService<IRealtimeManager>(),
 				locator.GetService<NLog.Logger>()
 			), typeof(IGameManager));
 

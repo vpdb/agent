@@ -7,11 +7,8 @@ using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading.Tasks;
-using Newtonsoft.Json.Linq;
 using NLog;
-using PusherClient;
 using ReactiveUI;
-using VpdbAgent.Models;
 using VpdbAgent.PinballX;
 using VpdbAgent.PinballX.Models;
 using VpdbAgent.Vpdb;
@@ -100,6 +97,7 @@ namespace VpdbAgent.Application
 		private readonly IVersionManager _versionManager;
 		private readonly IPlatformManager _platformManager;
 		private readonly IMessageManager _messageManager;
+		private readonly IRealtimeManager _realtimeManager;
 		private readonly Logger _logger;
 
 		// props
@@ -114,7 +112,7 @@ namespace VpdbAgent.Application
 		public GameManager(IMenuManager menuManager, IVpdbClient vpdbClient, ISettingsManager 
 			settingsManager, IDownloadManager downloadManager, IDatabaseManager databaseManager,
 			IVersionManager versionManager, IPlatformManager platformManager, IMessageManager messageManager,
-			Logger logger)
+			IRealtimeManager realtimeManager, Logger logger)
 		{
 			_menuManager = menuManager;
 			_vpdbClient = vpdbClient;
@@ -124,6 +122,7 @@ namespace VpdbAgent.Application
 			_versionManager = versionManager;
 			_platformManager = platformManager;
 			_messageManager = messageManager;
+			_realtimeManager = realtimeManager;
 			_logger = logger;
 
 			// setup game change listener once all games are fetched.
@@ -135,10 +134,7 @@ namespace VpdbAgent.Application
 				.Where(user => user != null)
 				.Take(1)
 				.Delay(TimeSpan.FromSeconds(2))
-				.Subscribe(_ => UpdateReleases());
-
-			// subscribe to pusher
-			_vpdbClient.UserChannel.Subscribe(OnChannelJoined);
+				.Subscribe(_ => UpdateReleaseData());
 
 			// subscribe to downloaded releases
 			_downloadManager.WhenReleaseDownloaded.Subscribe(OnReleaseDownloaded);
@@ -150,18 +146,21 @@ namespace VpdbAgent.Application
 			_menuManager.TableFileChanged.Subscribe(OnTableFileChanged);
 			_menuManager.TableFileRemoved.Subscribe(OnTableFileRemoved);
 
-			// when sync settings change, update profile with channel info
+			// when sync settings or IsSynced change, update profile with channel info
 			_settingsManager.Settings.Changed
 				.Where(x => x.PropertyName == "SyncStarred")
-				.Subscribe(_ => UpdateChannelProfile());
+				.Subscribe(_ => UpdateChannelConfig());
 			IDisposable gameSyncToggled = null;
 			Games.Changed.Subscribe(_ => {
 				gameSyncToggled?.Dispose();
 				gameSyncToggled = Games
 					.Select(g => g.Changed.Where(x => x.PropertyName == "IsSynced"))
 					.Merge()
-					.Subscribe(__ => UpdateChannelProfile());
+					.Subscribe(__ => UpdateChannelConfig());
 			});
+
+			// setup pusher messages
+			SetupRealtime();
 		}
 
 		public IGameManager Initialize()
@@ -185,14 +184,14 @@ namespace VpdbAgent.Application
 		public IGameManager LinkRelease(Game game, Release release, string fileId)
 		{
 			_logger.Info("Linking {0} to {1} ({2})", game, release, fileId);
-			AddRelease(release);
+			AddReleaseData(release);
 			game.ReleaseId = release.Id;
 			game.FileId = fileId;
 			game.Release = release;
 
 			// also update in case we didn't catch the last version.
 			_vpdbClient.Api.GetRelease(release.Id).Subscribe(updatedRelease => {
-				AddRelease(updatedRelease);
+				AddReleaseData(updatedRelease);
 				game.Release = updatedRelease;
 			}, exception => _vpdbClient.HandleApiError(exception, "retrieving release details during linking"));
 
@@ -201,15 +200,7 @@ namespace VpdbAgent.Application
 
 		public IGameManager Sync(Game game)
 		{
-			_vpdbClient.Api.GetFullRelease(game.ReleaseId).Subscribe(release => {
-				var latestFile = game.FindUpdate(release);
-				if (latestFile != null) {
-					_logger.Info("Found updated file {0} for {1}, adding to download queue.", latestFile, release);
-					_downloadManager.DownloadRelease(release, latestFile);
-				} else {
-					_logger.Info("No update found for {0}", release);
-				}
-			}, exception => _vpdbClient.HandleApiError(exception, "retrieving release details during sync"));
+			_downloadManager.DownloadRelease(game.ReleaseId, game.File);
 			return this;
 		}
 
@@ -253,6 +244,41 @@ namespace VpdbAgent.Application
 		}
 
 		/// <summary>
+		/// Sets up what happens when realtime messages from Pusher arrive.
+		/// </summary>
+		private void SetupRealtime()
+		{
+			// starring
+			_realtimeManager.WhenReleaseStarred.Subscribe(msg => {
+
+				// release starred
+				if (msg.Starred) {
+					var game = OnStarRelease(msg.Id, true);
+					if (game == null) {
+						if (_settingsManager.Settings.SyncStarred) {
+							_downloadManager.DownloadRelease(msg.Id);
+						} else {
+							_logger.Info(
+								"Sync starred not enabled, ignoring starred release.");
+						}
+					}
+
+				// release unstarred
+				} else {
+					OnStarRelease(msg.Id, false);
+				}
+			});
+
+			// new release version
+			_realtimeManager.WhenReleaseUpdated.Subscribe(msg => {
+				var game = Games.FirstOrDefault(g => !string.IsNullOrEmpty(g.ReleaseId) && g.ReleaseId.Equals(msg.ReleaseId));
+				if (game != null && game.IsSynced) {
+
+				}
+			});
+		}
+
+		/// <summary>
 		/// Updates the channel config of the user's profile at VPDB.
 		/// 
 		/// This basically tells the server to send release events through pusher
@@ -262,7 +288,7 @@ namespace VpdbAgent.Application
 		/// Executed if either a game's <see cref="Game.IsSynced"/> changes or the
 		/// setting's <see cref="Settings.SyncStarred"/>.
 		/// </remarks>
-		private void UpdateChannelProfile()
+		private void UpdateChannelConfig()
 		{	
 			// settings not initialized or other auth error
 			if (_settingsManager.AuthenticatedUser == null) {
@@ -317,7 +343,7 @@ namespace VpdbAgent.Application
 		/// is updated.
 		/// </summary>
 		/// <param name="release">Release to add or update</param>
-		private void AddRelease(Release release)
+		private void AddReleaseData(Release release)
 		{
 			if (!_databaseManager.Database.Releases.ContainsKey(release.Id)) {
 				_databaseManager.Database.Releases.Add(release.Id, release);
@@ -328,19 +354,24 @@ namespace VpdbAgent.Application
 		}
 
 		/// <summary>
-		/// Retrieves all known releases from VPDB and updates them locally.
+		/// Retrieves all known releases from the VPDB API and updates them locally.
 		/// 
+		/// Executed when the application starts in order to synchronize with VPDB.
 		/// todo include file id when searching. (also needs update on backend.)
 		/// </summary>
-		private void UpdateReleases()
+		private void UpdateReleaseData()
 		{
+			// get local release ids
 			var releaseIds = Games.Where(g => g.HasRelease).Select(g => g.ReleaseId).ToList();
 			if (releaseIds.Count > 0) {
 				_logger.Info("Updating {0} release(s)", releaseIds.Count);
+
+				// retrieve all releases of local ids
 				_vpdbClient.Api.GetReleasesByIds(string.Join(",", releaseIds))
 					.SubscribeOn(Scheduler.Default)
 					.Subscribe(releases => {
-						// update releases
+						
+						// update release data
 						foreach (var release in releases) {
 							if (!_databaseManager.Database.Releases.ContainsKey(release.Id)) {
 								_databaseManager.Database.Releases.Add(release.Id, release);
@@ -362,13 +393,19 @@ namespace VpdbAgent.Application
 			}
 		}
 
+		/// <summary>
+		/// Updates the database with new release data and also adds or updates
+		/// the XML database.
+		/// Executed after a release has been successfully downloaded.
+		/// </summary>
+		/// <param name="job">Download job that finished</param>
 		private void OnReleaseDownloaded(Job job)
 		{
 			// find release locally
 			var game = Games.FirstOrDefault(g => job.Release.Id.Equals(g.ReleaseId));
 
 			// add release
-			AddRelease(job.Release);
+			AddReleaseData(job.Release);
 
 			// add or update depending if found or not
 			if (game == null) {
@@ -452,65 +489,25 @@ namespace VpdbAgent.Application
 		}
 
 		/// <summary>
-		/// Executed when the pusher connection with the private user channel
-		/// is established and we can subscribe to messages.
+		/// Toggles star on a release
 		/// </summary>
-		/// <param name="userChannel">User channel object</param>
-		private void OnChannelJoined(Channel userChannel)
+		/// <param name="id">Release ID</param>
+		/// <param name="starred">If true, star, otherwise unstar</param>
+		/// <returns>Local game if found, null otherwise</returns>
+		private Game OnStarRelease(string id, bool starred)
 		{
-			if (userChannel == null) {
-				return;
-			}
-
-			// subscribe through a subject so we can do more fun stuff with it
-			var star = new Subject<JObject>();
-			var unstar = new Subject<JObject>();
-			userChannel.Bind("star", data =>
-			{
-				star.OnNext(data as JObject);
-			});
-			userChannel.Bind("unstar", data =>
-			{
-				unstar.OnNext(data as JObject);
-			});
-
-			// star
-			star.ObserveOn(RxApp.MainThreadScheduler).Subscribe(data => {
-				var id = data.GetValue("id").Value<string>();
-				if ("release".Equals(data.GetValue("type").Value<string>())) {
-					var game = OnStarRelease(id, true);
-					if (game == null) {
-						if (_settingsManager.Settings.SyncStarred) {
-							_downloadManager.DownloadRelease(id);
-						} else {
-							_logger.Info("Sync starred not enabled, ignoring starred release.");
-						}
-					}
-				}
-			});
-
-			// unstar
-			unstar.ObserveOn(RxApp.MainThreadScheduler).Subscribe(data => {
-				if ("release".Equals(data.GetValue("type").Value<string>())) {
-					OnStarRelease(data.GetValue("id").Value<string>(), false);
-				}
-			});
-		}
-
-		private Game OnStarRelease(string id, bool star) {
 			var game = Games.FirstOrDefault(g => !string.IsNullOrEmpty(g.ReleaseId) && g.ReleaseId.Equals(id));
 			if (game != null) {
 				var release = _databaseManager.Database.Releases[id];
-				release.Starred = star;
-				game.Release.Starred = star;
+				release.Starred = starred;
+				game.Release.Starred = starred;
 				if (_settingsManager.Settings.SyncStarred) {
-					game.IsSynced = star;
+					game.IsSynced = starred;
 				}
 				_databaseManager.Save();
-				_logger.Info("Toggled star on release {0} [{1}]", release.Name, star ? "on" : "off");
+				_logger.Info("Toggled star on release {0} [{1}]", release.Name, starred ? "on" : "off");
 			}
 			return game;
 		}
-
 	}
 }
