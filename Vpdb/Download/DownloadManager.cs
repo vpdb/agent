@@ -6,7 +6,6 @@ using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Runtime.Remoting.Messaging;
 using NLog;
 using ReactiveUI;
 using VpdbAgent.Application;
@@ -52,11 +51,11 @@ namespace VpdbAgent.Vpdb.Download
 		/// </summary>
 		/// <remarks>
 		/// Note that if <see cref="currentFile"/> is provided and the lastest file
-		/// is the same as <see cref="currentFile"/>, <c>null</c> is returned.
+		/// is the same version as <see cref="currentFile"/>, <c>null</c> is returned.
 		/// </remarks>
 		/// <param name="release"></param>
 		/// <param name="currentFile"></param>
-		/// <returns>The most recent file that matches user's flavor prefs and is not the same as provided, or null if not found</returns>
+		/// <returns>The most recent file that matches user's flavor prefs and is not the same version as provided, or null if not found</returns>
 		TableFile FindLatestFile(Release release, TableFile currentFile = null);
 	}
 
@@ -144,7 +143,15 @@ namespace VpdbAgent.Vpdb.Download
 					.Select(x => x.f)
 					.LastOrDefault();
 
-			return file != null && currentFile != null && file.Reference.Id == currentFile.Reference.Id ? null : file;
+			// check for same version
+			if (file != null && currentFile != null) {
+				var currentVersion = release.Versions.FirstOrDefault(v => v.Files.Select(f => f.Reference.Id).Contains(currentFile.Reference.Id));
+				var latestVersion = release.Versions.FirstOrDefault(v => v.Files.Select(f => f.Reference.Id).Contains(file.Reference.Id));
+				if (latestVersion != null && currentVersion != null && currentVersion.Name == latestVersion.Name) {
+					return null;
+				}
+			}
+			return file;
 		}
 
 		/// <summary>

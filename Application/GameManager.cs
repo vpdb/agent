@@ -146,15 +146,12 @@ namespace VpdbAgent.Application
 			_menuManager.TableFileChanged.Subscribe(OnTableFileChanged);
 			_menuManager.TableFileRemoved.Subscribe(OnTableFileRemoved);
 
-			// when sync settings or IsSynced change, update profile with channel info
-			_settingsManager.Settings.Changed
-				.Where(x => x.PropertyName == "SyncStarred")
-				.Subscribe(_ => UpdateChannelConfig());
-			IDisposable gameSyncToggled = null;
+			// when game is linked or unlinked, update profile with channel info
+			IDisposable gameLinked = null;
 			Games.Changed.Subscribe(_ => {
-				gameSyncToggled?.Dispose();
-				gameSyncToggled = Games
-					.Select(g => g.Changed.Where(x => x.PropertyName == "IsSynced"))
+				gameLinked?.Dispose();
+				gameLinked = Games
+					.Select(g => g.Changed.Where(x => x.PropertyName == "ReleaseId"))
 					.Merge()
 					.Subscribe(__ => UpdateChannelConfig());
 			});
@@ -295,24 +292,12 @@ namespace VpdbAgent.Application
 				return;
 			}
 
-			// server about sync preferences
-			if (_settingsManager.Settings.SyncStarred) {
-
-				// only add non-starred synced releases
-				_settingsManager.AuthenticatedUser.ChannelConfig.SubscribedReleases = Games
-					.Where(g => g.HasRelease)
-					.Where(g => g.IsSynced && !g.Release.Starred)
+			// subscribe all linked releases (we want to at least know about updates for non-synched releases)
+			_settingsManager.AuthenticatedUser.ChannelConfig.SubscribedReleases = Games
+					.Where(g => !string.IsNullOrEmpty(g.ReleaseId))
 					.Select(g => g.ReleaseId)
 					.ToList();
 
-			} else {
-				// add all synched releases
-				_settingsManager.AuthenticatedUser.ChannelConfig.SubscribedReleases = Games
-					.Where(g => g.HasRelease)
-					.Where(g => g.IsSynced)
-					.Select(g => g.ReleaseId)
-					.ToList();
-			}
 			_settingsManager.AuthenticatedUser.ChannelConfig.SubscribeToStarred = _settingsManager.Settings.SyncStarred;
 			_vpdbClient.Api.UpdateProfile(_settingsManager.AuthenticatedUser).Subscribe(user => {
 				_logger.Info("Updated channel profile: {0}, [{1}]", _settingsManager.Settings.SyncStarred,
