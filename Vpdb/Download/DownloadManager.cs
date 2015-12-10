@@ -121,6 +121,9 @@ namespace VpdbAgent.Vpdb.Download
 					return;
 				}
 
+				var version = release.Versions.FirstOrDefault(v => v.Files.Contains(file));
+				_logger.Info($"Found new release to download: v{version?.Name} - {file.Reference.Name}");
+
 				// download
 				DownloadRelease(release, file);
 

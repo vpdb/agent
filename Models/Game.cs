@@ -30,7 +30,7 @@ namespace VpdbAgent.Models
 		private Release _release;
 		private readonly ObservableAsPropertyHelper<bool> _hasRelease;
 		private readonly ObservableAsPropertyHelper<bool> _hasUpdate;
-		private readonly ObservableAsPropertyHelper<TableFile> _updatedRelease;
+		private ObservableAsPropertyHelper<TableFile> _updatedRelease;
 
 		// serialized properties
 		[DataMember] public string Id { get; set; }
@@ -46,7 +46,7 @@ namespace VpdbAgent.Models
 		public bool Exists { get { return _exists; } set { this.RaiseAndSetIfChanged(ref _exists, value); } }
 		public bool HasRelease => _hasRelease.Value;
 		public bool HasUpdate => _hasUpdate.Value;
-		public TableFile UpdatedRelease => _updatedRelease.Value;
+		public TableFile UpdatedRelease => _updatedRelease?.Value;
 		public long FileSize { get; set; }
 		public Platform Platform { get; private set; }
 		public TableFile File { get {
@@ -67,13 +67,27 @@ namespace VpdbAgent.Models
 				.Select(releaseId => releaseId != null)
 				.ToProperty(this, game => game.HasRelease, out _hasRelease);
 
-			this.WhenAnyValue(game => game.Release, game => game.FileId, (release, fileId) => new { game = this, release })
-				.Select(x => downloadManager.FindLatestFile(x.release, x.game.File))
-				.ToProperty(this, game => game.UpdatedRelease, out _updatedRelease);
+			// watch versions and release for updates
+			this.WhenAnyValue(g => g.Release).Subscribe(release => {
+				if (release == null) {
+					return;
+				}
+				var versionsUpdated = release.Versions.Changed.Select(_ => Unit.Default);
+				var releaseOrFileUpdated = this.WhenAnyValue(game => game.Release, game => game.FileId).Select(_ => Unit.Default);
+				versionsUpdated.Merge(releaseOrFileUpdated)
+					.Select(x => downloadManager.FindLatestFile(Release, File))
+					.ToProperty(this, game => game.UpdatedRelease, out _updatedRelease);
+			});
 
+			// watch updated file for hasUpdate
 			this.WhenAnyValue(game => game.UpdatedRelease)
 				.Select(update => update != null)
 				.ToProperty(this, game => game.HasUpdate, out _hasUpdate);
+
+			// download game when available
+			//this.WhenAnyValue(game => game.UpdatedRelease)
+			//	.Where(update => update != null && IsSynced)
+			//	.Subscribe(update => { downloadManager.DownloadRelease(ReleaseId, File); });
 		}
 
 		public Game(PinballXGame xmlGame, Platform platform, GlobalDatabase db) : this()
@@ -87,31 +101,6 @@ namespace VpdbAgent.Models
 			Update(platform, db);
 			UpdateFromGame(xmlGame, platform.TablePath);
 			return this;
-		}
-
-		/// <summary>
-		/// Checks if the given release has a newer version than the one
-		/// referenced in the game.
-		/// </summary>
-		/// <param name="release">Freshly obtained release from VPDB</param>
-		/// <returns>The newer file if available, null if no update available</returns>
-		public TableFile FindUpdate2(Release release)
-		{
-			if (FileId == null || release == null) {
-				return null;
-			}
-
-			// for now, only orientation is checked. todo add more configurable attributes.
-			var files = release.Versions
-				.SelectMany(version => version.Files)
-				.Where(file => file.Flavor.Orientation == Flavor.OrientationValue.FS)
-				.ToList();
-
-			files.Sort((a, b) => b.ReleasedAt.CompareTo(a.ReleasedAt));
-
-			var latestFile = files[0];
-			var updatedRelease = !latestFile.Reference.Id.Equals(FileId) ? latestFile : null;
-			return updatedRelease;
 		}
 
 		private void Update(Platform platform, GlobalDatabase db)

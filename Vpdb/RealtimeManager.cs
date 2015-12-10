@@ -56,7 +56,7 @@ namespace VpdbAgent.Vpdb
 			var newReleaseVersion = new Subject<JObject>();
 			userChannel.Bind("star", data => { star.OnNext(data as JObject); });
 			userChannel.Bind("unstar", data => { unstar.OnNext(data as JObject); });
-			userChannel.Bind("new_release_version", data => { unstar.OnNext(data as JObject); });
+			userChannel.Bind("new_release_version", data => { newReleaseVersion.OnNext(data as JObject); });
 
 			// star
 			star.ObserveOn(RxApp.MainThreadScheduler)

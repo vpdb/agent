@@ -10,7 +10,7 @@ namespace VpdbAgent.Vpdb.Models
 	{
 		private bool _starred;
 		private string _name;
-		private List<Version> _versions;
+		private ReactiveList<Version> _versions;
 		private Thumb _thumb;
 
 		[DataMember] public string Id { get; set; }
@@ -21,7 +21,7 @@ namespace VpdbAgent.Vpdb.Models
 		[DataMember] public Game Game { get; set; }
 
 		[DataMember] public Thumb Thumb { get { return _thumb; } set { this.RaiseAndSetIfChanged(ref _thumb, value); } }
-		[DataMember] public List<Version> Versions { get { return _versions; } set { this.RaiseAndSetIfChanged(ref _versions, value); } }
+		[DataMember] public ReactiveList<Version> Versions { get { return _versions; } set { this.RaiseAndSetIfChanged(ref _versions, value); } }
 		[DataMember] public bool Starred { get { return _starred; } set { this.RaiseAndSetIfChanged(ref _starred, value); } }
 
 		// convenience methods
@@ -51,12 +51,14 @@ namespace VpdbAgent.Vpdb.Models
 			Game = release.Game;
 			Starred = release.Starred;
 
-			foreach (var version in release.Versions.ToList()) {
-				var existingVersion = Versions.FirstOrDefault(v => version.Name.Equals(v.Name));
-				if (existingVersion != null) {
-					Versions.Remove(existingVersion);
+			using (Versions.SuppressChangeNotifications()) {
+				foreach (var version in release.Versions) {
+					var existingVersion = Versions.FirstOrDefault(v => version.Name.Equals(v.Name));
+					if (existingVersion != null) {
+						Versions.Remove(existingVersion);
+					}
+					Versions.Add(version);
 				}
-				Versions.Add(version);
 			}
 		}
 
