@@ -181,13 +181,15 @@ namespace VpdbAgent.Application
 		public IGameManager LinkRelease(Game game, VpdbRelease release, string fileId)
 		{
 			_logger.Info("Linking {0} to {1} ({2})", game, release, fileId);
-			UpdateReleaseData(release, game);
-			game.FileId = fileId;
+			UpdateReleaseData(release);
 			game.ReleaseId = release.Id;
+			game.FileId = fileId;
+			game.Release = release;
+			_databaseManager.Save();
 
 			// also update in case we didn't catch the last version.
 			_vpdbClient.Api.GetRelease(release.Id).Subscribe(updatedRelease => {
-				UpdateReleaseData(updatedRelease, game);
+				UpdateReleaseData(updatedRelease);
 				_databaseManager.Save();
 
 			}, exception => _vpdbClient.HandleApiError(exception, "retrieving release details during linking"));
@@ -270,7 +272,8 @@ namespace VpdbAgent.Application
 				var game = Games.FirstOrDefault(g => !string.IsNullOrEmpty(g.ReleaseId) && g.ReleaseId.Equals(msg.ReleaseId));
 				if (game != null) {
 					_vpdbClient.Api.GetFullRelease(msg.ReleaseId)
-						.Subscribe(rls => UpdateReleaseData(rls, game), exception => _vpdbClient.HandleApiError(exception, "while retrieving updated release"));
+						.Subscribe(UpdateReleaseData, 
+							exception => _vpdbClient.HandleApiError(exception, "while retrieving updated release"));
 				}
 			});
 		}
@@ -357,13 +360,10 @@ namespace VpdbAgent.Application
 		/// <summary>
 		/// Updates the database with updated release data for a given release
 		/// or adds it if not available.
-		/// 
-		/// Also updates links on local games if found.
 		/// </summary>
 		/// <param name="release">Release to update or add</param>
-		/// <param name="game">If known, provide local game for faster retrieval</param>
 		/// <returns>Local game if provided or found, null otherwise</returns>
-		private Game UpdateReleaseData(VpdbRelease release, Game game = null)
+		private void UpdateReleaseData(VpdbRelease release)
 		{
 			if (!_databaseManager.Database.Releases.ContainsKey(release.Id)) {
 				_databaseManager.Database.Releases.Add(release.Id, release);
@@ -371,16 +371,6 @@ namespace VpdbAgent.Application
 			} else {
 				_databaseManager.Database.Releases[release.Id].Update(release);
 			}
-
-			// also update the game's release link. todo check perf and use a map if too slow
-			if (game == null) {
-				game = Games.FirstOrDefault(g => g.ReleaseId == release.Id);
-			}
-			if (game != null) {
-				game.Release = _databaseManager.Database.Releases[release.Id];
-			}
-
-			return game;
 		}
 
 		/// <summary>
@@ -391,8 +381,11 @@ namespace VpdbAgent.Application
 		/// <param name="job">Download job that finished</param>
 		private void OnReleaseDownloaded(Job job)
 		{
+			// find release locally
+			var game = Games.FirstOrDefault(g => g.ReleaseId == job.Release.Id);
+
 			// add release
-			var game = UpdateReleaseData(job.Release);
+			UpdateReleaseData(job.Release);
 			_databaseManager.Save();
 
 			// add or update depending if found or not
