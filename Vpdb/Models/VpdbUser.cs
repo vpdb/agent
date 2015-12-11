@@ -9,15 +9,15 @@ using Newtonsoft.Json.Converters;
 
 namespace VpdbAgent.Vpdb.Models
 {
-	public class User
+	public class VpdbUser
 	{
 		public string Id { get; set; }
 		public string Name { get; set; }
 		public string Username { get; set; }
 		public string GravatarId { get; set; }
-		public UserCounter Counter { get; set; }
+		public VpdbCounter Counter { get; set; }
 
-		public class UserCounter
+		public class VpdbCounter
 		{
 			public int Comments { get; set; }
 			public int Downloads { get; set; }
@@ -25,19 +25,19 @@ namespace VpdbAgent.Vpdb.Models
 		}
 	}
 
-	public class UserFull : User
+	public class VpdbUserFull : VpdbUser
 	{
-		public PlanDetails Plan { get; set; }
+		public VpdbPlan Plan { get; set; }
 		public string Provider { get; set; }
 		public string Email { get; set; }
 		public string CreatedAt { get; set; }
 		public bool IsActive { get; set; }
 		public List<string> Roles { get; set; }
-		public ChannelConfigDetails ChannelConfig { get; set; }
-		public Permission Permissions { get; set; }
-		public QuotaDetails Quota { get; set; }
+		public VpdbChannelConfig ChannelConfig { get; set; }
+		public VpdbPermission Permissions { get; set; }
+		public VpdbQuota Quota { get; set; }
 
-		public class Permission
+		public class VpdbPermission
 		{
 			public List<string> Users { get; set; }
 			public List<string> Roles { get; set; }
@@ -54,30 +54,30 @@ namespace VpdbAgent.Vpdb.Models
 			public List<string> Messages { get; set; }
 		}
 
-		public class ChannelConfigDetails
+		public class VpdbChannelConfig
 		{
 			public string ApiKey { get; set; }
 			public List<string> SubscribedReleases { get; set; }
 			public bool SubscribeToStarred { get; set; }
 		}
 
-		public class PlanDetails
+		public class VpdbPlan
 		{
 			public string Id { get; set; }
 			public bool AppTokensEnabled { get; set; }
 			public bool PushNotificationsEnabled { get; set; }
 		}
 
-		public class QuotaDetails
+		public class VpdbQuota
 		{
 			public int Limit { get; set; }
-			public Period Period { get; set; }
+			public VpdbPeriod Period { get; set; }
 			public int Remaining { get; set; }
 			public long Reset { get; set; }
 			public bool Unlimited { get; set; }
 		}
 
-		public enum Period
+		public enum VpdbPeriod
 		{
 			Minute, Hour, Day, Week, Never
 		}

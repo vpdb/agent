@@ -1,4 +1,5 @@
 ﻿using System.Xml.Serialization;
+using VpdbAgent.Models;
 
 namespace VpdbAgent.PinballX.Models
 {
@@ -8,9 +9,17 @@ namespace VpdbAgent.PinballX.Models
 	
 		// "official hyperpin" fields
 		// ----------------------------------
+
+		/// <summary>
+		/// Filename without extension and path. Maps to <see cref="Game.Filename"/>,
+		/// apart from the latter including extension if file exists.
+		/// </summary>
 		[XmlAttribute("name")]
 		public string Filename { get; set; }
 
+		/// <summary>
+		/// The identifier used also for media. Maps to <see cref="Game.Id"/>.
+		/// </summary>
 		[XmlElement("description")]
 		public string Description { get; set; }
 

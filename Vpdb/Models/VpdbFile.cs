@@ -1,22 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Navigation;
 
 namespace VpdbAgent.Vpdb.Models
 {
-	public class FileReference
+	public class VpdbFile
 	{
 		public string Id { get; set; }
 		public string Name { get { return _name ?? Path.GetFileName(Url); } set { _name = value; } }
 		public long Bytes { get; set; }
 		public string MimeType { get; set; }
 		public string FileType { get; set; }
-		public Dictionary<string, FileVariation> Variations { get; set; }
-		public FileCounter Counter { get; set; }
+		public Dictionary<string, VpdbVariation> Variations { get; set; }
+		public VpdbCounter Counter { get; set; }
 		public bool IsActive { get; set; }
 		public bool IsProtected { get; set; }
 		public string Url { get; set; }
@@ -29,7 +24,7 @@ namespace VpdbAgent.Vpdb.Models
 		}
 	}
 
-	public class FileVariation
+	public class VpdbVariation
 	{
 		public string MimeType { get; set; }
 		public long Bytes { get; set; }
@@ -44,7 +39,7 @@ namespace VpdbAgent.Vpdb.Models
 		}
 	}
 
-	public class FileCounter
+	public class VpdbCounter
 	{
 		public int Downloads { get; set; }
 

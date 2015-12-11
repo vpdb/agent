@@ -9,27 +9,27 @@ namespace VpdbAgent.Vpdb
 	public interface IVpdbApi
 	{
 		[Get("/api/v1/user")]
-		IObservable<UserFull> GetProfile();
+		IObservable<VpdbUserFull> GetProfile();
 
 		[Patch("/api/v1/user")]
-		IObservable<UserFull> UpdateProfile([Body] UserFull profile);
+		IObservable<VpdbUserFull> UpdateProfile([Body] VpdbUserFull profile);
 
 		[Get("/api/v1/games/{id}")]
-		IObservable<Game> GetGame([AliasAs("id")] string gameId);
+		IObservable<VpdbGame> GetGame([AliasAs("id")] string gameId);
 
 		[Get("/api/v1/releases?thumb_format=square&thumb_per_file=1")]
-		Task<List<Release>> GetReleases();
+		Task<List<VpdbRelease>> GetReleases();
 
 		[Get("/api/v1/releases/{id}?thumb_format=square&thumb_per_file=1&full=1")]
-		IObservable<Release> GetFullRelease([AliasAs("id")] string releaseId);
+		IObservable<VpdbRelease> GetFullRelease([AliasAs("id")] string releaseId);
 
 		[Get("/api/v1/releases/{id}?thumb_format=square&thumb_per_file=1")]
-		IObservable<Release> GetRelease([AliasAs("id")] string releaseId);
+		IObservable<VpdbRelease> GetRelease([AliasAs("id")] string releaseId);
 
 		[Get("/api/v1/releases?thumb_format=square&thumb_per_file=1")]
-		IObservable<List<Release>> GetReleasesBySize([AliasAs("filesize")] long filesize, [AliasAs("threshold")] long threshold);
+		IObservable<List<VpdbRelease>> GetReleasesBySize([AliasAs("filesize")] long filesize, [AliasAs("threshold")] long threshold);
 
 		[Get("/api/v1/releases?thumb_format=square&thumb_per_file=1")]
-		IObservable<List<Release>> GetReleasesByIds([AliasAs("ids")] string releases);
+		IObservable<List<VpdbRelease>> GetReleasesByIds([AliasAs("ids")] string releases);
 	}
 }

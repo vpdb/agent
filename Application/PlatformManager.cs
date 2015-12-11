@@ -24,8 +24,8 @@ namespace VpdbAgent.Application
 		/// </summary>
 		ReactiveList<Platform> Platforms { get; }
 
-		Platform FindPlatform(TableFile tableFile);
-		Platform FindPlatform(TableFile.Platform platform);
+		Platform FindPlatform(VpdbTableFile tableFile);
+		Platform FindPlatform(VpdbTableFile.VpdbPlatform platform);
 	}
 
 	public class PlatformManager : IPlatformManager
@@ -61,7 +61,7 @@ namespace VpdbAgent.Application
 			.Subscribe(UpdatePlatform);
 		}
 
-		public Platform FindPlatform(TableFile tableFile)
+		public Platform FindPlatform(VpdbTableFile tableFile)
 		{
 			if (tableFile?.Compatibility == null || tableFile.Compatibility.Count == 0) {
 				return null;
@@ -69,14 +69,14 @@ namespace VpdbAgent.Application
 			return FindPlatform(tableFile.Compatibility[0].Platform);
 		}
 
-		public Platform FindPlatform(TableFile.Platform platform)
+		public Platform FindPlatform(VpdbTableFile.VpdbPlatform platform)
 		{
 			string platformName;
 			switch (platform) {
-				case TableFile.Platform.VP:
+				case VpdbTableFile.VpdbPlatform.VP:
 					platformName = "Visual Pinball";
 					break;
-				case TableFile.Platform.FP:
+				case VpdbTableFile.VpdbPlatform.FP:
 					platformName = "Future Pinball";
 					break;
 				default:

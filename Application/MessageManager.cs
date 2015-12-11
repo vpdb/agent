@@ -6,7 +6,6 @@ using Refit;
 using VpdbAgent.Models;
 using VpdbAgent.Vpdb.Models;
 using Game = VpdbAgent.Models.Game;
-using Version = VpdbAgent.Vpdb.Models.Version;
 
 namespace VpdbAgent.Application
 {
@@ -26,7 +25,7 @@ namespace VpdbAgent.Application
 		/// <param name="file">File downloaded</param>
 		/// <param name="bytesPerSecond">Download speed in bytes per second</param>
 		/// <returns>Created message</returns>
-		Message LogReleaseDownloaded(Release release, Version version, FileReference file, double bytesPerSecond);
+		Message LogReleaseDownloaded(VpdbRelease release, VpdbVersion version, VpdbFile file, double bytesPerSecond);
 
 		/// <summary>
 		/// Logs that a release has been linked to a local game
@@ -35,7 +34,7 @@ namespace VpdbAgent.Application
 		/// <param name="release">Release that has been linked to the game</param>
 		/// <param name="fileId">File ID of the file of the release that was linked</param>
 		/// <returns>Created message</returns>
-		Message LogReleaseLinked(Game game, Release release, string fileId);
+		Message LogReleaseLinked(Game game, VpdbRelease release, string fileId);
 
 		/// <summary>
 		/// Logs a generic error.
@@ -79,7 +78,7 @@ namespace VpdbAgent.Application
 			_crashManager = crashManager;
 		}
 
-		public Message LogReleaseDownloaded(Release release, Version version, FileReference file, double bytesPerSecond)
+		public Message LogReleaseDownloaded(VpdbRelease release, VpdbVersion version, VpdbFile file, double bytesPerSecond)
 		{
 			var msg = new Message(MessageType.ReleaseDownloaded, MessageLevel.Info, new Dictionary<string, string> {
 				{ DataRelease, release.Id },
@@ -92,7 +91,7 @@ namespace VpdbAgent.Application
 			return Log(msg);
 		}
 
-		public Message LogReleaseLinked(Game game, Release release, string fileId)
+		public Message LogReleaseLinked(Game game, VpdbRelease release, string fileId)
 		{
 			var msg = new Message(MessageType.ReleaseLinked, MessageLevel.Info, new Dictionary<string, string> {
 				{ DataGameName, game.Id },

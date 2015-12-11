@@ -8,13 +8,13 @@ using ReactiveUI;
 
 namespace VpdbAgent.Vpdb.Models
 {
-	public class Game
+	public class VpdbGame
 	{
 		public string Id { get; set; }
 		public string Title { get; set; }
 		public string Manufacturer { get; set; }
 		public int Year { get; set; }
-		public Dictionary<string, FileReference> Media { get; set; }
+		public Dictionary<string, VpdbFile> Media { get; set; }
 
 		[JsonIgnore]
 		public string DisplayName => Manufacturer != null ? $"{Title} ({Manufacturer} {Year})" : Title;

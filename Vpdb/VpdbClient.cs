@@ -230,7 +230,7 @@ namespace VpdbAgent.Vpdb
 		/// Connects to Pusher and subscribes to the user's private channel.
 		/// </summary>
 		/// <param name="user"></param>
-		private void SetupPusher(UserFull user)
+		private void SetupPusher(VpdbUserFull user)
 		{
 
 			// initialize pusher

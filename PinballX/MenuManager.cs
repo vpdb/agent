@@ -238,6 +238,7 @@ namespace VpdbAgent.PinballX
 		public IMenuManager UpdateGame(string oldFileName, Game jsonGame)
 		{
 			var xmlPath = Path.Combine(jsonGame.Platform.DatabasePath, jsonGame.DatabaseFile);
+			var newFilename = Path.GetFileNameWithoutExtension(jsonGame.Filename);
 
 			if (_settingsManager.Settings.ReformatXml) {
 
@@ -245,13 +246,13 @@ namespace VpdbAgent.PinballX
 				var menu = UnmarshallXml(xmlPath);
 
 				// get game
-				var game = menu.Games.FirstOrDefault(g => g.Filename.Equals(oldFileName));
+				var game = menu.Games.FirstOrDefault(g => g.Filename == oldFileName);
 				if (game == null) {
 					throw new InvalidOperationException($"Cannot find game with ID {jsonGame.Id} in {xmlPath}.");
 				}
 
 				// update game
-				game.Filename = jsonGame.FileId;
+				game.Filename = newFilename;
 
 				// save xml
 				MarshallXml(menu, xmlPath);
@@ -259,7 +260,7 @@ namespace VpdbAgent.PinballX
 			} else {
 
 				var xml = File.ReadAllText(xmlPath);
-				xml = xml.Replace($"name=\"{oldFileName}\"", $"name=\"{jsonGame.FileId}\"");
+				xml = xml.Replace($"name=\"{oldFileName}\"", $"name=\"{newFilename}\"");
 				File.WriteAllText(xmlPath, xml);
 
 				_logger.Info("Replaced name \"{0}\" with \"{1}\" in {2}.", oldFileName, jsonGame.FileId, xmlPath);

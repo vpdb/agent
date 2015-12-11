@@ -61,7 +61,7 @@ namespace VpdbAgent.Application
 		/// </summary>
 		/// <param name="user">Logged user</param>
 		/// <returns>This instance</returns>
-		public CrashManager SetUser(UserFull user)
+		public CrashManager SetUser(VpdbUserFull user)
 		{
 			_raygun.UserInfo = new RaygunIdentifierMessage(user.Id) {
 				IsAnonymous = false,

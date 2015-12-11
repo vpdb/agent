@@ -70,7 +70,7 @@ namespace VpdbAgent.Application
 		/// <param name="release">Release from VPDB</param>
 		/// <param name="fileId">File ID at VPDB</param>
 		/// <returns>This instance</returns>
-		IGameManager LinkRelease(Game game, Release release, string fileId);
+		IGameManager LinkRelease(Game game, VpdbRelease release, string fileId);
 
 		/// <summary>
 		/// Explicitly enables syncing of a game.
@@ -178,11 +178,12 @@ namespace VpdbAgent.Application
 			return this;
 		}
 
-		public IGameManager LinkRelease(Game game, Release release, string fileId)
+		public IGameManager LinkRelease(Game game, VpdbRelease release, string fileId)
 		{
 			_logger.Info("Linking {0} to {1} ({2})", game, release, fileId);
 			UpdateReleaseData(release, game);
 			game.FileId = fileId;
+			game.ReleaseId = release.Id;
 
 			// also update in case we didn't catch the last version.
 			_vpdbClient.Api.GetRelease(release.Id).Subscribe(updatedRelease => {
@@ -362,7 +363,7 @@ namespace VpdbAgent.Application
 		/// <param name="release">Release to update or add</param>
 		/// <param name="game">If known, provide local game for faster retrieval</param>
 		/// <returns>Local game if provided or found, null otherwise</returns>
-		private Game UpdateReleaseData(Release release, Game game = null)
+		private Game UpdateReleaseData(VpdbRelease release, Game game = null)
 		{
 			if (!_databaseManager.Database.Releases.ContainsKey(release.Id)) {
 				_databaseManager.Database.Releases.Add(release.Id, release);
@@ -469,7 +470,7 @@ namespace VpdbAgent.Application
 			var oldFileName = Path.GetFileNameWithoutExtension(game.Filename);
 				
 			// update and save json
-			game.FileId = Path.GetFileNameWithoutExtension(job.FilePath);
+			game.Filename = Path.GetFileName(job.FilePath);
 
 			// update and save xml
 			_menuManager.UpdateGame(oldFileName, game);

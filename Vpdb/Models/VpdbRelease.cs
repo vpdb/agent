@@ -6,22 +6,22 @@ using ReactiveUI;
 
 namespace VpdbAgent.Vpdb.Models
 {
-	public class Release : ReactiveObject
+	public class VpdbRelease : ReactiveObject
 	{
 		private bool _starred;
 		private string _name;
-		private ReactiveList<Version> _versions;
-		private Thumb _thumb;
+		private ReactiveList<VpdbVersion> _versions;
+		private VpdbThumb _thumb;
 
 		[DataMember] public string Id { get; set; }
 		[DataMember] public string Name { get { return _name; } set { this.RaiseAndSetIfChanged(ref _name, value); } }
 		[DataMember] public DateTime CreatedAt { get; set; }
-		[DataMember] public List<Author> Authors { get; set; }
+		[DataMember] public List<VpdbAuthor> Authors { get; set; }
 		[DataMember] public ReleaseCounter Counter { get; set; }
-		[DataMember] public Game Game { get; set; }
+		[DataMember] public VpdbGame Game { get; set; }
 
-		[DataMember] public Thumb Thumb { get { return _thumb; } set { this.RaiseAndSetIfChanged(ref _thumb, value); } }
-		[DataMember] public ReactiveList<Version> Versions { get { return _versions; } set { this.RaiseAndSetIfChanged(ref _versions, value); } }
+		[DataMember] public VpdbThumb Thumb { get { return _thumb; } set { this.RaiseAndSetIfChanged(ref _thumb, value); } }
+		[DataMember] public ReactiveList<VpdbVersion> Versions { get { return _versions; } set { this.RaiseAndSetIfChanged(ref _versions, value); } }
 		[DataMember] public bool Starred { get { return _starred; } set { this.RaiseAndSetIfChanged(ref _starred, value); } }
 
 		// convenience methods
@@ -42,7 +42,7 @@ namespace VpdbAgent.Vpdb.Models
 		/// Updates a release from the backend.
 		/// </summary>
 		/// <param name="release"></param>
-		public void Update(Release release)
+		public void Update(VpdbRelease release)
 		{
 			Name = release.Name;
 			CreatedAt = release.CreatedAt;

@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Runtime.Serialization;
 using ReactiveUI;
 
 namespace VpdbAgent.Vpdb.Models
 {
-	public class Image : ReactiveObject
+	public class VpdbImage : ReactiveObject
 	{
 		private string _url;
 

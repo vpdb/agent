@@ -54,7 +54,7 @@ namespace VpdbAgent.Application
 		/// <summary>
 		/// The currently authenticated user at VPDB
 		/// </summary>
-		UserFull AuthenticatedUser { get; }
+		VpdbUserFull AuthenticatedUser { get; }
 
 		/// <summary>
 		/// Produces a value each time settings are updated or available.
@@ -66,7 +66,7 @@ namespace VpdbAgent.Application
 		/// Produces a value each time the API tried to authenticate. Value is null
 		/// if authentication failed.
 		/// </summary>
-		IObservable<UserFull> ApiAuthenticated { get; }
+		IObservable<VpdbUserFull> ApiAuthenticated { get; }
 
 		/// <summary>
 		/// Validates current settings and returns a list of errors.
@@ -108,17 +108,17 @@ namespace VpdbAgent.Application
 		public Settings Settings { get; } = new Settings();
 
 		public bool CanCancel { get { return _canCancel; } set { this.RaiseAndSetIfChanged(ref _canCancel, value); } }
-		public UserFull AuthenticatedUser { get { return _authenticatedUser; } set { this.RaiseAndSetIfChanged(ref _authenticatedUser, value); } }
+		public VpdbUserFull AuthenticatedUser { get { return _authenticatedUser; } set { this.RaiseAndSetIfChanged(ref _authenticatedUser, value); } }
 
-		private readonly Subject<UserFull> _apiAuthenticated = new Subject<UserFull>();
+		private readonly Subject<VpdbUserFull> _apiAuthenticated = new Subject<VpdbUserFull>();
 		private readonly BehaviorSubject<Settings> _settingsAvailable = new BehaviorSubject<Settings>(null);
 		private readonly RegistryKey _registryKey = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", true);
 
-		public IObservable<UserFull> ApiAuthenticated => _apiAuthenticated;
+		public IObservable<VpdbUserFull> ApiAuthenticated => _apiAuthenticated;
 		public IObservable<Settings> SettingsAvailable => _settingsAvailable;
 
 
-		private UserFull _authenticatedUser;
+		private VpdbUserFull _authenticatedUser;
 		private bool _canCancel;
 
 		private readonly Logger _logger;
@@ -196,7 +196,7 @@ namespace VpdbAgent.Application
 			return errors;
 		}
 
-		private void OnValidationResult(UserFull user)
+		private void OnValidationResult(VpdbUserFull user)
 		{
 			System.Windows.Application.Current.Dispatcher.Invoke(delegate {
 				if (user != null) {

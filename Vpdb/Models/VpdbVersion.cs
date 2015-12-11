@@ -10,11 +10,11 @@ using System.Windows.Forms;
 
 namespace VpdbAgent.Vpdb.Models
 {
-	public class Version : ReactiveObject
+	public class VpdbVersion : ReactiveObject
 	{
 		[JsonProperty(PropertyName = "version")]
 		[DataMember] public string Name { get; set; }
-		[DataMember] public List<TableFile> Files { get; set; }
+		[DataMember] public List<VpdbTableFile> Files { get; set; }
 
 		public override string ToString()
 		{

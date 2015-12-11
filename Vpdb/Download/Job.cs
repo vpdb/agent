@@ -13,7 +13,6 @@ using ReactiveUI;
 using Splat;
 using VpdbAgent.Models;
 using VpdbAgent.Vpdb.Models;
-using Version = VpdbAgent.Vpdb.Models.Version;
 
 namespace VpdbAgent.Vpdb.Download
 {
@@ -36,7 +35,7 @@ namespace VpdbAgent.Vpdb.Download
 
 		// persisted properties
 		[DataMember]
-		public Release Release {
+		public VpdbRelease Release {
 			get { return _release; }
 			set {
 				_release = value;
@@ -45,7 +44,7 @@ namespace VpdbAgent.Vpdb.Download
 				}
 		} }
 		[DataMember]
-		public TableFile TableFile {
+		public VpdbTableFile TableFile {
 			get { return _tableFile; }
 			set {
 				_tableFile = value;
@@ -55,7 +54,7 @@ namespace VpdbAgent.Vpdb.Download
 				}
 		} }
 		[DataMember]
-		public FileReference File
+		public VpdbFile File
 		{
 			get { return _file; }
 			set {
@@ -69,10 +68,10 @@ namespace VpdbAgent.Vpdb.Download
 		[DataMember] public DateTime FinishedAt { get; set; }
 		[DataMember] public long TransferredBytes { get; set; }
 		[DataMember] public string ErrorMessage { get; set; }
-		[DataMember] public Image Thumb { get; private set; }
+		[DataMember] public VpdbImage Thumb { get; private set; }
 		[DataMember] [JsonConverter(typeof(StringEnumConverter))] public JobStatus Status { get; set; } = JobStatus.Queued;
 		[DataMember] [JsonConverter(typeof(StringEnumConverter))] public FileType FileType { get; set; }
-		[DataMember] [JsonConverter(typeof(StringEnumConverter))] public TableFile.Platform Platform { get; set; }
+		[DataMember] [JsonConverter(typeof(StringEnumConverter))] public VpdbTableFile.VpdbPlatform Platform { get; set; }
 
 		// business props
 		public Uri Uri { get; private set; }
@@ -81,7 +80,7 @@ namespace VpdbAgent.Vpdb.Download
 		// convenience props
 		public string FilePath { get; set; }
 		public string FileName { get; private set; }
-		public Version Version { get; private set; }
+		public VpdbVersion Version { get; private set; }
 		public bool IsFinished => Status != JobStatus.Transferring && Status != JobStatus.Queued;
 		public TimeSpan DownloadTime => FinishedAt - StartedAt;
 		public double DownloadBytesPerSecond => 1000d * TransferredBytes / DownloadTime.TotalMilliseconds;
@@ -91,9 +90,9 @@ namespace VpdbAgent.Vpdb.Download
 		public IObservable<DownloadProgressChangedEventArgs> WhenDownloadProgresses => _whenDownloadProgresses;
 
 		// fields
-		private TableFile _tableFile;
-		private FileReference _file;
-		private Release _release;
+		private VpdbTableFile _tableFile;
+		private VpdbFile _file;
+		private VpdbRelease _release;
 		private readonly Subject<JobStatus> _whenStatusChanges = new Subject<JobStatus>();
 		private readonly Subject<DownloadProgressChangedEventArgs> _whenDownloadProgresses = new Subject<DownloadProgressChangedEventArgs>();
 		private CancellationToken _cancellationToken;
@@ -120,7 +119,7 @@ namespace VpdbAgent.Vpdb.Download
 		/// <param name="tableFile">File of the release to be downloaded</param>
 		/// <param name="filetype">File type</param>
 		/// <param name="platform">Platform the file belongs to</param>
-		public Job(Release release, TableFile tableFile, FileType filetype, TableFile.Platform platform) : this()
+		public Job(VpdbRelease release, VpdbTableFile tableFile, FileType filetype, VpdbTableFile.VpdbPlatform platform) : this()
 		{
 			TableFile = tableFile;
 			Release = release;
@@ -137,7 +136,7 @@ namespace VpdbAgent.Vpdb.Download
 		/// <param name="file">File to be downloaded</param>
 		/// <param name="filetype">File type</param>
 		/// <param name="platform">Platform the file belongs to</param>
-		public Job(Release release, FileReference file, FileType filetype, TableFile.Platform platform) : this()
+		public Job(VpdbRelease release, VpdbFile file, FileType filetype, VpdbTableFile.VpdbPlatform platform) : this()
 		{
 			Release = release;
 			File = file;

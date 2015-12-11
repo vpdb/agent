@@ -23,7 +23,7 @@ namespace VpdbAgent.Models
 		/// updated at every application start as well as during runtime through
 		/// push messages.
 		/// </summary>
-		[DataMember] public Dictionary<string, Release> Releases { set; get; } = new Dictionary<string, Release>();
+		[DataMember] public Dictionary<string, VpdbRelease> Releases { set; get; } = new Dictionary<string, VpdbRelease>();
 
 		/// <summary>
 		/// Contains all download jobs, current and previous, aborted, successful and erroneous.

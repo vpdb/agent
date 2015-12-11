@@ -34,7 +34,7 @@ namespace VpdbAgent.Vpdb.Download
 		/// <param name="releaseId">ID of the release</param>
 		/// <param name="currentFile">The current/previous file of the release or null if new release</param>
 		/// <returns>This instance</returns>
-		IDownloadManager DownloadRelease(string releaseId, TableFile currentFile = null);
+		IDownloadManager DownloadRelease(string releaseId, VpdbTableFile currentFile = null);
 
 		/// <summary>
 		/// An observable that produces a value when a release finished 
@@ -56,7 +56,7 @@ namespace VpdbAgent.Vpdb.Download
 		/// <param name="release"></param>
 		/// <param name="currentFile"></param>
 		/// <returns>The most recent file that matches user's flavor prefs and is not the same version as provided, or null if not found</returns>
-		TableFile FindLatestFile(Release release, TableFile currentFile = null);
+		VpdbTableFile FindLatestFile(VpdbRelease release, VpdbTableFile currentFile = null);
 	}
 
 	public class DownloadManager : IDownloadManager
@@ -106,7 +106,7 @@ namespace VpdbAgent.Vpdb.Download
 			});
 		}
 
-		public IDownloadManager DownloadRelease(string id, TableFile currentFile = null)
+		public IDownloadManager DownloadRelease(string id, VpdbTableFile currentFile = null)
 		{
 			// retrieve release details
 			_logger.Info("Retrieving details for release {0}...", id);
@@ -132,7 +132,7 @@ namespace VpdbAgent.Vpdb.Download
 			return this;
 		}
 
-		public TableFile FindLatestFile(Release release, TableFile currentFile = null)
+		public VpdbTableFile FindLatestFile(VpdbRelease release, VpdbTableFile currentFile = null)
 		{
 			if (release == null) {
 				return null;
@@ -162,7 +162,7 @@ namespace VpdbAgent.Vpdb.Download
 		/// </summary>
 		/// <param name="release">Release to download</param>
 		/// <param name="tableFile">File of the release to download</param>
-		private void DownloadRelease(Release release, TableFile tableFile)
+		private void DownloadRelease(VpdbRelease release, VpdbTableFile tableFile)
 		{
 			// also fetch game data for media & co
 			_vpdbClient.Api.GetGame(release.Game.Id).Subscribe(game => 
@@ -259,7 +259,7 @@ namespace VpdbAgent.Vpdb.Download
 		/// <param name="tableFile">File to check</param>
 		/// <param name="currentFile">The current/previous file of the release or null if new release</param>
 		/// <returns>Returns true if the primary or secondary flavor setting of ALL flavors matches, false otherwise.</returns>
-		private bool FlavorMatches(TableFile tableFile, TableFile currentFile)
+		private bool FlavorMatches(VpdbTableFile tableFile, VpdbTableFile currentFile)
 		{
 			return _flavorMatchers.TrueForAll(matcher => matcher.Matches(tableFile, currentFile));
 		}
@@ -270,7 +270,7 @@ namespace VpdbAgent.Vpdb.Download
 		/// <param name="tableFile">File to check</param>
 		/// <param name="currentFile">The current/previous file of the release or null if new release</param>
 		/// <returns>Total weight of the file based on the user's flavor settings</returns>
-		private int FlavorWeight(TableFile tableFile, TableFile currentFile)
+		private int FlavorWeight(VpdbTableFile tableFile, VpdbTableFile currentFile)
 		{
 			return _flavorMatchers.Sum(matcher => matcher.Weight(tableFile, currentFile));
 		}

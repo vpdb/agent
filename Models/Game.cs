@@ -27,29 +27,65 @@ namespace VpdbAgent.Models
 		private string _fileId;
 		private bool _exists;
 		private bool _isSynced;
-		private Release _release;
+		private VpdbRelease _release;
 		private readonly ObservableAsPropertyHelper<bool> _hasRelease;
 		private readonly ObservableAsPropertyHelper<bool> _hasUpdate;
-		private ObservableAsPropertyHelper<TableFile> _updatedRelease;
+		private ObservableAsPropertyHelper<VpdbTableFile> _updatedRelease;
 
-		// serialized properties
+		/// <summary>
+		/// "ID" of the game within PinballX's platform. 
+		/// Comes from the <c>&lt;description&gt;</c> tag of the XML, usually something
+		/// like: "Theatre of Magic (Midway 1995)"
+		/// </summary>
+		/// <remarks>
+		/// Maps to <see cref="PinballXGame.Description"/>.
+		/// </remarks>
 		[DataMember] public string Id { get; set; }
+
+		/// <summary>
+		/// The entire filename with extension but without path if exists. If file was
+		/// not found, contains only filename without extensions.
+		/// </summary>
+		/// <remarks>
+		/// Maps to <see cref="PinballXGame.Filename"/>.
+		/// </remarks>
 		[DataMember] public string Filename { get; set; }
+
+		/// <summary>
+		/// Entire filename of the XML where the game was defined, without
+		/// path.
+		/// </summary>
 		[DataMember] public string DatabaseFile { get; set; }
+
+		/// <summary>
+		/// True if enabled in PinballX, false otherwise.
+		/// </summary>
 		[DataMember] public bool Enabled { get; set; } = true;
+
+		/// <summary>
+		/// Release ID of the linked release at VPDB.
+		/// </summary>
 		[DataMember] public string ReleaseId { get { return _releaseId; } set { this.RaiseAndSetIfChanged(ref _releaseId, value); } }
+
+		/// <summary>
+		/// File ID of the linked file at VPDB.
+		/// </summary>
 		[DataMember] public string FileId { get { return _fileId; } set { this.RaiseAndSetIfChanged(ref _fileId, value); } }
+
+		/// <summary>
+		/// True if should be updated automatically, false otherwise.
+		/// </summary>
 		[DataMember] public bool IsSynced { get { return _isSynced; } set { this.RaiseAndSetIfChanged(ref _isSynced, value); } }
 
 		// non-serialized props
-		public Release Release { get { return _release; } set { this.RaiseAndSetIfChanged(ref _release, value); } }
+		public VpdbRelease Release { get { return _release; } set { this.RaiseAndSetIfChanged(ref _release, value); } }
 		public bool Exists { get { return _exists; } set { this.RaiseAndSetIfChanged(ref _exists, value); } }
 		public bool HasRelease => _hasRelease.Value;
 		public bool HasUpdate => _hasUpdate.Value;
-		public TableFile UpdatedRelease => _updatedRelease?.Value;
+		public VpdbTableFile UpdatedRelease => _updatedRelease?.Value;
 		public long FileSize { get; set; }
 		public Platform Platform { get; private set; }
-		public TableFile File { get {
+		public VpdbTableFile File { get {
 			return FileId != null && Release != null
 				? Release.Versions.SelectMany(v => v.Files).FirstOrDefault(f => f.Reference.Id == FileId)
 				: null;
@@ -88,6 +124,14 @@ namespace VpdbAgent.Models
 			//this.WhenAnyValue(game => game.UpdatedRelease)
 			//	.Where(update => update != null && IsSynced)
 			//	.Subscribe(update => { downloadManager.DownloadRelease(ReleaseId, File); });
+
+			this.WhenAnyValue(game => game.UpdatedRelease)
+				.Where(update => update != null && IsSynced)
+				.Subscribe(update => {
+					var from = Release.Versions.FirstOrDefault(v => v.Files.Contains(v.Files.FirstOrDefault(f => f.Reference.Id == FileId)));
+					var to = Release.Versions.FirstOrDefault(v => v.Files.Contains(update));
+					Console.WriteLine("Updating from v{0} to v{1}.", from.Name, to.Name);
+				});
 		}
 
 		public Game(PinballXGame xmlGame, Platform platform, GlobalDatabase db) : this()

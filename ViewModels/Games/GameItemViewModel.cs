@@ -10,7 +10,6 @@ using VpdbAgent.Application;
 using VpdbAgent.Vpdb;
 using VpdbAgent.Vpdb.Models;
 using Game = VpdbAgent.Models.Game;
-using Version = VpdbAgent.Vpdb.Models.Version;
 
 namespace VpdbAgent.ViewModels.Games
 {
@@ -25,14 +24,14 @@ namespace VpdbAgent.ViewModels.Games
 		private static readonly IMessageManager MessageManager = Locator.CurrentMutable.GetService<IMessageManager>();
 
 		// commands
-		public ReactiveCommand<List<Release>> IdentifyRelease { get; protected set; }
+		public ReactiveCommand<List<VpdbRelease>> IdentifyRelease { get; protected set; }
 		public ReactiveCommand<object> CloseResults { get; } = ReactiveCommand.Create();
 		public ReactiveCommand<object> SyncToggled { get; } = ReactiveCommand.Create();
 
 		// data
 		public Game Game { get; }
-		public Version Version => _version.Value;
-		public TableFile TableFile => _file.Value;
+		public VpdbVersion Version => _version.Value;
+		public VpdbTableFile TableFile => _file.Value;
 
 		// needed for filters
 		private bool _isVisible = true;
@@ -50,8 +49,8 @@ namespace VpdbAgent.ViewModels.Games
 
 		private readonly ObservableAsPropertyHelper<bool> _showIdentifyButton;
 		private readonly ObservableAsPropertyHelper<bool> _isExecuting;
-		private readonly ObservableAsPropertyHelper<Version> _version;
-		private readonly ObservableAsPropertyHelper<TableFile> _file;
+		private readonly ObservableAsPropertyHelper<VpdbVersion> _version;
+		private readonly ObservableAsPropertyHelper<VpdbTableFile> _file;
 		private bool _hasExecuted;
 		private bool _hasResults;
 
@@ -105,10 +104,9 @@ namespace VpdbAgent.ViewModels.Games
 				}
 			}, exception => VpdbClient.HandleApiError(exception, "identifying a game by file size"));
 
-			// sync button
-			SyncToggled
-				.Where(_ => Game.IsSynced && Game.HasRelease)
-				.Subscribe(_ => { GameManager.Sync(Game); });
+			//SyncToggled
+			//	.Where(_ => Game.IsSynced && Game.HasRelease)
+			//	.Subscribe(_ => { GameManager.Sync(Game); });
 
 			// handle errors
 			IdentifyRelease.ThrownExceptions.Subscribe(e => { Logger.Error(e, "Error matching game."); });
