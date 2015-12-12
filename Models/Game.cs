@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reactive;
@@ -7,6 +8,7 @@ using ReactiveUI;
 using static System.String;
 using System.Reactive.Linq;
 using Splat;
+using VpdbAgent.Application;
 using VpdbAgent.PinballX.Models;
 using VpdbAgent.Vpdb.Download;
 using VpdbAgent.Vpdb.Models;
@@ -21,17 +23,6 @@ namespace VpdbAgent.Models
 	/// </summary>
 	public class Game : ReactiveObject, IComparable<Game>
 	{
-
-		// read/write fields
-		private string _releaseId;
-		private string _fileId;
-		private bool _exists;
-		private bool _isSynced;
-		private VpdbRelease _release;
-		private readonly ObservableAsPropertyHelper<bool> _hasRelease;
-		private readonly ObservableAsPropertyHelper<bool> _hasUpdate;
-		private ObservableAsPropertyHelper<VpdbTableFile> _updatedRelease;
-
 		/// <summary>
 		/// "ID" of the game within PinballX's platform. 
 		/// Comes from the <c>&lt;description&gt;</c> tag of the XML, usually something
@@ -77,19 +68,33 @@ namespace VpdbAgent.Models
 		/// </summary>
 		[DataMember] public bool IsSynced { get { return _isSynced; } set { this.RaiseAndSetIfChanged(ref _isSynced, value); } }
 
+		// dependencies
+		private static readonly IDatabaseManager DatabaseManager = Locator.Current.GetService<IDatabaseManager>();
+		
+		// object lookups
+		public VpdbRelease Release => _release.Value;
+		public VpdbVersion Version => _version.Value;
+		public VpdbTableFile File => _file.Value;
+		private readonly ObservableAsPropertyHelper<VpdbRelease> _release;
+		private readonly ObservableAsPropertyHelper<VpdbVersion> _version;
+		private readonly ObservableAsPropertyHelper<VpdbTableFile> _file;
+
+		// read/write fields
+		private string _releaseId;
+		private string _fileId;
+		private bool _exists;
+		private bool _isSynced;
+		private readonly ObservableAsPropertyHelper<bool> _hasRelease;
+		private readonly ObservableAsPropertyHelper<bool> _hasUpdate;
+		private ObservableAsPropertyHelper<VpdbTableFile> _updatedRelease;
+
 		// non-serialized props
-		public VpdbRelease Release { get { return _release; } set { this.RaiseAndSetIfChanged(ref _release, value); } }
 		public bool Exists { get { return _exists; } set { this.RaiseAndSetIfChanged(ref _exists, value); } }
 		public bool HasRelease => _hasRelease.Value;
 		public bool HasUpdate => _hasUpdate.Value;
 		public VpdbTableFile UpdatedRelease => _updatedRelease?.Value;
 		public long FileSize { get; set; }
 		public Platform Platform { get; private set; }
-		public VpdbTableFile File { get {
-			return FileId != null && Release != null
-				? Release.Versions.SelectMany(v => v.Files).FirstOrDefault(f => f.Reference.Id == FileId)
-				: null;
-		} }
 
 		/// <summary>
 		/// Sets up Output Properties
@@ -102,6 +107,11 @@ namespace VpdbAgent.Models
 			this.WhenAnyValue(game => game.ReleaseId)
 				.Select(releaseId => releaseId != null)
 				.ToProperty(this, game => game.HasRelease, out _hasRelease);
+
+			// notify prop listeners of the objects
+			this.WhenAnyValue(x => x.ReleaseId).Select(releaseId => DatabaseManager.GetRelease(ReleaseId)).ToProperty(this, x => x.Release, out _release);
+			this.WhenAnyValue(x => x.FileId).Select(fileId => DatabaseManager.GetVersion(ReleaseId, fileId)).ToProperty(this, x => x.Version, out _version);
+			this.WhenAnyValue(x => x.FileId).Select(fileId => DatabaseManager.GetFile(ReleaseId, fileId)).ToProperty(this, x => x.File, out _file);
 
 			// watch versions and release for updates
 			this.WhenAnyValue(g => g.Release).Subscribe(release => {
@@ -134,31 +144,26 @@ namespace VpdbAgent.Models
 				});
 		}
 
-		public Game(PinballXGame xmlGame, Platform platform, GlobalDatabase db) : this()
+		public Game(PinballXGame xmlGame, Platform platform) : this()
 		{
-			Update(platform, db);
+			Update(platform);
 			UpdateFromGame(xmlGame, platform.TablePath);
 		}
 
-		internal Game Merge(PinballXGame xmlGame, Platform platform, GlobalDatabase db)
+		public Game Merge(PinballXGame xmlGame, Platform platform)
 		{
-			Update(platform, db);
+			Update(platform);
 			UpdateFromGame(xmlGame, platform.TablePath);
 			return this;
 		}
 
-		private void Update(Platform platform, GlobalDatabase db)
+		private void Update(Platform platform)
 		{
 			Platform = platform;
 
 			// save to disk if these attributes change
 			this.WhenAny(g => g.ReleaseId, g => g.FileId, g => g.IsSynced, (rid, fid, s) => Unit.Default)
 				.Subscribe(Platform.GamePropertyChanged);
-
-			// link release id to release object
-			if (ReleaseId != null && db.Releases.ContainsKey(ReleaseId)) {
-				Release = db.Releases[ReleaseId];
-			}
 		}
 
 		private void UpdateFromGame(PinballXGame xmlGame, string tablePath)
@@ -186,7 +191,6 @@ namespace VpdbAgent.Models
 			if (oldFilename != Filename) {
 				FileId = null;
 				ReleaseId = null;
-				Release = null;
 			}
 		}
 

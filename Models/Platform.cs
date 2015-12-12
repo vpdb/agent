@@ -188,8 +188,8 @@ namespace VpdbAgent.Models
 			foreach (var xmlGame in enumerableXmlGames) {
 				var jsonGame = enumerableGames.FirstOrDefault(g => (g.Id.Equals(xmlGame.Description)));
 				games.Add(jsonGame == null
-					? new Game(xmlGame, this, db)
-					: jsonGame.Merge(xmlGame, this, db)
+					? new Game(xmlGame, this)
+					: jsonGame.Merge(xmlGame, this)
 				);
 			}
 

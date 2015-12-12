@@ -40,6 +40,18 @@ namespace VpdbAgent.Application
 		/// <returns></returns>
 		IDatabaseManager Save();
 
+		VpdbRelease GetRelease(string releaseId);
+
+		/// <summary>
+		/// Returns the version of a given file for a given release
+		/// </summary>
+		/// <param name="fileId">File ID</param>
+		/// <param name="releaseId">Release ID</param>
+		/// <returns>Version or null if either release or file is not found</returns>
+		VpdbVersion GetVersion(string releaseId, string fileId);
+
+		VpdbTableFile GetFile(string releaseId, string fileId);
+
 		/// <summary>
 		/// Adds a new message and saves database.
 		/// </summary>
@@ -84,6 +96,33 @@ namespace VpdbAgent.Application
 		{
 			MarshallDatabase();
 			return this;
+		}
+
+		public VpdbRelease GetRelease(string releaseId)
+		{
+			return releaseId == null || !Database.Releases.ContainsKey(releaseId) ? null : Database.Releases[releaseId];
+		}
+
+		public VpdbVersion GetVersion(string releaseId, string fileId)
+		{
+			if (releaseId == null || !Database.Releases.ContainsKey(releaseId)) {
+				return null;
+			}
+			// todo add map to make it fast
+			return Database.Releases[releaseId].Versions
+				.FirstOrDefault(v => v.Files.Contains(v.Files.FirstOrDefault(f => f.Reference.Id == fileId)));
+		}
+
+		public VpdbTableFile GetFile(string releaseId, string fileId)
+		{
+			
+			if (releaseId == null || !Database.Releases.ContainsKey(releaseId)) {
+				return null;
+			}
+			// todo add map to make it fast
+			return Database.Releases[releaseId].Versions
+					.SelectMany(v => v.Files)
+					.FirstOrDefault(f => f.Reference.Id == fileId);
 		}
 
 		public void Log(Message msg)

@@ -29,7 +29,7 @@
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
-        <c:CachedImage ImageUrl="{Binding TableFile.Thumb.Url}" Width="70" Height="70"
+        <c:CachedImage ImageUrl="{Binding Game.File.Thumb.Url}" Width="70" Height="70"
                     Grid.Column="0" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="0,10,0,0" />
 
         <StackPanel Grid.Column="1" Orientation="Vertical">
@@ -60,10 +60,10 @@
 
             <!-- second row -->
             <TextBlock Visibility="{Binding Path=Game.HasRelease, Converter={StaticResource TrueToVisible}}"
-                       Style="{StaticResource Label}" TextTrimming="CharacterEllipsis" Margin="5,0,0,-5">
+                       Style="{StaticResource Label}" Margin="5,0,0,-5">
                 <TextBlock.Inlines>
-                    <Run Text="{Binding Game.Release.Name}"/>
-                    <Run Text="{Binding Version.Name}" FontWeight="Bold"/>
+                    <Run Text="{Binding Path=Game.Release.Name, UpdateSourceTrigger=PropertyChanged}"/>
+                    <Run Text="{Binding Game.Version.Name}" FontWeight="Bold"/>
                     <Run Text=" by" FontStyle="Italic"/>
                     <Run Text="{Binding Path=Game.Release.AuthorNames, Mode=OneWay}" FontStyle="Italic"/>
                 </TextBlock.Inlines>

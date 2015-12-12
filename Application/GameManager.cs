@@ -73,14 +73,6 @@ namespace VpdbAgent.Application
 		void LinkRelease(Game game, VpdbRelease release, string fileId);
 
 		/// <summary>
-		/// Returns the version of a given file for a given release
-		/// </summary>
-		/// <param name="fileId">File ID</param>
-		/// <param name="releaseId">Release ID</param>
-		/// <returns>Version or null if either release or file is not found</returns>
-		VpdbVersion FindVersion(string fileId, string releaseId);
-
-		/// <summary>
 		/// Explicitly enables syncing of a game.
 		/// </summary>
 		/// <remarks>
@@ -190,7 +182,6 @@ namespace VpdbAgent.Application
 			_vpdbClient.Api.GetRelease(release.Id).Subscribe(updatedRelease => {
 				_logger.Info("Linking {0} to {1} ({2})", game, release, fileId);
 				UpdateReleaseData(release);
-				game.Release = release;
 				game.ReleaseId = release.Id;
 				game.FileId = fileId;
 				_databaseManager.Save();
@@ -202,15 +193,6 @@ namespace VpdbAgent.Application
 		{
 			_downloadManager.DownloadRelease(game.ReleaseId, game.File);
 			return this;
-		}
-
-		public VpdbVersion FindVersion(string fileId, string releaseId)
-		{
-			if (!_databaseManager.Database.Releases.ContainsKey(releaseId)) {
-				return null;
-			}
-			return _databaseManager.Database.Releases[releaseId].Versions
-				.FirstOrDefault(v => v.Files.Contains(v.Files.FirstOrDefault(f => f.Reference.Id == fileId)));
 		}
 
 		/// <summary>
