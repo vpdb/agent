@@ -63,20 +63,17 @@ namespace VpdbAgent.ViewModels.Games
 				.Where(r => r != null)
 				.SelectMany(r => r.Versions)
 				.SelectMany(v => v.Files)
-				.Where(f => f.Reference.Id.Equals(Game.FileId))
+				.Where(f => f.Reference.Id == Game.FileId)
 				.ToProperty(this, vm => vm.TableFile, out _file);
 
 			// find version object in release
-			this.WhenAnyValue(vm => vm.Game.Release)
-				.Where(r => r != null)
-				.SelectMany(r => r.Versions)
-				.SelectMany(v => v.Files.Select(f => new { v, f }))
-				.Where(x => x.f.Reference.Id.Equals(Game.FileId))
-				.Select(x => x.v)
+			this.WhenAnyValue(vm => vm.Game.FileId)
+				.Where(fileId => fileId != null && Game.ReleaseId != null)
+				.Select(fileId => GameManager.FindVersion(fileId, Game.ReleaseId))
 				.ToProperty(this, vm => vm.Version, out _version);
 
 			// release identify
-			IdentifyRelease = ReactiveCommand.CreateAsyncObservable(_ => VpdbClient.Api.GetReleasesBySize(game.FileSize, MatchThreshold).SubscribeOn(Scheduler.Default));
+			IdentifyRelease = ReactiveCommand.CreateAsyncObservable(_ => VpdbClient.Api.GetReleasesBySize(Game.FileSize, MatchThreshold).SubscribeOn(Scheduler.Default));
 			IdentifyRelease.Select(releases => releases
 				.Select(release => new {release, release.Versions})
 				.SelectMany(x => x.Versions.Select(version => new {x.release, version, version.Files}))

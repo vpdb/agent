@@ -61,7 +61,7 @@ namespace VpdbAgent.Application
 		/// relevant files.
 		/// </summary>
 		/// <returns>This instance</returns>
-		IGameManager Initialize();
+		void Initialize();
 
 		/// <summary>
 		/// Links a release from VPDB to a game.
@@ -70,7 +70,15 @@ namespace VpdbAgent.Application
 		/// <param name="release">Release from VPDB</param>
 		/// <param name="fileId">File ID at VPDB</param>
 		/// <returns>This instance</returns>
-		IGameManager LinkRelease(Game game, VpdbRelease release, string fileId);
+		void LinkRelease(Game game, VpdbRelease release, string fileId);
+
+		/// <summary>
+		/// Returns the version of a given file for a given release
+		/// </summary>
+		/// <param name="fileId">File ID</param>
+		/// <param name="releaseId">Release ID</param>
+		/// <returns>Version or null if either release or file is not found</returns>
+		VpdbVersion FindVersion(string fileId, string releaseId);
 
 		/// <summary>
 		/// Explicitly enables syncing of a game.
@@ -160,7 +168,7 @@ namespace VpdbAgent.Application
 			SetupRealtime();
 		}
 
-		public IGameManager Initialize()
+		public void Initialize()
 		{
 			// settings must be initialized before doing this.
 			if (string.IsNullOrEmpty(_settingsManager.Settings.ApiKey)) {
@@ -174,33 +182,35 @@ namespace VpdbAgent.Application
 
 			// validate settings and retrieve profile
 			Task.Run(async () => await _settingsManager.Validate(_settingsManager.Settings, _messageManager));
-
-			return this;
 		}
 
-		public IGameManager LinkRelease(Game game, VpdbRelease release, string fileId)
+		public void LinkRelease(Game game, VpdbRelease release, string fileId)
 		{
-			_logger.Info("Linking {0} to {1} ({2})", game, release, fileId);
-			UpdateReleaseData(release);
-			game.ReleaseId = release.Id;
-			game.FileId = fileId;
-			game.Release = release;
-			_databaseManager.Save();
-
-			// also update in case we didn't catch the last version.
+			// update in case we didn't catch the last version.
 			_vpdbClient.Api.GetRelease(release.Id).Subscribe(updatedRelease => {
-				UpdateReleaseData(updatedRelease);
+				_logger.Info("Linking {0} to {1} ({2})", game, release, fileId);
+				UpdateReleaseData(release);
+				game.Release = release;
+				game.ReleaseId = release.Id;
+				game.FileId = fileId;
 				_databaseManager.Save();
 
 			}, exception => _vpdbClient.HandleApiError(exception, "retrieving release details during linking"));
-
-			return this;
 		}
 
 		public IGameManager Sync(Game game)
 		{
 			_downloadManager.DownloadRelease(game.ReleaseId, game.File);
 			return this;
+		}
+
+		public VpdbVersion FindVersion(string fileId, string releaseId)
+		{
+			if (!_databaseManager.Database.Releases.ContainsKey(releaseId)) {
+				return null;
+			}
+			return _databaseManager.Database.Releases[releaseId].Versions
+				.FirstOrDefault(v => v.Files.Contains(v.Files.FirstOrDefault(f => f.Reference.Id == fileId)));
 		}
 
 		/// <summary>
@@ -336,6 +346,7 @@ namespace VpdbAgent.Application
 		/// </summary>
 		private void UpdateReleaseData()
 		{
+			//return;
 			// get local release ids
 			var releaseIds = Games.Where(g => g.HasRelease).Select(g => g.ReleaseId).ToList();
 			if (releaseIds.Count > 0) {

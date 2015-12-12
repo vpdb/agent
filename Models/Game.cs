@@ -111,24 +111,9 @@ namespace VpdbAgent.Models
 				var versionsUpdated = release.Versions.Changed.Select(_ => Unit.Default);
 				var releaseOrFileUpdated = this.WhenAnyValue(game => game.Release, game => game.FileId).Select(_ => Unit.Default);
 				versionsUpdated.Merge(releaseOrFileUpdated)
-					.Select(x =>
-					{
-						return downloadManager.FindLatestFile(Release, File);
-					})
+					.Select(x => downloadManager.FindLatestFile(Release, File))
 					.ToProperty(this, game => game.UpdatedRelease, out _updatedRelease);
-
-				releaseOrFileUpdated.Subscribe(_ => {
-					Console.WriteLine("Release or file updated!");
-				});
-
-				versionsUpdated.Subscribe(_ => {
-					Console.WriteLine("Versions changed!");
-				});
-
-
 			});
-
-
 
 			// watch updated file for hasUpdate
 			this.WhenAnyValue(game => game.UpdatedRelease)
@@ -136,9 +121,9 @@ namespace VpdbAgent.Models
 				.ToProperty(this, game => game.HasUpdate, out _hasUpdate);
 
 			// download game when available
-			//this.WhenAnyValue(game => game.UpdatedRelease)
-			//	.Where(update => update != null && IsSynced)
-			//	.Subscribe(update => { downloadManager.DownloadRelease(ReleaseId, File); });
+			this.WhenAnyValue(game => game.UpdatedRelease)
+				.Where(update => update != null && IsSynced)
+				.Subscribe(update => { downloadManager.DownloadRelease(ReleaseId, File); });
 
 			this.WhenAnyValue(game => game.UpdatedRelease)
 				.Where(update => update != null && IsSynced)
