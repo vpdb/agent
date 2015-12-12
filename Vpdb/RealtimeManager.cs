@@ -96,7 +96,7 @@ namespace VpdbAgent.Vpdb
 	{
 		public string GameId { get; private set; }
 		public string ReleaseId { get; private set; }
-		public string VersionName { get; private set; }
+		public string Version { get; private set; }
 
 		public static NewVersionEvent GetInstance(JObject data)
 		{
@@ -104,7 +104,7 @@ namespace VpdbAgent.Vpdb
 			{
 				GameId = data.GetValue("game_id").Value<string>(),
 				ReleaseId = data.GetValue("release_id").Value<string>(),
-				VersionName = data.GetValue("version").Value<string>()
+				Version = data.GetValue("version").Value<string>()
 			};
 		}
 	}

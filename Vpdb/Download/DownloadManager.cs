@@ -151,9 +151,17 @@ namespace VpdbAgent.Vpdb.Download
 				var currentVersion = release.Versions.FirstOrDefault(v => v.Files.Select(f => f.Reference.Id).Contains(currentFile.Reference.Id));
 				var latestVersion = release.Versions.FirstOrDefault(v => v.Files.Select(f => f.Reference.Id).Contains(file.Reference.Id));
 				if (latestVersion != null && currentVersion != null && currentVersion.Name == latestVersion.Name) {
+					_logger.Info("No new files to download.");
 					return null;
 				}
+				if (latestVersion != null && currentVersion != null) {
+					_logger.Info("Found new version v{0}, upgrading from v{1}", latestVersion.Name, currentVersion.Name);
+				}
 			}
+			if (file == null) {
+				_logger.Info("No files to download.");
+			}
+			
 			return file;
 		}
 

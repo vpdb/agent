@@ -269,11 +269,13 @@ namespace VpdbAgent.Application
 
 			// new release version
 			_realtimeManager.WhenReleaseUpdated.Subscribe(msg => {
-				var game = Games.FirstOrDefault(g => !string.IsNullOrEmpty(g.ReleaseId) && g.ReleaseId.Equals(msg.ReleaseId));
+				var game = Games.FirstOrDefault(g => g.ReleaseId == msg.ReleaseId);
 				if (game != null) {
 					_vpdbClient.Api.GetFullRelease(msg.ReleaseId)
-						.Subscribe(UpdateReleaseData, 
+						.Subscribe(UpdateReleaseData,
 							exception => _vpdbClient.HandleApiError(exception, "while retrieving updated release"));
+				} else {
+					_logger.Warn("Got update from non-existent release {0}.", msg.ReleaseId);
 				}
 			});
 		}
@@ -366,9 +368,11 @@ namespace VpdbAgent.Application
 		private void UpdateReleaseData(VpdbRelease release)
 		{
 			if (!_databaseManager.Database.Releases.ContainsKey(release.Id)) {
+				_logger.Info("Adding release {0} ({1})", release.Id, release.Name);
 				_databaseManager.Database.Releases.Add(release.Id, release);
 
 			} else {
+				_logger.Info("Updating release {0} ({1})", release.Id, release.Name);
 				_databaseManager.Database.Releases[release.Id].Update(release);
 			}
 		}
