@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using NLog;
 using ReactiveUI;
 using VpdbAgent.Application;
-using VpdbAgent.PinballX;
 
 namespace VpdbAgent.Vpdb.Download
 {
@@ -95,7 +94,7 @@ namespace VpdbAgent.Vpdb.Download
 		/// </summary>
 		public JobManager(IDatabaseManager databaseManager, IMessageManager messageManager, CrashManager crashManager, Logger logger)
 		{
-			CurrentJobs = databaseManager.Database.DownloadJobs;
+			CurrentJobs = databaseManager.GetJobs();
 
 			_databaseManager = databaseManager;
 			_messageManager = messageManager;
@@ -147,7 +146,7 @@ namespace VpdbAgent.Vpdb.Download
 		{
 			// update jobs back on main thread
 			System.Windows.Application.Current.Dispatcher.Invoke(delegate {
-				_databaseManager.Database.DownloadJobs.Remove(job);
+				_databaseManager.RemoveJob(job);
 				_databaseManager.Save();
 			});
 			return this;
@@ -169,7 +168,7 @@ namespace VpdbAgent.Vpdb.Download
 		/// <returns>Job</returns>
 		private async Task<Job> ProcessDownload(Job job, CancellationToken token)
 		{
-			var dest = Path.Combine(_downloadPath, job.FileName);
+			var dest = Path.Combine(_downloadPath, job.File.Name);
 
 			_logger.Info("Starting downloading of {0} to {1}", job.Uri, dest);
 
@@ -212,7 +211,7 @@ namespace VpdbAgent.Vpdb.Download
 			// update jobs back on main thread
 			System.Windows.Application.Current.Dispatcher.Invoke(delegate {
 				job.WhenStatusChanges.Subscribe(status => _whenStatusChanged.OnNext(status));
-				_databaseManager.Database.DownloadJobs.Add(job);
+				_databaseManager.AddJob(job);
 				_databaseManager.Save();
 			});
 		}

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using ReactiveUI;
 using VpdbAgent.Vpdb;
 using VpdbAgent.Vpdb.Download;
@@ -23,7 +24,17 @@ namespace VpdbAgent.Models
 		/// updated at every application start as well as during runtime through
 		/// push messages.
 		/// </summary>
-		[DataMember] public Dictionary<string, VpdbRelease> Releases { set; get; } = new Dictionary<string, VpdbRelease>();
+		[DataMember]
+		[JsonProperty(Order = 1)]
+		public Dictionary<string, VpdbRelease> Releases { set; get; } = new Dictionary<string, VpdbRelease>();
+
+		/// <summary>
+		/// A dictionary with files from VPDB that are not part of a release, 
+		/// like media files or ROMs.
+		/// </summary>
+		[DataMember]
+		[JsonProperty(Order = 0)]
+		public Dictionary<string, VpdbFile> Files { set; get; } = new Dictionary<string, VpdbFile>();
 
 		/// <summary>
 		/// Contains all download jobs, current and previous, aborted, successful and erroneous.
@@ -36,8 +47,13 @@ namespace VpdbAgent.Models
 		public ReactiveList<Message> Messages = new ReactiveList<Message>();
 			
 		// private members
-		[DataMember(Name = "jobs")] private List<Job> _downloadJobs = new List<Job>();
-		[DataMember(Name = "messages")] private List<Message> _messages = new List<Message>();
+		[DataMember(Name = "jobs")]
+		[JsonProperty(Order = 2)]
+		private List<Job> _downloadJobs = new List<Job>();
+
+		[DataMember(Name = "messages")]
+		[JsonProperty(Order = 3)]
+		private List<Message> _messages = new List<Message>();
 
 		public GlobalDatabase()
 		{
@@ -51,14 +67,19 @@ namespace VpdbAgent.Models
 			if (db == null) {
 				return this;
 			}
-			Releases = db.Releases;
-			using (DownloadJobs.SuppressChangeNotifications()) {
-				DownloadJobs.RemoveRange(0, DownloadJobs.Count);
-				DownloadJobs.AddRange(db._downloadJobs);
+			if (ReferenceEquals(this, db)) {
+				return this;
 			}
+
+			Releases = db.Releases;
+			Files = db.Files;
 			using (Messages.SuppressChangeNotifications()) {
 				Messages.RemoveRange(0, Messages.Count);
 				Messages.AddRange(db._messages);
+			}
+			using (DownloadJobs.SuppressChangeNotifications()) {
+				DownloadJobs.RemoveRange(0, DownloadJobs.Count);
+				DownloadJobs.AddRange(db._downloadJobs);
 			}
 			return this;
 		}

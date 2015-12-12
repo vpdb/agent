@@ -1,8 +1,8 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Net;
+using System.Reactive;
+using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Runtime.Serialization;
 using System.Threading;
@@ -11,6 +11,7 @@ using Newtonsoft.Json.Converters;
 using NLog;
 using ReactiveUI;
 using Splat;
+using VpdbAgent.Application;
 using VpdbAgent.Models;
 using VpdbAgent.Vpdb.Models;
 
@@ -32,37 +33,12 @@ namespace VpdbAgent.Vpdb.Download
 	/// </summary>
 	public class Job : ReactiveObject, IComparable<Job>
 	{
+		// dependencies
+		private static readonly IDatabaseManager DatabaseManager = Locator.Current.GetService<IDatabaseManager>();
 
 		// persisted properties
-		[DataMember]
-		public VpdbRelease Release {
-			get { return _release; }
-			set {
-				_release = value;
-				if (_tableFile != null) {
-					Version = _release.Versions.FirstOrDefault(version => version.Files.Contains(_tableFile));
-				}
-		} }
-		[DataMember]
-		public VpdbTableFile TableFile {
-			get { return _tableFile; }
-			set {
-				_tableFile = value;
-				File = value.Reference;
-				if (_release != null) {
-					Version = _release.Versions.FirstOrDefault(version => version.Files.Contains(_tableFile));
-				}
-		} }
-		[DataMember]
-		public VpdbFile File
-		{
-			get { return _file; }
-			set {
-				_file = value;
-				Uri = VpdbClient.GetUri(value.Url);
-				FileName = value.Name;
-			}
-		}
+		[DataMember] public string ReleaseId { get { return _releaseId; } set { this.RaiseAndSetIfChanged(ref _releaseId, value); } }
+		[DataMember] public string FileId { get { return _fileId; } set { this.RaiseAndSetIfChanged(ref _fileId, value); } }
 		[DataMember] public DateTime QueuedAt { get; set; } = DateTime.Now;
 		[DataMember] public DateTime StartedAt { get; set; }
 		[DataMember] public DateTime FinishedAt { get; set; }
@@ -73,14 +49,24 @@ namespace VpdbAgent.Vpdb.Download
 		[DataMember] [JsonConverter(typeof(StringEnumConverter))] public FileType FileType { get; set; }
 		[DataMember] [JsonConverter(typeof(StringEnumConverter))] public VpdbTableFile.VpdbPlatform Platform { get; set; }
 
-		// business props
-		public Uri Uri { get; private set; }
+		// object lookups
+		public VpdbRelease Release => _release.Value;
+		public VpdbVersion Version => _version.Value;
+		public VpdbTableFile TableFile => _tableFile.Value;
+		public VpdbFile File => _file.Value;
+		private ObservableAsPropertyHelper<VpdbRelease> _release;
+		private ObservableAsPropertyHelper<VpdbVersion> _version;
+		private ObservableAsPropertyHelper<VpdbTableFile> _tableFile;
+		private ObservableAsPropertyHelper<VpdbFile> _file;
+
+		// uri
+		public Uri Uri => _uri.Value;
+		private ObservableAsPropertyHelper<Uri> _uri;
+
 		public readonly WebClient Client;
 
 		// convenience props
 		public string FilePath { get; set; }
-		public string FileName { get; private set; }
-		public VpdbVersion Version { get; private set; }
 		public bool IsFinished => Status != JobStatus.Transferring && Status != JobStatus.Queued;
 		public TimeSpan DownloadTime => FinishedAt - StartedAt;
 		public double DownloadBytesPerSecond => 1000d * TransferredBytes / DownloadTime.TotalMilliseconds;
@@ -90,12 +76,11 @@ namespace VpdbAgent.Vpdb.Download
 		public IObservable<DownloadProgressChangedEventArgs> WhenDownloadProgresses => _whenDownloadProgresses;
 
 		// fields
-		private VpdbTableFile _tableFile;
-		private VpdbFile _file;
-		private VpdbRelease _release;
 		private readonly Subject<JobStatus> _whenStatusChanges = new Subject<JobStatus>();
 		private readonly Subject<DownloadProgressChangedEventArgs> _whenDownloadProgresses = new Subject<DownloadProgressChangedEventArgs>();
 		private CancellationToken _cancellationToken;
+		private string _releaseId;
+		private string _fileId;
 
 		// dependencies
 		private static readonly IVpdbClient VpdbClient = Locator.CurrentMutable.GetService<IVpdbClient>();
@@ -106,14 +91,43 @@ namespace VpdbAgent.Vpdb.Download
 		/// </summary>
 		public Job()
 		{
+			// notify prop listeners of the objects
+
+			if (DatabaseManager.IsInitialized) {
+				SetupOutputProps();
+			} else {
+				DatabaseManager.Initialized.Subscribe(_ =>
+				{
+					SetupOutputProps();
+				});
+			}
+
+
 			_whenStatusChanges.Subscribe(status => {
 				Status = status;
 			});
 			Client = VpdbClient.GetWebClient();
 		}
 
+		private void SetupOutputProps()
+		{
+			this.WhenAnyValue(j => j.ReleaseId).Select(releaseId => DatabaseManager.GetRelease(ReleaseId)).ToProperty(this, j => j.Release, out _release);
+			this.WhenAnyValue(j => j.FileId).Select(fileId => DatabaseManager.GetVersion(ReleaseId, fileId)).ToProperty(this, j => j.Version, out _version);
+			this.WhenAnyValue(j => j.FileId).Select(fileId => DatabaseManager.GetTableFile(ReleaseId, fileId)).ToProperty(this, j => j.TableFile, out _tableFile);
+			this.WhenAnyValue(j => j.FileId).Select(fileId => DatabaseManager.GetFile(fileId)).ToProperty(this, j => j.File, out _file);
+
+			this.WhenAnyValue(j => j.ReleaseId).Subscribe(fileid =>
+			{
+				Console.WriteLine("ReleaseId changed.");
+			});
+
+			// uri
+			this.WhenAnyValue(j => j.File).Where(f => f != null).Select(f => VpdbClient.GetUri(f.Url)).ToProperty(this, x => x.Uri, out _uri);
+		}
+
 		/// <summary>
-		/// Constructor called when creating new job through the application
+		/// Constructor called when creating a new job through the application for
+		/// downloading a table file.
 		/// </summary>
 		/// <param name="release">Release to be downloaded</param>
 		/// <param name="tableFile">File of the release to be downloaded</param>
@@ -121,16 +135,20 @@ namespace VpdbAgent.Vpdb.Download
 		/// <param name="platform">Platform the file belongs to</param>
 		public Job(VpdbRelease release, VpdbTableFile tableFile, FileType filetype, VpdbTableFile.VpdbPlatform platform) : this()
 		{
-			TableFile = tableFile;
-			Release = release;
+			// store file object in global db
+			DatabaseManager.AddOrReplaceFile(tableFile.Reference);
+
+			FileId = tableFile.Reference.Id;
+			ReleaseId = release.Id;
 			FileType = filetype;
 			Thumb = tableFile.Thumb;
 			Platform = platform;
-			Logger.Info("Creating new download job for {0} {1}.", filetype, Uri.AbsoluteUri);
+			Logger.Info("Creating new release download job for {0} {1}.", filetype, Uri.AbsoluteUri);
 		}
 
 		/// <summary>
-		/// Constructor called when creating new job through the application
+		/// Constructor called when creating a new job through the application for
+		/// downloading a file not part of a release but related to a release.
 		/// </summary>
 		/// <param name="release">Release to be downloaded</param>
 		/// <param name="file">File to be downloaded</param>
@@ -138,8 +156,11 @@ namespace VpdbAgent.Vpdb.Download
 		/// <param name="platform">Platform the file belongs to</param>
 		public Job(VpdbRelease release, VpdbFile file, FileType filetype, VpdbTableFile.VpdbPlatform platform) : this()
 		{
-			Release = release;
-			File = file;
+			// store file object in global db
+			DatabaseManager.AddOrReplaceFile(file);
+
+			FileId = file.Id;
+			ReleaseId = release.Id;
 			FileType = filetype;
 			Platform = platform;
 			Thumb = release.Thumb?.Image;
@@ -170,12 +191,18 @@ namespace VpdbAgent.Vpdb.Download
 			WhenDownloadProgresses.Subscribe(progress => { TransferredBytes = progress.BytesReceived; });
 		}
 
+		/// <summary>
+		/// Sets the status to <see cref="JobStatus.Queued"/> and resets the timestamp.
+		/// </summary>
 		public void Initialize()
 		{
 			Status = JobStatus.Queued;
 			QueuedAt = DateTime.Now;
 		}
 
+		/// <summary>
+		/// Cancels a job.
+		/// </summary>
 		public void Cancel()
 		{
 			if (_cancellationToken.CanBeCanceled) {
@@ -345,7 +372,7 @@ namespace VpdbAgent.Vpdb.Download
 		}
 
 		// media folder names
-		public static readonly string MediaBackglassImages = "Backglass Images";
+		public const string MediaBackglassImages = "Backglass Images";
 		public const string MediaBackglassVideos = "Backglass Videos";
 		public const string MediaDmdImages = "DMD Images";
 		public const string MediaDmdVideos = "DMD Videos";

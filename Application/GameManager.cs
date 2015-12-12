@@ -181,7 +181,7 @@ namespace VpdbAgent.Application
 			// update in case we didn't catch the last version.
 			_vpdbClient.Api.GetRelease(release.Id).Subscribe(updatedRelease => {
 				_logger.Info("Linking {0} to {1} ({2})", game, release, fileId);
-				UpdateReleaseData(release);
+				_databaseManager.AddOrUpdateRelease(release);
 				game.ReleaseId = release.Id;
 				game.FileId = fileId;
 				_databaseManager.Save();
@@ -264,7 +264,7 @@ namespace VpdbAgent.Application
 				var game = Games.FirstOrDefault(g => g.ReleaseId == msg.ReleaseId);
 				if (game != null) {
 					_vpdbClient.Api.GetFullRelease(msg.ReleaseId)
-						.Subscribe(UpdateReleaseData,
+						.Subscribe(_databaseManager.AddOrUpdateRelease,
 							exception => _vpdbClient.HandleApiError(exception, "while retrieving updated release"));
 				} else {
 					_logger.Warn("Got update from non-existent release {0}.", msg.ReleaseId);
@@ -313,7 +313,7 @@ namespace VpdbAgent.Application
 				for (var i = _gamesToLink.Count - 1; i >= 0; i--) {
 					var x = _gamesToLink[i];
 					var game = Games.FirstOrDefault(g => g.Id.Equals(x.Item1));
-					var release = _databaseManager.Database.Releases[x.Item2];
+					var release = _databaseManager.GetRelease(x.Item2);
 					LinkRelease(game, release, x.Item3);
 					_gamesToLink.RemoveAt(i);
 				}
@@ -341,7 +341,7 @@ namespace VpdbAgent.Application
 						
 						// update release data
 						foreach (var release in releases) {
-							UpdateReleaseData(release);
+							_databaseManager.AddOrUpdateRelease(release);
 						}
 
 						// save
@@ -349,24 +349,6 @@ namespace VpdbAgent.Application
 					}, exception => _vpdbClient.HandleApiError(exception, "retrieving all known releases by ID"));
 			} else {
 				_logger.Info("Skipping release update, no linked releases found.");
-			}
-		}
-
-		/// <summary>
-		/// Updates the database with updated release data for a given release
-		/// or adds it if not available.
-		/// </summary>
-		/// <param name="release">Release to update or add</param>
-		/// <returns>Local game if provided or found, null otherwise</returns>
-		private void UpdateReleaseData(VpdbRelease release)
-		{
-			if (!_databaseManager.Database.Releases.ContainsKey(release.Id)) {
-				_logger.Info("Adding release {0} ({1})", release.Id, release.Name);
-				_databaseManager.Database.Releases.Add(release.Id, release);
-
-			} else {
-				_logger.Info("Updating release {0} ({1})", release.Id, release.Name);
-				_databaseManager.Database.Releases[release.Id].Update(release);
 			}
 		}
 
@@ -382,7 +364,6 @@ namespace VpdbAgent.Application
 			var game = Games.FirstOrDefault(g => g.ReleaseId == job.Release.Id);
 
 			// add release
-			UpdateReleaseData(job.Release);
 			_databaseManager.Save();
 
 			// add or update depending if found or not
@@ -428,9 +409,10 @@ namespace VpdbAgent.Application
 		{
 			_logger.Info("Adding {0} to PinballX database...", job.Release);
 
-			var platform = _platformManager.FindPlatform(job.TableFile);
+			var tableFile = _databaseManager.GetTableFile(job.ReleaseId, job.FileId);
+			var platform = _platformManager.FindPlatform(tableFile);
 			if (platform == null) {
-				_logger.Warn("Cannot find platform for release {0} ({1}), aborting.", job.Release.Id, string.Join(",", job.TableFile.Compatibility));
+				_logger.Warn("Cannot find platform for release {0} ({1}), aborting.", job.Release.Id, string.Join(",", tableFile.Compatibility));
 				return;
 			}
 			var newGame = _menuManager.NewGame(job);
@@ -469,16 +451,15 @@ namespace VpdbAgent.Application
 		/// <summary>
 		/// Toggles star on a release
 		/// </summary>
-		/// <param name="id">Release ID</param>
+		/// <param name="releaseId">Release ID</param>
 		/// <param name="starred">If true, star, otherwise unstar</param>
 		/// <returns>Local game if found, null otherwise</returns>
-		private Game OnStarRelease(string id, bool starred)
+		private Game OnStarRelease(string releaseId, bool starred)
 		{
-			var game = Games.FirstOrDefault(g => !string.IsNullOrEmpty(g.ReleaseId) && g.ReleaseId.Equals(id));
+			var game = Games.FirstOrDefault(g => !string.IsNullOrEmpty(g.ReleaseId) && g.ReleaseId.Equals(releaseId));
 			if (game != null) {
-				var release = _databaseManager.Database.Releases[id];
+				var release = _databaseManager.GetRelease(releaseId);
 				release.Starred = starred;
-				game.Release.Starred = starred;
 				if (_settingsManager.Settings.SyncStarred) {
 					game.IsSynced = starred;
 				}

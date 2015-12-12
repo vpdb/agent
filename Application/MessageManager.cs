@@ -119,7 +119,7 @@ namespace VpdbAgent.Application
 
 		public void MarkAllRead()
 		{
-			_databaseManager.Database.Messages
+			_databaseManager.GetMessages()
 				.Where(msg => !msg.WasRead)
 				.ToList()
 				.ForEach(msg => msg.WasRead = true);

@@ -2,11 +2,15 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reactive;
+using System.Reactive.Subjects;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using NLog;
+using ReactiveUI;
 using VpdbAgent.Models;
+using VpdbAgent.Vpdb.Download;
 using VpdbAgent.Vpdb.Models;
 using VpdbAgent.Vpdb.Network;
 using File = System.IO.File;
@@ -23,10 +27,9 @@ namespace VpdbAgent.Application
 	/// <see cref="GlobalDatabase"/>
 	public interface IDatabaseManager
 	{
-		/// <summary>
-		/// Retrieve the global database
-		/// </summary>
-		GlobalDatabase Database { get; }
+
+		IObservable<Unit> Initialized { get; }
+		bool IsInitialized { get; } 
 
 		/// <summary>
 		/// Read data, run when settings are initialized.
@@ -40,17 +43,82 @@ namespace VpdbAgent.Application
 		/// <returns></returns>
 		IDatabaseManager Save();
 
+		/// <summary>
+		/// Returns the entire release object for a given release ID.
+		/// </summary>
+		/// <param name="releaseId">Release ID</param>
+		/// <returns>Release or null if release not in database</returns>
 		VpdbRelease GetRelease(string releaseId);
 
 		/// <summary>
-		/// Returns the version of a given file for a given release
+		/// Returns the version object for a given file of a given release.
 		/// </summary>
 		/// <param name="fileId">File ID</param>
 		/// <param name="releaseId">Release ID</param>
 		/// <returns>Version or null if either release or file is not found</returns>
 		VpdbVersion GetVersion(string releaseId, string fileId);
 
-		VpdbTableFile GetFile(string releaseId, string fileId);
+		/// <summary>
+		/// Returns the table file object for a given file ID of a given release.
+		/// </summary>
+		/// <param name="fileId">File ID</param>
+		/// <param name="releaseId">Release ID</param>
+		/// <returns></returns>
+		VpdbTableFile GetTableFile(string releaseId, string fileId);
+
+		/// <summary>
+		/// Returns the file object for a given file ID that is not part of a release.
+		/// </summary>
+		/// <param name="fileId">File ID</param>
+		/// <returns></returns>
+		VpdbFile GetFile(string fileId);
+
+		/// <summary>
+		/// Updates the database with updated release data for a given release
+		/// or adds it if not available.
+		/// </summary>
+		/// <remarks>
+		/// Note that the database is NOT saved, so use <see cref="Save"/> if needed.
+		/// </remarks>
+		/// <param name="release">Release to update or add</param>
+		/// <returns>Local game if provided or found, null otherwise</returns>
+		void AddOrUpdateRelease(VpdbRelease release);
+
+		/// <summary>
+		/// Adds a new file object to the database or replaces if it exists
+		/// already.
+		/// </summary>
+		/// <remarks>
+		/// The file cache is mainly we have access to all file data of files
+		/// that are not part of a release. However, for convenience reasons,
+		/// we also add release file part of a download job.
+		/// </remarks>
+		/// <param name="file">File object</param>
+		void AddOrReplaceFile(VpdbFile file);
+
+		/// <summary>
+		/// Adds a new download job to the database.
+		/// </summary>
+		/// <param name="job">Job to add</param>
+		void AddJob(Job job);
+
+		/// <summary>
+		/// Returns all jobs in the database.
+		/// </summary>
+		/// <returns>Download jobs</returns>
+		ReactiveList<Job> GetJobs();
+
+		/// <summary>
+		/// Removes a given download job from the database.
+		/// </summary>
+		/// <param name="job">Job to remove</param>
+		void RemoveJob(Job job);
+
+		/// <summary>
+		/// Returns all log messages in the database.
+		/// </summary>
+		/// <returns>All log messages</returns>
+		IReactiveList<Message> GetMessages();
 
 		/// <summary>
 		/// Adds a new message and saves database.
@@ -72,9 +140,12 @@ namespace VpdbAgent.Application
 		private readonly Logger _logger;
 
 		// props
-		public GlobalDatabase Database { get; } = new GlobalDatabase();
+		public IObservable<Unit> Initialized => _initialized;
+		public bool IsInitialized { get; private set; }
+		private GlobalDatabase Database { get; } = new GlobalDatabase();
 
 		private string _dbPath;
+		private readonly Subject<Unit> _initialized = new Subject<Unit>();
 
 		public DatabaseManager(ISettingsManager settingsManager, CrashManager crashManager, Logger logger)
 		{
@@ -88,7 +159,9 @@ namespace VpdbAgent.Application
 			_dbPath = Path.Combine(_settingsManager.Settings.PbxFolder, @"Databases\vpdb.json");
 			Database.Update(UnmarshallDatabase());
 			_logger.Info("Global database with {0} release(s) loaded.", Database.Releases.Count);
-
+			IsInitialized = true;
+			_initialized.OnNext(Unit.Default);
+			_initialized.OnCompleted();
 			return this;
 		}
 
@@ -113,7 +186,7 @@ namespace VpdbAgent.Application
 				.FirstOrDefault(v => v.Files.Contains(v.Files.FirstOrDefault(f => f.Reference.Id == fileId)));
 		}
 
-		public VpdbTableFile GetFile(string releaseId, string fileId)
+		public VpdbTableFile GetTableFile(string releaseId, string fileId)
 		{
 			
 			if (releaseId == null || !Database.Releases.ContainsKey(releaseId)) {
@@ -123,6 +196,56 @@ namespace VpdbAgent.Application
 			return Database.Releases[releaseId].Versions
 					.SelectMany(v => v.Files)
 					.FirstOrDefault(f => f.Reference.Id == fileId);
+		}
+
+		public VpdbFile GetFile(string fileId)
+		{
+			if (fileId == null || !Database.Files.ContainsKey(fileId)) {
+				return null;
+			}
+			return Database.Files[fileId];
+		}
+
+		public void AddOrUpdateRelease(VpdbRelease release)
+		{
+			if (!Database.Releases.ContainsKey(release.Id)) {
+				_logger.Info("Adding release {0} ({1})", release.Id, release.Name);
+				Database.Releases.Add(release.Id, release);
+
+			} else {
+				_logger.Info("Updating release {0} ({1})", release.Id, release.Name);
+				Database.Releases[release.Id].Update(release);
+			}
+		}
+
+		public void AddOrReplaceFile(VpdbFile file)
+		{
+			if (!Database.Files.ContainsKey(file.Id)) {
+				Database.Files.Add(file.Id, file);
+
+			} else {
+				Database.Files[file.Id] = file;
+			}
+		}
+
+		public void AddJob(Job job)
+		{
+			Database.DownloadJobs.Add(job);
+		}
+
+		public ReactiveList<Job> GetJobs()
+		{
+			return Database.DownloadJobs;
+		}
+
+		public void RemoveJob(Job job)
+		{
+			Database.DownloadJobs.Remove(job);
+		}
+
+		public IReactiveList<Message> GetMessages()
+		{
+			return Database.Messages;
 		}
 
 		public void Log(Message msg)

@@ -111,7 +111,7 @@ namespace VpdbAgent.Models
 			// notify prop listeners of the objects
 			this.WhenAnyValue(x => x.ReleaseId).Select(releaseId => DatabaseManager.GetRelease(ReleaseId)).ToProperty(this, x => x.Release, out _release);
 			this.WhenAnyValue(x => x.FileId).Select(fileId => DatabaseManager.GetVersion(ReleaseId, fileId)).ToProperty(this, x => x.Version, out _version);
-			this.WhenAnyValue(x => x.FileId).Select(fileId => DatabaseManager.GetFile(ReleaseId, fileId)).ToProperty(this, x => x.File, out _file);
+			this.WhenAnyValue(x => x.FileId).Select(fileId => DatabaseManager.GetTableFile(ReleaseId, fileId)).ToProperty(this, x => x.File, out _file);
 
 			// watch versions and release for updates
 			this.WhenAnyValue(g => g.Release).Subscribe(release => {

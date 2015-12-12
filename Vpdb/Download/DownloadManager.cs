@@ -67,6 +67,7 @@ namespace VpdbAgent.Vpdb.Download
 		private readonly IVpdbClient _vpdbClient;
 		private readonly ISettingsManager _settingsManager;
 		private readonly IMessageManager _messageManager;
+		private readonly IDatabaseManager _databaseManager;
 		private readonly CrashManager _crashManager;
 		private readonly Logger _logger;
 
@@ -78,13 +79,15 @@ namespace VpdbAgent.Vpdb.Download
 		private readonly List<IFlavorMatcher> _flavorMatchers = new List<IFlavorMatcher>();
 
 		public DownloadManager(IPlatformManager platformManager, IJobManager jobManager, IVpdbClient vpdbClient, 
-			ISettingsManager settingsManager, IMessageManager messageManager, CrashManager crashManager, Logger logger)
+			ISettingsManager settingsManager, IMessageManager messageManager, IDatabaseManager databaseManager,
+			CrashManager crashManager, Logger logger)
 		{
 			_platformManager = platformManager;
 			_jobManager = jobManager;
 			_vpdbClient = vpdbClient;
 			_settingsManager = settingsManager;
 			_messageManager = messageManager;
+			_databaseManager = databaseManager;
 			_crashManager = crashManager;
 			_logger = logger;
 
@@ -106,11 +109,14 @@ namespace VpdbAgent.Vpdb.Download
 			});
 		}
 
-		public IDownloadManager DownloadRelease(string id, VpdbTableFile currentFile = null)
+		public IDownloadManager DownloadRelease(string releaseId, VpdbTableFile currentFile = null)
 		{
 			// retrieve release details
-			_logger.Info("Retrieving details for release {0}...", id);
-			_vpdbClient.Api.GetFullRelease(id).ObserveOn(Scheduler.Default).Subscribe(release => {
+			_logger.Info("Retrieving details for release {0}...", releaseId);
+			_vpdbClient.Api.GetFullRelease(releaseId).ObserveOn(Scheduler.Default).Subscribe(release => {
+
+				// add release data to db
+				_databaseManager.AddOrUpdateRelease(release);
 
 				// match file based on settings
 				var file = FindLatestFile(release, currentFile);
@@ -121,7 +127,7 @@ namespace VpdbAgent.Vpdb.Download
 					return;
 				}
 
-				var version = release.Versions.FirstOrDefault(v => v.Files.Contains(file));
+				var version = _databaseManager.GetVersion(releaseId, file.Reference.Id);
 				_logger.Info($"Found new release to download: v{version?.Name} - {file.Reference.Name}");
 
 				// download
@@ -202,6 +208,7 @@ namespace VpdbAgent.Vpdb.Download
 
 				// queue for download
 				var job = new Job(release, tableFile, FileType.TableFile, vpdbPlatform);
+				_logger.Info("Created new job for {0} - {1} v{2} ({3}): {4}", job.Release.Game.DisplayName, job.Release.Name, job.Version.Name, job.File.Id, job.TableFile.ToString());
 				_jobManager.AddJob(job);
 
 			}, exception => _vpdbClient.HandleApiError(exception, "retrieving game details during download"));

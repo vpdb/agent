@@ -173,6 +173,7 @@ namespace VpdbAgent
 				locator.GetService<IVpdbClient>(),
 				locator.GetService<ISettingsManager>(),
 				locator.GetService<IMessageManager>(),
+				locator.GetService<IDatabaseManager>(),
 				locator.GetService<CrashManager>(),
 				locator.GetService<NLog.Logger>()
 			), typeof(IDownloadManager));

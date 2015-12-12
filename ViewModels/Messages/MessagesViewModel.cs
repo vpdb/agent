@@ -28,7 +28,7 @@ namespace VpdbAgent.ViewModels.Messages
 		{
 			_messageManager = messageManager;
 
-			Messages = databaseManager.Database.Messages.CreateDerivedCollection(
+			Messages = databaseManager.GetMessages().CreateDerivedCollection(
 				msg => new MessageItemViewModel(msg),
 				x => true, 
 				(x, y) => x.Message.CompareTo(y.Message),

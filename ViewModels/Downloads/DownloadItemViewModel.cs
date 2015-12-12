@@ -218,7 +218,7 @@ namespace VpdbAgent.ViewModels.Downloads
 						new Run(Job.Release.Name),
 						new Run(Job.Version.Name),
 					};
-					SubtitleLabel = new ObservableCollection<Inline> { new Run(Job.FileName) };
+					SubtitleLabel = new ObservableCollection<Inline> { new Run(Job.File.Name) };
 					FileIcon = AudioIcon;
 					FileIconSize = 16;
 					break;
@@ -255,7 +255,7 @@ namespace VpdbAgent.ViewModels.Downloads
 					TitleLabel = new ObservableCollection<Inline> { new Run(Job.Release.Game.DisplayName) { FontWeight = FontWeights.Bold } };
 					SubtitleLabel = new ObservableCollection<Inline> {
 						new Run("ROM: "),
-						new Run(Job.FileName) {FontWeight = FontWeights.Bold}
+						new Run(Job.File.Name) {FontWeight = FontWeights.Bold}
 					};
 					FileIcon = RomIcon;
 					FileIconSize = 16;
@@ -270,7 +270,7 @@ namespace VpdbAgent.ViewModels.Downloads
 						new Run(" – "),
 						new Run(Job.Release.Name)
 					};
-					SubtitleLabel = new ObservableCollection<Inline> { new Run(Job.FileName) };
+					SubtitleLabel = new ObservableCollection<Inline> { new Run(Job.File.Name) };
 					FileIcon = DefaultFileIcon;
 					FileIconSize = 16;
 					break;

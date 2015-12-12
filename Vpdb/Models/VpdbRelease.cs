@@ -44,6 +44,11 @@ namespace VpdbAgent.Vpdb.Models
 		/// <param name="release"></param>
 		public void Update(VpdbRelease release)
 		{
+			// no need to update if it's the same object.
+			if (ReferenceEquals(this, release)) {
+				return;
+			}
+
 			Name = release.Name;
 			CreatedAt = release.CreatedAt;
 			Authors = release.Authors;

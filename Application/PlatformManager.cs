@@ -100,7 +100,7 @@ namespace VpdbAgent.Application
 			_logger.Info("Updating games for {0}", system);
 
 			// create new platform and find old
-			var newPlatform = new Platform(system, _databaseManager.Database);
+			var newPlatform = new Platform(system);
 			var oldPlatform = Platforms.FirstOrDefault(p => p.Name.Equals(system.Name));
 
 			// save vpdb.json for updated platform
@@ -132,7 +132,7 @@ namespace VpdbAgent.Application
 			_logger.Info("Updating all games for all platforms");
 
 			// create platforms from games
-			var platforms = _menuManager.Systems.Select(system => new Platform(system, _databaseManager.Database)).ToList();
+			var platforms = _menuManager.Systems.Select(system => new Platform(system)).ToList();
 
 			// write vpdb.json
 			platforms.ForEach(p => p.Save());

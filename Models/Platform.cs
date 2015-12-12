@@ -82,12 +82,20 @@ namespace VpdbAgent.Models
 		public string DatabaseFile => DatabasePath + @"\vpdb.json";
 		#endregion
 
-		public readonly ReactiveList<Game> Games = new ReactiveList<Game>();
+		// dependencies
+		private readonly static Logger Logger = Locator.CurrentMutable.GetService<Logger>();
+		private readonly static CrashManager CrashManager = Locator.CurrentMutable.GetService<CrashManager>();
 
-		public readonly Subject<Unit> GamePropertyChanged = new Subject<Unit>();
+		/// <summary>
+		/// The platform specific database
+		/// </summary>
 		private readonly PlatformDatabase _database;
-		private readonly Logger _logger = Locator.CurrentMutable.GetService<Logger>();
-		private readonly CrashManager _crashManager = Locator.CurrentMutable.GetService<CrashManager>();
+
+		/// <summary>
+		/// All attached games
+		/// </summary>
+		public readonly ReactiveList<Game> Games = new ReactiveList<Game>();
+		public readonly Subject<Unit> GamePropertyChanged = new Subject<Unit>();
 
 		private readonly JsonSerializer _serializer = new JsonSerializer {
 			NullValueHandling = NullValueHandling.Ignore,
@@ -95,7 +103,7 @@ namespace VpdbAgent.Models
 			Formatting = Formatting.Indented
 		};
 
-		public Platform(PinballXSystem system, GlobalDatabase db)
+		public Platform(PinballXSystem system)
 		{
 			Name = system.Name;
 			IsEnabled = system.Enabled;
@@ -109,7 +117,7 @@ namespace VpdbAgent.Models
 
 			_database = UnmarshallDatabase();
 
-			UpdateGames(system, db);
+			UpdateGames(system);
 
 			// save changes, but at most once per second.
 			GamePropertyChanged
@@ -133,10 +141,9 @@ namespace VpdbAgent.Models
 		/// Updates the games coming from XML files of PinballX.ini
 		/// </summary>
 		/// <param name="system">System with games attached</param>
-		/// <param name="db">Reference to global database</param>
-		private void UpdateGames(PinballXSystem system, GlobalDatabase db)
+		private void UpdateGames(PinballXSystem system)
 		{
-			_database.Games = MergeGames(system, db);
+			_database.Games = MergeGames(system);
 			System.Windows.Application.Current.Dispatcher.Invoke(delegate {
 				using (Games.SuppressChangeNotifications()) {
 					// todo make this more intelligent by diff'ing and changing instead of drop-and-create
@@ -152,17 +159,16 @@ namespace VpdbAgent.Models
 		/// the .json).
 		/// </summary>
 		/// <param name="system">System in which the game changed</param>
-		/// <param name="db">Reference to global database</param>
-		private IEnumerable<Game> MergeGames(PinballXSystem system, GlobalDatabase db)
+		private IEnumerable<Game> MergeGames(PinballXSystem system)
 		{
 			var xmlGames = system.Games;
 			List<Game> mergedGames;
 			if (_database == null) {
-				_logger.Warn("No vpdb.json at {0}", DatabaseFile);
-				mergedGames = MergeGames(xmlGames, null, db);
+				Logger.Warn("No vpdb.json at {0}", DatabaseFile);
+				mergedGames = MergeGames(xmlGames, null);
 			} else {
-				_logger.Info("Found and parsed vpdb.json at {0}", DatabaseFile);
-				mergedGames = MergeGames(xmlGames, _database.Games, db);
+				Logger.Info("Found and parsed vpdb.json at {0}", DatabaseFile);
+				mergedGames = MergeGames(xmlGames, _database.Games);
 			}
 
 			return mergedGames;
@@ -174,11 +180,10 @@ namespace VpdbAgent.Models
 		/// </summary>
 		/// <param name="xmlGames">Games read from an .XML file</param>
 		/// <param name="jsonGames">Games read from the internal .json database</param>
-		/// <param name="db">Reference to global database</param>
 		/// <returns>List of merged games</returns>
-		private List<Game> MergeGames(IEnumerable<PinballXGame> xmlGames, IEnumerable<Game> jsonGames, GlobalDatabase db)
+		private List<Game> MergeGames(IEnumerable<PinballXGame> xmlGames, IEnumerable<Game> jsonGames)
 		{
-			_logger.Info("MergeGames() START");
+			Logger.Info("MergeGames() START");
 
 			var games = new List<Game>();
 			var enumerableGames = jsonGames as Game[] ?? jsonGames.ToArray();
@@ -193,7 +198,7 @@ namespace VpdbAgent.Models
 				);
 			}
 
-			_logger.Info("MergeGames() DONE");
+			Logger.Info("MergeGames() DONE");
 			return games;
 		}
 
@@ -216,16 +221,16 @@ namespace VpdbAgent.Models
 						reader.Close();
 						return db ?? new PlatformDatabase();
 					} catch (Exception e) {
-						_logger.Error(e, "Error parsing vpdb.json, deleting and ignoring.");
-						_crashManager.Report(e, "json");
+						Logger.Error(e, "Error parsing vpdb.json, deleting and ignoring.");
+						CrashManager.Report(e, "json");
 						reader.Close();
 						File.Delete(DatabaseFile);
 						return new PlatformDatabase();
 					}
 				}
 			} catch (Exception e) {
-				_logger.Error(e, "Error reading vpdb.json, deleting and ignoring.");
-				_crashManager.Report(e, "json");
+				Logger.Error(e, "Error reading vpdb.json, deleting and ignoring.");
+				CrashManager.Report(e, "json");
 				return new PlatformDatabase();
 			}
 		}
@@ -238,7 +243,7 @@ namespace VpdbAgent.Models
 			// don't do anything for non-existent folder
 			var dbFolder = Path.GetDirectoryName(DatabaseFile);
 			if (dbFolder != null && DatabaseFile != null && !Directory.Exists(dbFolder)) {
-				_logger.Warn("Directory {0} does not exist, not writing vpdb.json.", dbFolder);
+				Logger.Warn("Directory {0} does not exist, not writing vpdb.json.", dbFolder);
 				return;
 			}
 
@@ -247,10 +252,10 @@ namespace VpdbAgent.Models
 				using (JsonWriter writer = new JsonTextWriter(sw)) {
 					_serializer.Serialize(writer, _database);
 				}
-				_logger.Debug("Wrote vpdb.json back to {0}", DatabaseFile);
+				Logger.Debug("Wrote vpdb.json back to {0}", DatabaseFile);
 			} catch (Exception e) {
-				_logger.Error(e, "Error writing vpdb.json to {0}", DatabaseFile);
-				_crashManager.Report(e, "json");
+				Logger.Error(e, "Error writing vpdb.json to {0}", DatabaseFile);
+				CrashManager.Report(e, "json");
 			}
 		}
 
