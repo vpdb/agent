@@ -79,6 +79,7 @@ namespace VpdbAgent.Vpdb.Download
 		// members
 		private readonly Subject<Job> _whenReleaseDownloaded = new Subject<Job>();
 		private readonly List<IFlavorMatcher> _flavorMatchers = new List<IFlavorMatcher>();
+		private readonly Dictionary<string, bool> _currentlyDownloading = new Dictionary<string, bool>();
 
 		public DownloadManager(IPlatformManager platformManager, IJobManager jobManager, IVpdbClient vpdbClient, 
 			ISettingsManager settingsManager, IMessageManager messageManager, IDatabaseManager databaseManager,
@@ -113,10 +114,16 @@ namespace VpdbAgent.Vpdb.Download
 
 		public IDownloadManager DownloadRelease(string releaseId, string currentFileId = null)
 		{
+			// ignore if already launched
+			if (_currentlyDownloading.ContainsKey(releaseId)) {
+				return this;
+			}
+			_currentlyDownloading.Add(releaseId, true);
+
 			var currentFile = _databaseManager.GetTableFile(releaseId, currentFileId);
 
 			// retrieve release details
-			_logger.Info("Retrieving details for release {0}...", releaseId);
+			_logger.Info("Retrieving details for release {0} before downloading..", releaseId);
 			_vpdbClient.Api.GetFullRelease(releaseId).ObserveOn(Scheduler.Default).Subscribe(release => {
 
 				// add release data to db
@@ -128,11 +135,9 @@ namespace VpdbAgent.Vpdb.Download
 				// check if match
 				if (file == null) {
 					_logger.Info("Nothing matched current flavor configuration, skipping.");
+					_currentlyDownloading.Remove(releaseId);
 					return;
 				}
-
-				var version = _databaseManager.GetVersion(releaseId, file.Reference.Id);
-				_logger.Info($"Found new release to download: v{version?.Name} - {file.Reference.Name}");
 
 				// download
 				DownloadRelease(release, file);
@@ -159,18 +164,20 @@ namespace VpdbAgent.Vpdb.Download
 
 			// check for newer version
 			if (file != null && currentFile != null) {
-				var currentVersion = release.Versions.FirstOrDefault(v => v.Files.Select(f => f.Reference.Id).Contains(currentFile.Reference.Id));
-				var latestVersion = release.Versions.FirstOrDefault(v => v.Files.Select(f => f.Reference.Id).Contains(file.Reference.Id));
+				var currentVersion = _databaseManager.GetVersion(release.Id, currentFile.Reference.Id);
+				var latestVersion = _databaseManager.GetVersion(release.Id, file.Reference.Id);
 				if (latestVersion != null && currentVersion != null && currentVersion.ReleasedAt >= latestVersion.ReleasedAt) {
-					_logger.Info("No new files to download.");
+					_logger.Info("Update check: No update found.");
 					return null;
 				}
 				if (latestVersion != null && currentVersion != null) {
-					_logger.Info("Found new version from v{0} to v{1}", currentVersion.Name, latestVersion.Name);
+					_logger.Info("Update check: Found new version from v{0} to v{1}", currentVersion.Name, latestVersion.Name);
+				} else {
+					_logger.Warn("Update check: Failed to retrieve version for file {0}/{1}", file.Reference.Id, currentFile.Reference.Id);
 				}
 			}
 			if (file == null) {
-				_logger.Info("No files to download.");
+				_logger.Info("Update check: Nothing matched.");
 			}
 			
 			return file;
@@ -184,8 +191,11 @@ namespace VpdbAgent.Vpdb.Download
 		private void DownloadRelease(VpdbRelease release, VpdbTableFile tableFile)
 		{
 			// also fetch game data for media & co
-			_vpdbClient.Api.GetGame(release.Game.Id).Subscribe(game => 
-			{
+			_vpdbClient.Api.GetGame(release.Game.Id).Subscribe(game =>  {
+
+				var version = _databaseManager.GetVersion(release.Id, tableFile.Reference.Id);
+				_logger.Info($"Downloading {game.DisplayName} - {release.Name} v{version?.Name} ({tableFile.Reference.Id})");
+
 				var gameName = release.Game.DisplayName;
 				var pbxPlatform = _platformManager.FindPlatform(tableFile);
 				var vpdbPlatform = tableFile.Compatibility[0].Platform;
@@ -215,6 +225,8 @@ namespace VpdbAgent.Vpdb.Download
 				var job = new Job(release, tableFile, FileType.TableFile, vpdbPlatform);
 				_logger.Info("Created new job for {0} - {1} v{2} ({3}): {4}", job.Release.Game.DisplayName, job.Release.Name, job.Version.Name, job.File.Id, job.TableFile.ToString());
 				_jobManager.AddJob(job);
+
+				_currentlyDownloading.Remove(release.Id);
 
 			}, exception => _vpdbClient.HandleApiError(exception, "retrieving game details during download"));
 		}

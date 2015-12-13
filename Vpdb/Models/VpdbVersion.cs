@@ -20,7 +20,7 @@ namespace VpdbAgent.Vpdb.Models
 
 		public override string ToString()
 		{
-			return $"{Name} ({Files.Count} files)";
+			return $"v{Name}" + (Files.Count > 1 ? $" ({Files.Count} files)" : "");
 		}
 	}
 }

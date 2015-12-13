@@ -119,7 +119,7 @@ namespace VpdbAgent.Models
 					return;
 				}
 				var versionsUpdated = release.Versions.Changed.Select(_ => Unit.Default);
-				var releaseOrFileUpdated = this.WhenAnyValue(game => game.Release, game => game.FileId).Select(_ => Unit.Default);
+				var releaseOrFileUpdated = this.WhenAnyValue(g => g.FileId).Select(_ => Unit.Default);
 				versionsUpdated.Merge(releaseOrFileUpdated)
 					.Select(x => downloadManager.FindLatestFile(Release, File))
 					.ToProperty(this, game => game.UpdatedRelease, out _updatedRelease);
@@ -136,14 +136,6 @@ namespace VpdbAgent.Models
 				.Subscribe(update => {
 					downloadManager.DownloadRelease(ReleaseId, FileId);
 				});
-
-			//this.WhenAnyValue(game => game.UpdatedRelease)
-			//	.Where(update => update != null && IsSynced)
-			//	.Subscribe(update => {
-			//		var from = Release.Versions.FirstOrDefault(v => v.Files.Contains(v.Files.FirstOrDefault(f => f.Reference.Id == FileId)));
-			//		var to = Release.Versions.FirstOrDefault(v => v.Files.Contains(update));
-			//		Console.WriteLine("Updating from v{0} to v{1}.", from.Name, to.Name);
-			//	});
 		}
 
 		public Game(PinballXGame xmlGame, Platform platform) : this()

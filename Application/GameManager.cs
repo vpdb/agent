@@ -353,15 +353,16 @@ namespace VpdbAgent.Application
 		}
 
 		/// <summary>
-		/// Updates the database with new release data and also adds or updates
-		/// the XML database.
+		/// Adds or updates the XML database of PinballX. Also updates fileId
+		/// if the download was an update.
+		/// 
 		/// Executed after a release has been successfully downloaded.
 		/// </summary>
 		/// <param name="job">Download job that finished</param>
 		private void OnReleaseDownloaded(Job job)
 		{
 			// find release locally
-			var game = Games.FirstOrDefault(g => g.ReleaseId == job.Release.Id);
+			var game = Games.FirstOrDefault(g => g.ReleaseId == job.ReleaseId);
 
 			// add release
 			_databaseManager.Save();
@@ -371,6 +372,9 @@ namespace VpdbAgent.Application
 				AddGame(job);
 
 			} else {
+				var from = _databaseManager.GetVersion(job.ReleaseId, game.FileId);
+				var to = _databaseManager.GetVersion(job.ReleaseId, job.FileId);
+				_logger.Info("Updating file ID from {0} ({1}) to {2} ({3})...", game.FileId, from, job.FileId, to);
 				game.FileId = job.FileId;
 				UpdateGame(game, job);
 			}

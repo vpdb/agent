@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reactive;
+using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
@@ -28,9 +29,7 @@ namespace VpdbAgent.Application
 	/// <see cref="GlobalDatabase"/>
 	public interface IDatabaseManager
 	{
-
-		IObservable<Unit> Initialized { get; }
-		bool IsInitialized { get; } 
+		IObservable<bool> Initialized { get; }
 
 		/// <summary>
 		/// Read data, run when settings are initialized.
@@ -141,12 +140,11 @@ namespace VpdbAgent.Application
 		private readonly Logger _logger;
 
 		// props
-		public IObservable<Unit> Initialized => _initialized;
-		public bool IsInitialized { get; private set; }
+		public IObservable<bool> Initialized => _initialized;
 		private GlobalDatabase Database { get; } = new GlobalDatabase();
 
 		private string _dbPath;
-		private readonly Subject<Unit> _initialized = new Subject<Unit>();
+		private readonly BehaviorSubject<bool> _initialized = new BehaviorSubject<bool>(false);
 		private readonly Subject<Unit> _save = new Subject<Unit>();
 
 		public DatabaseManager(ISettingsManager settingsManager, CrashManager crashManager, Logger logger)
@@ -155,9 +153,11 @@ namespace VpdbAgent.Application
 			_crashManager = crashManager;
 			_logger = logger;
 
-			_save.Throttle(TimeSpan.FromMilliseconds(500)).Subscribe(_ => {
-				MarshallDatabase();
-			});
+			// throttle saving
+			_save
+				.ObserveOn(Scheduler.Default)
+				.Sample(TimeSpan.FromMilliseconds(500))
+				.Subscribe(_ => { MarshallDatabase(); });
 		}
 
 		public IDatabaseManager Initialize()
@@ -165,9 +165,7 @@ namespace VpdbAgent.Application
 			_dbPath = Path.Combine(_settingsManager.Settings.PbxFolder, @"Databases\vpdb.json");
 			Database.Update(UnmarshallDatabase());
 			_logger.Info("Global database with {0} release(s) loaded.", Database.Releases.Count);
-			IsInitialized = true;
-			_initialized.OnNext(Unit.Default);
-			_initialized.OnCompleted();
+			_initialized.OnNext(true);
 			return this;
 		}
 
@@ -215,11 +213,11 @@ namespace VpdbAgent.Application
 		public void AddOrUpdateRelease(VpdbRelease release)
 		{
 			if (!Database.Releases.ContainsKey(release.Id)) {
-				_logger.Info("Adding release {0} ({1})", release.Id, release.Name);
+				_logger.Info("Adding new release data for release {0} ({1})", release.Id, release.Name);
 				Database.Releases.Add(release.Id, release);
 
 			} else {
-				_logger.Info("Updating release {0} ({1})", release.Id, release.Name);
+				_logger.Info("Updating release data of release {0} ({1})", release.Id, release.Name);
 				Database.Releases[release.Id].Update(release);
 			}
 		}
@@ -315,11 +313,12 @@ namespace VpdbAgent.Application
 			}
 
 			try {
+				_logger.Info("Saving global database...");
 				using (var sw = new StreamWriter(_dbPath))
 				using (JsonWriter writer = new JsonTextWriter(sw)) {
 					_serializer.Serialize(writer, Database);
 				}
-				_logger.Debug("Wrote vpdb.json back to {0}", _dbPath);
+				_logger.Info("Saved at {0}", _dbPath);
 			} catch (Exception e) {
 				_logger.Error(e, "Error writing database to {0}", _dbPath);
 				_crashManager.Report(e, "json");

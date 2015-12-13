@@ -119,10 +119,10 @@ namespace VpdbAgent.Models
 
 			UpdateGames(system);
 
-			// save changes, but at most once per second.
+			// save changes
 			GamePropertyChanged
 				.ObserveOn(Scheduler.Default)
-				.Sample(TimeSpan.FromSeconds(1))
+				//.Sample(TimeSpan.FromSeconds(1)) // disable for now, causes timing issues when updating a release (xml gets updated, platform re-parsed, json re-read but json is still the old, non-updated one, resulting in the new version not being displayed.)
 				.Subscribe(_ => Save());
 		}
 
@@ -213,6 +213,7 @@ namespace VpdbAgent.Models
 				return new PlatformDatabase();
 			}
 
+			Logger.Info("Reading game database from {0}...", DatabaseFile);
 			try {
 				using (var sr = new StreamReader(DatabaseFile))
 				using (JsonReader reader = new JsonTextReader(sr)) {

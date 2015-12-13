@@ -263,7 +263,7 @@ namespace VpdbAgent.PinballX
 				xml = xml.Replace($"name=\"{oldFileName}\"", $"name=\"{newFilename}\"");
 				File.WriteAllText(xmlPath, xml);
 
-				_logger.Info("Replaced name \"{0}\" with \"{1}\" in {2}.", oldFileName, jsonGame.FileId, xmlPath);
+				_logger.Info("Replaced name \"{0}\" with \"{1}\" in {2}.", oldFileName, newFilename, xmlPath);
 			}
 			return this;
 		}

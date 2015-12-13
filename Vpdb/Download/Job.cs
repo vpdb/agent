@@ -91,38 +91,24 @@ namespace VpdbAgent.Vpdb.Download
 		/// </summary>
 		public Job()
 		{
-			// notify prop listeners of the objects
+			// setup output props only once database is ready, otherwise we end up with null values.
+			DatabaseManager.Initialized
+				.Where(isInitialized => isInitialized)
+				.Subscribe(isInitialized => {
 
-			if (DatabaseManager.IsInitialized) {
-				SetupOutputProps();
-			} else {
-				DatabaseManager.Initialized.Subscribe(_ =>
-				{
-					SetupOutputProps();
+					this.WhenAnyValue(j => j.ReleaseId).Select(releaseId => DatabaseManager.GetRelease(ReleaseId)).ToProperty(this, j => j.Release, out _release);
+					this.WhenAnyValue(j => j.FileId).Select(fileId => DatabaseManager.GetVersion(ReleaseId, fileId)).ToProperty(this, j => j.Version, out _version);
+					this.WhenAnyValue(j => j.FileId).Select(fileId => DatabaseManager.GetTableFile(ReleaseId, fileId)).ToProperty(this, j => j.TableFile, out _tableFile);
+					this.WhenAnyValue(j => j.FileId).Select(fileId => DatabaseManager.GetFile(fileId)).ToProperty(this, j => j.File, out _file);
+
+					// uri
+					this.WhenAnyValue(j => j.File).Where(f => f != null).Select(f => VpdbClient.GetUri(f.Url)).ToProperty(this, x => x.Uri, out _uri);
 				});
-			}
-
 
 			_whenStatusChanges.Subscribe(status => {
 				Status = status;
 			});
 			Client = VpdbClient.GetWebClient();
-		}
-
-		private void SetupOutputProps()
-		{
-			this.WhenAnyValue(j => j.ReleaseId).Select(releaseId => DatabaseManager.GetRelease(ReleaseId)).ToProperty(this, j => j.Release, out _release);
-			this.WhenAnyValue(j => j.FileId).Select(fileId => DatabaseManager.GetVersion(ReleaseId, fileId)).ToProperty(this, j => j.Version, out _version);
-			this.WhenAnyValue(j => j.FileId).Select(fileId => DatabaseManager.GetTableFile(ReleaseId, fileId)).ToProperty(this, j => j.TableFile, out _tableFile);
-			this.WhenAnyValue(j => j.FileId).Select(fileId => DatabaseManager.GetFile(fileId)).ToProperty(this, j => j.File, out _file);
-
-			this.WhenAnyValue(j => j.ReleaseId).Subscribe(fileid =>
-			{
-				Console.WriteLine("ReleaseId changed.");
-			});
-
-			// uri
-			this.WhenAnyValue(j => j.File).Where(f => f != null).Select(f => VpdbClient.GetUri(f.Url)).ToProperty(this, x => x.Uri, out _uri);
 		}
 
 		/// <summary>
