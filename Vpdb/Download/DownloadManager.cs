@@ -32,9 +32,9 @@ namespace VpdbAgent.Vpdb.Download
 		/// than the release ID. 
 		/// </remarks>
 		/// <param name="releaseId">ID of the release</param>
-		/// <param name="currentFile">The current/previous file of the release or null if new release</param>
+		/// <param name="currentFileId">ID of current/previous file of the release or null if new release</param>
 		/// <returns>This instance</returns>
-		IDownloadManager DownloadRelease(string releaseId, VpdbTableFile currentFile = null);
+		IDownloadManager DownloadRelease(string releaseId, string currentFileId = null);
 
 		/// <summary>
 		/// An observable that produces a value when a release finished 
@@ -50,12 +50,14 @@ namespace VpdbAgent.Vpdb.Download
 		/// makes it possible to match the "Same" rule.
 		/// </summary>
 		/// <remarks>
-		/// Note that if <see cref="currentFile"/> is provided and the lastest file
-		/// is the same version as <see cref="currentFile"/>, <c>null</c> is returned.
+		/// Note that when <see cref="currentFile"/> is provided, the matched
+		/// file must be of a more recent version. Otherwise, the weight
+		/// resulting in the flavor overweights the recentness of the version,
+		/// i.e. a better matching flavor of an older version is preferred.
 		/// </remarks>
-		/// <param name="release"></param>
-		/// <param name="currentFile"></param>
-		/// <returns>The most recent file that matches user's flavor prefs and is not the same version as provided, or null if not found</returns>
+		/// <param name="release">Release containing all versions</param>
+		/// <param name="currentFile">Current file</param>
+		/// <returns>The most recent file that matches user's flavor prefs, or null if not found</returns>
 		VpdbTableFile FindLatestFile(VpdbRelease release, VpdbTableFile currentFile = null);
 	}
 
@@ -109,8 +111,10 @@ namespace VpdbAgent.Vpdb.Download
 			});
 		}
 
-		public IDownloadManager DownloadRelease(string releaseId, VpdbTableFile currentFile = null)
+		public IDownloadManager DownloadRelease(string releaseId, string currentFileId = null)
 		{
+			var currentFile = _databaseManager.GetTableFile(releaseId, currentFileId);
+
 			// retrieve release details
 			_logger.Info("Retrieving details for release {0}...", releaseId);
 			_vpdbClient.Api.GetFullRelease(releaseId).ObserveOn(Scheduler.Default).Subscribe(release => {
@@ -145,23 +149,24 @@ namespace VpdbAgent.Vpdb.Download
 			}
 
 			var file = release.Versions
-					.SelectMany(v => v.Files)
-					.Where(f => FlavorMatches(f, currentFile))
-					.Select(f => new { f, weight = FlavorWeight(f, currentFile) })
-					.OrderBy(x => x.weight)
-					.Select(x => x.f)
-					.LastOrDefault();
+				.SelectMany(v => v.Files)
+				.Where(f => FlavorMatches(f, currentFile))
+				.Select(f => new { f, weight = FlavorWeight(f, currentFile) })
+				.OrderByDescending(x => x.weight)
+				.ThenByDescending(x => x.f.ReleasedAt)
+				.Select(x => x.f)
+				.FirstOrDefault();
 
-			// check for same version
+			// check for newer version
 			if (file != null && currentFile != null) {
 				var currentVersion = release.Versions.FirstOrDefault(v => v.Files.Select(f => f.Reference.Id).Contains(currentFile.Reference.Id));
 				var latestVersion = release.Versions.FirstOrDefault(v => v.Files.Select(f => f.Reference.Id).Contains(file.Reference.Id));
-				if (latestVersion != null && currentVersion != null && currentVersion.Name == latestVersion.Name) {
+				if (latestVersion != null && currentVersion != null && currentVersion.ReleasedAt >= latestVersion.ReleasedAt) {
 					_logger.Info("No new files to download.");
 					return null;
 				}
 				if (latestVersion != null && currentVersion != null) {
-					_logger.Info("Found new version v{0}, upgrading from v{1}", latestVersion.Name, currentVersion.Name);
+					_logger.Info("Found new version from v{0} to v{1}", currentVersion.Name, latestVersion.Name);
 				}
 			}
 			if (file == null) {

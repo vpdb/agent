@@ -191,7 +191,7 @@ namespace VpdbAgent.Application
 
 		public IGameManager Sync(Game game)
 		{
-			_downloadManager.DownloadRelease(game.ReleaseId, game.File);
+			_downloadManager.DownloadRelease(game.ReleaseId, game.FileId);
 			return this;
 		}
 
@@ -315,7 +315,7 @@ namespace VpdbAgent.Application
 					var game = Games.FirstOrDefault(g => g.Id.Equals(x.Item1));
 					var release = _databaseManager.GetRelease(x.Item2);
 					LinkRelease(game, release, x.Item3);
-					_gamesToLink.RemoveAt(i);
+					_gamesToLink.RemoveAt(i); 
 				}
 			}
 		}
@@ -328,7 +328,7 @@ namespace VpdbAgent.Application
 		/// </summary>
 		private void UpdateReleaseData()
 		{
-			//return;
+			return;
 			// get local release ids
 			var releaseIds = Games.Where(g => g.HasRelease).Select(g => g.ReleaseId).ToList();
 			if (releaseIds.Count > 0) {
@@ -371,6 +371,7 @@ namespace VpdbAgent.Application
 				AddGame(job);
 
 			} else {
+				game.FileId = job.FileId;
 				UpdateGame(game, job);
 			}
 		}

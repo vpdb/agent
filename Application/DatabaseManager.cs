@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reactive;
+using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
 using System.Threading.Tasks;
@@ -146,12 +147,17 @@ namespace VpdbAgent.Application
 
 		private string _dbPath;
 		private readonly Subject<Unit> _initialized = new Subject<Unit>();
+		private readonly Subject<Unit> _save = new Subject<Unit>();
 
 		public DatabaseManager(ISettingsManager settingsManager, CrashManager crashManager, Logger logger)
 		{
 			_settingsManager = settingsManager;
 			_crashManager = crashManager;
 			_logger = logger;
+
+			_save.Throttle(TimeSpan.FromMilliseconds(500)).Subscribe(_ => {
+				MarshallDatabase();
+			});
 		}
 
 		public IDatabaseManager Initialize()
@@ -167,7 +173,7 @@ namespace VpdbAgent.Application
 
 		public IDatabaseManager Save()
 		{
-			MarshallDatabase();
+			_save.OnNext(Unit.Default);
 			return this;
 		}
 

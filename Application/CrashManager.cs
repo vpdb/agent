@@ -78,8 +78,13 @@ namespace VpdbAgent.Application
 		/// <returns>Application log</returns>
 		private Dictionary<string, object> GetLogs()
 		{
-			var logs = string.Join("\n", _log.Logs);
-			return new Dictionary<string, object>() {{"log", logs }};
+			try {
+				var logs = string.Join("\n", _log.Logs);
+				return new Dictionary<string, object>() { { "log", logs } };
+
+			} catch (Exception) {
+				return new Dictionary<string, object>();
+			}
 		}
 
 		/// <summary>
