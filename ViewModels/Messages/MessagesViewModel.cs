@@ -35,9 +35,8 @@ namespace VpdbAgent.ViewModels.Messages
 				_messagesRead
 			);
 
-			Messages.CountChanged
+			this.WhenAnyObservable(x => x.Messages.CountChanged)
 				.Select(_ => Messages.Count == 0)
-				.StartWith(Messages.Count == 0)
 				.ToProperty(this, x => x.IsEmpty, out _isEmpty);
 
 			ClearAll.Subscribe(_ => {

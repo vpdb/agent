@@ -32,9 +32,8 @@ namespace VpdbAgent.ViewModels.Downloads
 				jobManager.WhenStatusChanged
 			);
 
-			Jobs.CountChanged
+			this.WhenAnyObservable(x => x.Jobs.CountChanged)
 				.Select(_ => Jobs.Count == 0)
-				.StartWith(Jobs.Count == 0)
 				.ToProperty(this, x => x.IsEmpty, out _isEmpty);
 		}
 	}
