@@ -231,6 +231,7 @@
     <Compile Include="Application\MessageManager.cs" />
     <Compile Include="Application\PlatformManager.cs" />
     <Compile Include="Common\Extensions\Common.cs" />
+    <Compile Include="Libs\Diff.cs" />
     <Compile Include="Vpdb\RealtimeManager.cs" />
     <Compile Include="Application\Settings.cs" />
     <Compile Include="Application\VersionManager.cs" />

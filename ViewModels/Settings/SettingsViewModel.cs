@@ -27,6 +27,7 @@ namespace VpdbAgent.ViewModels.Settings
 		public string PbxFolder { get { return _pbxFolder; } set { this.RaiseAndSetIfChanged(ref _pbxFolder, value); } }
 		public bool SyncStarred { get { return _syncStarred; } set { this.RaiseAndSetIfChanged(ref _syncStarred, value); } }
 		public bool DownloadOnStartup { get { return _downloadOnStartup; } set { this.RaiseAndSetIfChanged(ref _downloadOnStartup, value); } }
+		public bool PatchTableScripts { get { return _patchTableScripts; } set { this.RaiseAndSetIfChanged(ref _patchTableScripts, value); } }
 		public bool MinimizeToTray { get { return _minimizeToTray; } set { this.RaiseAndSetIfChanged(ref _minimizeToTray, value); } }
 		public bool StartWithWindows { get { return _startWithWindows; } set { this.RaiseAndSetIfChanged(ref _startWithWindows, value); } }
 		public bool ReformatXml { get { return _reformatXml; } set { this.RaiseAndSetIfChanged(ref _reformatXml, value); } }
@@ -57,6 +58,7 @@ namespace VpdbAgent.ViewModels.Settings
 		public ReactiveCommand<Dictionary<string, string>> SaveSettings { get; }
 		public ReactiveCommand<object> ChooseFolder { get; } = ReactiveCommand.Create();
 		public ReactiveCommand<object> CloseSettings { get; } = ReactiveCommand.Create();
+		public ReactiveCommand<object> ShowPatchTableInfo { get; } = ReactiveCommand.Create();
 
 		// privates
 		private string _apiKey;
@@ -66,6 +68,7 @@ namespace VpdbAgent.ViewModels.Settings
 		private string _authPass;
 		private bool _syncStarred;
 		private bool _downloadOnStartup;
+		private bool _patchTableScripts;
 		private bool _minimizeToTray;
 		private bool _startWithWindows;
 		private bool _reformatXml;
@@ -94,6 +97,7 @@ namespace VpdbAgent.ViewModels.Settings
 			PbxFolder = _settingsManager.Settings.PbxFolder;
 			SyncStarred = _settingsManager.Settings.SyncStarred;
 			DownloadOnStartup = _settingsManager.Settings.DownloadOnStartup;
+			PatchTableScripts = _settingsManager.Settings.PatchTableScripts;
 			MinimizeToTray = _settingsManager.Settings.MinimizeToTray;
 			ReformatXml = _settingsManager.Settings.ReformatXml;
 			XmlFileVP = _settingsManager.Settings.XmlFile[Platform.PlatformType.VP];
@@ -171,6 +175,7 @@ namespace VpdbAgent.ViewModels.Settings
 			settings.PbxFolder = _pbxFolder;
 			settings.SyncStarred = _syncStarred;
 			settings.DownloadOnStartup = _downloadOnStartup;
+			settings.PatchTableScripts = _patchTableScripts;
 			settings.MinimizeToTray = _minimizeToTray;
 			settings.ReformatXml = _reformatXml;
 			settings.XmlFile = new Dictionary<Platform.PlatformType, string> {{ Platform.PlatformType.VP, _xmlFileVP }};

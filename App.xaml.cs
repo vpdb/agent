@@ -8,6 +8,7 @@ using Hardcodet.Wpf.TaskbarNotification;
 using Mindscape.Raygun4Net;
 using NLog;
 using Squirrel;
+using SynchrotronNet;
 using VpdbAgent.Application;
 using VpdbAgent.ViewModels;
 
@@ -36,6 +37,28 @@ namespace VpdbAgent
 			// crash handling
 			CrashManager = new CrashManager(_logger);
 			DispatcherUnhandledException += CrashManager.OnDispatcherUnhandledException;
+
+
+			var original = new[] { "first line", "second line", "third line", "fourth line" };
+			var originalChanged = new[] { "first line", "edited 2nd", "third line", "fourth line also" };
+			var update = new[] { "first line", "second line", "third line", "fourth line has changed" };
+
+			var result = Diff.Diff3Merge(originalChanged, original, update, true);
+
+			foreach (var block in result) {
+				var okBlock = block as Diff.MergeOkResultBlock;
+				var conflictBlock = block as Diff.MergeConflictResultBlock;
+
+				if (okBlock != null) {
+					Console.WriteLine("------------------- Success: \n{0}", string.Join("\n", okBlock.ContentLines));
+
+				} else if (conflictBlock != null) {
+					Console.WriteLine("------------------- Conflict.");
+
+				} else {
+					throw new InvalidOperationException("Result must be either ok or conflict.");
+				}
+			}
 		}
 
 		protected override void OnStartup(StartupEventArgs e)

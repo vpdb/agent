@@ -73,6 +73,11 @@ namespace VpdbAgent.Application
 		public bool DownloadOnStartup { get { return _downloadOnStartup; } set { this.RaiseAndSetIfChanged(ref _downloadOnStartup, value); } }
 
 		/// <summary>
+		/// If true, changes of a local table script are applied to table updates using three-way merge.
+		/// </summary>
+		public bool PatchTableScripts { get { return _patchTableScripts; } set { this.RaiseAndSetIfChanged(ref _patchTableScripts, value); } }
+
+		/// <summary>
 		/// Primary orientation when downloading a release
 		/// </summary>
 		public SettingsManager.Orientation DownloadOrientation { get { return _downloadOrientation; } set { this.RaiseAndSetIfChanged(ref _downloadOrientation, value); } }
@@ -122,6 +127,7 @@ namespace VpdbAgent.Application
 		private bool _reformatXml;
 		private Dictionary<Platform.PlatformType, string> _xmlFile;
 		private bool _downloadOnStartup;
+		private bool _patchTableScripts;
 		private SettingsManager.Orientation _downloadOrientation;
 		private SettingsManager.Orientation _downloadOrientationFallback;
 		private SettingsManager.Lighting _downloadLighting;
@@ -147,6 +153,7 @@ namespace VpdbAgent.Application
 			ReformatXml = await storage.GetOrCreateObject("ReformatXml", () => false);
 			XmlFile = await storage.GetOrCreateObject("XmlFile", () => new Dictionary<Platform.PlatformType, string> {{ Platform.PlatformType.VP, "Visual Pinball" }});
 			DownloadOnStartup = await storage.GetOrCreateObject("DownloadOnStartup", () => false);
+			PatchTableScripts = await storage.GetOrCreateObject("PatchTableScripts", () => true);
 			DownloadOrientation = await storage.GetOrCreateObject("DownloadOrientation", () => SettingsManager.Orientation.Portrait);
 			DownloadOrientationFallback = await storage.GetOrCreateObject("DownloadOrientationFallback", () => SettingsManager.Orientation.Same);
 			DownloadLighting = await storage.GetOrCreateObject("DownloadLighting", () => SettingsManager.Lighting.Day);
@@ -168,6 +175,7 @@ namespace VpdbAgent.Application
 			await storage.InsertObject("ReformatXml", ReformatXml);
 			await storage.InsertObject("XmlFile", XmlFile);
 			await storage.InsertObject("DownloadOnStartup", DownloadOnStartup);
+			await storage.InsertObject("PatchTableScripts", PatchTableScripts);
 			await storage.InsertObject("DownloadOrientation", DownloadOrientation);
 			await storage.InsertObject("DownloadOrientationFallback", DownloadOrientationFallback);
 			await storage.InsertObject("DownloadLighting", DownloadLighting);
@@ -193,6 +201,7 @@ namespace VpdbAgent.Application
 			to.ReformatXml = from.ReformatXml;
 			to.XmlFile = new Dictionary<Platform.PlatformType, string>(from.XmlFile);
 			to.DownloadOnStartup = from.DownloadOnStartup;
+			to.PatchTableScripts = from.PatchTableScripts;
 			to.DownloadOrientation = from.DownloadOrientation;
 			to.DownloadOrientationFallback = from.DownloadOrientationFallback;
 			to.DownloadLighting = from.DownloadLighting;

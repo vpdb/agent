@@ -38,6 +38,7 @@ namespace VpdbAgent.Views.Settings
 				d(this.BindCommand(ViewModel, vm => vm.ChooseFolder, v => v.PinballXFolderButton));
 				d(this.BindCommand(ViewModel, vm => vm.CloseSettings, v => v.CancelButton));
 				d(this.BindCommand(ViewModel, vm => vm.SaveSettings, v => v.SaveButton));
+				d(this.BindCommand(ViewModel, vm => vm.ShowPatchTableInfo, v => v.PatchTableScriptsInfoButton));
 
 				DataContext = ViewModel;
 			});

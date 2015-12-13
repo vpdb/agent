@@ -3,7 +3,7 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-      xmlns:c="clr-namespace:VpdbAgent.Controls"
+      xmlns:ctrl="clr-namespace:VpdbAgent.Controls"
       xmlns:v="clr-namespace:VpdbAgent.Views.Settings"
       xmlns:vm="clr-namespace:VpdbAgent.ViewModels.Settings"
       xmlns:typeConverters="clr-namespace:VpdbAgent.Common.TypeConverters"
@@ -65,7 +65,7 @@
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-                    <c:IconControl Foreground="{StaticResource LightRedBrush}" Data="{StaticResource IconWarning}"
+                    <ctrl:IconControl Foreground="{StaticResource LightRedBrush}" Data="{StaticResource IconWarning}"
                                    Grid.Column="0" Height="18" Width="18" VerticalAlignment="Top" Margin="15,3,10,0" />
                     <TextBlock x:Name="PbxFolderError" Style="{StaticResource Label}" Foreground="{StaticResource LightRedBrush}" 
                                Grid.Column="1" Text="Error message" TextWrapping="Wrap"/>
@@ -82,7 +82,7 @@
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-                    <c:IconControl Foreground="{StaticResource LightRedBrush}" Data="{StaticResource IconWarning}"
+                    <ctrl:IconControl Foreground="{StaticResource LightRedBrush}" Data="{StaticResource IconWarning}"
                                    Grid.Column="0" Height="18" Width="18" VerticalAlignment="Top" Margin="0,3,10,0" />
                     <TextBlock x:Name="ApiKeyError" Style="{StaticResource Label}" Foreground="{StaticResource LightRedBrush}" 
                                Grid.Column="1" Text="Error message" TextWrapping="Wrap"/>
@@ -114,7 +114,7 @@
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-                    <c:IconControl Foreground="{StaticResource LightRedBrush}" Data="{StaticResource IconWarning}"
+                    <ctrl:IconControl Foreground="{StaticResource LightRedBrush}" Data="{StaticResource IconWarning}"
                                    Grid.Column="0" Height="18" Width="18" VerticalAlignment="Top" Margin="0,3,10,0" />
                     <TextBlock x:Name="AuthError" Style="{StaticResource Label}" Foreground="{StaticResource LightRedBrush}" 
                                Grid.Column="1" Text="Error message" TextWrapping="Wrap"/>
@@ -143,6 +143,26 @@
                     <TextBlock Text="Check for new and updated games at startup" Style="{StaticResource Label}" Grid.Column="0" Margin="15,0,0,0"/>
                     <ToggleButton IsChecked="{Binding DownloadOnStartup}" x:Name="DownloadOnStartup" Grid.Column="1" Height="20" Margin="5,0,0,0"/>
                 </Grid>
+                
+                <!-- Patch table scripts -->
+                <Grid Margin="0,10,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="Apply my table script changes to updates" Style="{StaticResource Label}" Grid.Column="0" Margin="15,0,0,0"/>
+                    <Button x:Name="PatchTableScriptsInfoButton" Style="{StaticResource ButtonLink}" HorizontalAlignment="Left" Grid.Column="1">
+                        <ctrl:IconControl Data="{StaticResource IconInfoCircle}" Height="16" Width="16" 
+                                          HorizontalAlignment="Left" VerticalAlignment="Center" Margin="15,5,0,0" />
+                    </Button>
+                    <ToggleButton IsChecked="{Binding PatchTableScripts}" x:Name="PatchTableScripts" Grid.Column="2" Height="20" Margin="5,0,0,0"/>
+                </Grid>
+                <Expander IsExpanded="True" Style="{StaticResource AnimatedExpander}" >
+                    <Grid Background="{StaticResource DarkBackgroundBrush}">
+                        <TextBlock Text="When updating a table, create a diff between the script of your outdated table and the original script of the outdated table and apply it to the updated table script." />
+                    </Grid>
+                </Expander>
 
                 <!-- Download Options -->
                 <Label Content="Flavor Preferences" Style="{StaticResource Header1}" Margin="0,20,0,0"/>
@@ -281,7 +301,7 @@
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <c:IconControl Foreground="{StaticResource LightRedBrush}" Data="{StaticResource IconWarning}"
+                        <ctrl:IconControl Foreground="{StaticResource LightRedBrush}" Data="{StaticResource IconWarning}"
                                    Grid.Column="0" Height="18" Width="18" VerticalAlignment="Top" Margin="0,3,10,0" />
                         <TextBlock x:Name="XmlFileVpError" Style="{StaticResource Label}" Foreground="{StaticResource LightRedBrush}" 
                                Grid.Column="1" Text="Error message" TextWrapping="Wrap"/>
