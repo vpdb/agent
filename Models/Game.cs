@@ -108,7 +108,7 @@ namespace VpdbAgent.Models
 				.Select(releaseId => releaseId != null)
 				.ToProperty(this, game => game.HasRelease, out _hasRelease);
 
-			// notify prop listeners of the objects
+			// setup output props that link to objects
 			this.WhenAnyValue(x => x.ReleaseId).Select(releaseId => DatabaseManager.GetRelease(ReleaseId)).ToProperty(this, x => x.Release, out _release);
 			this.WhenAnyValue(x => x.FileId).Select(fileId => DatabaseManager.GetVersion(ReleaseId, fileId)).ToProperty(this, x => x.Version, out _version);
 			this.WhenAnyValue(x => x.FileId).Select(fileId => DatabaseManager.GetTableFile(ReleaseId, fileId)).ToProperty(this, x => x.File, out _file);
