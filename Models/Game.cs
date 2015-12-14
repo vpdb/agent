@@ -68,6 +68,13 @@ namespace VpdbAgent.Models
 		/// </summary>
 		[DataMember] public bool IsSynced { get { return _isSynced; } set { this.RaiseAndSetIfChanged(ref _isSynced, value); } }
 
+		/// <summary>
+		/// The table script as it was saved back after patching. If null, the script
+		/// either hasn't previously been updated, there was no previous version
+		/// or patching resulted in a conflict.
+		/// </summary>
+		[DataMember] public string PatchedTableScript { get { return _patchedTableScript; } set { this.RaiseAndSetIfChanged(ref _patchedTableScript, value); } }
+
 		// dependencies
 		private static readonly IDatabaseManager DatabaseManager = Locator.Current.GetService<IDatabaseManager>();
 		
@@ -84,6 +91,7 @@ namespace VpdbAgent.Models
 		private string _fileId;
 		private bool _exists;
 		private bool _isSynced;
+		private string _patchedTableScript;
 		private readonly ObservableAsPropertyHelper<bool> _hasRelease;
 		private readonly ObservableAsPropertyHelper<bool> _hasUpdate;
 		private ObservableAsPropertyHelper<VpdbTableFile> _updatedRelease;

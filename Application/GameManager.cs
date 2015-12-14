@@ -9,8 +9,10 @@ using System.Reactive.Subjects;
 using System.Threading.Tasks;
 using NLog;
 using ReactiveUI;
+using SynchrotronNet;
 using VpdbAgent.PinballX;
 using VpdbAgent.PinballX.Models;
+using VpdbAgent.VisualPinball;
 using VpdbAgent.Vpdb;
 using VpdbAgent.Vpdb.Download;
 using VpdbAgent.Vpdb.Models;
@@ -98,6 +100,7 @@ namespace VpdbAgent.Application
 		private readonly IPlatformManager _platformManager;
 		private readonly IMessageManager _messageManager;
 		private readonly IRealtimeManager _realtimeManager;
+		private readonly IVisualPinballManager _visualPinballManager;
 		private readonly Logger _logger;
 
 		// props
@@ -112,7 +115,7 @@ namespace VpdbAgent.Application
 		public GameManager(IMenuManager menuManager, IVpdbClient vpdbClient, ISettingsManager 
 			settingsManager, IDownloadManager downloadManager, IDatabaseManager databaseManager,
 			IVersionManager versionManager, IPlatformManager platformManager, IMessageManager messageManager,
-			IRealtimeManager realtimeManager, Logger logger)
+			IRealtimeManager realtimeManager, IVisualPinballManager visualPinballManager, Logger logger)
 		{
 			_menuManager = menuManager;
 			_vpdbClient = vpdbClient;
@@ -123,6 +126,7 @@ namespace VpdbAgent.Application
 			_platformManager = platformManager;
 			_messageManager = messageManager;
 			_realtimeManager = realtimeManager;
+			_visualPinballManager = visualPinballManager;
 			_logger = logger;
 
 			// setup game change listener once all games are fetched.
@@ -371,12 +375,95 @@ namespace VpdbAgent.Application
 				AddGame(job);
 
 			} else {
+				var previousFileId = game.FileId;
+				var previousFilename = game.Filename;
 				var from = _databaseManager.GetVersion(job.ReleaseId, game.FileId);
 				var to = _databaseManager.GetVersion(job.ReleaseId, job.FileId);
 				_logger.Info("Updating file ID from {0} ({1}) to {2} ({3})...", game.FileId, from, job.FileId, to);
 				game.FileId = job.FileId;
 				UpdateGame(game, job);
+
+				if (_settingsManager.Settings.PatchTableScripts) {
+					PatchGame(game, previousFileId, previousFilename, job.FileId);
+				}
 			}
+		}
+
+		private void PatchGame(Game game, string baseFileId, string baseFileName, string fileToPatchId)
+		{
+			_logger.Info("Patching file {0} with changes from file {1}", fileToPatchId, baseFileId);
+
+			// get table scripts for original files
+			var baseFile = _databaseManager.GetTableFile(game.ReleaseId, baseFileId).Reference;
+			var fileToPatch = _databaseManager.GetTableFile(game.ReleaseId, fileToPatchId).Reference;
+			var baseScript = baseFile?.Metadata["table_script"];
+			var scriptToPatch = fileToPatch?.Metadata["table_script"];
+			if (baseScript == null || scriptToPatch == null) {
+				_logger.Warn("Got no script for file {0}, aborting.", baseScript == null ? baseFileId : fileToPatchId);
+				return;
+			}
+
+			// get script from local (potentially modified) table file
+			var oldTablePath = Path.Combine(game.Platform.TablePath, baseFileName);
+			var localScript = _visualPinballManager.GetTableScript(oldTablePath);
+			if (localScript == null) {
+				_logger.Warn("Error reading table script from {0}.", oldTablePath);
+			}
+
+			if (localScript == baseScript) {
+				_logger.Warn("Got no script for file {0}, aborting.", baseScript == null ? baseFileId : fileToPatchId);
+				return;
+			}
+
+			// sanity check: compare extracted script from vpdb with our own
+			var newTablePath = Path.Combine(game.Platform.TablePath, game.Filename);
+			var newScript = _visualPinballManager.GetTableScript(newTablePath);
+			if (newScript != scriptToPatch)
+			{
+				_logger.Error("Script from VPDB ({0} bytes) is not identical to what we've extracted from the download ({1} bytes).", scriptToPatch.Length, newScript.Length);
+				return;
+			}
+
+			var baseScriptLines = baseScript.Split('\n');
+			var scriptToPatchLines = baseScript.Split('\n');
+			var localScriptLines = baseScript.Split('\n');
+
+			// do the three-way merge
+			var result = Diff.Diff3Merge(localScriptLines, baseScriptLines, scriptToPatchLines, true);
+			var patchedScriptLines = new List<string>();
+			var failed = 0;
+			var succeeded = 0;
+			foreach (var block in result) {
+				var okBlock = block as Diff.MergeOkResultBlock;
+				var conflictBlock = block as Diff.MergeConflictResultBlock;
+				if (okBlock != null) {
+					succeeded++;
+					patchedScriptLines.AddRange(okBlock.ContentLines);
+					//Console.WriteLine("------------------- Success: \n{0}", string.Join("\n", okBlock.ContentLines));
+
+				} else if (conflictBlock != null) {
+					failed++;
+					//Console.WriteLine("------------------- Conflict.");
+
+				} else {
+					throw new InvalidOperationException("Result must be either ok or conflict.");
+				}
+			}
+			if (failed > 0) {
+				_logger.Warn("Patching failed ({0} block(s) ok, {1} block(s) conflicted.", succeeded, failed);
+				return;
+			}
+			var patchedScript = string.Join("\n", patchedScriptLines);
+			_logger.Info("Successfully patched scripts ({0} block(s) applied).", succeeded);
+
+			// write back script
+			try {
+				_visualPinballManager.SetTableScript(newTablePath, patchedScript);
+			} catch (Exception e) {
+				_logger.Error(e, "Error writing patched script back to table file.");
+				return;
+			}
+			_logger.Info("Successfully wrote back script to table file.");
 		}
 
 		/// <summary>

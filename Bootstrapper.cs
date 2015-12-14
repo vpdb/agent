@@ -188,6 +188,7 @@ namespace VpdbAgent
 				locator.GetService<IPlatformManager>(),
 				locator.GetService<IMessageManager>(),
 				locator.GetService<IRealtimeManager>(),
+				locator.GetService<IVisualPinballManager>(),
 				locator.GetService<NLog.Logger>()
 			), typeof(IGameManager));
 

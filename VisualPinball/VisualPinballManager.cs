@@ -65,6 +65,13 @@ namespace VpdbAgent.VisualPinball
 		/// <param name="tableScript">Contents of the new table script</param>
 		/// <returns></returns>
 		IVisualPinballManager SetTableScript(string path, string tableScript);
+
+		/// <summary>
+		/// Retrieves the table script from a given path.
+		/// </summary>
+		/// <param name="path">Absolute path to the table file</param>
+		/// <returns>Table script or null on error</returns>
+		string GetTableScript(string path);
 	}
 
 	public class VisualPinballManager : IVisualPinballManager
@@ -81,6 +88,10 @@ namespace VpdbAgent.VisualPinball
 
 		public string GetTableScript(string path)
 		{
+			if (!File.Exists(path)) {
+				return null;
+			}
+
 			var cf = new CompoundFile(path);
 			var storage = cf.RootStorage.GetStorage("GameStg");
 

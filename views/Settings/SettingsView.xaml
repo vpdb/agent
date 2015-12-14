@@ -158,10 +158,13 @@
                     </Button>
                     <ToggleButton IsChecked="{Binding PatchTableScripts}" x:Name="PatchTableScripts" Grid.Column="2" Height="20" Margin="5,0,0,0"/>
                 </Grid>
+                <StackPanel Orientation="Vertical" Background="{StaticResource DarkBackgroundBrush}" Margin="-20,0,-20,0">
+                    <TextBlock Style="{StaticResource Label}" TextTrimming="None" Margin="35,0,35,0"
+                                Text="When updating a table, create a diff between the script of your outdated table and the original script of the outdated table and apply it to the updated table script." />
+                </StackPanel>
+                
                 <Expander IsExpanded="True" Style="{StaticResource AnimatedExpander}" >
-                    <Grid Background="{StaticResource DarkBackgroundBrush}">
-                        <TextBlock Text="When updating a table, create a diff between the script of your outdated table and the original script of the outdated table and apply it to the updated table script." />
-                    </Grid>
+                   
                 </Expander>
 
                 <!-- Download Options -->
