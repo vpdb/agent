@@ -12,7 +12,7 @@ namespace VpdbAgent.Vpdb.Models
 		public DateTime CreatedAt { get; set; }
 		public string MimeType { get; set; }
 		public string FileType { get; set; }
-		public Dictionary<string, string> Metadata { get; set; }
+		public Dictionary<string, dynamic> Metadata { get; set; }
 		public Dictionary<string, VpdbVariation> Variations { get; set; }
 		public VpdbCounter Counter { get; set; }
 		public bool IsActive { get; set; }

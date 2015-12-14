@@ -389,76 +389,79 @@ namespace VpdbAgent.Application
 			}
 		}
 
+		/// <summary>
+		/// Applies table script changes from a previous version to an updated version.
+		/// </summary>
+		/// <param name="game">Game where to apply changes to</param>
+		/// <param name="baseFileId">File ID of the previous version</param>
+		/// <param name="baseFileName">File name of the previous version</param>
+		/// <param name="fileToPatchId">File ID of the updated version</param>
 		private void PatchGame(Game game, string baseFileId, string baseFileName, string fileToPatchId)
 		{
+			// todo create log message when something goes wrong.
+
 			_logger.Info("Patching file {0} with changes from file {1}", fileToPatchId, baseFileId);
 
 			// get table scripts for original files
 			var baseFile = _databaseManager.GetTableFile(game.ReleaseId, baseFileId).Reference;
 			var fileToPatch = _databaseManager.GetTableFile(game.ReleaseId, fileToPatchId).Reference;
-			var baseScript = baseFile?.Metadata["table_script"];
-			var scriptToPatch = fileToPatch?.Metadata["table_script"];
-			if (baseScript == null || scriptToPatch == null) {
-				_logger.Warn("Got no script for file {0}, aborting.", baseScript == null ? baseFileId : fileToPatchId);
+			var originalBaseScript = (string)baseFile?.Metadata["table_script"];
+			var originalScriptToPatch = (string)fileToPatch?.Metadata["table_script"];
+			if (originalBaseScript == null || originalScriptToPatch == null) {
+				_logger.Warn("Got no script for file {0}, aborting.", originalBaseScript == null ? baseFileId : fileToPatchId);
 				return;
 			}
 
 			// get script from local (potentially modified) table file
-			var oldTablePath = Path.Combine(game.Platform.TablePath, baseFileName);
-			var localScript = _visualPinballManager.GetTableScript(oldTablePath);
-			if (localScript == null) {
-				_logger.Warn("Error reading table script from {0}.", oldTablePath);
-			}
-
-			if (localScript == baseScript) {
-				_logger.Warn("Got no script for file {0}, aborting.", baseScript == null ? baseFileId : fileToPatchId);
+			var localBaseFilePath = Path.Combine(game.Platform.TablePath, baseFileName);
+			var localBaseScript = _visualPinballManager.GetTableScript(localBaseFilePath);
+			if (localBaseScript == null) {
+				_logger.Warn("Error reading table script from {0}.", localBaseFilePath);
 				return;
 			}
+
+			if (localBaseScript == originalBaseScript) {
+				_logger.Info("No changes between old local and remote version, so nothing to patch. We're done patching.");
+				return;
+			}
+			_logger.Info("Script changes between old local and old remote table detected, so let's merge those changes!");
 
 			// sanity check: compare extracted script from vpdb with our own
-			var newTablePath = Path.Combine(game.Platform.TablePath, game.Filename);
-			var newScript = _visualPinballManager.GetTableScript(newTablePath);
-			if (newScript != scriptToPatch)
-			{
-				_logger.Error("Script from VPDB ({0} bytes) is not identical to what we've extracted from the download ({1} bytes).", scriptToPatch.Length, newScript.Length);
+			var localFilePathToPatch = Path.Combine(game.Platform.TablePath, game.Filename);
+			var localScriptToPatch = _visualPinballManager.GetTableScript(localFilePathToPatch);
+			if (localScriptToPatch != originalScriptToPatch) {
+				_logger.Error("Script in metadata ({0} bytes) is not identical to what we've extracted from the download ({1} bytes).", originalScriptToPatch.Length, localScriptToPatch.Length);
 				return;
 			}
 
-			var baseScriptLines = baseScript.Split('\n');
-			var scriptToPatchLines = baseScript.Split('\n');
-			var localScriptLines = baseScript.Split('\n');
+			// we need line arrays for the merge tool
+			var originalBaseScriptLines = originalBaseScript.Split('\n');
+			var originalScriptToPatchLines = originalScriptToPatch.Split('\n');
+			var localBaseScriptLines = localBaseScript.Split('\n');
 
 			// do the three-way merge
-			var result = Diff.Diff3Merge(localScriptLines, baseScriptLines, scriptToPatchLines, true);
+			var result = Diff.Diff3Merge(localBaseScriptLines, originalBaseScriptLines, originalScriptToPatchLines, true);
 			var patchedScriptLines = new List<string>();
 			var failed = 0;
 			var succeeded = 0;
-			foreach (var block in result) {
-				var okBlock = block as Diff.MergeOkResultBlock;
-				var conflictBlock = block as Diff.MergeConflictResultBlock;
+			foreach (var okBlock in result.Select(block => block as Diff.MergeOkResultBlock)) {
 				if (okBlock != null) {
 					succeeded++;
 					patchedScriptLines.AddRange(okBlock.ContentLines);
-					//Console.WriteLine("------------------- Success: \n{0}", string.Join("\n", okBlock.ContentLines));
-
-				} else if (conflictBlock != null) {
-					failed++;
-					//Console.WriteLine("------------------- Conflict.");
-
 				} else {
-					throw new InvalidOperationException("Result must be either ok or conflict.");
+					failed++;
 				}
 			}
 			if (failed > 0) {
-				_logger.Warn("Patching failed ({0} block(s) ok, {1} block(s) conflicted.", succeeded, failed);
+				_logger.Warn("Merge failed ({0} block(s) ok, {1} block(s) conflicted. Needs manual resolving", succeeded, failed);
 				return;
 			}
 			var patchedScript = string.Join("\n", patchedScriptLines);
-			_logger.Info("Successfully patched scripts ({0} block(s) applied).", succeeded);
+			_logger.Info("Successfully merged changes - {0} block(s) applied.", succeeded);
 
-			// write back script
+			// save script to table
 			try {
-				_visualPinballManager.SetTableScript(newTablePath, patchedScript);
+				_visualPinballManager.SetTableScript(localFilePathToPatch, patchedScript);
 			} catch (Exception e) {
 				_logger.Error(e, "Error writing patched script back to table file.");
 				return;

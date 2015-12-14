@@ -38,8 +38,8 @@ namespace VpdbAgent.VisualPinball
 	/// 
 	/// `WriteTag()` just writes "size 4", followed by "CODE", with no further
 	/// data. Then, the CodeViewer object just dumps whatever it thinks is right
-	/// into the stream, without even going through the BiffWriter, which is
-	/// supposed to abtract all this shit.
+	/// into the stream, without even going through the BiffWriter, which surely
+	/// looks like it's supposed to abtract all this shit.
 	/// 
 	/// Looking at the result we can guess that it writes first the size of the
 	/// table script, followed by its data. But other objects are less obvious,
@@ -240,7 +240,7 @@ namespace VpdbAgent.VisualPinball
 			/// Returns the size of the block
 			/// </summary>
 			/// <param name="biffData">Entire BIFF data block</param>
-			/// <param name="offset">Offset where block to analyize starts</param>
+			/// <param name="offset">Offset where block to analyze starts</param>
 			/// <returns>Total size of the block</returns>
 			int GetSize(byte[] biffData, int offset);
 
@@ -249,7 +249,7 @@ namespace VpdbAgent.VisualPinball
 			/// size stripped away).
 			/// </summary>
 			/// <param name="biffData">Entire BIFF data block</param>
-			/// <param name="offset">Offset where block to analyize starts</param>
+			/// <param name="offset">Offset where block to analyze starts</param>
 			/// <param name="blockSize">Previously parsed size of the entire block</param>
 			/// <returns></returns>
 			byte[] DeserializeData(byte[] biffData, int offset, int blockSize);

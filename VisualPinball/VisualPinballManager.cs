@@ -119,7 +119,7 @@ namespace VpdbAgent.VisualPinball
 
 		public IVisualPinballManager SetTableScript(string path, string tableScript)
 		{
-			_logger.Info("Updating table script for {0}", path);
+			_logger.Info("Saving table script to {0}", path);
 
 			var cf = new CompoundFile(path, CFSUpdateMode.Update, CFSConfiguration.Default);
 			var storage = cf.RootStorage.GetStorage("GameStg");
@@ -131,6 +131,7 @@ namespace VpdbAgent.VisualPinball
 			if (!computedChecksum.SequenceEqual(storedChecksum)) {
 				throw new FormatException("Could not recompute checksum.");
 			}
+			_logger.Info("Checkum looks good, computed the same as found in file.");
 			_logger.Info("Checking BIFF capabilities...");
 			var gameData = new BiffSerializer(storage.GetStream("GameData").GetData());
 			var parsers = new Dictionary<string, BiffSerializer.IBiffTagSerializer> {
@@ -140,11 +141,12 @@ namespace VpdbAgent.VisualPinball
 			if (!gameData.CheckConsistency()) {
 				throw new FormatException("Could not re-serialize BIFF data.");
 			}
+			_logger.Info("Un- and re-serialized BIFF data and got the same result. We're good to go!");
 
 			try {
 
 				// 2. update table script
-				_logger.Info("Setting new CODE...");
+				_logger.Info("Updating CODE data in BIFF stream...");
 				gameData.SetString("CODE", tableScript);
 				storage.GetStream("GameData").SetData(gameData.Serialize());
 				cf.Commit();
