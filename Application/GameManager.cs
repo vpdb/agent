@@ -332,6 +332,8 @@ namespace VpdbAgent.Application
 		/// </summary>
 		private void UpdateReleaseData()
 		{
+
+			return;
 			// get local release ids
 			var releaseIds = Games.Where(g => g.HasRelease).Select(g => g.ReleaseId).ToList();
 			if (releaseIds.Count > 0) {
@@ -375,16 +377,18 @@ namespace VpdbAgent.Application
 				AddGame(job);
 
 			} else {
-				var previousFileId = game.FileId;
 				var previousFilename = game.Filename;
 				var from = _databaseManager.GetVersion(job.ReleaseId, game.FileId);
 				var to = _databaseManager.GetVersion(job.ReleaseId, job.FileId);
 				_logger.Info("Updating file ID from {0} ({1}) to {2} ({3})...", game.FileId, from, job.FileId, to);
-				game.FileId = job.FileId;
+				using (game.SuppressChangeNotifications()) {
+					game.PreviousFileId = game.FileId;
+					game.FileId = job.FileId;
+				}
 				UpdateGame(game, job);
 
 				if (_settingsManager.Settings.PatchTableScripts) {
-					PatchGame(game, previousFileId, previousFilename, job.FileId);
+					PatchGame(game, previousFilename, job.FileId);
 				}
 			}
 		}
@@ -393,14 +397,13 @@ namespace VpdbAgent.Application
 		/// Applies table script changes from a previous version to an updated version.
 		/// </summary>
 		/// <param name="game">Game where to apply changes to</param>
-		/// <param name="baseFileId">File ID of the previous version</param>
 		/// <param name="baseFileName">File name of the previous version</param>
 		/// <param name="fileToPatchId">File ID of the updated version</param>
-		private void PatchGame(Game game, string baseFileId, string baseFileName, string fileToPatchId)
+		private void PatchGame(Game game, string baseFileName, string fileToPatchId)
 		{
 			// todo create log message when something goes wrong.
-			// todo save patched and old table script to game
 
+			var baseFileId = game.PreviousFileId;
 			_logger.Info("Patching file {0} with changes from file {1}", fileToPatchId, baseFileId);
 
 			// get table scripts for original files
@@ -467,6 +470,8 @@ namespace VpdbAgent.Application
 				_logger.Error(e, "Error writing patched script back to table file.");
 				return;
 			}
+			game.PatchedTableScript = patchedScript;
+
 			_logger.Info("Successfully wrote back script to table file.");
 		}
 

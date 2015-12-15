@@ -69,6 +69,12 @@ namespace VpdbAgent.Models
 		[DataMember] public bool IsSynced { get { return _isSynced; } set { this.RaiseAndSetIfChanged(ref _isSynced, value); } }
 
 		/// <summary>
+		/// File ID of the linked file at VPDB.
+		/// </summary>
+		[DataMember]
+		public string PreviousFileId { get { return _previousFileId; } set { this.RaiseAndSetIfChanged(ref _previousFileId, value); } }
+
+		/// <summary>
 		/// The table script as it was saved back after patching. If null, the script
 		/// either hasn't previously been updated, there was no previous version
 		/// or patching resulted in a conflict.
@@ -92,6 +98,7 @@ namespace VpdbAgent.Models
 		private bool _exists;
 		private bool _isSynced;
 		private string _patchedTableScript;
+		private string _previousFileId;
 		private readonly ObservableAsPropertyHelper<bool> _hasRelease;
 		private readonly ObservableAsPropertyHelper<bool> _hasUpdate;
 		private ObservableAsPropertyHelper<VpdbTableFile> _updatedRelease;
@@ -164,7 +171,7 @@ namespace VpdbAgent.Models
 			Platform = platform;
 
 			// save to disk if these attributes change
-			this.WhenAny(g => g.ReleaseId, g => g.FileId, g => g.IsSynced, (rid, fid, s) => Unit.Default)
+			this.WhenAny(g => g.ReleaseId, g => g.FileId, g => g.IsSynced, g => g.PreviousFileId, g => g.PatchedTableScript, (rid, fid, s, pfid, script) => Unit.Default)
 				.Subscribe(Platform.GamePropertyChanged);
 		}
 
