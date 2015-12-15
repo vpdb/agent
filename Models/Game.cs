@@ -129,7 +129,7 @@ namespace VpdbAgent.Models
 				var versionsUpdated = release.Versions.Changed.Select(_ => Unit.Default);
 				var releaseOrFileUpdated = this.WhenAnyValue(g => g.FileId).Select(_ => Unit.Default);
 				versionsUpdated.Merge(releaseOrFileUpdated)
-					.Select(x => downloadManager.FindLatestFile(Release, File))
+					.Select(x => downloadManager.FindLatestFile(Release, FileId))
 					.ToProperty(this, game => game.UpdatedRelease, out _updatedRelease);
 			});
 

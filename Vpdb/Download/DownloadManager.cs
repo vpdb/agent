@@ -50,15 +50,15 @@ namespace VpdbAgent.Vpdb.Download
 		/// makes it possible to match the "Same" rule.
 		/// </summary>
 		/// <remarks>
-		/// Note that when <see cref="currentFile"/> is provided, the matched
+		/// Note that when <see cref="currentFileId"/> is provided, the matched
 		/// file must be of a more recent version. Otherwise, the weight
 		/// resulting in the flavor overweights the recentness of the version,
 		/// i.e. a better matching flavor of an older version is preferred.
 		/// </remarks>
 		/// <param name="release">Release containing all versions</param>
-		/// <param name="currentFile">Current file</param>
+		/// <param name="currentFileId">Current file</param>
 		/// <returns>The most recent file that matches user's flavor prefs, or null if not found</returns>
-		VpdbTableFile FindLatestFile(VpdbRelease release, VpdbTableFile currentFile = null);
+		VpdbTableFile FindLatestFile(VpdbRelease release, string currentFileId = null);
 	}
 
 	public class DownloadManager : IDownloadManager
@@ -120,8 +120,6 @@ namespace VpdbAgent.Vpdb.Download
 			}
 			_currentlyDownloading.Add(releaseId, true);
 
-			var currentFile = _databaseManager.GetTableFile(releaseId, currentFileId);
-
 			// retrieve release details
 			_logger.Info("Retrieving details for release {0} before downloading..", releaseId);
 			_vpdbClient.Api.GetFullRelease(releaseId).ObserveOn(Scheduler.Default).Subscribe(release => {
@@ -130,7 +128,7 @@ namespace VpdbAgent.Vpdb.Download
 				_databaseManager.AddOrUpdateRelease(release);
 
 				// match file based on settings
-				var file = FindLatestFile(release, currentFile);
+				var file = FindLatestFile(release, currentFileId);
 
 				// check if match
 				if (file == null) {
@@ -147,11 +145,12 @@ namespace VpdbAgent.Vpdb.Download
 			return this;
 		}
 
-		public VpdbTableFile FindLatestFile(VpdbRelease release, VpdbTableFile currentFile = null)
+		public VpdbTableFile FindLatestFile(VpdbRelease release, string currentFileId = null)
 		{
 			if (release == null) {
 				return null;
 			}
+			var currentFile = _databaseManager.GetTableFile(release.Id, currentFileId);
 
 			var file = release.Versions
 				.SelectMany(v => v.Files)
