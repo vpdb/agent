@@ -399,6 +399,7 @@ namespace VpdbAgent.Application
 		private void PatchGame(Game game, string baseFileId, string baseFileName, string fileToPatchId)
 		{
 			// todo create log message when something goes wrong.
+			// todo save patched and old table script to game
 
 			_logger.Info("Patching file {0} with changes from file {1}", fileToPatchId, baseFileId);
 

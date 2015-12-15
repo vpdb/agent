@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Specialized;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
@@ -35,7 +36,8 @@ namespace VpdbAgent.ViewModels.Messages
 				_messagesRead
 			);
 
-			this.WhenAnyObservable(x => x.Messages.CountChanged)
+			databaseManager.GetMessages().CountChanged
+				.StartWith(0)
 				.Select(_ => Messages.Count == 0)
 				.ToProperty(this, x => x.IsEmpty, out _isEmpty);
 

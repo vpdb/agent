@@ -1,22 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Linq;
 using System.Reactive;
-using System.Reactive.Concurrency;
 using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using System.Runtime.InteropServices;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Windows.Controls;
 using NLog;
 using ReactiveUI;
 using VpdbAgent.Application;
 using VpdbAgent.Common.Extensions;
 using VpdbAgent.Models;
-using VpdbAgent.Vpdb;
-using VpdbAgent.Vpdb.Models;
 using Game = VpdbAgent.Models.Game;
 
 namespace VpdbAgent.ViewModels.Games
