@@ -44,22 +44,22 @@ namespace VpdbAgent
 	{
 		public RoutingState Router { get; }
 
-		public Bootstrapper(IMutableDependencyResolver dependencyResolver = null, RoutingState testRouter = null)
+		public Bootstrapper(IMutableDependencyResolver deps = null, RoutingState testRouter = null)
 		{
 			Router = testRouter ?? new RoutingState();
-			dependencyResolver = dependencyResolver ?? Locator.CurrentMutable;
+			deps = deps ?? Locator.CurrentMutable;
 			var options = ((App) System.Windows.Application.Current).CommandLineOptions;
 
 			// Bind 
-			RegisterParts(dependencyResolver);
+			RegisterParts(deps);
 
 			// This is a good place to set up any other app 
 			// startup tasks, like setting the logging level
 			LogHost.Default.Level = LogLevel.Debug;
-			var settingsManager = Locator.Current.GetService<ISettingsManager>();
-			var gameManager = Locator.Current.GetService<IGameManager>();
+			var settingsManager = deps.GetService<ISettingsManager>();
+			var gameManager = deps.GetService<IGameManager>();
 
-			Locator.CurrentMutable.GetService<NLog.Logger>().Info("Waiting for settings...");
+			deps.GetService<NLog.Logger>().Info("Waiting for settings...");
 
 			settingsManager.ApiAuthenticated.Subscribe(user => {
 				if (user != null) {
@@ -74,14 +74,14 @@ namespace VpdbAgent
 				}
 				System.Windows.Application.Current.Dispatcher.Invoke(delegate {
 
-					Locator.CurrentMutable.GetService<NLog.Logger>().Info("Got settings!");
+					deps.GetService<NLog.Logger>().Info("Got settings!");
 					if (settings.IsFirstRun || string.IsNullOrEmpty(settings.ApiKey)) {
 						System.Windows.Application.Current.MainWindow = new MainWindow(this);
 						System.Windows.Application.Current.MainWindow.Show();
-						Router.Navigate.Execute(new SettingsViewModel(this, 
-							Locator.Current.GetService<ISettingsManager>(),
-							Locator.Current.GetService<IVersionManager>(),
-							Locator.Current.GetService<IGameManager>())
+						Router.Navigate.Execute(new SettingsViewModel(this,
+							deps.GetService<ISettingsManager>(),
+							deps.GetService<IVersionManager>(),
+							deps.GetService<IGameManager>())
 						);
 
 					} else if (!options.Minimized) {
@@ -90,7 +90,7 @@ namespace VpdbAgent
 
 						System.Windows.Application.Current.MainWindow = new MainWindow(this);
 						System.Windows.Application.Current.MainWindow.Show();
-						Router.Navigate.Execute(new MainViewModel(this, Locator.Current.GetService<ISettingsManager>(), Locator.Current.GetService<IVersionManager>()));
+						Router.Navigate.Execute(new MainViewModel(this, deps.GetService<ISettingsManager>(), deps.GetService<IVersionManager>()));
 					} else {
 						// start the initialization
 						gameManager.Initialize();
@@ -99,118 +99,122 @@ namespace VpdbAgent
 			});
 		}
 
-		private void RegisterParts(IMutableDependencyResolver locator)
+		private void RegisterParts(IMutableDependencyResolver deps)
 		{
-			locator.RegisterConstant(this, typeof(IScreen));
+			deps.RegisterConstant(this, typeof(IScreen));
 
 			// services
-			locator.RegisterLazySingleton(NLog.LogManager.GetCurrentClassLogger, typeof(NLog.Logger));
-			locator.RegisterLazySingleton(() => ((App)System.Windows.Application.Current).CrashManager, typeof(CrashManager));
+			deps.RegisterLazySingleton(NLog.LogManager.GetCurrentClassLogger, typeof(NLog.Logger));
+			deps.RegisterLazySingleton(() => ((App)System.Windows.Application.Current).CrashManager, typeof(CrashManager));
 
-			locator.RegisterLazySingleton(() => new SettingsManager(
-				locator.GetService<NLog.Logger>()
+			deps.RegisterLazySingleton(() => new SettingsManager(
+				deps.GetService<NLog.Logger>()
 			), typeof(ISettingsManager));
-			locator.RegisterLazySingleton(() => new FileSystemWatcher(
-				locator.GetService<NLog.Logger>()
+			deps.RegisterLazySingleton(() => new FileAccessManager(
+				deps.GetService<NLog.Logger>()
+			), typeof(IFileAccessManager));
+			deps.RegisterLazySingleton(() => new FileSystemWatcher(
+				deps.GetService<NLog.Logger>()
 			), typeof(IFileSystemWatcher));
-			locator.RegisterLazySingleton(() => new VersionManager(
-				locator.GetService<CrashManager>(),
-				locator.GetService<NLog.Logger>()
+			deps.RegisterLazySingleton(() => new VersionManager(
+				deps.GetService<CrashManager>(),
+				deps.GetService<NLog.Logger>()
 			), typeof(IVersionManager));
-			locator.RegisterLazySingleton(() => new VisualPinballManager(
-				locator.GetService<CrashManager>(),
-				locator.GetService<NLog.Logger>()
+			deps.RegisterLazySingleton(() => new VisualPinballManager(
+				deps.GetService<CrashManager>(),
+				deps.GetService<NLog.Logger>()
 			), typeof(IVisualPinballManager));
 
-			locator.RegisterLazySingleton(() => new DatabaseManager(
-				locator.GetService<ISettingsManager>(),
-				locator.GetService<CrashManager>(),
-				locator.GetService<NLog.Logger>()
+			deps.RegisterLazySingleton(() => new DatabaseManager(
+				deps.GetService<ISettingsManager>(),
+				deps.GetService<CrashManager>(),
+				deps.GetService<NLog.Logger>()
 			), typeof(IDatabaseManager));
 
-			locator.RegisterLazySingleton(() => new MessageManager(
-				locator.GetService<IDatabaseManager>(),
-				locator.GetService<CrashManager>()
+			deps.RegisterLazySingleton(() => new MessageManager(
+				deps.GetService<IDatabaseManager>(),
+				deps.GetService<CrashManager>()
 			), typeof(IMessageManager));
 
-			locator.RegisterLazySingleton(() => new MenuManager(
-				locator.GetService<IFileSystemWatcher>(),
-				locator.GetService<ISettingsManager>(),
-				locator.GetService<CrashManager>(),
-				locator.GetService<NLog.Logger>()
+			deps.RegisterLazySingleton(() => new MenuManager(
+				deps.GetService<IFileSystemWatcher>(),
+				deps.GetService<ISettingsManager>(),
+				deps.GetService<IFileAccessManager>(),
+				deps.GetService<CrashManager>(),
+				deps.GetService<NLog.Logger>()
 			), typeof(IMenuManager));
 
-			locator.RegisterLazySingleton(() => new PlatformManager(
-				locator.GetService<IMenuManager>(),
-				locator.GetService<IDatabaseManager>(),
-				locator.GetService<NLog.Logger>()
+			deps.RegisterLazySingleton(() => new PlatformManager(
+				deps.GetService<IMenuManager>(),
+				deps.GetService<IDatabaseManager>(),
+				deps.GetService<NLog.Logger>()
 			), typeof(IPlatformManager));
 
-			locator.RegisterLazySingleton(() => new VpdbClient(
-				locator.GetService<ISettingsManager>(),
-				locator.GetService<IVersionManager>(),
-				locator.GetService<IMessageManager>(),
+			deps.RegisterLazySingleton(() => new VpdbClient(
+				deps.GetService<ISettingsManager>(),
+				deps.GetService<IVersionManager>(),
+				deps.GetService<IMessageManager>(),
 				this,
-				locator.GetService<CrashManager>(),
-				locator.GetService<NLog.Logger>()
+				deps.GetService<CrashManager>(),
+				deps.GetService<NLog.Logger>()
 			), typeof(IVpdbClient));
 
-			locator.RegisterLazySingleton(() => new RealtimeManager(
-				locator.GetService<IVpdbClient>(),
-				locator.GetService<NLog.Logger>()
+			deps.RegisterLazySingleton(() => new RealtimeManager(
+				deps.GetService<IVpdbClient>(),
+				deps.GetService<NLog.Logger>()
 			), typeof(IRealtimeManager));
 
-			locator.RegisterLazySingleton(() => new JobManager(
-				locator.GetService<IDatabaseManager>(),
-				locator.GetService<IMessageManager>(),
-				locator.GetService<CrashManager>(),
-				locator.GetService<NLog.Logger>()
+			deps.RegisterLazySingleton(() => new JobManager(
+				deps.GetService<IDatabaseManager>(),
+				deps.GetService<IMessageManager>(),
+				deps.GetService<CrashManager>(),
+				deps.GetService<NLog.Logger>()
 			), typeof(IJobManager));
 
-			locator.RegisterLazySingleton(() => new DownloadManager(
-				locator.GetService<IPlatformManager>(),
-				locator.GetService<IJobManager>(),
-				locator.GetService<IVpdbClient>(),
-				locator.GetService<ISettingsManager>(),
-				locator.GetService<IMessageManager>(),
-				locator.GetService<IDatabaseManager>(),
-				locator.GetService<CrashManager>(),
-				locator.GetService<NLog.Logger>()
+			deps.RegisterLazySingleton(() => new DownloadManager(
+				deps.GetService<IPlatformManager>(),
+				deps.GetService<IJobManager>(),
+				deps.GetService<IVpdbClient>(),
+				deps.GetService<ISettingsManager>(),
+				deps.GetService<IMessageManager>(),
+				deps.GetService<IDatabaseManager>(),
+				deps.GetService<CrashManager>(),
+				deps.GetService<NLog.Logger>()
 			), typeof(IDownloadManager));
 
-			locator.RegisterLazySingleton(() => new GameManager(
-				locator.GetService<IMenuManager>(),
-				locator.GetService<IVpdbClient>(),
-				locator.GetService<ISettingsManager>(),
-				locator.GetService<IDownloadManager>(),
-				locator.GetService<IDatabaseManager>(),
-				locator.GetService<IVersionManager>(),
-				locator.GetService<IPlatformManager>(),
-				locator.GetService<IMessageManager>(),
-				locator.GetService<IRealtimeManager>(),
-				locator.GetService<IVisualPinballManager>(),
-				locator.GetService<NLog.Logger>()
+			deps.RegisterLazySingleton(() => new GameManager(
+				deps.GetService<IMenuManager>(),
+				deps.GetService<IVpdbClient>(),
+				deps.GetService<ISettingsManager>(),
+				deps.GetService<IDownloadManager>(),
+				deps.GetService<IDatabaseManager>(),
+				deps.GetService<IVersionManager>(),
+				deps.GetService<IPlatformManager>(),
+				deps.GetService<IMessageManager>(),
+				deps.GetService<IRealtimeManager>(),
+				deps.GetService<IVisualPinballManager>(),
+				deps.GetService<NLog.Logger>()
 			), typeof(IGameManager));
 
 			// converters
-			locator.RegisterConstant(new ImageToUrlTypeConverter(), typeof(IBindingTypeConverter));
-			locator.RegisterConstant(new NullToCollapsedConverter(), typeof(IBindingTypeConverter));
-			locator.RegisterConstant(new NullToFalseConverter(), typeof(IBindingTypeConverter));
-			locator.RegisterConstant(new DictionaryToStringConverter(), typeof(IBindingTypeConverter));
-			locator.RegisterConstant(new DictionaryToBooleanConverter(), typeof(IBindingTypeConverter));
-			locator.RegisterConstant(new DictionaryToVisibilityConverter(), typeof(IBindingTypeConverter));
-			locator.RegisterConstant(new BooleanToVisibilityConverter(), typeof(IBindingTypeConverter));
+			deps.RegisterConstant(new ImageToUrlTypeConverter(), typeof(IBindingTypeConverter));
+			deps.RegisterConstant(new NullToCollapsedConverter(), typeof(IBindingTypeConverter));
+			deps.RegisterConstant(new NullToFalseConverter(), typeof(IBindingTypeConverter));
+			deps.RegisterConstant(new DictionaryToStringConverter(), typeof(IBindingTypeConverter));
+			deps.RegisterConstant(new DictionaryToBooleanConverter(), typeof(IBindingTypeConverter));
+			deps.RegisterConstant(new DictionaryToVisibilityConverter(), typeof(IBindingTypeConverter));
+			deps.RegisterConstant(new BooleanToVisibilityConverter(), typeof(IBindingTypeConverter));
 
 			// view models
-			locator.RegisterLazySingleton(() => new MainView(), typeof(IViewFor<MainViewModel>));
-			locator.RegisterLazySingleton(() => new GamesView(), typeof(IViewFor<GamesViewModel>));
-			locator.RegisterLazySingleton(() => new DownloadsView(), typeof(IViewFor<DownloadsViewModel>));
-			locator.RegisterLazySingleton(() => new MessagesView(), typeof(IViewFor<MessagesViewModel>));
-			locator.Register(() => new GameItemView(), typeof(IViewFor<GameItemViewModel>));
-			locator.Register(() => new GameResultItemView(), typeof(IViewFor<GameResultItemViewModel>));
-			locator.Register(() => new DownloadItemView(), typeof(IViewFor<DownloadItemViewModel>));
-			locator.Register(() => new MessageItemView(), typeof(IViewFor<MessageItemViewModel>));
-			locator.RegisterLazySingleton(() => new SettingsView(), typeof(IViewFor<SettingsViewModel>));
+			deps.RegisterLazySingleton(() => new MainView(), typeof(IViewFor<MainViewModel>));
+			deps.RegisterLazySingleton(() => new GamesView(), typeof(IViewFor<GamesViewModel>));
+			deps.RegisterLazySingleton(() => new DownloadsView(), typeof(IViewFor<DownloadsViewModel>));
+			deps.RegisterLazySingleton(() => new MessagesView(), typeof(IViewFor<MessagesViewModel>));
+			deps.Register(() => new GameItemView(), typeof(IViewFor<GameItemViewModel>));
+			deps.Register(() => new GameResultItemView(), typeof(IViewFor<GameResultItemViewModel>));
+			deps.Register(() => new DownloadItemView(), typeof(IViewFor<DownloadItemViewModel>));
+			deps.Register(() => new MessageItemView(), typeof(IViewFor<MessageItemViewModel>));
+			deps.RegisterLazySingleton(() => new SettingsView(), typeof(IViewFor<SettingsViewModel>));
 		}
 	}
 }

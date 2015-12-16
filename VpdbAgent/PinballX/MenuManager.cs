@@ -112,14 +112,16 @@ namespace VpdbAgent.PinballX
 		// dependencies
 		private readonly IFileSystemWatcher _watcher;
 		private readonly ISettingsManager _settingsManager;
+		private readonly IFileAccessManager _fileAccessManager;
 		private readonly CrashManager _crashManager;
 		private readonly Logger _logger;
 
-		public MenuManager(IFileSystemWatcher fileSystemWatcher, ISettingsManager settingsManager, 
-			CrashManager crashManager, Logger logger)
+		public MenuManager(IFileSystemWatcher fileSystemWatcher, ISettingsManager settingsManager,
+			IFileAccessManager fileAccessManager, CrashManager crashManager, Logger logger)
 		{
 			_watcher = fileSystemWatcher;
 			_settingsManager = settingsManager;
+			_fileAccessManager = fileAccessManager;
 			_crashManager = crashManager;
 			_logger = logger;
 		}
@@ -347,9 +349,8 @@ namespace VpdbAgent.PinballX
 			// only notify after this block
 			_logger.Info("Parsing systems from {0}", iniPath);
 
-			if (File.Exists(iniPath)) {
-				var parser = new FileIniDataParser();
-				var data = parser.ReadFile(iniPath);
+			var data = _fileAccessManager.ParseIni(iniPath);
+			if (data != null) {
 				systems.Add(new PinballXSystem(Platform.PlatformType.VP, data["VisualPinball"]));
 				systems.Add(new PinballXSystem(Platform.PlatformType.FP, data["FuturePinball"]));
 				for (var i = 0; i < 20; i++) {
@@ -357,8 +358,6 @@ namespace VpdbAgent.PinballX
 						systems.Add(new PinballXSystem(data["System_" + i]));
 					}
 				}
-			} else {
-				_logger.Error("PinballX.ini at {0} does not exist.", iniPath);
 			}
 			_logger.Info("Done, {0} systems parsed.", systems.Count);
 
