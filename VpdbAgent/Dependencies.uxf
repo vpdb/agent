@@ -1,0 +1,341 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<diagram program="umlet" version="13.3">
+  <zoom_level>10</zoom_level>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1540</x>
+      <y>640</y>
+      <w>120</w>
+      <h>30</h>
+    </coordinates>
+    <panel_attributes>Logger</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1540</x>
+      <y>690</y>
+      <w>120</w>
+      <h>30</h>
+    </coordinates>
+    <panel_attributes>CrashManager</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1540</x>
+      <y>740</y>
+      <w>120</w>
+      <h>30</h>
+    </coordinates>
+    <panel_attributes>ThreadManager</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1360</x>
+      <y>730</y>
+      <w>150</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>IFileAccessManager
+--
+CrashManager
+Logger
+
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1360</x>
+      <y>640</y>
+      <w>150</w>
+      <h>60</h>
+    </coordinates>
+    <panel_attributes>ISettingsManager
+--
+Logger
+
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1360</x>
+      <y>820</y>
+      <w>150</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>IFileSystemManager
+--
+Logger
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1360</x>
+      <y>1000</y>
+      <w>150</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>IVisualPinballManager
+--
+CrashManager
+Logger
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1360</x>
+      <y>910</y>
+      <w>150</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>IVersionManager
+--
+CrashManager
+Logger
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1180</x>
+      <y>640</y>
+      <w>150</w>
+      <h>90</h>
+    </coordinates>
+    <panel_attributes>IDatabaseManager
+--
+ISettingsManager
+CrashManager
+Logger
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1000</x>
+      <y>640</y>
+      <w>150</w>
+      <h>90</h>
+    </coordinates>
+    <panel_attributes>IMessageManager
+--
+IDatabaseManager
+CrashManager
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>820</x>
+      <y>640</y>
+      <w>150</w>
+      <h>150</h>
+    </coordinates>
+    <panel_attributes>IMenuManager
+--
+IFileSystemWatcher
+ISettingsManager
+IFileAccessManager
+IThreadManager
+CrashManager
+Logger
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>640</x>
+      <y>650</y>
+      <w>150</w>
+      <h>110</h>
+    </coordinates>
+    <panel_attributes>IPlatformManager
+--
+IMenuManager
+IDatabaseManager
+IDownloadManager
+IFileAccessManager</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>640</x>
+      <y>790</y>
+      <w>150</w>
+      <h>150</h>
+    </coordinates>
+    <panel_attributes>IVpdbClient
+--
+ISettingsManager
+IVersionMAnager
+IMessageManager
+IScreen
+CrashManager
+Logger</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>450</x>
+      <y>790</y>
+      <w>150</w>
+      <h>100</h>
+    </coordinates>
+    <panel_attributes>IRealtimeManager
+--
+IVpdbClient
+Logger</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>640</x>
+      <y>500</y>
+      <w>150</w>
+      <h>110</h>
+    </coordinates>
+    <panel_attributes>IJobManager
+--
+IDatabaseManager
+IMessageManager
+CrashManager
+Logger</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>450</x>
+      <y>500</y>
+      <w>150</w>
+      <h>170</h>
+    </coordinates>
+    <panel_attributes>IDownloadManager
+--
+IPlatformManager
+IJobManager
+IVpdbClient
+IMessageManager
+IDatabaseManager
+CrashManager
+Logger</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>270</x>
+      <y>610</y>
+      <w>150</w>
+      <h>230</h>
+    </coordinates>
+    <panel_attributes>IGameManager
+--
+IMenuManager
+IVpdbClient
+ISettingsManager
+IDownloadManager
+IDatabaseManager
+IVersionManager
+IPlatformManager
+IMessageManager
+IRealtimeManager
+IVisualPinballManager
+Logger</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>100</x>
+      <y>330</y>
+      <w>150</w>
+      <h>90</h>
+    </coordinates>
+    <panel_attributes>Platform
+--
+IFileAccessManager
+Logger
+List&lt;Game&gt;</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>280</x>
+      <y>330</y>
+      <w>150</w>
+      <h>90</h>
+    </coordinates>
+    <panel_attributes>Game
+--
+IDatabaseManager
+IDownloadManager</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>170</x>
+      <y>250</y>
+      <w>570</w>
+      <h>420</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-</panel_attributes>
+    <additional_attributes>10.0;80.0;10.0;10.0;450.0;10.0;450.0;380.0;550.0;380.0;550.0;400.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>350</x>
+      <y>410</y>
+      <w>120</w>
+      <h>180</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-</panel_attributes>
+    <additional_attributes>100.0;160.0;10.0;160.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>510</x>
+      <y>660</y>
+      <w>150</w>
+      <h>80</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-</panel_attributes>
+    <additional_attributes>130.0;60.0;10.0;60.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>240</x>
+      <y>370</y>
+      <w>60</w>
+      <h>30</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-</panel_attributes>
+    <additional_attributes>40.0;10.0;10.0;10.0</additional_attributes>
+  </element>
+</diagram>
