@@ -79,7 +79,7 @@ packaging the builds. In order to release a new version:
   [Raygun](https://raygun.io/?ref=vpdb-agent). And by the way, it also 
   works with a ton of other platforms!
 
-  <a href="https://raygun.io/?ref=vpdb-agent"><img src="https://raw.githubusercontent.com/freezy/vpdb-agent/master/Resources/raygun.png" width="200"></a>
+  <a href="https://raygun.io/?ref=vpdb-agent"><img src="https://raw.githubusercontent.com/freezy/vpdb-agent/master/Assets/raygun.png" width="200"></a>
 - @andreaskoepf for some really helpful Rx suggestions
 
 ## License
