@@ -3,7 +3,6 @@ using System;
 using System.IO;
 using ReactiveUI;
 using VpdbAgent.Models;
-using Splat;
 using VpdbAgent.Application;
 
 namespace VpdbAgent.PinballX.Models
@@ -17,7 +16,7 @@ namespace VpdbAgent.PinballX.Models
 	public class PinballXSystem
 	{
 		// deps
-		private readonly static ISettingsManager SettingsManager = Locator.Current.GetService<ISettingsManager>();
+		private readonly ISettingsManager _settingsManager;
 
 		// from pinballx.ini
 		public string Name { get; set; }
@@ -35,7 +34,12 @@ namespace VpdbAgent.PinballX.Models
 		// data props
 		public ReactiveList<PinballXGame> Games { get; } = new ReactiveList<PinballXGame>();
 
-		public PinballXSystem(KeyDataCollection data)
+		public PinballXSystem(ISettingsManager settingsManager)
+		{
+			_settingsManager = settingsManager;
+		}
+
+		public PinballXSystem(KeyDataCollection data, ISettingsManager settingsManager) : this(settingsManager)
 		{
 			var systemType = data["SystemType"];
 			if ("0".Equals(systemType)) {
@@ -50,7 +54,7 @@ namespace VpdbAgent.PinballX.Models
 			SetByData(data);
 		}
 
-		public PinballXSystem(Platform.PlatformType type, KeyDataCollection data)
+		public PinballXSystem(Platform.PlatformType type, KeyDataCollection data, ISettingsManager settingsManager) : this(settingsManager)
 		{
 			Type = type;
 			switch (type) {
@@ -77,8 +81,8 @@ namespace VpdbAgent.PinballX.Models
 			Executable = data["Executable"];
 			Parameters = data["Parameters"];
 
-			DatabasePath = Path.Combine(SettingsManager.Settings.PbxFolder, "Databases", Name);
-			MediaPath = Path.Combine(SettingsManager.Settings.PbxFolder, "Media", Name);
+			DatabasePath = Path.Combine(_settingsManager.Settings.PbxFolder, "Databases", Name);
+			MediaPath = Path.Combine(_settingsManager.Settings.PbxFolder, "Media", Name);
 		}
 
 		public override string ToString()

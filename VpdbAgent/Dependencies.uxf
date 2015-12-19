@@ -4,8 +4,8 @@
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>1540</x>
-      <y>640</y>
+      <x>1570</x>
+      <y>470</y>
       <w>120</w>
       <h>30</h>
     </coordinates>
@@ -15,8 +15,8 @@
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>1540</x>
-      <y>690</y>
+      <x>1570</x>
+      <y>520</y>
       <w>120</w>
       <h>30</h>
     </coordinates>
@@ -26,8 +26,8 @@
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>1540</x>
-      <y>740</y>
+      <x>1570</x>
+      <y>570</y>
       <w>120</w>
       <h>30</h>
     </coordinates>
@@ -37,8 +37,8 @@
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>1360</x>
-      <y>730</y>
+      <x>1390</x>
+      <y>560</y>
       <w>150</w>
       <h>70</h>
     </coordinates>
@@ -53,8 +53,8 @@ Logger
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>1360</x>
-      <y>640</y>
+      <x>1390</x>
+      <y>470</y>
       <w>150</w>
       <h>60</h>
     </coordinates>
@@ -68,8 +68,8 @@ Logger
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>1360</x>
-      <y>820</y>
+      <x>1390</x>
+      <y>650</y>
       <w>150</w>
       <h>70</h>
     </coordinates>
@@ -82,8 +82,8 @@ Logger
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>1360</x>
-      <y>1000</y>
+      <x>1390</x>
+      <y>830</y>
       <w>150</w>
       <h>70</h>
     </coordinates>
@@ -97,8 +97,8 @@ Logger
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>1360</x>
-      <y>910</y>
+      <x>1390</x>
+      <y>740</y>
       <w>150</w>
       <h>70</h>
     </coordinates>
@@ -112,8 +112,8 @@ Logger
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>1180</x>
-      <y>640</y>
+      <x>1210</x>
+      <y>470</y>
       <w>150</w>
       <h>90</h>
     </coordinates>
@@ -128,8 +128,8 @@ Logger
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>1000</x>
-      <y>640</y>
+      <x>1030</x>
+      <y>470</y>
       <w>150</w>
       <h>90</h>
     </coordinates>
@@ -143,8 +143,8 @@ CrashManager
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>820</x>
-      <y>640</y>
+      <x>850</x>
+      <y>470</y>
       <w>150</w>
       <h>150</h>
     </coordinates>
@@ -162,25 +162,24 @@ Logger
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>640</x>
-      <y>650</y>
-      <w>150</w>
-      <h>110</h>
+      <x>660</x>
+      <y>470</y>
+      <w>160</w>
+      <h>90</h>
     </coordinates>
     <panel_attributes>IPlatformManager
 --
 IMenuManager
-IDatabaseManager
-IDownloadManager
-IFileAccessManager</panel_attributes>
+IFileAccessManager
+*IDependencyResolver*</panel_attributes>
     <additional_attributes/>
   </element>
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>640</x>
-      <y>790</y>
-      <w>150</w>
+      <x>660</x>
+      <y>610</y>
+      <w>160</w>
       <h>150</h>
     </coordinates>
     <panel_attributes>IVpdbClient
@@ -196,8 +195,8 @@ Logger</panel_attributes>
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>450</x>
-      <y>790</y>
+      <x>470</x>
+      <y>610</y>
       <w>150</w>
       <h>100</h>
     </coordinates>
@@ -210,9 +209,9 @@ Logger</panel_attributes>
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>640</x>
-      <y>500</y>
-      <w>150</w>
+      <x>660</x>
+      <y>320</y>
+      <w>160</w>
       <h>110</h>
     </coordinates>
     <panel_attributes>IJobManager
@@ -226,8 +225,8 @@ Logger</panel_attributes>
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>450</x>
-      <y>500</y>
+      <x>470</x>
+      <y>320</y>
       <w>150</w>
       <h>170</h>
     </coordinates>
@@ -245,8 +244,8 @@ Logger</panel_attributes>
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>270</x>
-      <y>610</y>
+      <x>290</x>
+      <y>430</y>
       <w>150</w>
       <h>230</h>
     </coordinates>
@@ -268,48 +267,39 @@ Logger</panel_attributes>
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>100</x>
-      <y>330</y>
-      <w>150</w>
-      <h>90</h>
+      <x>110</x>
+      <y>150</y>
+      <w>160</w>
+      <h>100</h>
     </coordinates>
     <panel_attributes>Platform
 --
 IFileAccessManager
 Logger
-List&lt;Game&gt;</panel_attributes>
+List&lt;Game&gt;
+*IDependencyResolver*</panel_attributes>
     <additional_attributes/>
   </element>
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>280</x>
-      <y>330</y>
-      <w>150</w>
+      <x>300</x>
+      <y>150</y>
+      <w>160</w>
       <h>90</h>
     </coordinates>
     <panel_attributes>Game
 --
 IDatabaseManager
-IDownloadManager</panel_attributes>
+IDownloadManager
+*IDependencyResolver*</panel_attributes>
     <additional_attributes/>
   </element>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>170</x>
-      <y>250</y>
-      <w>570</w>
-      <h>420</h>
-    </coordinates>
-    <panel_attributes>lt=&lt;-</panel_attributes>
-    <additional_attributes>10.0;80.0;10.0;10.0;450.0;10.0;450.0;380.0;550.0;380.0;550.0;400.0</additional_attributes>
-  </element>
-  <element>
-    <id>Relation</id>
-    <coordinates>
-      <x>350</x>
-      <y>410</y>
+      <x>370</x>
+      <y>230</y>
       <w>120</w>
       <h>180</h>
     </coordinates>
@@ -319,23 +309,34 @@ IDownloadManager</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>510</x>
-      <y>660</y>
+      <x>530</x>
+      <y>480</y>
       <w>150</w>
-      <h>80</h>
+      <h>70</h>
     </coordinates>
     <panel_attributes>lt=&lt;-</panel_attributes>
-    <additional_attributes>130.0;60.0;10.0;60.0;10.0;10.0</additional_attributes>
+    <additional_attributes>130.0;50.0;10.0;50.0;10.0;10.0</additional_attributes>
   </element>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>240</x>
-      <y>370</y>
+      <x>260</x>
+      <y>190</y>
       <w>60</w>
       <h>30</h>
     </coordinates>
     <panel_attributes>lt=&lt;-</panel_attributes>
     <additional_attributes>40.0;10.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1570</x>
+      <y>150</y>
+      <w>160</w>
+      <h>30</h>
+    </coordinates>
+    <panel_attributes>IDependencyResolver</panel_attributes>
+    <additional_attributes/>
   </element>
 </diagram>

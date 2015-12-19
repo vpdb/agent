@@ -1,6 +1,4 @@
 ﻿using System;
-using Mindscape.Raygun4Net;
-using Mindscape.Raygun4Net.Messages;
 using ReactiveUI;
 using Splat;
 using VpdbAgent.Application;
@@ -106,20 +104,26 @@ namespace VpdbAgent
 			// services
 			deps.RegisterLazySingleton(NLog.LogManager.GetCurrentClassLogger, typeof(NLog.Logger));
 			deps.RegisterLazySingleton(() => ((App)System.Windows.Application.Current).CrashManager, typeof(CrashManager));
+			deps.RegisterLazySingleton(() => new ThreadManager(), typeof(IThreadManager));
 
 			deps.RegisterLazySingleton(() => new SettingsManager(
 				deps.GetService<NLog.Logger>()
 			), typeof(ISettingsManager));
+
 			deps.RegisterLazySingleton(() => new FileAccessManager(
-				deps.GetService<NLog.Logger>()
+				deps.GetService<NLog.Logger>(),
+				deps.GetService<CrashManager>()
 			), typeof(IFileAccessManager));
+
 			deps.RegisterLazySingleton(() => new FileSystemWatcher(
 				deps.GetService<NLog.Logger>()
 			), typeof(IFileSystemWatcher));
+
 			deps.RegisterLazySingleton(() => new VersionManager(
 				deps.GetService<CrashManager>(),
 				deps.GetService<NLog.Logger>()
 			), typeof(IVersionManager));
+
 			deps.RegisterLazySingleton(() => new VisualPinballManager(
 				deps.GetService<CrashManager>(),
 				deps.GetService<NLog.Logger>()
@@ -140,14 +144,16 @@ namespace VpdbAgent
 				deps.GetService<IFileSystemWatcher>(),
 				deps.GetService<ISettingsManager>(),
 				deps.GetService<IFileAccessManager>(),
+				deps.GetService<IThreadManager>(),
 				deps.GetService<CrashManager>(),
 				deps.GetService<NLog.Logger>()
 			), typeof(IMenuManager));
 
 			deps.RegisterLazySingleton(() => new PlatformManager(
 				deps.GetService<IMenuManager>(),
-				deps.GetService<IDatabaseManager>(),
-				deps.GetService<NLog.Logger>()
+				deps.GetService<IFileAccessManager>(),
+				deps.GetService<NLog.Logger>(),
+				deps
 			), typeof(IPlatformManager));
 
 			deps.RegisterLazySingleton(() => new VpdbClient(

@@ -1,18 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using Newtonsoft.Json;
 using NLog;
 using ReactiveUI;
 using Splat;
-using VpdbAgent.Application;
+using VpdbAgent.PinballX;
 using VpdbAgent.PinballX.Models;
-using VpdbAgent.Vpdb.Network;
 
 namespace VpdbAgent.Models
 {
@@ -83,8 +80,9 @@ namespace VpdbAgent.Models
 		#endregion
 
 		// dependencies
-		private readonly static Logger Logger = Locator.CurrentMutable.GetService<Logger>();
-		private readonly static CrashManager CrashManager = Locator.CurrentMutable.GetService<CrashManager>();
+		private readonly IDependencyResolver _resolver;
+		private readonly IFileAccessManager _fileAccessManager;
+		private readonly Logger _logger;
 
 		/// <summary>
 		/// The platform specific database
@@ -97,14 +95,12 @@ namespace VpdbAgent.Models
 		public readonly ReactiveList<Game> Games = new ReactiveList<Game>();
 		public readonly Subject<Unit> GamePropertyChanged = new Subject<Unit>();
 
-		private readonly JsonSerializer _serializer = new JsonSerializer {
-			NullValueHandling = NullValueHandling.Ignore,
-			ContractResolver = new SnakeCasePropertyNamesContractResolver(),
-			Formatting = Formatting.Indented
-		};
-
-		public Platform(PinballXSystem system)
+		public Platform(PinballXSystem system, IDependencyResolver resolver)
 		{
+			_resolver = resolver;
+			_fileAccessManager = resolver.GetService<IFileAccessManager>();
+			_logger = resolver.GetService<Logger>();
+
 			Name = system.Name;
 			IsEnabled = system.Enabled;
 			WorkingPath = system.WorkingPath;
@@ -115,7 +111,7 @@ namespace VpdbAgent.Models
 			DatabasePath = system.DatabasePath;
 			MediaPath = system.MediaPath;
 
-			_database = UnmarshallDatabase();
+			_database = _fileAccessManager.UnmarshallPlatformDatabase(DatabaseFile);
 
 			UpdateGames(system);
 
@@ -133,7 +129,7 @@ namespace VpdbAgent.Models
 		public Platform Save()
 		{
 			_database.Games = Games;
-			MarshallDatabase();
+			_fileAccessManager.MarshallPlatformDatabase(_database, DatabaseFile);
 			return this;
 		}
 
@@ -164,10 +160,10 @@ namespace VpdbAgent.Models
 			var xmlGames = system.Games;
 			List<Game> mergedGames;
 			if (_database == null) {
-				Logger.Warn("No vpdb.json at {0}", DatabaseFile);
+				_logger.Warn("No vpdb.json at {0}", DatabaseFile);
 				mergedGames = MergeGames(xmlGames, null);
 			} else {
-				Logger.Info("Found and parsed vpdb.json at {0}", DatabaseFile);
+				_logger.Info("Found and parsed vpdb.json at {0}", DatabaseFile);
 				mergedGames = MergeGames(xmlGames, _database.Games);
 			}
 
@@ -183,7 +179,7 @@ namespace VpdbAgent.Models
 		/// <returns>List of merged games</returns>
 		private List<Game> MergeGames(IEnumerable<PinballXGame> xmlGames, IEnumerable<Game> jsonGames)
 		{
-			Logger.Info("MergeGames() START");
+			_logger.Info("MergeGames() START");
 
 			var games = new List<Game>();
 			var enumerableGames = jsonGames as Game[] ?? jsonGames.ToArray();
@@ -193,71 +189,13 @@ namespace VpdbAgent.Models
 			foreach (var xmlGame in enumerableXmlGames) {
 				var jsonGame = enumerableGames.FirstOrDefault(g => (g.Id.Equals(xmlGame.Description)));
 				games.Add(jsonGame == null
-					? new Game(xmlGame, this)
+					? new Game(xmlGame, this, _resolver)
 					: jsonGame.Merge(xmlGame, this)
 				);
 			}
 
-			Logger.Info("MergeGames() DONE");
+			_logger.Info("MergeGames() DONE");
 			return games;
-		}
-
-		/// <summary>
-		/// Reads the internal .json file of a given platform and returns the 
-		/// unmarshalled database object.
-		/// </summary>
-		/// <returns>Deserialized object or empty database if no file exists or parsing error</returns>
-		private PlatformDatabase UnmarshallDatabase()
-		{
-			if (!File.Exists(DatabaseFile)) {
-				return new PlatformDatabase();
-			}
-
-			Logger.Info("Reading game database from {0}...", DatabaseFile);
-			try {
-				using (var sr = new StreamReader(DatabaseFile))
-				using (JsonReader reader = new JsonTextReader(sr)) {
-					try {
-						var db = _serializer.Deserialize<PlatformDatabase>(reader);
-						reader.Close();
-						return db ?? new PlatformDatabase();
-					} catch (Exception e) {
-						Logger.Error(e, "Error parsing vpdb.json, deleting and ignoring.");
-						CrashManager.Report(e, "json");
-						reader.Close();
-						File.Delete(DatabaseFile);
-						return new PlatformDatabase();
-					}
-				}
-			} catch (Exception e) {
-				Logger.Error(e, "Error reading vpdb.json, deleting and ignoring.");
-				CrashManager.Report(e, "json");
-				return new PlatformDatabase();
-			}
-		}
-
-		/// <summary>
-		/// Writes the database to the internal .json file for a given platform.
-		/// </summary>
-		private void MarshallDatabase()
-		{
-			// don't do anything for non-existent folder
-			var dbFolder = Path.GetDirectoryName(DatabaseFile);
-			if (dbFolder != null && DatabaseFile != null && !Directory.Exists(dbFolder)) {
-				Logger.Warn("Directory {0} does not exist, not writing vpdb.json.", dbFolder);
-				return;
-			}
-
-			try {
-				using (var sw = new StreamWriter(DatabaseFile))
-				using (JsonWriter writer = new JsonTextWriter(sw)) {
-					_serializer.Serialize(writer, _database);
-				}
-				Logger.Debug("Wrote vpdb.json back to {0}", DatabaseFile);
-			} catch (Exception e) {
-				Logger.Error(e, "Error writing vpdb.json to {0}", DatabaseFile);
-				CrashManager.Report(e, "json");
-			}
 		}
 
 		public override string ToString()

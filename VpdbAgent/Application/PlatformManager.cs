@@ -1,13 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using NLog;
 using ReactiveUI;
+using Splat;
 using VpdbAgent.Models;
 using VpdbAgent.PinballX;
 using VpdbAgent.PinballX.Models;
@@ -31,17 +29,20 @@ namespace VpdbAgent.Application
 	public class PlatformManager : IPlatformManager
 	{
 		// dependencies
+		private readonly IDependencyResolver _resolver;
 		private readonly IMenuManager _menuManager;
-		private readonly IDatabaseManager _databaseManager;
+		private readonly IFileAccessManager _fileAccessManager;
 		private readonly Logger _logger;
 
 		// props
 		public ReactiveList<Platform> Platforms { get; } = new ReactiveList<Platform>();
 
-		public PlatformManager(IMenuManager menuManager, IDatabaseManager databaseManager, Logger logger)
+		public PlatformManager(IMenuManager menuManager, IFileAccessManager fileAccessManager, Logger logger,
+			IDependencyResolver resolver)
 		{
 			_menuManager = menuManager;
-			_databaseManager = databaseManager;
+			_resolver = resolver;
+			_fileAccessManager = fileAccessManager;
 			_logger = logger;
 
 			var systems = _menuManager.Systems;
@@ -100,7 +101,7 @@ namespace VpdbAgent.Application
 			_logger.Info("Updating games for {0}", system);
 
 			// create new platform and find old
-			var newPlatform = new Platform(system);
+			var newPlatform = new Platform(system, _resolver);
 			var oldPlatform = Platforms.FirstOrDefault(p => p.Name.Equals(system.Name));
 
 			// save vpdb.json for updated platform
@@ -132,7 +133,8 @@ namespace VpdbAgent.Application
 			_logger.Info("Updating all games for all platforms");
 
 			// create platforms from games
-			var platforms = _menuManager.Systems.Select(system => new Platform(system)).ToList();
+			var platforms = _menuManager.Systems.Select(system => 
+				new Platform(system, _resolver)).ToList();
 
 			// write vpdb.json
 			platforms.ForEach(p => p.Save());

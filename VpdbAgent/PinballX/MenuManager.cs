@@ -1,5 +1,4 @@
-﻿using IniParser;
-using NLog;
+﻿using NLog;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -10,7 +9,6 @@ using System.Xml.Serialization;
 using ReactiveUI;
 using VpdbAgent.PinballX.Models;
 using System.Reactive.Linq;
-using System.Reactive.Concurrency;
 using System.Reactive.Subjects;
 using System.Text.RegularExpressions;
 using System.Xml;
@@ -113,15 +111,18 @@ namespace VpdbAgent.PinballX
 		private readonly IFileSystemWatcher _watcher;
 		private readonly ISettingsManager _settingsManager;
 		private readonly IFileAccessManager _fileAccessManager;
+		private readonly IThreadManager _threadManager;
 		private readonly CrashManager _crashManager;
 		private readonly Logger _logger;
 
 		public MenuManager(IFileSystemWatcher fileSystemWatcher, ISettingsManager settingsManager,
-			IFileAccessManager fileAccessManager, CrashManager crashManager, Logger logger)
+			IFileAccessManager fileAccessManager, IThreadManager threadManager,
+			CrashManager crashManager, Logger logger)
 		{
 			_watcher = fileSystemWatcher;
 			_settingsManager = settingsManager;
 			_fileAccessManager = fileAccessManager;
+			_threadManager = threadManager;
 			_crashManager = crashManager;
 			_logger = logger;
 		}
@@ -134,13 +135,13 @@ namespace VpdbAgent.PinballX
 
 			// update systems when ini changes (also, kick it off now)
 			_watcher.FileWatcher(iniPath)
-				.StartWith(iniPath)                // kick-off without waiting for first file change
-				.SubscribeOn(Scheduler.Default)    // do work on background thread
+				.StartWith(iniPath)                             // kick-off without waiting for first file change
+				.SubscribeOn(_threadManager.WorkerScheduler)    // do work on background thread
 				.Subscribe(UpdateSystems);
 
 			// parse games when systems change
 			Systems.Changed
-				.ObserveOn(Scheduler.Default)
+				.ObserveOn(_threadManager.WorkerScheduler)
 				.Subscribe(UpdateGames);
 
 			// parse games when .xmls change
@@ -151,7 +152,7 @@ namespace VpdbAgent.PinballX
 				// database files
 				xmlWatcher?.Dispose();
 				xmlWatcher = _watcher.DatabaseWatcher(dbPath, Systems)
-					.ObserveOn(Scheduler.Default)
+					.ObserveOn(_threadManager.WorkerScheduler)
 					.Select(path => new { path, system = Systems.FirstOrDefault(s => s.DatabasePath.Equals(Path.GetDirectoryName(path))) })
 					.Subscribe(x => UpdateGames(x.system, Path.GetFileName(x.path)));
 
@@ -281,8 +282,7 @@ namespace VpdbAgent.PinballX
 			var systems = ParseSystems(iniPath);
 
 			// treat result back on main thread
-			System.Windows.Application.Current.Dispatcher.Invoke(delegate
-			{
+			_threadManager.MainDispatcher.Invoke(delegate {
 				using (Systems.SuppressChangeNotifications()) {
 					// todo make this more intelligent by diff'ing and changing instead of drop-and-create
 					Systems.Clear();
@@ -351,11 +351,16 @@ namespace VpdbAgent.PinballX
 
 			var data = _fileAccessManager.ParseIni(iniPath);
 			if (data != null) {
-				systems.Add(new PinballXSystem(Platform.PlatformType.VP, data["VisualPinball"]));
-				systems.Add(new PinballXSystem(Platform.PlatformType.FP, data["FuturePinball"]));
+				if (data["VisualPinball"] != null) {
+					systems.Add(new PinballXSystem(Platform.PlatformType.VP, data["VisualPinball"], _settingsManager));
+				}
+				if (data["FuturePinball"] != null) {
+					systems.Add(new PinballXSystem(Platform.PlatformType.FP, data["FuturePinball"], _settingsManager));
+				}
+				
 				for (var i = 0; i < 20; i++) {
 					if (data["System_" + i] != null) {
-						systems.Add(new PinballXSystem(data["System_" + i]));
+						systems.Add(new PinballXSystem(data["System_" + i], _settingsManager));
 					}
 				}
 			}

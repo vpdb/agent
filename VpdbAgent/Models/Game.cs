@@ -1,7 +1,5 @@
 ﻿using System;
-using System.ComponentModel;
 using System.IO;
-using System.Linq;
 using System.Reactive;
 using System.Runtime.Serialization;
 using ReactiveUI;
@@ -82,7 +80,7 @@ namespace VpdbAgent.Models
 		[DataMember] public string PatchedTableScript { get { return _patchedTableScript; } set { this.RaiseAndSetIfChanged(ref _patchedTableScript, value); } }
 
 		// dependencies
-		private static readonly IDatabaseManager DatabaseManager = Locator.Current.GetService<IDatabaseManager>();
+		private readonly IDatabaseManager _databaseManager;
 		
 		// object lookups
 		public VpdbRelease Release => _release.Value;
@@ -114,9 +112,10 @@ namespace VpdbAgent.Models
 		/// <summary>
 		/// Sets up Output Properties
 		/// </summary>
-		public Game()
+		public Game(IDependencyResolver resolver)
 		{
-			var downloadManager = Locator.Current.GetService<IDownloadManager>();
+			var downloadManager = resolver.GetService<IDownloadManager>();
+			_databaseManager = resolver.GetService<IDatabaseManager>();
 
 			// update HasRelease
 			this.WhenAnyValue(game => game.ReleaseId)
@@ -124,9 +123,9 @@ namespace VpdbAgent.Models
 				.ToProperty(this, game => game.HasRelease, out _hasRelease);
 
 			// setup output props that link to objects
-			this.WhenAnyValue(x => x.ReleaseId).Select(releaseId => DatabaseManager.GetRelease(ReleaseId)).ToProperty(this, x => x.Release, out _release);
-			this.WhenAnyValue(x => x.FileId).Select(fileId => DatabaseManager.GetVersion(ReleaseId, fileId)).ToProperty(this, x => x.Version, out _version);
-			this.WhenAnyValue(x => x.FileId).Select(fileId => DatabaseManager.GetTableFile(ReleaseId, fileId)).ToProperty(this, x => x.File, out _file);
+			this.WhenAnyValue(x => x.ReleaseId).Select(releaseId => _databaseManager.GetRelease(ReleaseId)).ToProperty(this, x => x.Release, out _release);
+			this.WhenAnyValue(x => x.FileId).Select(fileId => _databaseManager.GetVersion(ReleaseId, fileId)).ToProperty(this, x => x.Version, out _version);
+			this.WhenAnyValue(x => x.FileId).Select(fileId => _databaseManager.GetTableFile(ReleaseId, fileId)).ToProperty(this, x => x.File, out _file);
 
 			// watch versions and release for updates
 			this.WhenAnyValue(g => g.Release).Subscribe(release => {
@@ -153,7 +152,9 @@ namespace VpdbAgent.Models
 				});
 		}
 
-		public Game(PinballXGame xmlGame, Platform platform) : this()
+		public Game() : this(Locator.Current) { }
+
+		public Game(PinballXGame xmlGame, Platform platform, IDependencyResolver dependencyResolver) : this(dependencyResolver)
 		{
 			Update(platform);
 			UpdateFromGame(xmlGame, platform.TablePath);
