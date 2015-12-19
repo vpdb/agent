@@ -2,6 +2,7 @@
 using ReactiveUI;
 using Splat;
 using VpdbAgent.Application;
+using VpdbAgent.Common.Filesystem;
 using VpdbAgent.Common.TypeConverters.ReactiveUI;
 using VpdbAgent.PinballX;
 using VpdbAgent.ViewModels;
@@ -105,6 +106,8 @@ namespace VpdbAgent
 			deps.RegisterLazySingleton(NLog.LogManager.GetCurrentClassLogger, typeof(NLog.Logger));
 			deps.RegisterLazySingleton(() => ((App)System.Windows.Application.Current).CrashManager, typeof(CrashManager));
 			deps.RegisterLazySingleton(() => new ThreadManager(), typeof(IThreadManager));
+			deps.RegisterLazySingleton(() => new Directory(), typeof(IDirectory));
+			deps.RegisterLazySingleton(() => new File(), typeof(IFile));
 
 			deps.RegisterLazySingleton(() => new SettingsManager(
 				deps.GetService<NLog.Logger>()
@@ -145,6 +148,8 @@ namespace VpdbAgent
 				deps.GetService<ISettingsManager>(),
 				deps.GetService<IFileAccessManager>(),
 				deps.GetService<IThreadManager>(),
+				deps.GetService<IFile>(),
+				deps.GetService<IDirectory>(),
 				deps.GetService<CrashManager>(),
 				deps.GetService<NLog.Logger>()
 			), typeof(IMenuManager));

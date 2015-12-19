@@ -13,6 +13,7 @@ using System.Reactive.Subjects;
 using System.Text.RegularExpressions;
 using System.Xml;
 using VpdbAgent.Application;
+using VpdbAgent.Common.Filesystem;
 using VpdbAgent.Models;
 using VpdbAgent.Vpdb.Download;
 
@@ -112,17 +113,21 @@ namespace VpdbAgent.PinballX
 		private readonly ISettingsManager _settingsManager;
 		private readonly IFileAccessManager _fileAccessManager;
 		private readonly IThreadManager _threadManager;
+		private readonly IFile _file;
+		private readonly IDirectory _dir;
 		private readonly CrashManager _crashManager;
 		private readonly Logger _logger;
 
 		public MenuManager(IFileSystemWatcher fileSystemWatcher, ISettingsManager settingsManager,
 			IFileAccessManager fileAccessManager, IThreadManager threadManager,
-			CrashManager crashManager, Logger logger)
+			IFile file, IDirectory dir, CrashManager crashManager, Logger logger)
 		{
 			_watcher = fileSystemWatcher;
 			_settingsManager = settingsManager;
 			_fileAccessManager = fileAccessManager;
 			_threadManager = threadManager;
+			_file = file;
+			_dir = dir;
 			_crashManager = crashManager;
 			_logger = logger;
 		}
@@ -160,7 +165,7 @@ namespace VpdbAgent.PinballX
 				tableWatcher?.Dispose();
 				tableWatcher = _watcher.TablesWatcher(Systems)
 					.Subscribe(f => {
-						if (File.Exists(f)) {
+						if (_file.Exists(f)) {
 							_tableFileChanged.OnNext(f);
 						} else {
 							_tableFileRemoved.OnNext(f);
@@ -175,7 +180,7 @@ namespace VpdbAgent.PinballX
 			// read current xml
 			var xmlPath = Path.Combine(databasePath, _settingsManager.Settings.XmlFile[Platform.PlatformType.VP] + ".xml"); // todo make platform dynamic
 
-			if (_settingsManager.Settings.ReformatXml || !File.Exists(xmlPath)) {
+			if (_settingsManager.Settings.ReformatXml || !_file.Exists(xmlPath)) {
 				var menu = UnmarshallXml(xmlPath);
 
 				// add game
@@ -186,7 +191,7 @@ namespace VpdbAgent.PinballX
 
 			} else {
 
-				var xml = File.ReadAllText(xmlPath);
+				var xml = _file.ReadAllText(xmlPath);
 				var ns = new XmlSerializerNamespaces();
 				ns.Add("", "");
 
@@ -219,7 +224,7 @@ namespace VpdbAgent.PinballX
 						xml = xml.Substring(0, pos) + xmlGame + xml.Substring(pos);
 
 						// write back to disk
-						File.WriteAllText(xmlPath, xml);
+						_file.WriteAllText(xmlPath, xml);
 
 						_logger.Info("Appended game \"{0}\" to {1}", game.Description, xmlPath);
 					}
@@ -262,9 +267,9 @@ namespace VpdbAgent.PinballX
 
 			} else {
 
-				var xml = File.ReadAllText(xmlPath);
+				var xml = _file.ReadAllText(xmlPath);
 				xml = xml.Replace($"name=\"{oldFileName}\"", $"name=\"{newFilename}\"");
-				File.WriteAllText(xmlPath, xml);
+				_file.WriteAllText(xmlPath, xml);
 
 				_logger.Info("Replaced name \"{0}\" with \"{1}\" in {2}.", oldFileName, newFilename, xmlPath);
 			}
@@ -389,8 +394,8 @@ namespace VpdbAgent.PinballX
 
 			var games = new List<PinballXGame>();
 			var fileCount = 0;
-			if (Directory.Exists(system.DatabasePath)) {
-				foreach (var filePath in Directory.GetFiles(system.DatabasePath).Where(filePath => ".xml".Equals(Path.GetExtension(filePath), StringComparison.InvariantCultureIgnoreCase)))
+			if (_dir.Exists(system.DatabasePath)) {
+				foreach (var filePath in _dir.GetFiles(system.DatabasePath).Where(filePath => ".xml".Equals(Path.GetExtension(filePath), StringComparison.InvariantCultureIgnoreCase)))
 				{
 					var currentDatabaseFile = Path.GetFileName(filePath);
 					// if database file is specified, drop everything else
@@ -417,7 +422,7 @@ namespace VpdbAgent.PinballX
 		{
 			var menu = new PinballXMenu();
 
-			if (!File.Exists(filepath)) {
+			if (!_file.Exists(filepath)) {
 				return menu;
 			}
 			Stream reader = null;
