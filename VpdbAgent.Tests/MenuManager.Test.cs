@@ -1,13 +1,15 @@
 ﻿using System.IO;
+using System.Linq;
 using System.Text;
+using FluentAssertions;
 using IniParser;
 using IniParser.Model;
 using Moq;
 using NLog;
 using Splat;
 using VpdbAgent.Application;
+using VpdbAgent.Common.Filesystem;
 using VpdbAgent.PinballX;
-using VpdbAgent.Tests.Mocks;
 using Xunit;
 
 namespace VpdbAgent.Tests
@@ -18,59 +20,74 @@ namespace VpdbAgent.Tests
 		public void ShouldReadInitialSystem()
 		{
 			// setup
-			var fam = new Mock<IFileAccessManager>();
-			fam.Setup(f => f.ParseIni(It.IsAny<string>())).Returns(GeneratePinballXIni(Ini1));
-
-			var menuManager = GetManager(new TestDependencies().Locator, fam.Object);
+			var env = new TestEnvironment();
+			env.FileAccessManager.Setup(f => f.ParseIni(It.IsAny<string>())).Returns(GeneratePinballXIni(Ini1));
+			var menuManager = GetManager(env.Locator);
 
 			// test 
 			menuManager.Initialize();
 
-			Assert.Equal(1, menuManager.Systems.Count);
+			// assert
+			menuManager.Systems.ToList().Should()
+				.NotBeEmpty()
+				.And.HaveCount(1);
+			var system = menuManager.Systems[0];
+			system.Name.Should().Be("Visual Pinball");
+			system.Executable.Should().Be("VPinball.exe");
+			system.Enabled.Should().Be(true);
+			system.WorkingPath.Should().Be(@"C:\Visual Pinball");
+			system.Parameters.Should().Be("/play - \"[TABLEPATH]\\[TABLEFILE]\"");
 		}
 
 		[Fact]
 		public void ShouldReadInitialSystems()
 		{
 			// setup
-			var fam = new Mock<IFileAccessManager>();
-			fam.Setup(f => f.ParseIni(It.IsAny<string>())).Returns(GeneratePinballXIni(Ini3));
-
-			var menuManager = GetManager(new TestDependencies().Locator, fam.Object);
+			var env = new TestEnvironment();
+			env.FileAccessManager.Setup(f => f.ParseIni(It.IsAny<string>())).Returns(GeneratePinballXIni(Ini3));
+			var menuManager = GetManager(env.Locator);
 
 			// test
 			menuManager.Initialize();
 
-			Assert.Equal(3, menuManager.Systems.Count);
+			// assert
+			menuManager.Systems.ToList().Should()
+				.NotBeEmpty()
+				.And.HaveCount(3);
+			menuManager.Systems.FirstOrDefault(s => s.Name == "Visual Pinball").Should().NotBeNull();
+			menuManager.Systems.FirstOrDefault(s => s.Name == "Future Pinball").Should().NotBeNull();
+			menuManager.Systems.FirstOrDefault(s => s.Name == "MAME").Should().NotBeNull();
 		}
 
 		[Fact]
 		public void ShouldUpdateSystems()
 		{
 			// setup
-			var fam = new Mock<IFileAccessManager>();
-			fam.Setup(f => f.ParseIni(It.IsAny<string>())).Returns(GeneratePinballXIni(Ini1));
-
-			var deps = new TestDependencies();
-			var menuManager = GetManager(deps.Locator, fam.Object);
+			var env = new TestEnvironment();
+			env.FileAccessManager.Setup(f => f.ParseIni(It.IsAny<string>())).Returns(GeneratePinballXIni(Ini1));
+			var menuManager = GetManager(env.Locator);
 
 			// test
 			menuManager.Initialize();
 
 			// now, pinballx.ini has changed.
-			fam.Setup(f => f.ParseIni(It.IsAny<string>())).Returns(GeneratePinballXIni(Ini3));
-			deps.PinballXIniWatcher.OnNext("path-to-pinballx.ini");
+			env.FileAccessManager.Setup(f => f.ParseIni(It.IsAny<string>())).Returns(GeneratePinballXIni(Ini3));
+			env.PinballXIniWatcher.OnNext("path-to-pinballx.ini");
 
-			Assert.Equal(3, menuManager.Systems.Count);
+			menuManager.Systems.ToList().Should()
+				.NotBeEmpty()
+				.And.HaveCount(3);
 		}
 
-		private static IMenuManager GetManager(IDependencyResolver resolver, IFileAccessManager fam)
+		private static IMenuManager GetManager(IDependencyResolver resolver)
 		{
 			return new PinballX.MenuManager(
 				resolver.GetService<IFileSystemWatcher>(),
 				resolver.GetService<ISettingsManager>(),
-				fam,
+				resolver.GetService<IFileAccessManager>(),
 				resolver.GetService<IThreadManager>(),
+				resolver.GetService<IFile>(),
+				resolver.GetService<IDirectory>(),
 				resolver.GetService<CrashManager>(),
 				resolver.GetService<Logger>());
 		}
