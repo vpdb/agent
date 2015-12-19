@@ -113,10 +113,10 @@ namespace VpdbAgent
 				deps.GetService<NLog.Logger>()
 			), typeof(ISettingsManager));
 
-			deps.RegisterLazySingleton(() => new FileAccessManager(
+			deps.RegisterLazySingleton(() => new MarshallManager(
 				deps.GetService<NLog.Logger>(),
 				deps.GetService<CrashManager>()
-			), typeof(IFileAccessManager));
+			), typeof(IMarshallManager));
 
 			deps.RegisterLazySingleton(() => new FileSystemWatcher(
 				deps.GetService<NLog.Logger>()
@@ -146,17 +146,16 @@ namespace VpdbAgent
 			deps.RegisterLazySingleton(() => new MenuManager(
 				deps.GetService<IFileSystemWatcher>(),
 				deps.GetService<ISettingsManager>(),
-				deps.GetService<IFileAccessManager>(),
+				deps.GetService<IMarshallManager>(),
 				deps.GetService<IThreadManager>(),
 				deps.GetService<IFile>(),
 				deps.GetService<IDirectory>(),
-				deps.GetService<CrashManager>(),
 				deps.GetService<NLog.Logger>()
 			), typeof(IMenuManager));
 
 			deps.RegisterLazySingleton(() => new PlatformManager(
 				deps.GetService<IMenuManager>(),
-				deps.GetService<IFileAccessManager>(),
+				deps.GetService<IMarshallManager>(),
 				deps.GetService<NLog.Logger>(),
 				deps
 			), typeof(IPlatformManager));

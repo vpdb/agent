@@ -1,5 +1,9 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Reactive.Subjects;
+using System.Text;
+using IniParser;
+using IniParser.Model;
 using Moq;
 using NLog;
 using Splat;
@@ -19,7 +23,7 @@ namespace VpdbAgent.Tests
 		public readonly Mock<IFile> File = new Mock<IFile>();
 		public readonly Mock<IDirectory> Directory = new Mock<IDirectory>();
 		public readonly Mock<IFileSystemWatcher> FileSystemWatcher = new Mock<IFileSystemWatcher>();
-		public readonly Mock<IFileAccessManager> FileAccessManager = new Mock<IFileAccessManager>();
+		public readonly Mock<IMarshallManager> MarshallManager = new Mock<IMarshallManager>();
 
 		// observers
 		public readonly Subject<string> PinballXIniWatcher = new Subject<string>();
@@ -33,7 +37,8 @@ namespace VpdbAgent.Tests
 			_locator = new ModernDependencyResolver();
 	
 			// IFileAccessManager
-			_locator.RegisterLazySingleton(() => FileAccessManager.Object, typeof(IFileAccessManager));
+			_locator.RegisterLazySingleton(() => MarshallManager.Object, typeof(IMarshallManager));
+			MarshallManager.Setup(f => f.ParseIni(It.IsAny<string>())).Returns(GeneratePinballXIni(Ini));
 
 			// IFileSystemWatcher
 			FileSystemWatcher.Setup(f => f.FileWatcher(It.IsAny<string>())).Returns(PinballXIniWatcher);
@@ -43,7 +48,7 @@ namespace VpdbAgent.Tests
 
 			// ISettingsManager
 			var sm = new Mock<ISettingsManager>();
-			sm.Setup(s => s.Settings).Returns(TestConfig.GenerateSettings());
+			sm.Setup(s => s.Settings).Returns(Settings);
 			_locator.RegisterLazySingleton(() => sm.Object, typeof(ISettingsManager));
 
 			// IFile, IDirectory
@@ -56,6 +61,36 @@ namespace VpdbAgent.Tests
 
 			// IThreadManager
 			_locator.RegisterLazySingleton(() => new TestThreadManager(), typeof(IThreadManager));
+
+			// IMenuManager
+			_locator.RegisterLazySingleton(() => new PinballX.MenuManager(
+				_locator.GetService<IFileSystemWatcher>(),
+				_locator.GetService<ISettingsManager>(),
+				_locator.GetService<IMarshallManager>(),
+				_locator.GetService<IThreadManager>(),
+				_locator.GetService<IFile>(),
+				_locator.GetService<IDirectory>(),
+				_locator.GetService<Logger>()), typeof(IMenuManager));
+		}
+
+		public readonly Settings Settings = new Settings {
+			PbxFolder = @"C:\PinballX"
+		};
+
+		private static readonly string[] Ini = {
+			@"[VisualPinball]",
+			@"Enabled = true",
+			@"WorkingPath = C:\Visual Pinball",
+			@"Executable = VPinball.exe",
+			"Parameters = /play - \"[TABLEPATH]\\[TABLEFILE]\"",
+		};
+
+		public static IniData GeneratePinballXIni(string[] ini)
+		{
+			var byteArray = Encoding.UTF8.GetBytes(string.Join("\n", ini));
+			var stream = new MemoryStream(byteArray);
+			var parser = new FileIniDataParser();
+			return parser.ReadData(new StreamReader(stream));
 		}
 	}
 }

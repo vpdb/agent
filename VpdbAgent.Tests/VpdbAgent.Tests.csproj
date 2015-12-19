@@ -101,7 +101,6 @@
   <ItemGroup>
     <Compile Include="TestEnvironment.cs" />
     <Compile Include="MenuManager.Test.cs" />
-    <Compile Include="Mocks\TestConfig.cs" />
     <Compile Include="Mocks\TestSchedulerManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

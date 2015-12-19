@@ -1,24 +1,21 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Xml.Serialization;
 using IniParser;
 using IniParser.Model;
 using Newtonsoft.Json;
 using NLog;
-using NuGet.Resolver;
 using VpdbAgent.Application;
 using VpdbAgent.Models;
+using VpdbAgent.PinballX.Models;
 using VpdbAgent.Vpdb.Network;
 
 namespace VpdbAgent.PinballX
 {
 	/// <summary>
-	/// A class that abstracts all access to the file system.
+	/// A class that abstracts all serializing access to the file system.
 	/// </summary>
-	public interface IFileAccessManager
+	public interface IMarshallManager
 	{
 		/// <summary>
 		/// Parses a .ini file and returns the result or null if failed.
@@ -41,15 +38,35 @@ namespace VpdbAgent.PinballX
 		/// <param name="databaseFile">Absolute path of the database file to read</param>
 		/// <returns>Deserialized object or empty database if no file exists or parsing error</returns>
 		PlatformDatabase UnmarshallPlatformDatabase(string databaseFile);
+
+		/// <summary>
+		/// Returns an unmarshalled object for a given .XML file
+		/// </summary>
+		/// <param name="filepath">Absolute path to the .XML file</param>
+		/// <returns></returns>
+		PinballXMenu UnmarshallXml(string filepath);
+
+		/// <summary>
+		/// Saves the menu back to the XML file.
+		/// </summary>
+		/// <remarks>
+		/// This should only be used for updating or adding games by VPDB Agent,
+		/// i.e. those in Vpdb.xml that is managed by VPDB Agent. For existing games
+		/// another serializer should be used that keeps eventual comments and
+		/// ordering intact.
+		/// </remarks>
+		/// <param name="menu"></param>
+		/// <param name="filepath"></param>
+		void MarshallXml(PinballXMenu menu, string filepath);
 	}
 
-	public class FileAccessManager : IFileAccessManager
+	public class MarshallManager : IMarshallManager
 	{
 		// dependencies
 		private readonly Logger _logger;
 		private readonly CrashManager _crashManager;
 
-		public FileAccessManager(Logger logger, CrashManager crashManager)
+		public MarshallManager(Logger logger, CrashManager crashManager)
 		{
 			_logger = logger;
 			_crashManager = crashManager;
@@ -119,6 +136,44 @@ namespace VpdbAgent.PinballX
 				_logger.Error(e, "Error writing vpdb.json to {0}", databaseFile);
 				_crashManager.Report(e, "json");
 			}
+		}
+
+		public PinballXMenu UnmarshallXml(string filepath)
+		{
+			var menu = new PinballXMenu();
+
+			if (!File.Exists(filepath)) {
+				return menu;
+			}
+			Stream reader = null;
+			try {
+				var serializer = new XmlSerializer(typeof(PinballXMenu));
+				reader = new FileStream(filepath, FileMode.Open);
+				menu = serializer.Deserialize(reader) as PinballXMenu;
+
+			} catch (Exception e) {
+				_logger.Error(e, "Error parsing {0}: {1}", filepath, e.Message);
+				_crashManager.Report(e, "xml");
+
+			} finally {
+				reader?.Close();
+			}
+			return menu;
+		}
+
+		public void MarshallXml(PinballXMenu menu, string filepath)
+		{
+			try {
+				var serializer = new XmlSerializer(typeof(PinballXMenu));
+				using (TextWriter writer = new StreamWriter(filepath)) {
+					serializer.Serialize(writer, menu);
+					_logger.Info("Saved {0}.", filepath);
+				}
+			} catch (Exception e) {
+				_logger.Error(e, "Error writing XML to {0}: {1}", filepath, e.Message);
+				_crashManager.Report(e, "xml");
+			}
+
 		}
 	}
 }

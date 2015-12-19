@@ -111,24 +111,22 @@ namespace VpdbAgent.PinballX
 		// dependencies
 		private readonly IFileSystemWatcher _watcher;
 		private readonly ISettingsManager _settingsManager;
-		private readonly IFileAccessManager _fileAccessManager;
+		private readonly IMarshallManager _marshallManager;
 		private readonly IThreadManager _threadManager;
 		private readonly IFile _file;
 		private readonly IDirectory _dir;
-		private readonly CrashManager _crashManager;
 		private readonly Logger _logger;
 
 		public MenuManager(IFileSystemWatcher fileSystemWatcher, ISettingsManager settingsManager,
-			IFileAccessManager fileAccessManager, IThreadManager threadManager,
-			IFile file, IDirectory dir, CrashManager crashManager, Logger logger)
+			IMarshallManager marshallManager, IThreadManager threadManager,
+			IFile file, IDirectory dir, Logger logger)
 		{
 			_watcher = fileSystemWatcher;
 			_settingsManager = settingsManager;
-			_fileAccessManager = fileAccessManager;
+			_marshallManager = marshallManager;
 			_threadManager = threadManager;
 			_file = file;
 			_dir = dir;
-			_crashManager = crashManager;
 			_logger = logger;
 		}
 	
@@ -181,13 +179,13 @@ namespace VpdbAgent.PinballX
 			var xmlPath = Path.Combine(databasePath, _settingsManager.Settings.XmlFile[Platform.PlatformType.VP] + ".xml"); // todo make platform dynamic
 
 			if (_settingsManager.Settings.ReformatXml || !_file.Exists(xmlPath)) {
-				var menu = UnmarshallXml(xmlPath);
+				var menu = _marshallManager.UnmarshallXml(xmlPath);
 
 				// add game
 				menu.Games.Add(game);
 
 				// save xml
-				MarshallXml(menu, xmlPath);
+				_marshallManager.MarshallXml(menu, xmlPath);
 
 			} else {
 
@@ -251,7 +249,7 @@ namespace VpdbAgent.PinballX
 			if (_settingsManager.Settings.ReformatXml) {
 
 				// read xml
-				var menu = UnmarshallXml(xmlPath);
+				var menu = _marshallManager.UnmarshallXml(xmlPath);
 
 				// get game
 				var game = menu.Games.FirstOrDefault(g => g.Filename == oldFileName);
@@ -263,7 +261,7 @@ namespace VpdbAgent.PinballX
 				game.Filename = newFilename;
 
 				// save xml
-				MarshallXml(menu, xmlPath);
+				_marshallManager.MarshallXml(menu, xmlPath);
 
 			} else {
 
@@ -354,7 +352,7 @@ namespace VpdbAgent.PinballX
 			// only notify after this block
 			_logger.Info("Parsing systems from {0}", iniPath);
 
-			var data = _fileAccessManager.ParseIni(iniPath);
+			var data = _marshallManager.ParseIni(iniPath);
 			if (data != null) {
 				if (data["VisualPinball"] != null) {
 					systems.Add(new PinballXSystem(Platform.PlatformType.VP, data["VisualPinball"], _settingsManager));
@@ -402,7 +400,7 @@ namespace VpdbAgent.PinballX
 					if (databaseFile != null && !databaseFile.Equals(currentDatabaseFile)) {
 						continue;
 					}
-					var menu = UnmarshallXml(filePath);
+					var menu = _marshallManager.UnmarshallXml(filePath);
 					menu.Games.ForEach(game => game.DatabaseFile = currentDatabaseFile);
 					games.AddRange(menu.Games);
 					fileCount++;
@@ -413,58 +411,6 @@ namespace VpdbAgent.PinballX
 			return games;
 		}
 
-		/// <summary>
-		/// Returns an unmarshalled object for a given .XML file
-		/// </summary>
-		/// <param name="filepath">Absolute path to the .XML file</param>
-		/// <returns></returns>
-		private PinballXMenu UnmarshallXml(string filepath)
-		{
-			var menu = new PinballXMenu();
-
-			if (!_file.Exists(filepath)) {
-				return menu;
-			}
-			Stream reader = null;
-			try {
-				var serializer = new XmlSerializer(typeof(PinballXMenu));
-				reader = new FileStream(filepath, FileMode.Open);
-				menu = serializer.Deserialize(reader) as PinballXMenu;
-
-			} catch (Exception e) {
-				_logger.Error(e, "Error parsing {0}: {1}", filepath, e.Message);
-				_crashManager.Report(e, "xml");
-
-			} finally {
-				reader?.Close();
-			}
-			return menu;
-		}
-
-		/// <summary>
-		/// Saves the menu back to the XML file.
-		/// </summary>
-		/// <remarks>
-		/// This should only be used for updating or adding games by VPDB Agent,
-		/// i.e. those in Vpdb.xml that is managed by VPDB Agent. For existing games
-		/// another serializer should be used that keeps eventual comments and
-		/// ordering intact.
-		/// </remarks>
-		/// <param name="menu"></param>
-		/// <param name="filepath"></param>
-		private void MarshallXml(PinballXMenu menu, string filepath)
-		{
-			try {
-				var serializer = new XmlSerializer(typeof(PinballXMenu));
-				using (TextWriter writer = new StreamWriter(filepath)) {
-					serializer.Serialize(writer, menu);
-					_logger.Info("Saved {0}.", filepath);
-				}
-			} catch (Exception e) {
-				_logger.Error(e, "Error writing XML to {0}: {1}", filepath, e.Message);
-				_crashManager.Report(e, "xml");
-			}
-
-		}
+		
 	}
 }

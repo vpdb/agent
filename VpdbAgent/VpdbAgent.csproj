@@ -243,7 +243,7 @@
     <Compile Include="Common\Filesystem\Directory.cs" />
     <Compile Include="Common\Filesystem\File.cs" />
     <Compile Include="Libs\Diff.cs" />
-    <Compile Include="PinballX\FileAccessManager.cs" />
+    <Compile Include="PinballX\MarshallManager.cs" />
     <Compile Include="Vpdb\RealtimeManager.cs" />
     <Compile Include="Application\Settings.cs" />
     <Compile Include="Application\VersionManager.cs" />

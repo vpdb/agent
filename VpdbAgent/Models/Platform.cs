@@ -81,7 +81,7 @@ namespace VpdbAgent.Models
 
 		// dependencies
 		private readonly IDependencyResolver _resolver;
-		private readonly IFileAccessManager _fileAccessManager;
+		private readonly IMarshallManager _marshallManager;
 		private readonly Logger _logger;
 
 		/// <summary>
@@ -98,7 +98,7 @@ namespace VpdbAgent.Models
 		public Platform(PinballXSystem system, IDependencyResolver resolver)
 		{
 			_resolver = resolver;
-			_fileAccessManager = resolver.GetService<IFileAccessManager>();
+			_marshallManager = resolver.GetService<IMarshallManager>();
 			_logger = resolver.GetService<Logger>();
 
 			Name = system.Name;
@@ -111,7 +111,7 @@ namespace VpdbAgent.Models
 			DatabasePath = system.DatabasePath;
 			MediaPath = system.MediaPath;
 
-			_database = _fileAccessManager.UnmarshallPlatformDatabase(DatabaseFile);
+			_database = _marshallManager.UnmarshallPlatformDatabase(DatabaseFile);
 
 			UpdateGames(system);
 
@@ -129,7 +129,7 @@ namespace VpdbAgent.Models
 		public Platform Save()
 		{
 			_database.Games = Games;
-			_fileAccessManager.MarshallPlatformDatabase(_database, DatabaseFile);
+			_marshallManager.MarshallPlatformDatabase(_database, DatabaseFile);
 			return this;
 		}
 

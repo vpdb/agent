@@ -31,18 +31,18 @@ namespace VpdbAgent.Application
 		// dependencies
 		private readonly IDependencyResolver _resolver;
 		private readonly IMenuManager _menuManager;
-		private readonly IFileAccessManager _fileAccessManager;
+		private readonly IMarshallManager _marshallManager;
 		private readonly Logger _logger;
 
 		// props
 		public ReactiveList<Platform> Platforms { get; } = new ReactiveList<Platform>();
 
-		public PlatformManager(IMenuManager menuManager, IFileAccessManager fileAccessManager, Logger logger,
+		public PlatformManager(IMenuManager menuManager, IMarshallManager marshallManager, Logger logger,
 			IDependencyResolver resolver)
 		{
 			_menuManager = menuManager;
 			_resolver = resolver;
-			_fileAccessManager = fileAccessManager;
+			_marshallManager = marshallManager;
 			_logger = logger;
 
 			var systems = _menuManager.Systems;
