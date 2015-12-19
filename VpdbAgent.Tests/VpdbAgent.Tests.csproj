@@ -91,7 +91,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Mocks\TestLocator.cs" />
+    <Compile Include="Mocks\TestDependencies.cs" />
     <Compile Include="MenuManager.Test.cs" />
     <Compile Include="Mocks\TestConfig.cs" />
     <Compile Include="Mocks\TestSchedulerManager.cs" />
