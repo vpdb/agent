@@ -1,6 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Reactive.Subjects;
+using System.Text;
+using IniParser;
+using IniParser.Model;
 using Moq;
 using NLog;
 using Splat;
@@ -15,32 +19,39 @@ namespace VpdbAgent.Tests
 	public class MenuManager
 	{
 		[Fact]
-		public void ShouldReadGames()
+		public void ShouldReadInitialGames()
 		{
-
-			var resolver = new ModernDependencyResolver();
-			var logger = LogManager.GetCurrentClassLogger();
-			var fsw = new Mock<IFileSystemWatcher>();
+			var pinballXIni = GeneratePinballXIni(new[] {
+				@"[VisualPinball]",
+				@"Enabled = true",
+				@"WorkingPath = C:\Visual Pinball",
+				@"Executable = VPinball.exe",
+				"Parameters = /play - \"[TABLEPATH]\\[TABLEFILE]\"",
+			});
 			var fam = new Mock<IFileAccessManager>();
-			var sm = new Mock<ISettingsManager>();
-			sm.Setup(s => s.Settings).Returns(TestConfig.GenerateSettings());
-			fam.Setup(f => f.ParseIni(It.IsAny<string>())).Returns(TestConfig.GeneratePinballXIni());
+			fam.Setup(f => f.ParseIni(It.IsAny<string>())).Returns(pinballXIni);
 
-			var fileWatcher = new Subject<string>();
-			var databaseWatcher = new Subject<string>();
-			fsw.Setup(f => f.FileWatcher(It.IsAny<string>())).Returns(fileWatcher);
-			fsw.Setup(f => f.DatabaseWatcher(It.IsAny<string>(), It.IsAny<IList<PinballXSystem>>())).Returns(databaseWatcher);
-
+			var resolver = TestLocator.Generate();
 			var menuManager = new PinballX.MenuManager(
-				fsw.Object,
-				sm.Object, 
+				resolver.GetService<IFileSystemWatcher>(),
+				resolver.GetService<ISettingsManager>(),
 				fam.Object,
-				new TestThreadManager(), 
-				new Mock<CrashManager>(logger).Object,
-				logger);
+				resolver.GetService<IThreadManager>(), 
+				resolver.GetService<CrashManager>(),
+				resolver.GetService<Logger>());
 
 			menuManager.Initialize();
 
+			Assert.Equal(1, menuManager.Systems.Count);
+		}
+
+
+		public static IniData GeneratePinballXIni(string[] ini)
+		{
+			var byteArray = Encoding.UTF8.GetBytes(string.Join("\n", ini));
+			var stream = new MemoryStream(byteArray);
+			var parser = new FileIniDataParser();
+			return parser.ReadData(new StreamReader(stream));
 		}
 	}
 
