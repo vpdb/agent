@@ -40,6 +40,13 @@ For more details, see [FEATURES](FEATURES.md).
 - [NotifyIcon](http://www.hardcodet.net/wpf-notifyicon) for tray features
 - [OpenMcdf](http://sourceforge.net/projects/openmcdf/) for reading and writing VP's OLE Compound format
 
+## Tests
+
+Tests are written with [XUnit](https://xunit.github.io/) and 
+[Fluent Assertions](https://github.com/dennisdoomen/fluentassertions/wiki).
+When using Resharper, use [the plugin](https://resharper-plugins.jetbrains.com/packages/xunitcontrib/)
+so you can easily debug. Coverage is still poor but increasing.
+
 
 ## Database
 
