@@ -101,6 +101,7 @@ namespace VpdbAgent.Application
 		private readonly IMessageManager _messageManager;
 		private readonly IRealtimeManager _realtimeManager;
 		private readonly IVisualPinballManager _visualPinballManager;
+		private readonly IThreadManager _threadManager;
 		private readonly Logger _logger;
 
 		// props
@@ -115,7 +116,7 @@ namespace VpdbAgent.Application
 		public GameManager(IMenuManager menuManager, IVpdbClient vpdbClient, ISettingsManager 
 			settingsManager, IDownloadManager downloadManager, IDatabaseManager databaseManager,
 			IVersionManager versionManager, IPlatformManager platformManager, IMessageManager messageManager,
-			IRealtimeManager realtimeManager, IVisualPinballManager visualPinballManager, Logger logger)
+			IRealtimeManager realtimeManager, IVisualPinballManager visualPinballManager, IThreadManager threadManager, Logger logger)
 		{
 			_menuManager = menuManager;
 			_vpdbClient = vpdbClient;
@@ -127,6 +128,7 @@ namespace VpdbAgent.Application
 			_messageManager = messageManager;
 			_realtimeManager = realtimeManager;
 			_visualPinballManager = visualPinballManager;
+			_threadManager = threadManager;
 			_logger = logger;
 
 			// setup game change listener once all games are fetched.
@@ -221,7 +223,7 @@ namespace VpdbAgent.Application
 				.Select(_ => _platformManager.Platforms.SelectMany(x => x.Games).ToList())
 				.Where(games => games.Count > 0)
 				.Subscribe(games => {
-					System.Windows.Application.Current.Dispatcher.Invoke(delegate {
+					_threadManager.MainDispatcher.Invoke(delegate {
 						// TODO better logic
 						using (Games.SuppressChangeNotifications()) {
 							Games.Clear();

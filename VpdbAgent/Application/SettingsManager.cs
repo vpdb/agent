@@ -16,7 +16,6 @@ using Newtonsoft.Json;
 using NLog;
 using ReactiveUI;
 using Refit;
-using Splat;
 using VpdbAgent.Libs.ShellLink;
 using VpdbAgent.Models;
 using VpdbAgent.Vpdb;
@@ -129,8 +128,7 @@ namespace VpdbAgent.Application
 			BlobCache.ApplicationName = DataFolder;
 			_storage = BlobCache.Secure;
 
-			Task.Run(async () =>
-			{
+			Task.Run(async () => {
 				await Settings.ReadFromStorage(_storage);
 				_settingsAvailable.OnNext(Settings);
 			});

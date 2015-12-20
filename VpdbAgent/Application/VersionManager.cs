@@ -35,7 +35,6 @@ namespace VpdbAgent.Application
 		{
 			// setup update check beginning with now
 			Observable.Interval(UpdateInterval).StartWith(0).Subscribe(CheckForUpdate);
-
 			return this;
 		}
 

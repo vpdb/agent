@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reactive.Subjects;
 using System.Text;
@@ -6,6 +7,7 @@ using IniParser;
 using IniParser.Model;
 using Moq;
 using NLog;
+using PusherClient;
 using Splat;
 using VpdbAgent.Application;
 using VpdbAgent.Common.Filesystem;
@@ -13,6 +15,10 @@ using VpdbAgent.Models;
 using VpdbAgent.PinballX;
 using VpdbAgent.PinballX.Models;
 using VpdbAgent.Tests.Mocks;
+using VpdbAgent.VisualPinball;
+using VpdbAgent.Vpdb;
+using VpdbAgent.Vpdb.Download;
+using VpdbAgent.Vpdb.Models;
 
 namespace VpdbAgent.Tests
 {
@@ -33,14 +39,19 @@ namespace VpdbAgent.Tests
 		// mocks
 		public readonly Mock<IFile> File = new Mock<IFile>();
 		public readonly Mock<IDirectory> Directory = new Mock<IDirectory>();
+		public readonly Mock<ISettingsManager> SettingsManager = new Mock<ISettingsManager>();
 		public readonly Mock<IFileSystemWatcher> FileSystemWatcher = new Mock<IFileSystemWatcher>();
 		public readonly Mock<IMarshallManager> MarshallManager = new Mock<IMarshallManager>();
 		public readonly Mock<IDatabaseManager> DatabaseManager = new Mock<IDatabaseManager>();
+		public readonly Mock<IVpdbClient> VpdbClient = new Mock<IVpdbClient>();
+		public readonly Mock<IVisualPinballManager> VisualPinballManager = new Mock<IVisualPinballManager>();
 
 		// observers
 		public readonly Subject<string> PinballXIniWatcher = new Subject<string>();
 		public readonly Subject<string> DatabaseWatcher = new Subject<string>();
 		public readonly Subject<string> TableWatcher = new Subject<string>();
+		public readonly Subject<Channel> UserChannel = new Subject<Channel>();
+		public readonly Subject<VpdbUserFull> ApiAuthenticated = new Subject<VpdbUserFull>();
 
 		private readonly ModernDependencyResolver _locator;
 
@@ -62,12 +73,19 @@ namespace VpdbAgent.Tests
 			_locator.RegisterLazySingleton(() => FileSystemWatcher.Object, typeof(IFileSystemWatcher));
 
 			// ISettingsManager
-			var sm = new Mock<ISettingsManager>();
-			sm.Setup(s => s.Settings).Returns(Settings);
-			_locator.RegisterLazySingleton(() => sm.Object, typeof(ISettingsManager));
+			SettingsManager.Setup(s => s.Settings).Returns(Settings);
+			SettingsManager.Setup(s => s.ApiAuthenticated).Returns(ApiAuthenticated);
+			_locator.RegisterLazySingleton(() => SettingsManager.Object, typeof(ISettingsManager));
 
 			// IDatabaseManager
 			_locator.RegisterLazySingleton(() => DatabaseManager.Object, typeof(IDatabaseManager));
+
+			// IVpdbClient
+			VpdbClient.Setup(v => v.UserChannel).Returns(UserChannel);
+			_locator.RegisterLazySingleton(() => VpdbClient.Object, typeof(IVpdbClient));
+
+			// IVisualPinballManager
+			_locator.RegisterLazySingleton(() => VisualPinballManager.Object, typeof(IVisualPinballManager));
 
 			// IFile, IDirectory
 			Directory.Setup(d => d.Exists(VisualPinballDatabasePath)).Returns(true);
@@ -81,6 +99,38 @@ namespace VpdbAgent.Tests
 
 			// IThreadManager
 			_locator.RegisterLazySingleton(() => new TestThreadManager(), typeof(IThreadManager));
+
+
+			//--------------------------------------------------------------------------
+			// Real (non-mocked) services start here. Those are the tested ones.
+			//--------------------------------------------------------------------------
+
+
+			// IVersionManager
+			_locator.RegisterLazySingleton(() => new VersionManager(
+				_locator.GetService<CrashManager>(),
+				_locator.GetService<Logger>()
+			), typeof(IVersionManager));
+
+			// IMessageManager
+			_locator.RegisterLazySingleton(() => new MessageManager(
+				_locator.GetService<IDatabaseManager>(),
+				_locator.GetService<CrashManager>()
+			), typeof(IMessageManager));
+
+			// IRealtimeManager
+			_locator.RegisterLazySingleton(() => new RealtimeManager(
+				_locator.GetService<IVpdbClient>(),
+				_locator.GetService<Logger>()
+			), typeof(IRealtimeManager));
+
+			// IJobManager
+			_locator.RegisterLazySingleton(() => new JobManager(
+				_locator.GetService<IDatabaseManager>(),
+				_locator.GetService<IMessageManager>(),
+				_locator.GetService<CrashManager>(),
+				_locator.GetService<Logger>()
+			), typeof(IJobManager));
 
 			// IMenuManager
 			_locator.RegisterLazySingleton(() => new PinballX.MenuManager(
@@ -99,10 +149,39 @@ namespace VpdbAgent.Tests
 				_locator.GetService<Logger>(),
 				_locator
 			), typeof(IPlatformManager));
+
+			// IDownloadManager
+			_locator.RegisterLazySingleton(() => new DownloadManager(
+				_locator.GetService<IPlatformManager>(),
+				_locator.GetService<IJobManager>(),
+				_locator.GetService<IVpdbClient>(),
+				_locator.GetService<ISettingsManager>(),
+				_locator.GetService<IMessageManager>(),
+				_locator.GetService<IDatabaseManager>(),
+				_locator.GetService<CrashManager>(),
+				_locator.GetService<Logger>()
+			), typeof(IDownloadManager));
+
+			// IGameManager
+			_locator.RegisterLazySingleton(() => new Application.GameManager(
+				_locator.GetService<IMenuManager>(),
+				_locator.GetService<IVpdbClient>(),
+				_locator.GetService<ISettingsManager>(),
+				_locator.GetService<IDownloadManager>(),
+				_locator.GetService<IDatabaseManager>(),
+				_locator.GetService<IVersionManager>(),
+				_locator.GetService<IPlatformManager>(),
+				_locator.GetService<IMessageManager>(),
+				_locator.GetService<IRealtimeManager>(),
+				_locator.GetService<IVisualPinballManager>(),
+				_locator.GetService<IThreadManager>(),
+				_locator.GetService<Logger>()
+			), typeof(IGameManager));
 		}
 
 		public Settings Settings = new Settings {
-			PbxFolder = PinballXPath
+			PbxFolder = PinballXPath,
+			ApiKey = "fake-test-api-key"
 		};
 
 		private readonly string[] _ini = {
