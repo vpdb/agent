@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 using System.Security;
 using System.Text;
@@ -43,6 +44,13 @@ namespace VpdbAgent.Common.Filesystem
 		/// <param name="path">The file to write to. </param><param name="contents">The string to write to the file. </param><exception cref="T:System.ArgumentException"><paramref name="path"/> is a zero-length string, contains only white space, or contains one or more invalid characters as defined by <see cref="F:System.IO.Path.InvalidPathChars"/>. </exception><exception cref="T:System.ArgumentNullException"><paramref name="path"/> is null or <paramref name="contents"/> is empty.  </exception><exception cref="T:System.IO.PathTooLongException">The specified path, file name, or both exceed the system-defined maximum length. For example, on Windows-based platforms, paths must be less than 248 characters, and file names must be less than 260 characters. </exception><exception cref="T:System.IO.DirectoryNotFoundException">The specified path is invalid (for example, it is on an unmapped drive). </exception><exception cref="T:System.IO.IOException">An I/O error occurred while opening the file. </exception><exception cref="T:System.UnauthorizedAccessException"><paramref name="path"/> specified a file that is read-only.-or- This operation is not supported on the current platform.-or- <paramref name="path"/> specified a directory.-or- The caller does not have the required permission. </exception><exception cref="T:System.NotSupportedException"><paramref name="path"/> is in an invalid format. </exception><exception cref="T:System.Security.SecurityException">The caller does not have the required permission. </exception><filterpriority>1</filterpriority><PermissionSet><IPermission class="System.Security.Permissions.FileIOPermission, mscorlib, Version=2.0.3600.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" version="1" Unrestricted="true"/></PermissionSet>
 		[SecuritySafeCritical]
 		void WriteAllText(string path, string contents);
+
+		/// <summary>
+		/// Returns the files size for the given path.
+		/// </summary>
+		/// <param name="path">Absolute path</param>
+		/// <returns>File size in bytes</returns>
+		long FileSize(string path);
 	}
 
 	[ExcludeFromCodeCoverage]
@@ -61,6 +69,11 @@ namespace VpdbAgent.Common.Filesystem
 		public void WriteAllText(string path, string contents)
 		{
 			System.IO.File.WriteAllText(path, contents);
+		}
+
+		public long FileSize(string path)
+		{
+			return new FileInfo(path).Length;
 		}
 	}
 }

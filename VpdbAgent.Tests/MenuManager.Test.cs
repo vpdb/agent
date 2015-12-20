@@ -116,12 +116,14 @@ namespace VpdbAgent.Tests
 			@"[VisualPinball]",
 			@"Enabled = true",
 			@"WorkingPath = C:\Visual Pinball",
+			@"TablePath = C:\Visual Pinball\Tables",
 			@"Executable = VPinball.exe",
 			"Parameters = /play - \"[TABLEPATH]\\[TABLEFILE]\"",
 
 			@"[FuturePinball]",
 			@"Enabled = true",
 			@"WorkingPath = C:\Future Pinball",
+			@"TablePath = C:\Future Pinball\Tables",
 			@"Executable = FuturePinball.exe",
 			"Parameters = /open \"[TABLEPATH]\\[TABLEFILE]\" /play /exit /arcaderender",
 
@@ -129,6 +131,7 @@ namespace VpdbAgent.Tests
 			@"Name = MAME",
 			@"Enabled = true",
 			@"WorkingPath = C:\Emulators\MAME",
+			@"TablePath = C:\Emulators\MAME\Tables",
 			@"Executable = mamep64.exe",
 			"Parameters =[TABLEFILE]",
 		};

@@ -59,12 +59,14 @@ namespace VpdbAgent.Tests
 			@"Enabled = true",
 			@"WorkingPath = C:\Visual Pinball",
 			@"Executable = VPinball.exe",
+			@"TablePath = C:\Visual Pinball\Tables",
 			"Parameters = /play - \"[TABLEPATH]\\[TABLEFILE]\"",
 
 			@"[FuturePinball]",
 			@"Enabled = true",
 			@"WorkingPath = C:\Future Pinball",
 			@"Executable = FuturePinball.exe",
+			@"TablePath = C:\Future Pinball\Tables",
 			"Parameters = /open \"[TABLEPATH]\\[TABLEFILE]\" /play /exit /arcaderender"
 		};
 	}

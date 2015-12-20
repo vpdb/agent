@@ -73,6 +73,11 @@ namespace VpdbAgent.PinballX.Models
 			SetByData(data);
 		}
 
+		/// <summary>
+		/// Copies system data from PinballX.ini to our object.
+		/// TODO validate (e.g. no TablePath should result at least in an error (now it crashes))
+		/// </summary>
+		/// <param name="data">Parsed data</param>
 		private void SetByData(KeyDataCollection data)
 		{
 			Enabled = "true".Equals(data["Enabled"], StringComparison.InvariantCultureIgnoreCase);

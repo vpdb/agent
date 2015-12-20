@@ -186,14 +186,15 @@ namespace VpdbAgent.Models
 			DatabaseFile = xmlGame.DatabaseFile;
 
 			var oldFilename = Filename;
-
-			if (_file.Exists(tablePath + @"\" + xmlGame.Filename + ".vpt")) {
-				Filename = xmlGame.Filename + ".vpt";
-				FileSize = new FileInfo(tablePath + @"\" + xmlGame.Filename + ".vpt").Length;
+			var vptPath = Path.Combine(tablePath, xmlGame.Filename + ".vpt");
+			var vpxPath = Path.Combine(tablePath, xmlGame.Filename + ".vpx");
+			if (_file.Exists(vptPath)) {
+				Filename = Path.GetFileName(vptPath);
+				FileSize = _file.FileSize(vptPath);
 				Exists = true;
-			} else if (_file.Exists(tablePath + @"\" + xmlGame.Filename + ".vpx")) {
-				Filename = xmlGame.Filename + ".vpx";
-				FileSize = new FileInfo(tablePath + @"\" + xmlGame.Filename + ".vpx").Length;
+			} else if (_file.Exists(vpxPath)) {
+				Filename = Path.GetFileName(vpxPath);
+				FileSize = _file.FileSize(vpxPath);
 				Exists = true;
 			} else {
 				Filename = xmlGame.Filename;

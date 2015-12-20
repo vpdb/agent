@@ -59,6 +59,9 @@ namespace VpdbAgent.Tests
 		{
 			_locator = new ModernDependencyResolver();
 
+			var game1 = Menu.Games[0];
+			var game2 = Menu.Games[1];
+
 			// IMarshallManager
 			MarshallManager.Setup(m => m.ParseIni(PinballXIniPath)).Returns(GetPinballXIni(_ini));
 			MarshallManager.Setup(m => m.UnmarshallPlatformDatabase(VisualPinballDatabaseJsonPath)).Returns(new PlatformDatabase());
@@ -90,6 +93,10 @@ namespace VpdbAgent.Tests
 			// IFile, IDirectory
 			Directory.Setup(d => d.Exists(VisualPinballDatabasePath)).Returns(true);
 			Directory.Setup(d => d.GetFiles(VisualPinballDatabasePath)).Returns(new[] { Path.GetFileName(VisualPinballDatabaseXmlPath) });
+			File.Setup(f => f.Exists(Path.Combine(VisualPinballTablePath, game1.Filename + ".vpt"))).Returns(true);
+			File.Setup(f => f.Exists(Path.Combine(VisualPinballTablePath, game2.Filename + ".vpx"))).Returns(true);
+			File.Setup(f => f.FileSize(Path.Combine(VisualPinballTablePath, game1.Filename + ".vpt"))).Returns(10001);
+			File.Setup(f => f.FileSize(Path.Combine(VisualPinballTablePath, game2.Filename + ".vpx"))).Returns(10002);
 			_locator.RegisterLazySingleton(() => File.Object, typeof(IFile));
 			_locator.RegisterLazySingleton(() => Directory.Object, typeof(IDirectory));
 
