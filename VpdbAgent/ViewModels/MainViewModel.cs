@@ -50,7 +50,7 @@ namespace VpdbAgent.ViewModels
 		{
 			HostScreen = screen;
 
-			Games = new GamesViewModel(Locator.Current.GetService<IGameManager>(), Locator.Current.GetService<IPlatformManager>());
+			Games = new GamesViewModel(Locator.Current);
 			Downloads = new DownloadsViewModel(Locator.Current.GetService<IJobManager>());
 			Messsages = new MessagesViewModel(Locator.Current.GetService<IDatabaseManager>(), Locator.Current.GetService<IMessageManager>());
 			GotoSettings = ReactiveCommand.CreateAsyncObservable(_ => screen.Router.Navigate.ExecuteAsync(new SettingsViewModel(screen, settingsManager, versionManager, Locator.Current.GetService<IGameManager>())));

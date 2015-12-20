@@ -45,6 +45,7 @@ namespace VpdbAgent.Tests
 		public readonly Mock<IDatabaseManager> DatabaseManager = new Mock<IDatabaseManager>();
 		public readonly Mock<IVpdbClient> VpdbClient = new Mock<IVpdbClient>();
 		public readonly Mock<IVisualPinballManager> VisualPinballManager = new Mock<IVisualPinballManager>();
+		public readonly Mock<IVpdbApi> VpdbApi = new Mock<IVpdbApi>();
 
 		// observers
 		public readonly Subject<string> PinballXIniWatcher = new Subject<string>();
@@ -85,6 +86,7 @@ namespace VpdbAgent.Tests
 
 			// IVpdbClient
 			VpdbClient.Setup(v => v.UserChannel).Returns(UserChannel);
+			VpdbClient.Setup(v => v.Api).Returns(VpdbApi.Object);
 			_locator.RegisterLazySingleton(() => VpdbClient.Object, typeof(IVpdbClient));
 
 			// IVisualPinballManager

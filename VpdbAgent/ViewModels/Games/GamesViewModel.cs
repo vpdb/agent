@@ -4,6 +4,7 @@ using System.Reactive;
 using System.Reactive.Linq;
 using NLog;
 using ReactiveUI;
+using Splat;
 using VpdbAgent.Application;
 using VpdbAgent.Common.Extensions;
 using VpdbAgent.Models;
@@ -29,9 +30,10 @@ namespace VpdbAgent.ViewModels.Games
 		private readonly ReactiveList<string> _platformFilter = new ReactiveList<string>();
 		private readonly IReactiveDerivedList<GameItemViewModel> _allGames;
 
-		public GamesViewModel(IGameManager gameManager, IPlatformManager platformManager)
+		public GamesViewModel(IDependencyResolver resolver)
 		{
-			_platformManager = platformManager;
+			_platformManager = resolver.GetService<IPlatformManager>();
+			var gameManager = resolver.GetService<IGameManager>();
 
 			// setup init listener
 			gameManager.Initialized.Subscribe(_ => SetupTracking());
@@ -45,7 +47,7 @@ namespace VpdbAgent.ViewModels.Games
 
 			// push all games into AllGames as view models and sorted
 			_allGames = gameManager.Games.CreateDerivedCollection(
-				game => new GameItemViewModel(game) { IsVisible = IsGameVisible(game) },
+				game => new GameItemViewModel(game, resolver) { IsVisible = IsGameVisible(game) },
 				gameViewModel => true,
 				(x, y) => string.Compare(x.Game.Id, y.Game.Id, StringComparison.Ordinal)
 			);
@@ -169,7 +171,7 @@ namespace VpdbAgent.ViewModels.Games
 			using (_platformFilter.SuppressChangeNotifications()) {
 				_platformFilter.Clear();
 				_platformFilter.AddRange(Platforms.Select(p => p.Name));
-			};
+			}
 			Logger.Info("We've got {0} platforms, {2} visible, {1} in total.", Platforms.Count, _platformManager.Platforms.Count, _platformFilter.Count);
 
 		}

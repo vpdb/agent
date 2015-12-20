@@ -18,10 +18,10 @@ namespace VpdbAgent.ViewModels.Games
 		private const long MatchThreshold = 262144;
 
 		// deps
-		private static readonly Logger Logger = Locator.CurrentMutable.GetService<Logger>();
-		private static readonly IVpdbClient VpdbClient = Locator.CurrentMutable.GetService<IVpdbClient>();
-		private static readonly IGameManager GameManager = Locator.CurrentMutable.GetService<IGameManager>();
-		private static readonly IMessageManager MessageManager = Locator.CurrentMutable.GetService<IMessageManager>();
+		private readonly Logger _logger;
+		private readonly IVpdbClient _vpdbClient;
+		private readonly IGameManager _gameManager;
+		private readonly IMessageManager _messageManager;
 
 		// commands
 		public ReactiveCommand<List<VpdbRelease>> IdentifyRelease { get; protected set; }
@@ -50,12 +50,18 @@ namespace VpdbAgent.ViewModels.Games
 		private bool _hasExecuted;
 		private bool _hasResults;
 
-		public GameItemViewModel(Game game)
+		public GameItemViewModel(Game game, IDependencyResolver resolver)
 		{
 			Game = game;
 
+			_logger = resolver.GetService<Logger>();
+			_vpdbClient = resolver.GetService<IVpdbClient>();
+			_gameManager = resolver.GetService<IGameManager>();
+			_messageManager = resolver.GetService<IMessageManager>();
+			var threadManager = resolver.GetService<IThreadManager>();
+
 			// release identify
-			IdentifyRelease = ReactiveCommand.CreateAsyncObservable(_ => VpdbClient.Api.GetReleasesBySize(Game.FileSize, MatchThreshold).SubscribeOn(Scheduler.Default));
+			IdentifyRelease = ReactiveCommand.CreateAsyncObservable(_ => _vpdbClient.Api.GetReleasesBySize(Game.FileSize, MatchThreshold).SubscribeOn(threadManager.WorkerScheduler));
 			IdentifyRelease.Select(releases => releases
 				.Select(release => new {release, release.Versions})
 				.SelectMany(x => x.Versions.Select(version => new {x.release, version, version.Files}))
@@ -74,21 +80,21 @@ namespace VpdbAgent.ViewModels.Games
 
 				// if file name and file size are identical, directly match.
 				if (numMatches == 1 && match != null) {
-					GameManager.LinkRelease(match.Game, match.Release, match.TableFile.Reference.Id);
-					MessageManager.LogReleaseLinked(match.Game, match.Release, match.TableFile.Reference.Id);
+					_gameManager.LinkRelease(match.Game, match.Release, match.TableFile.Reference.Id);
+					_messageManager.LogReleaseLinked(match.Game, match.Release, match.TableFile.Reference.Id);
 
 				} else {
 					IdentifiedReleases = releases;
 					HasExecuted = true;
 				}
-			}, exception => VpdbClient.HandleApiError(exception, "identifying a game by file size"));
+			}, exception => _vpdbClient.HandleApiError(exception, "identifying a game by file size"));
 
 			//SyncToggled
 			//	.Where(_ => Game.IsSynced && Game.HasRelease)
 			//	.Subscribe(_ => { GameManager.Sync(Game); });
 
 			// handle errors
-			IdentifyRelease.ThrownExceptions.Subscribe(e => { Logger.Error(e, "Error matching game."); });
+			IdentifyRelease.ThrownExceptions.Subscribe(e => { _logger.Error(e, "Error matching game."); });
 
 			// spinner
 			IdentifyRelease.IsExecuting.ToProperty(this, vm => vm.IsExecuting, out _isExecuting);
