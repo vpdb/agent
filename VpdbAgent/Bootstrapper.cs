@@ -155,7 +155,7 @@ namespace VpdbAgent
 
 			deps.RegisterLazySingleton(() => new PlatformManager(
 				deps.GetService<IMenuManager>(),
-				deps.GetService<IMarshallManager>(),
+				deps.GetService<IThreadManager>(),
 				deps.GetService<NLog.Logger>(),
 				deps
 			), typeof(IPlatformManager));

@@ -9,6 +9,7 @@ using NLog;
 using Splat;
 using VpdbAgent.Application;
 using VpdbAgent.Common.Filesystem;
+using VpdbAgent.Models;
 using VpdbAgent.PinballX;
 using VpdbAgent.PinballX.Models;
 using VpdbAgent.Tests.Mocks;
@@ -35,14 +36,14 @@ namespace VpdbAgent.Tests
 		public TestEnvironment()
 		{
 			_locator = new ModernDependencyResolver();
-			var pinballXIniPath = Path.Combine(Settings.PbxFolder, "Config", "PinballX.ini");
 
 			// IFileAccessManager
-			MarshallManager.Setup(f => f.ParseIni(pinballXIniPath)).Returns(GetPinballXIni(Ini));
+			MarshallManager.Setup(f => f.ParseIni(PinballXIniPath)).Returns(GetPinballXIni(_ini));
+			MarshallManager.Setup(f => f.UnmarshallPlatformDatabase(VisualPinballDatabasePath)).Returns(new PlatformDatabase());
 			_locator.RegisterLazySingleton(() => MarshallManager.Object, typeof(IMarshallManager));
 
 			// IFileSystemWatcher
-			FileSystemWatcher.Setup(f => f.FileWatcher(pinballXIniPath)).Returns(PinballXIniWatcher);
+			FileSystemWatcher.Setup(f => f.FileWatcher(PinballXIniPath)).Returns(PinballXIniWatcher);
 			FileSystemWatcher.Setup(f => f.DatabaseWatcher(It.IsAny<string>(), It.IsAny<IList<PinballXSystem>>())).Returns(DatabaseWatcher);
 			FileSystemWatcher.Setup(f => f.TablesWatcher(It.IsAny<IList<PinballXSystem>>())).Returns(TableWatcher);
 			_locator.RegisterLazySingleton(() => FileSystemWatcher.Object, typeof(IFileSystemWatcher));
@@ -72,18 +73,30 @@ namespace VpdbAgent.Tests
 				_locator.GetService<IFile>(),
 				_locator.GetService<IDirectory>(),
 				_locator.GetService<Logger>()), typeof(IMenuManager));
+
+			// IPlatformManager
+			_locator.RegisterLazySingleton(() => new Application.PlatformManager(
+				_locator.GetService<IMenuManager>(),
+				_locator.GetService<IThreadManager>(),
+				_locator.GetService<Logger>(),
+				_locator
+			), typeof(IPlatformManager));
 		}
 
-		public readonly Settings Settings = new Settings {
-			PbxFolder = @"C:\PinballX"
+		public const string PinballXPath              = @"C:\PinballX";
+		public const string PinballXIniPath           = @"C:\PinballX\Config\PinballX.ini";
+		public const string VisualPinballPath         = @"C:\Visual Pinball";
+		public const string VisualPinballTablePath    = @"C:\Visual Pinball\Tables";
+		public const string VisualPinballDatabasePath = @"C:\PinballX\Databases\Visual Pinball\vpdb.json";
+
+		public Settings Settings = new Settings {
+			PbxFolder = PinballXPath
 		};
 
-		public static string VisualPinballTablePath = @"C:\Visual Pinball\Tables";
-
-		private static readonly string[] Ini = {
+		private readonly string[] _ini = {
 			@"[VisualPinball]",
 			@"Enabled = true",
-			@"WorkingPath = C:\Visual Pinball",
+			@"WorkingPath = " + VisualPinballPath,
 			@"TablePath = " + VisualPinballTablePath,
 			@"Executable = VPinball.exe",
 			"Parameters = /play - \"[TABLEPATH]\\[TABLEFILE]\"",

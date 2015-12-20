@@ -9,9 +9,12 @@ namespace VpdbAgent.Models
 	/// </summary>
 	public class PlatformDatabase
 	{
-		public IEnumerable<Game> Games { set; get; } = new List<Game>();
+		public IEnumerable<Game> Games { set; get; }
 
-		public PlatformDatabase() { }
+		public PlatformDatabase()
+		{
+			Games = new List<Game>();
+		}
 
 		public PlatformDatabase(IEnumerable<Game> games)
 		{

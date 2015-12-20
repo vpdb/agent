@@ -8,6 +8,7 @@ using System.Reactive.Subjects;
 using NLog;
 using ReactiveUI;
 using Splat;
+using VpdbAgent.Application;
 using VpdbAgent.PinballX;
 using VpdbAgent.PinballX.Models;
 
@@ -82,6 +83,7 @@ namespace VpdbAgent.Models
 		// dependencies
 		private readonly IDependencyResolver _resolver;
 		private readonly IMarshallManager _marshallManager;
+		private readonly IThreadManager _threadManager;
 		private readonly Logger _logger;
 
 		/// <summary>
@@ -99,6 +101,7 @@ namespace VpdbAgent.Models
 		{
 			_resolver = resolver;
 			_marshallManager = resolver.GetService<IMarshallManager>();
+			_threadManager = resolver.GetService<IThreadManager>();
 			_logger = resolver.GetService<Logger>();
 
 			Name = system.Name;
@@ -140,7 +143,7 @@ namespace VpdbAgent.Models
 		private void UpdateGames(PinballXSystem system)
 		{
 			_database.Games = MergeGames(system);
-			System.Windows.Application.Current.Dispatcher.Invoke(delegate {
+			_threadManager.MainDispatcher.Invoke(delegate {
 				using (Games.SuppressChangeNotifications()) {
 					// todo make this more intelligent by diff'ing and changing instead of drop-and-create
 					Games.Clear();
@@ -161,7 +164,7 @@ namespace VpdbAgent.Models
 			List<Game> mergedGames;
 			if (_database == null) {
 				_logger.Warn("No vpdb.json at {0}", DatabaseFile);
-				mergedGames = MergeGames(xmlGames, null);
+				mergedGames = MergeGames(xmlGames, new List<Game>());
 			} else {
 				_logger.Info("Found and parsed vpdb.json at {0}", DatabaseFile);
 				mergedGames = MergeGames(xmlGames, _database.Games);

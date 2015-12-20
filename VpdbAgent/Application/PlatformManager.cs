@@ -22,7 +22,18 @@ namespace VpdbAgent.Application
 		/// </summary>
 		ReactiveList<Platform> Platforms { get; }
 
+		/// <summary>
+		/// Retrieves a platform for a given table file
+		/// </summary>
+		/// <param name="tableFile">Table file</param>
+		/// <returns>Platform or null if not found</returns>
 		Platform FindPlatform(VpdbTableFile tableFile);
+
+		/// <summary>
+		/// Retrieves a platform for a given VPDB-platform
+		/// </summary>
+		/// <param name="platform">Platform definition at VPDB</param>
+		/// <returns>Local platform object</returns>
 		Platform FindPlatform(VpdbTableFile.VpdbPlatform platform);
 	}
 
@@ -31,18 +42,17 @@ namespace VpdbAgent.Application
 		// dependencies
 		private readonly IDependencyResolver _resolver;
 		private readonly IMenuManager _menuManager;
-		private readonly IMarshallManager _marshallManager;
+		private readonly IThreadManager _threadManager;
 		private readonly Logger _logger;
 
 		// props
 		public ReactiveList<Platform> Platforms { get; } = new ReactiveList<Platform>();
 
-		public PlatformManager(IMenuManager menuManager, IMarshallManager marshallManager, Logger logger,
-			IDependencyResolver resolver)
+		public PlatformManager(IMenuManager menuManager, IThreadManager threadManager, Logger logger, IDependencyResolver resolver)
 		{
 			_menuManager = menuManager;
+			_threadManager = threadManager;
 			_resolver = resolver;
-			_marshallManager = marshallManager;
 			_logger = logger;
 
 			var systems = _menuManager.Systems;
@@ -108,7 +118,7 @@ namespace VpdbAgent.Application
 			newPlatform.Save();
 
 			// update platforms back on main thread
-			System.Windows.Application.Current.Dispatcher.Invoke(delegate {
+			_threadManager.MainDispatcher.Invoke(delegate {
 				using (Platforms.SuppressChangeNotifications()) {
 					if (oldPlatform != null) {
 						Platforms.Remove(oldPlatform);
@@ -140,7 +150,7 @@ namespace VpdbAgent.Application
 			platforms.ForEach(p => p.Save());
 
 			// update platforms back on main thread
-			System.Windows.Application.Current.Dispatcher.Invoke(delegate {
+			_threadManager.MainDispatcher.Invoke(delegate {
 				using (Platforms.SuppressChangeNotifications()) {
 					// todo make this more intelligent by diff'ing and changing instead of drop-and-create
 					Platforms.Clear();
