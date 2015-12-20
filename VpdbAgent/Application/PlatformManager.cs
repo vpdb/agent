@@ -23,7 +23,7 @@ namespace VpdbAgent.Application
 		ReactiveList<Platform> Platforms { get; }
 
 		/// <summary>
-		/// Retrieves a platform for a given table file
+		/// Retrieves a platform for a given table file's VPDB-platform attribute
 		/// </summary>
 		/// <param name="tableFile">Table file</param>
 		/// <returns>Platform or null if not found</returns>

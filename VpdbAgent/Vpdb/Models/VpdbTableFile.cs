@@ -46,7 +46,21 @@ namespace VpdbAgent.Vpdb.Models
 		/// </summary>
 		public enum VpdbPlatform
 		{
-			VP, FP
+			/// <summary>
+			/// Visual Pinball
+			/// </summary>
+			VP,
+
+			/// <summary>
+			/// Future Pinball
+			/// </summary>
+			FP,
+
+			/// <summary>
+			/// For testing only
+			/// </summary>
+			[Obsolete("Only use for testing!")]
+			Unknown 
 		}
 	}
 }
