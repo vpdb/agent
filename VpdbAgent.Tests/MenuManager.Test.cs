@@ -4,6 +4,7 @@ using FluentAssertions;
 using Moq;
 using Splat;
 using VpdbAgent.PinballX;
+using VpdbAgent.PinballX.Models;
 using Xunit;
 
 namespace VpdbAgent.Tests
@@ -15,7 +16,8 @@ namespace VpdbAgent.Tests
 		{
 			// setup
 			var env = new TestEnvironment();
-			env.MarshallManager.Setup(f => f.ParseIni(It.IsAny<string>())).Returns(TestEnvironment.GeneratePinballXIni(Ini1));
+			env.MarshallManager.Setup(f => f.ParseIni(Path.Combine(env.Settings.PbxFolder, "Config", "PinballX.ini")))
+				.Returns(TestEnvironment.GetPinballXIni(Ini1));
 			var menuManager = env.Locator.GetService<IMenuManager>();
 
 			// test 
@@ -38,7 +40,8 @@ namespace VpdbAgent.Tests
 		{
 			// setup
 			var env = new TestEnvironment();
-			env.MarshallManager.Setup(f => f.ParseIni(It.IsAny<string>())).Returns(TestEnvironment.GeneratePinballXIni(Ini3));
+			env.MarshallManager.Setup(f => f.ParseIni(Path.Combine(env.Settings.PbxFolder, "Config", "PinballX.ini")))
+				.Returns(TestEnvironment.GetPinballXIni(Ini3));
 			var menuManager = env.Locator.GetService<IMenuManager>();
 
 			// test
@@ -58,16 +61,19 @@ namespace VpdbAgent.Tests
 		{
 			// setup
 			var env = new TestEnvironment();
-			env.MarshallManager.Setup(f => f.ParseIni(It.IsAny<string>())).Returns(TestEnvironment.GeneratePinballXIni(Ini1));
+			var iniPath = Path.Combine(env.Settings.PbxFolder, "Config", "PinballX.ini");
+			env.MarshallManager.Setup(f => f.ParseIni(iniPath)).Returns(TestEnvironment.GetPinballXIni(Ini1));
 			var menuManager = env.Locator.GetService<IMenuManager>();
 
 			// test
 			menuManager.Initialize();
 
 			// now, pinballx.ini has changed.
-			env.MarshallManager.Setup(f => f.ParseIni(It.IsAny<string>())).Returns(TestEnvironment.GeneratePinballXIni(Ini3));
-			env.PinballXIniWatcher.OnNext("path-to-pinballx.ini");
+			env.MarshallManager.Setup(f => f.ParseIni(iniPath))
+				.Returns(TestEnvironment.GetPinballXIni(Ini3));
+			env.PinballXIniWatcher.OnNext(iniPath);
 
+			// assert
 			menuManager.Systems.ToList().Should()
 				.NotBeEmpty()
 				.And.HaveCount(3);
@@ -79,10 +85,29 @@ namespace VpdbAgent.Tests
 			// setup
 			var env = new TestEnvironment();
 			var dbPath = Path.Combine(env.Settings.PbxFolder, "Databases", "Visual Pinball");
+			const string xml = "Visual Pinball.xml";
+			var menu = new PinballXMenu();
+			menu.Games.Add(new PinballXGame() {
+				Filename = "Test_Game",
+				Description = "Test Game (Test 2016)"
+			});
 
 			env.Directory.Setup(d => d.Exists(dbPath)).Returns(true);
-			env.Directory.Setup(d => d.GetFiles(dbPath)).Returns(new []{ "Visual Pinball.xml" });
+			env.Directory.Setup(d => d.GetFiles(dbPath)).Returns(new []{ xml });
+//			env.File.Setup(f => f.Exists(Path.Combine(TestEnvironment.VisualPinballTablePath, "Test_Game.vpt"))).Returns(true);
+			env.MarshallManager.Setup(m => m.UnmarshallXml("Visual Pinball.xml")).Returns(menu);
 
+			var menuManager = env.Locator.GetService<IMenuManager>();
+
+			// test
+			menuManager.Initialize();
+
+			// assert
+			menuManager.Systems.ToList().Should().NotBeEmpty().And.HaveCount(1);
+			var system = menuManager.Systems[0];
+			system.Games.Should().NotBeEmpty().And.HaveCount(1);
+			system.Games[0].Filename.Should().Be("Test_Game");
+			system.Games[0].Description.Should().Be("Test Game (Test 2016)");
 		}
 
 		private static readonly string[] Ini1 = {

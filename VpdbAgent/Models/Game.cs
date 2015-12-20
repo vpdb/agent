@@ -7,6 +7,7 @@ using static System.String;
 using System.Reactive.Linq;
 using Splat;
 using VpdbAgent.Application;
+using VpdbAgent.Common.Filesystem;
 using VpdbAgent.PinballX.Models;
 using VpdbAgent.Vpdb.Download;
 using VpdbAgent.Vpdb.Models;
@@ -81,14 +82,15 @@ namespace VpdbAgent.Models
 
 		// dependencies
 		private readonly IDatabaseManager _databaseManager;
+		private readonly IFile _file;
 		
 		// object lookups
 		public VpdbRelease Release => _release.Value;
 		public VpdbVersion Version => _version.Value;
-		public VpdbTableFile File => _file.Value;
+		public VpdbTableFile File => _tableFile.Value;
 		private readonly ObservableAsPropertyHelper<VpdbRelease> _release;
 		private readonly ObservableAsPropertyHelper<VpdbVersion> _version;
-		private readonly ObservableAsPropertyHelper<VpdbTableFile> _file;
+		private readonly ObservableAsPropertyHelper<VpdbTableFile> _tableFile;
 
 		// read/write fields
 		private string _releaseId;
@@ -116,6 +118,7 @@ namespace VpdbAgent.Models
 		{
 			var downloadManager = resolver.GetService<IDownloadManager>();
 			_databaseManager = resolver.GetService<IDatabaseManager>();
+			_file = resolver.GetService<IFile>();
 
 			// update HasRelease
 			this.WhenAnyValue(game => game.ReleaseId)
@@ -125,7 +128,7 @@ namespace VpdbAgent.Models
 			// setup output props that link to objects
 			this.WhenAnyValue(x => x.ReleaseId).Select(releaseId => _databaseManager.GetRelease(ReleaseId)).ToProperty(this, x => x.Release, out _release);
 			this.WhenAnyValue(x => x.FileId).Select(fileId => _databaseManager.GetVersion(ReleaseId, fileId)).ToProperty(this, x => x.Version, out _version);
-			this.WhenAnyValue(x => x.FileId).Select(fileId => _databaseManager.GetTableFile(ReleaseId, fileId)).ToProperty(this, x => x.File, out _file);
+			this.WhenAnyValue(x => x.FileId).Select(fileId => _databaseManager.GetTableFile(ReleaseId, fileId)).ToProperty(this, x => x.File, out _tableFile);
 
 			// watch versions and release for updates
 			this.WhenAnyValue(g => g.Release).Subscribe(release => {
@@ -184,11 +187,11 @@ namespace VpdbAgent.Models
 
 			var oldFilename = Filename;
 
-			if (System.IO.File.Exists(tablePath + @"\" + xmlGame.Filename + ".vpt")) {
+			if (_file.Exists(tablePath + @"\" + xmlGame.Filename + ".vpt")) {
 				Filename = xmlGame.Filename + ".vpt";
 				FileSize = new FileInfo(tablePath + @"\" + xmlGame.Filename + ".vpt").Length;
 				Exists = true;
-			} else if (System.IO.File.Exists(tablePath + @"\" + xmlGame.Filename + ".vpx")) {
+			} else if (_file.Exists(tablePath + @"\" + xmlGame.Filename + ".vpx")) {
 				Filename = xmlGame.Filename + ".vpx";
 				FileSize = new FileInfo(tablePath + @"\" + xmlGame.Filename + ".vpx").Length;
 				Exists = true;

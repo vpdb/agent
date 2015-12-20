@@ -35,10 +35,10 @@ namespace VpdbAgent.Tests
 		public TestEnvironment()
 		{
 			_locator = new ModernDependencyResolver();
-	
+
 			// IFileAccessManager
+			MarshallManager.Setup(f => f.ParseIni(Path.Combine(Settings.PbxFolder, "Config", "PinballX.ini"))).Returns(GetPinballXIni(Ini));
 			_locator.RegisterLazySingleton(() => MarshallManager.Object, typeof(IMarshallManager));
-			MarshallManager.Setup(f => f.ParseIni(It.IsAny<string>())).Returns(GeneratePinballXIni(Ini));
 
 			// IFileSystemWatcher
 			FileSystemWatcher.Setup(f => f.FileWatcher(It.IsAny<string>())).Returns(PinballXIniWatcher);
@@ -77,15 +77,18 @@ namespace VpdbAgent.Tests
 			PbxFolder = @"C:\PinballX"
 		};
 
+		public static string VisualPinballTablePath = @"C:\Visual Pinball\Tables";
+
 		private static readonly string[] Ini = {
 			@"[VisualPinball]",
 			@"Enabled = true",
-			@"WorkingPath = C:\Visual Pinball",
+			@"WorkingPath = C:\Visual Pinbal",
+			@"TablePath = " + VisualPinballTablePath,
 			@"Executable = VPinball.exe",
 			"Parameters = /play - \"[TABLEPATH]\\[TABLEFILE]\"",
 		};
 
-		public static IniData GeneratePinballXIni(string[] ini)
+		public static IniData GetPinballXIni(string[] ini)
 		{
 			var byteArray = Encoding.UTF8.GetBytes(string.Join("\n", ini));
 			var stream = new MemoryStream(byteArray);

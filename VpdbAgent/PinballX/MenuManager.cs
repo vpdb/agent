@@ -136,12 +136,6 @@ namespace VpdbAgent.PinballX
 			var iniPath = _settingsManager.Settings.PbxFolder + @"\Config\PinballX.ini";
 			var dbPath = _settingsManager.Settings.PbxFolder + @"\Databases\";
 
-			// update systems when ini changes (also, kick it off now)
-			_watcher.FileWatcher(iniPath)
-				.StartWith(iniPath)                             // kick-off without waiting for first file change
-				.SubscribeOn(_threadManager.WorkerScheduler)    // do work on background thread
-				.Subscribe(UpdateSystems);
-
 			// parse games when systems change
 			Systems.Changed
 				.ObserveOn(_threadManager.WorkerScheduler)
@@ -170,6 +164,13 @@ namespace VpdbAgent.PinballX
 						}
 					});
 			});
+
+			// update systems when ini changes (also, kick it off now)
+			_watcher.FileWatcher(iniPath)
+				.StartWith(iniPath)                             // kick-off without waiting for first file change
+				.SubscribeOn(_threadManager.WorkerScheduler)    // do work on background thread
+				.Subscribe(UpdateSystems);
+
 			return this;
 		}
 
@@ -410,7 +411,5 @@ namespace VpdbAgent.PinballX
 
 			return games;
 		}
-
-		
 	}
 }
