@@ -10,6 +10,7 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -17,10 +18,11 @@ using System.Windows.Threading;
 
 namespace Devart.Controls
 {
-    /// <summary>
-    /// Panel that virtualizes child collection and supports smooth scrolling.
-    /// </summary>
-    public partial class SmoothPanel : VirtualizingPanel, IScrollInfo
+	/// <summary>
+	/// Panel that virtualizes child collection and supports smooth scrolling.
+	/// </summary>
+	[ExcludeFromCodeCoverage]
+	public partial class SmoothPanel : VirtualizingPanel, IScrollInfo
     {
         /// <summary>
         /// Using a DependencyProperty as the backing store for Templates.

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Windows;
@@ -22,6 +23,7 @@ namespace VpdbAgent
 	/// <summary>
 	/// Interaction logic for MainWindow.xaml
 	/// </summary>
+	[ExcludeFromCodeCoverage]
 	public partial class MainWindow
 	{
 		public Bootstrapper Bootstrapper { get; protected set; }

@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Windows;
 using System.Windows.Controls;
 using ReactiveUI;
 using VpdbAgent.ViewModels.Games;
@@ -8,6 +9,7 @@ namespace VpdbAgent.Views.Games
 	/// <summary>
 	/// An item in the search result in the identify release panel
 	/// </summary>
+	[ExcludeFromCodeCoverage]
 	public partial class GameResultItemView : UserControl, IViewFor<GameResultItemViewModel>
 	{
 		public GameResultItemView()

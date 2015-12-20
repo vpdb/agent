@@ -9,14 +9,17 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace Devart.Controls
 {
-    /// <summary>
-    /// Provides method for instant data binding.
-    /// </summary>
-    public static class DataBindHelper
+	/// <summary>
+	/// Provides method for instant data binding.
+	/// </summary>
+	[ExcludeFromCodeCoverage]
+	public static class DataBindHelper
     {
         /// <summary>
         /// The pending task status.
@@ -135,7 +138,7 @@ namespace Devart.Controls
         /// <summary>
         /// Gets the head task.
         /// </summary>
-        /// <returns>A <see cref="DataBindEngine.Task"/> instance.</returns>
+        /// <returns>A <see cref="Task"/> instance.</returns>
         private static object GetHeadTask()
         {
             if (_headField == null)
@@ -169,7 +172,7 @@ namespace Devart.Controls
         /// Gets the next task.
         /// </summary>
         /// <param name="task">The task.</param>
-        /// <returns>A <see cref="DataBindEngine.Task"/> instance.</returns>
+        /// <returns>A <see cref="Task"/> instance.</returns>
         private static object GetNextTask(object task)
         {
             if (_nextField == null)
@@ -188,7 +191,7 @@ namespace Devart.Controls
         /// Gets the task status.
         /// </summary>
         /// <param name="task">The task.</param>
-        /// <returns>A <see cref="DataBindEngine.Task.Status"/> casted to <see cref="Int32"/>.</returns>
+        /// <returns>A <see cref="Task.Status"/> casted to <see cref="Int32"/>.</returns>
         private static int GetTaskStatus(object task)
         {
             if (_statusField == null)

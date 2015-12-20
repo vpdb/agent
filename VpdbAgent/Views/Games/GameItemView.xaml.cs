@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Windows;
 using System.Windows.Controls;
 using Devart.Controls;
 using ReactiveUI;
@@ -9,6 +10,7 @@ namespace VpdbAgent.Views.Games
 	/// <summary>
 	/// Interaction logic for GameTemplate.xaml
 	/// </summary>
+	[ExcludeFromCodeCoverage]
 	public partial class GameItemView : UserControl, IViewFor<GameItemViewModel>, IHeightMeasurer
 	{
 		public GameItemView()

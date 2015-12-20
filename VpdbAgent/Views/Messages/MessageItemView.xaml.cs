@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Windows;
 using System.Windows.Controls;
 using Devart.Controls;
 using ReactiveUI;
@@ -9,6 +10,7 @@ namespace VpdbAgent.Views.Messages
 	/// <summary>
 	/// Interaction logic for MessageItemView.xaml
 	/// </summary>
+	[ExcludeFromCodeCoverage]
 	public partial class MessageItemView : UserControl, IViewFor<MessageItemViewModel>, IHeightMeasurer
 	{
 		public MessageItemView()

@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Windows;
 using ReactiveUI;
 
 namespace VpdbAgent.Common.TypeConverters.ReactiveUI
 {
+	[ExcludeFromCodeCoverage]
 	public class DictionaryToVisibilityConverter : IBindingTypeConverter
 	{
 		public int GetAffinityForObjects(Type fromType, Type toType)

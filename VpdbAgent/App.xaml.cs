@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using System.Windows;
@@ -17,6 +18,7 @@ namespace VpdbAgent
 	/// <summary>
 	/// Interaction logic for App.xaml
 	/// </summary>
+	[ExcludeFromCodeCoverage]
 	public partial class App : System.Windows.Application
 	{
 

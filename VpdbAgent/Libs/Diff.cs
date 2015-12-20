@@ -36,6 +36,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace SynchrotronNet
@@ -44,6 +45,7 @@ namespace SynchrotronNet
 	/// Implementation of a three-way merge.
 	/// </summary>
 	/// <seealso cref="https://gist.github.com/TaoK/2633407"/>
+	[ExcludeFromCodeCoverage]
 	public class Diff
 	{
 		#region Arbitrarily-named in-between objects
@@ -710,6 +712,7 @@ namespace SynchrotronNet
 
 	#region Extra JS-emulating stuff
 
+	[ExcludeFromCodeCoverage]
 	public static class ArrayExtension
 	{
 		public static T[] SliceJs<T>(this T[] array, int startingIndex, int followingIndex)

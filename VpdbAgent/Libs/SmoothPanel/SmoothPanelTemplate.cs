@@ -8,14 +8,16 @@
 // --------------------------------------------------------------------------
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Windows;
 
 namespace Devart.Controls
 {
-    /// <summary>
-    /// Maps type of view model to type of visual element.
-    /// </summary>
-    public class SmoothPanelTemplate : DependencyObject
+	/// <summary>
+	/// Maps type of view model to type of visual element.
+	/// </summary>
+	[ExcludeFromCodeCoverage]
+	public class SmoothPanelTemplate : DependencyObject
     {
         /// <summary>
         /// Using a DependencyProperty as the backing store for ViewModel.

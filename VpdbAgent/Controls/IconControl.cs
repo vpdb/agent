@@ -1,15 +1,15 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using VpdbAgent.Common;
-
 
 namespace VpdbAgent.Controls
 {
 	/// <summary>
 	/// Displays a vector icon.
 	/// </summary>
+	[ExcludeFromCodeCoverage]
 	public class IconControl : Control
 	{
 		public static readonly DependencyProperty DataGeometryProperty =

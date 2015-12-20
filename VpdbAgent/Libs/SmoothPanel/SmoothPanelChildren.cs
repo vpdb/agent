@@ -10,15 +10,16 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Windows;
 using System.Windows.Controls;
 
 namespace Devart.Controls
 {
-    /// <content>
-    /// Nested type is used.
-    /// </content>
-    public partial class SmoothPanel
+	/// <content>
+	/// Nested type is used.
+	/// </content>
+	public partial class SmoothPanel
     {
         /// <summary>
         /// Manages the child visual elements.

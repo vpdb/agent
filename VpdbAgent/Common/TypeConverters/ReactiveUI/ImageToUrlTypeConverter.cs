@@ -1,10 +1,11 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using ReactiveUI;
 using VpdbAgent.Vpdb.Models;
 
 namespace VpdbAgent.Common.TypeConverters.ReactiveUI
 {
-
+	[ExcludeFromCodeCoverage]
 	public class ImageToUrlTypeConverter : IBindingTypeConverter
 	{
 		public int GetAffinityForObjects(Type fromType, Type toType)

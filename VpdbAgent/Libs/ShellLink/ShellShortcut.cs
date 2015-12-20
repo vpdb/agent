@@ -21,6 +21,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -32,6 +33,7 @@ namespace VpdbAgent.Libs.ShellLink
 	/// <remarks>
 	///   .NET friendly wrapper for the ShellLink class
 	/// </remarks>
+	[ExcludeFromCodeCoverage]
 	public class ShellShortcut : IDisposable
 	{
     private const int INFOTIPSIZE = 1024;

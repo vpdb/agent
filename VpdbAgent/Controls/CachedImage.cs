@@ -1,5 +1,5 @@
-﻿
-using System;
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Reactive.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -11,6 +11,7 @@ using VpdbAgent.Common.Extensions;
 
 namespace VpdbAgent.Controls
 {
+	[ExcludeFromCodeCoverage]
 	public class CachedImage : Image
 	{
 		// constants

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -21,6 +22,7 @@ namespace VpdbAgent.Views.Downloads
 	/// <summary>
 	/// Interaction logic for DownloadItemView.xaml
 	/// </summary>
+	[ExcludeFromCodeCoverage]
 	public partial class DownloadItemView : UserControl, IViewFor<DownloadItemViewModel>, IHeightMeasurer
 	{
 		public DownloadItemView()

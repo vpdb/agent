@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using ReactiveUI;
 #if WINRT
 using Windows.UI.Xaml;
@@ -21,6 +22,7 @@ namespace VpdbAgent.Common.TypeConverters.ReactiveUI
 	/// This type convert converts between Boolean and XAML Visibility - the 
 	/// conversionHint is a BooleanToVisibilityHint
 	/// </summary>
+	[ExcludeFromCodeCoverage]
 	public class BooleanToVisibilityConverter : IBindingTypeConverter
 	{
 		public int GetAffinityForObjects(Type fromType, Type toType)

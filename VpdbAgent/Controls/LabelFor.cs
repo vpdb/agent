@@ -1,9 +1,11 @@
-﻿using System.Windows.Controls;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 
 namespace VpdbAgent.Controls
 {
+	[ExcludeFromCodeCoverage]
 	public class LabelFor : Label
 	{
 		public override void BeginInit()

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Xml.Serialization;
 using IniParser;
@@ -15,6 +16,10 @@ namespace VpdbAgent.PinballX
 	/// <summary>
 	/// A class that abstracts all serializing access to the file system.
 	/// </summary>
+	/// <remarks>
+	/// Note that this is currently mocked in tests, but could be included 
+	/// in the future.
+	/// </remarks>
 	public interface IMarshallManager
 	{
 		/// <summary>
@@ -60,6 +65,7 @@ namespace VpdbAgent.PinballX
 		void MarshallXml(PinballXMenu menu, string filepath);
 	}
 
+	[ExcludeFromCodeCoverage]
 	public class MarshallManager : IMarshallManager
 	{
 		// dependencies

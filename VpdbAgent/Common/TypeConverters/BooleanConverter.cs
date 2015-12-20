@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Windows.Data;
 
 namespace VpdbAgent.Common.TypeConverters
 {
+	[ExcludeFromCodeCoverage]
 	public class BooleanConverter<T> : IValueConverter
 	{
 		public BooleanConverter(T trueValue, T falseValue)

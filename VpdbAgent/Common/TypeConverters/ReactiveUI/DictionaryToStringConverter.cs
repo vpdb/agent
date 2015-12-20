@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using ReactiveUI;
 
 namespace VpdbAgent.Common.TypeConverters.ReactiveUI
 {
+	[ExcludeFromCodeCoverage]
 	public class DictionaryToStringConverter : IBindingTypeConverter
 	{
 		public int GetAffinityForObjects(Type fromType, Type toType)

@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Windows;
 using System.Windows.Controls;
 using ReactiveUI;
 using VpdbAgent.ViewModels.Downloads;
@@ -9,6 +10,7 @@ namespace VpdbAgent.Views.Messages
 	/// <summary>
 	/// Interaction logic for MessagesView.xaml
 	/// </summary>
+	[ExcludeFromCodeCoverage]
 	public partial class MessagesView : UserControl, IViewFor<MessagesViewModel>
 	{
 		public MessagesView()

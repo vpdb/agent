@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Windows;
 using System.Windows.Controls;
 using NLog;
 using ReactiveUI;
@@ -9,6 +10,7 @@ namespace VpdbAgent.Views.Games
 	/// <summary>
 	/// Interaction logic for MainPage.xaml
 	/// </summary>
+	[ExcludeFromCodeCoverage]
 	public partial class GamesView : UserControl, IViewFor<GamesViewModel>
 	{
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using ReactiveUI;
 using Splat;
 using VpdbAgent.Application;
@@ -39,6 +40,7 @@ namespace VpdbAgent
      * you should configure your IoC container. And finally, it's the place 
      * which decides which View to Navigate to when the application starts.
      */
+	[ExcludeFromCodeCoverage]
 	public class Bootstrapper : ReactiveObject, IScreen
 	{
 		public RoutingState Router { get; }

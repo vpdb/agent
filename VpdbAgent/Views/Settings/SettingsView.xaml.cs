@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Windows;
 using ReactiveUI;
 using VpdbAgent.ViewModels.Settings;
 using UserControl = System.Windows.Controls.UserControl;
@@ -8,6 +9,7 @@ namespace VpdbAgent.Views.Settings
 	/// <summary>
 	/// Interaction logic for SettingsPage.xaml
 	/// </summary>
+	[ExcludeFromCodeCoverage]
 	public partial class SettingsView : UserControl, IViewFor<SettingsViewModel>
 	{
 		public SettingsView()

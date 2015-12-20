@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -16,6 +17,7 @@ namespace VpdbAgent.Common
 	/// <summary>
 	/// Wraps the file observer into an observable.
 	/// </summary>
+	[ExcludeFromCodeCoverage]
 	public class FilesystemWatchCache : IFilesystemWatchCache
 	{
 		readonly MemoizingMRUCache<Tuple<string, string>, IObservable<string>> _watchCache = new MemoizingMRUCache<Tuple<string, string>, IObservable<string>>((pair, _) =>

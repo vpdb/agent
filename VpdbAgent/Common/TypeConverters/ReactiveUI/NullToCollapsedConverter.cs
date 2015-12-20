@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Windows;
 using ReactiveUI;
 
 namespace VpdbAgent.Common.TypeConverters.ReactiveUI
 {
+	[ExcludeFromCodeCoverage]
 	public class NullToCollapsedConverter : IBindingTypeConverter
 	{
 		public int GetAffinityForObjects(Type fromType, Type toType)

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Security;
 using System.Text;
@@ -44,6 +45,7 @@ namespace VpdbAgent.Common.Filesystem
 		void WriteAllText(string path, string contents);
 	}
 
+	[ExcludeFromCodeCoverage]
 	public class File : IFile
 	{
 		public bool Exists(string path)

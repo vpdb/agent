@@ -9,14 +9,15 @@
 
 using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Windows;
 
 namespace Devart.Controls
 {
-    /// <content>
-    /// Nested type is used.
-    /// </content>
-    public partial class SmoothPanel
+	/// <content>
+	/// Nested type is used.
+	/// </content>
+	public partial class SmoothPanel
     {
         /// <summary>
         /// Temporary instances of this type are used for measuring in

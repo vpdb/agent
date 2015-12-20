@@ -1,4 +1,5 @@
-﻿using System.Security;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Security;
 
 namespace VpdbAgent.Common.Filesystem
 {
@@ -30,6 +31,7 @@ namespace VpdbAgent.Common.Filesystem
 		string[] GetFiles(string path);
 	}
 
+	[ExcludeFromCodeCoverage]
 	public class Directory : IDirectory
 	{
 		public bool Exists(string path)

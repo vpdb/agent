@@ -1,6 +1,7 @@
 ﻿using NLog;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using VpdbAgent.Common;
@@ -58,6 +59,7 @@ namespace VpdbAgent.PinballX
 		IObservable<string> TablesWatcher(IList<PinballXSystem> systems);
 	}
 
+	[ExcludeFromCodeCoverage]
 	public class FileSystemWatcher : IFileSystemWatcher
 	{
 		// dependencies

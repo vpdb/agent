@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Text;
@@ -8,6 +9,7 @@ using System.Threading.Tasks;
 
 namespace VpdbAgent.Common
 {
+	[ExcludeFromCodeCoverage]
 	public static class ObservableTrace
 	{
 		public static IObservable<TSource> Trace<TSource>(this IObservable<TSource> source, string name)

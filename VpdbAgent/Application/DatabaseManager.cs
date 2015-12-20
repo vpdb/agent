@@ -1,13 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Text;
-using System.Threading.Tasks;
 using Newtonsoft.Json;
 using NLog;
 using ReactiveUI;
@@ -132,6 +130,7 @@ namespace VpdbAgent.Application
 		void ClearLog();
 	}
 
+	[ExcludeFromCodeCoverage]
 	public class DatabaseManager : IDatabaseManager
 	{
 		// deps

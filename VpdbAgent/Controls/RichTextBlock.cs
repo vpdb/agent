@@ -1,15 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.ObjectModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 
 namespace VpdbAgent.Controls
 {
+	[ExcludeFromCodeCoverage]
 	public class RichTextBlock : TextBlock
 	{
 		public ObservableCollection<Inline> InlineList
