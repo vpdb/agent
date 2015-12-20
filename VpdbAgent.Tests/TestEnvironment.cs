@@ -35,13 +35,14 @@ namespace VpdbAgent.Tests
 		public TestEnvironment()
 		{
 			_locator = new ModernDependencyResolver();
+			var pinballXIniPath = Path.Combine(Settings.PbxFolder, "Config", "PinballX.ini");
 
 			// IFileAccessManager
-			MarshallManager.Setup(f => f.ParseIni(Path.Combine(Settings.PbxFolder, "Config", "PinballX.ini"))).Returns(GetPinballXIni(Ini));
+			MarshallManager.Setup(f => f.ParseIni(pinballXIniPath)).Returns(GetPinballXIni(Ini));
 			_locator.RegisterLazySingleton(() => MarshallManager.Object, typeof(IMarshallManager));
 
 			// IFileSystemWatcher
-			FileSystemWatcher.Setup(f => f.FileWatcher(It.IsAny<string>())).Returns(PinballXIniWatcher);
+			FileSystemWatcher.Setup(f => f.FileWatcher(pinballXIniPath)).Returns(PinballXIniWatcher);
 			FileSystemWatcher.Setup(f => f.DatabaseWatcher(It.IsAny<string>(), It.IsAny<IList<PinballXSystem>>())).Returns(DatabaseWatcher);
 			FileSystemWatcher.Setup(f => f.TablesWatcher(It.IsAny<IList<PinballXSystem>>())).Returns(TableWatcher);
 			_locator.RegisterLazySingleton(() => FileSystemWatcher.Object, typeof(IFileSystemWatcher));
@@ -82,7 +83,7 @@ namespace VpdbAgent.Tests
 		private static readonly string[] Ini = {
 			@"[VisualPinball]",
 			@"Enabled = true",
-			@"WorkingPath = C:\Visual Pinbal",
+			@"WorkingPath = C:\Visual Pinball",
 			@"TablePath = " + VisualPinballTablePath,
 			@"Executable = VPinball.exe",
 			"Parameters = /play - \"[TABLEPATH]\\[TABLEFILE]\"",

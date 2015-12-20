@@ -108,6 +108,7 @@ namespace VpdbAgent.Tests
 			system.Games.Should().NotBeEmpty().And.HaveCount(1);
 			system.Games[0].Filename.Should().Be("Test_Game");
 			system.Games[0].Description.Should().Be("Test Game (Test 2016)");
+			system.Games[0].DatabaseFile.Should().Be(xml);
 		}
 
 		private static readonly string[] Ini1 = {
