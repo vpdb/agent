@@ -15,7 +15,7 @@ namespace VpdbAgent.ViewModels.Games
 {
 	public class GameItemViewModel : ReactiveObject
 	{
-		private const long MatchThreshold = 262144;
+		public const long MatchThreshold = 262144;
 
 		// deps
 		private readonly Logger _logger;

@@ -83,7 +83,7 @@ namespace VpdbAgent.ViewModels.Games
 					.Where(g => !g.HasExecuted && !g.Game.HasRelease && !g.IsExecuting)
 					.StepInterval(TimeSpan.FromMilliseconds(200)) // don't DOS the server...
 					.Subscribe(g => {
-						System.Windows.Application.Current.Dispatcher.Invoke(async () => { 
+						System.Windows.Application.Current.Dispatcher.Invoke(async () => {
 							var result = await g.IdentifyRelease.ExecuteAsyncTask();
 							if (result.Count == 0) {
 								g.CloseResults.Execute(null);

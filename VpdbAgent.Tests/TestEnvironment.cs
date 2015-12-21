@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Reactive.Subjects;
 using System.Text;
 using IniParser;
 using IniParser.Model;
 using Moq;
+using Newtonsoft.Json;
 using NLog;
 using PusherClient;
 using Splat;
@@ -19,6 +19,7 @@ using VpdbAgent.VisualPinball;
 using VpdbAgent.Vpdb;
 using VpdbAgent.Vpdb.Download;
 using VpdbAgent.Vpdb.Models;
+using VpdbAgent.Vpdb.Network;
 
 namespace VpdbAgent.Tests
 {
@@ -97,7 +98,7 @@ namespace VpdbAgent.Tests
 			Directory.Setup(d => d.GetFiles(VisualPinballDatabasePath)).Returns(new[] { Path.GetFileName(VisualPinballDatabaseXmlPath) });
 			File.Setup(f => f.Exists(Path.Combine(VisualPinballTablePath, game1.Filename + ".vpt"))).Returns(true);
 			File.Setup(f => f.Exists(Path.Combine(VisualPinballTablePath, game2.Filename + ".vpx"))).Returns(true);
-			File.Setup(f => f.FileSize(Path.Combine(VisualPinballTablePath, game1.Filename + ".vpt"))).Returns(10001);
+			File.Setup(f => f.FileSize(Path.Combine(VisualPinballTablePath, game1.Filename + ".vpt"))).Returns(24895488);
 			File.Setup(f => f.FileSize(Path.Combine(VisualPinballTablePath, game2.Filename + ".vpx"))).Returns(10002);
 			_locator.RegisterLazySingleton(() => File.Object, typeof(IFile));
 			_locator.RegisterLazySingleton(() => Directory.Object, typeof(IDirectory));
