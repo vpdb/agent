@@ -5,7 +5,6 @@ using System.Text;
 using IniParser;
 using IniParser.Model;
 using Moq;
-using Newtonsoft.Json;
 using NLog;
 using PusherClient;
 using Splat;
@@ -19,7 +18,8 @@ using VpdbAgent.VisualPinball;
 using VpdbAgent.Vpdb;
 using VpdbAgent.Vpdb.Download;
 using VpdbAgent.Vpdb.Models;
-using VpdbAgent.Vpdb.Network;
+using IDependencyResolver = Splat.IDependencyResolver;
+using Settings = VpdbAgent.Application.Settings;
 
 namespace VpdbAgent.Tests
 {

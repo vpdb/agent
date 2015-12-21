@@ -51,7 +51,7 @@ namespace VpdbAgent.Tests
 			// setup
 			var env = new TestEnvironment();
 			var gameManager = env.Locator.GetService<IGameManager>();
-			env.VpdbApi.Setup(v => v.GetReleasesBySize(24895488, GameItemViewModel.MatchThreshold)).Returns(TestVpdbApi.GetReleasesBySize());
+			//env.VpdbApi.Setup(v => v.GetReleasesBySize(24895488, GameItemViewModel.MatchThreshold)).Returns(TestVpdbApi.GetReleasesBySize());
 
 			// test 
 			gameManager.Initialize();
