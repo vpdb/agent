@@ -1,23 +1,18 @@
 version: 0.0.6.{build}
-skip_tags: true
+os: Visual Studio 2015
+skip_tags: false
 configuration: Debug
-assembly_info:
-  patch: true
-  file: '**\AssemblyInfo.*'
-  assembly_version: '{version}'
-  assembly_file_version: '{version}'
-  assembly_informational_version: '{version}'
 environment:
   COVERALLS_REPO_TOKEN:
     secure: JrXjUphTOrdW5JHuMosIgHFT99k0qGDDxw3r+/tV0l3VXUBLDZM57rGNjz8PLJBb
 before_build:
-  - nuget restore ".\vpdb-agent.sln"
+- nuget restore
 build:
   project: .\vpdb-agent.sln
   verbosity: minimal
 test_script:
 - ps: >-
-    .\packages\OpenCover.4.6.166\tools\OpenCover.Console.exe -register:user -target:xunit.console.clr4.exe "-targetargs:""VpdbAgent.Tests\bin\$env:CONFIGURATION\VpdbAgent.Tests.dll"" /noshadow /appveyor" -filter:"+[VpdbAgent*]*" -excludebyattribute:"*.ExcludeFromCoverageAttribute" -output:opencoverCoverage.xml
+    .\packages\OpenCover.4.6.166\tools\OpenCover.Console.exe -register:user -target:"%xunit20%\xunit.console.x86.exe" -targetargs:"C:\projects\vpdb-agent\VpdbAgent.Tests\bin\$env:CONFIGURATION\VpdbAgent.Tests.dll -noshadow -appveyor" -returntargetcode -filter:"+[VpdbAgent*]*" -excludebyattribute:*.ExcludeFromCodeCoverage* -hideskipped:All -output:.\opencoverCoverage.xml
 
     $coveralls = (Resolve-Path "packages/coveralls.net.*/tools/csmacnz.coveralls.exe").ToString()
 
