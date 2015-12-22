@@ -12,7 +12,7 @@ build:
   verbosity: minimal
 test_script:
 - ps: >-
-    .\packages\OpenCover.4.6.166\tools\OpenCover.Console.exe -register:user -target:"%xunit20%\xunit.console.x86.exe" "-targetargs:""C:\projects\vpdb-agent\VpdbAgent.Tests\bin\$env:CONFIGURATION\VpdbAgent.Tests.dll"" /noshadow /appveyor" -returntargetcode -filter:"+[VpdbAgent*]*" -excludebyattribute:*.ExcludeFromCodeCoverage* -hideskipped:All -output:.\opencoverCoverage.xml
+    .\packages\OpenCover.4.6.166\tools\OpenCover.Console.exe -register:user -target:"%xunit20%\xunit.console.x86.exe" "-targetargs:""C:\projects\vpdb-agent\VpdbAgent.Tests\bin\$env:CONFIGURATION\VpdbAgent.Tests.dll"" -noshadow -appveyor" -returntargetcode -filter:"+[VpdbAgent*]*" -excludebyattribute:*.ExcludeFromCodeCoverage* -hideskipped:All -output:.\opencoverCoverage.xml
 
     $coveralls = (Resolve-Path "packages/coveralls.net.*/tools/csmacnz.coveralls.exe").ToString()
 
