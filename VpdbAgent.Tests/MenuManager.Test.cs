@@ -1,7 +1,6 @@
 ﻿using System.IO;
 using System.Linq;
 using FluentAssertions;
-using Moq;
 using Splat;
 using VpdbAgent.PinballX;
 using VpdbAgent.PinballX.Models;

@@ -1,20 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.IO;
 using System.Linq;
-using System.Reactive.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using FluentAssertions;
-using Newtonsoft.Json;
 using Splat;
 using VpdbAgent.Application;
-using VpdbAgent.Models;
 using VpdbAgent.PinballX;
-using VpdbAgent.Tests.Mocks;
 using VpdbAgent.ViewModels.Games;
-using VpdbAgent.Vpdb.Models;
 using Xunit;
 
 namespace VpdbAgent.Tests
