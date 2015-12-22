@@ -2,6 +2,9 @@
 
 *A Windows desktop application that syncs local data with VPDB*.
 
+[![Build status](https://ci.appveyor.com/api/projects/status/28oc0qo7in6ps680?svg=true)](https://ci.appveyor.com/project/freezy/vpdb-agent)
+[![Coverage Status](https://coveralls.io/repos/freezy/vpdb-agent/badge.svg?branch=master&service=github)](https://coveralls.io/github/freezy/vpdb-agent?branch=master)
+
 ## What is it?
 
 A program that runs in the background on your cab and fills the gap between
