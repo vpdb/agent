@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reactive.Subjects;
 using System.Text;
@@ -6,7 +7,6 @@ using IniParser;
 using IniParser.Model;
 using Moq;
 using NLog;
-using NLog.Config;
 using PusherClient;
 using Splat;
 using VpdbAgent.Application;
@@ -15,19 +15,18 @@ using VpdbAgent.Models;
 using VpdbAgent.PinballX;
 using VpdbAgent.PinballX.Models;
 using VpdbAgent.Tests.Mocks;
+using VpdbAgent.ViewModels.Games;
 using VpdbAgent.VisualPinball;
 using VpdbAgent.Vpdb;
 using VpdbAgent.Vpdb.Download;
 using VpdbAgent.Vpdb.Models;
-using Xunit.Abstractions;
-using Xunit.NLog.Targets;
 using IDependencyResolver = Splat.IDependencyResolver;
 using ILogger = NLog.ILogger;
 using Settings = VpdbAgent.Application.Settings;
 
 namespace VpdbAgent.Tests
 {
-	public class TestEnvironment
+	public class TestEnvironment : IDisposable
 	{
 		public IDependencyResolver Locator => _locator;
 
@@ -66,8 +65,8 @@ namespace VpdbAgent.Tests
 		{
 			_locator = new ModernDependencyResolver();
 
-			var game1 = Menu.Games[0];
-			var game2 = Menu.Games[1];
+			var abracadabra = Menu.Games[0];
+			var mm = Menu.Games[1];
 
 			//--------------------------------------------------------------------------
 			// Fixtures
@@ -95,6 +94,10 @@ namespace VpdbAgent.Tests
 			// IDatabaseManager
 			_locator.RegisterLazySingleton(() => DatabaseManager.Object, typeof(IDatabaseManager));
 
+			// VPDB API
+			VpdbApi.Setup(api => api.GetReleasesBySize(TestVpdbApi.AbraCaDabraV20FileSize, GameItemViewModel.MatchThreshold)).Returns(TestVpdbApi.GetAbraCaDabraIdentify());
+			VpdbApi.Setup(api => api.GetRelease(TestVpdbApi.AbraCaDabraReleaseId)).Returns(TestVpdbApi.GetAbraCaDabraDetails());
+
 			// IVpdbClient
 			VpdbClient.Setup(v => v.UserChannel).Returns(UserChannel);
 			VpdbClient.Setup(v => v.Api).Returns(VpdbApi.Object);
@@ -106,10 +109,10 @@ namespace VpdbAgent.Tests
 			// IFile, IDirectory
 			Directory.Setup(d => d.Exists(VisualPinballDatabasePath)).Returns(true);
 			Directory.Setup(d => d.GetFiles(VisualPinballDatabasePath)).Returns(new[] { Path.GetFileName(VisualPinballDatabaseXmlPath) });
-			File.Setup(f => f.Exists(Path.Combine(VisualPinballTablePath, game1.Filename + ".vpt"))).Returns(true);
-			File.Setup(f => f.Exists(Path.Combine(VisualPinballTablePath, game2.Filename + ".vpx"))).Returns(true);
-			File.Setup(f => f.FileSize(Path.Combine(VisualPinballTablePath, game1.Filename + ".vpt"))).Returns(24895488);
-			File.Setup(f => f.FileSize(Path.Combine(VisualPinballTablePath, game2.Filename + ".vpx"))).Returns(10002);
+			File.Setup(f => f.Exists(Path.Combine(VisualPinballTablePath, abracadabra.Filename + ".vpt"))).Returns(true);
+			File.Setup(f => f.FileSize(Path.Combine(VisualPinballTablePath, abracadabra.Filename + ".vpt"))).Returns(TestVpdbApi.AbraCaDabraV20FileSize);
+			File.Setup(f => f.Exists(Path.Combine(VisualPinballTablePath, mm.Filename + ".vpx"))).Returns(true);
+			File.Setup(f => f.FileSize(Path.Combine(VisualPinballTablePath, mm.Filename + ".vpx"))).Returns(10002);
 			_locator.RegisterLazySingleton(() => File.Object, typeof(IFile));
 			_locator.RegisterLazySingleton(() => Directory.Object, typeof(IDirectory));
 
@@ -199,6 +202,13 @@ namespace VpdbAgent.Tests
 			), typeof(IGameManager));
 		}
 
+		public Mock<T> Register<T>() where T : class
+		{
+			var mock = new Mock<T>();
+			_locator.Register(() => mock.Object, typeof(T));
+			return mock;
+		}
+
 		public Settings Settings = new Settings {
 			PbxFolder = PinballXPath,
 			ApiKey = "fake-test-api-key"
@@ -213,7 +223,7 @@ namespace VpdbAgent.Tests
 			"Parameters = /play - \"[TABLEPATH]\\[TABLEFILE]\"",
 		};
 
-		public readonly PinballXMenu Menu = new PinballXMenu() {
+		public PinballXMenu Menu = new PinballXMenu() {
 			Games = new List<PinballXGame> {
 				new PinballXGame {
 					Filename = "AbraCaDabra_FS_B2S",
@@ -256,6 +266,11 @@ namespace VpdbAgent.Tests
 			var stream = new MemoryStream(byteArray);
 			var parser = new FileIniDataParser();
 			return parser.ReadData(new StreamReader(stream));
+		}
+
+		public void Dispose()
+		{
+			_locator.Dispose();
 		}
 	}
 }

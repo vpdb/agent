@@ -188,6 +188,7 @@
   <ItemGroup>
     <None Include="app.config" />
     <EmbeddedResource Include="Json\AbraCaDabra_Identify.json" />
+    <EmbeddedResource Include="Json\AbraCaDabra_Details.json" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

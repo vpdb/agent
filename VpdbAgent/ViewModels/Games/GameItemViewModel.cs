@@ -77,17 +77,18 @@ namespace VpdbAgent.ViewModels.Games
 						match = vm;
 					}
 				}
+				_logger.Info("Found {0} identical match(es).", numMatches);
 
 				// if file name and file size are identical, directly match.
 				if (numMatches == 1 && match != null) {
+					_logger.Info("File name and size are equal to local release, linking.");
 					_gameManager.LinkRelease(match.Game, match.Release, match.TableFile.Reference.Id);
 					_messageManager.LogReleaseLinked(match.Game, match.Release, match.TableFile.Reference.Id);
-					_logger.Info("File name and size are equal to local release, linking.");
 
 				} else {
+					_logger.Info("View model updated with identified releases.");
 					IdentifiedReleases = releases;
 					HasExecuted = true;
-					_logger.Info("View model updated with identified releases.");
 				}
 			}, exception => _vpdbClient.HandleApiError(exception, "identifying a game by file size"));
 

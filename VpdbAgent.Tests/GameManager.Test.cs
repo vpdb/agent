@@ -1,14 +1,18 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Reactive.Threading.Tasks;
 using FluentAssertions;
+using Moq;
 using NLog;
 using NLog.Config;
 using Splat;
 using VpdbAgent.Application;
+using VpdbAgent.Models;
 using VpdbAgent.PinballX;
 using VpdbAgent.Tests.Mocks;
 using VpdbAgent.ViewModels.Games;
+using VpdbAgent.Vpdb.Models;
 using Xunit;
 using Xunit.Abstractions;
 using Xunit.NLog.Targets;
@@ -44,12 +48,56 @@ namespace VpdbAgent.Tests
 		}
 
 		[Fact]
+		public void ShouldLinkRelease()
+		{
+			// setup
+			var env = new TestEnvironment(Logger);
+			var gameManager = env.Locator.GetService<IGameManager>();
+
+			// test 
+			gameManager.Initialize();
+			var game = gameManager.Games[0];
+			TestVpdbApi.GetAbraCaDabraDetails().Subscribe(release =>
+			{
+				gameManager.LinkRelease(game, release, TestVpdbApi.AbraCaDabraV20FileId);
+
+				// assert
+				game.HasRelease.Should().BeTrue();
+			});
+		}
+
+		[Fact]
 		public void ShouldIdentifyGameInstantly()
 		{
 			// setup
 			var env = new TestEnvironment(Logger);
 			var gameManager = env.Locator.GetService<IGameManager>();
-			env.VpdbApi.Setup(v => v.GetReleasesBySize(24895488, GameItemViewModel.MatchThreshold)).Returns(TestVpdbApi.GetReleasesBySize());
+
+			// test 
+			gameManager.Initialize();
+
+			// let's mock also IGameManager, we only need to know if LinkRelease is called.
+			var gameManagerMock = env.Register<IGameManager>();
+			var game = gameManager.Games[0];
+			var viewModel = new GameItemViewModel(game, env.Locator);
+
+			viewModel.IdentifyRelease.Execute(null);
+
+			// assert
+			gameManagerMock.Verify(gm => gm.LinkRelease(
+				It.Is<Game>(g => g.Id == game.Id),
+				It.Is<VpdbRelease>(r => r.Id == TestVpdbApi.AbraCaDabraReleaseId),
+				TestVpdbApi.AbraCaDabraV20FileId
+			));
+		}
+
+		[Fact]
+		public void ShouldIdentifyMultipleVersions()
+		{
+			// setup
+			var env = new TestEnvironment(Logger);
+			var gameManager = env.Locator.GetService<IGameManager>();
+			env.Menu.Games[0].Filename = "not_same_name";
 
 			// test 
 			gameManager.Initialize();
@@ -59,7 +107,8 @@ namespace VpdbAgent.Tests
 
 			viewModel.IdentifyRelease.Execute(null);
 
-			game.HasRelease.Should().BeTrue();
+			// assert
+			viewModel.IdentifiedReleases.Should().HaveCount(2);
 		}
 	}
 }
