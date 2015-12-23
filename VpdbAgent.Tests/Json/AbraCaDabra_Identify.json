@@ -1,0 +1,106 @@
+[
+	{
+		"id": "w2xts7ooqh",
+		"name": "Magikus Editon",
+		"created_at": "2015-12-07T20:28:39.661Z",
+		"authors": [
+			{
+				"roles": [
+					"Uploader"
+				],
+				"user": {
+					"id": "w2dv9p3qb",
+					"name": "freezy",
+					"username": "freezy",
+					"gravatar_id": "3216e12a740c59824257efe8b806cc7b",
+					"counter": {
+						"comments": 0,
+						"stars": 0
+					}
+				}
+			}
+		],
+		"counter": {
+			"stars": 0,
+			"comments": 0,
+			"downloads": 3
+		},
+		"versions": [
+			{
+				"version": "2.1",
+				"released_at": "2015-12-15T10:34:59.376Z",
+				"files": [
+					{
+						"released_at": "2015-12-15T10:34:59.376Z",
+						"flavor": {
+							"orientation": "fs",
+							"lighting": "day"
+						},
+						"compatibility": [
+							{
+								"id": "9.9.0"
+							}
+						],
+						"file": {
+							"id": "q2b86g1tpb",
+							"name": "AbraCaDabra_FS_B2S_2.1.vpt",
+							"bytes": 24895488,
+							"mime_type": "application/x-visual-pinball-table"
+						},
+						"thumb": {
+							"url": "/public/files/square/wkb69c1vpb.jpg",
+							"width": 120,
+							"height": 120
+						}
+					}
+				]
+			},
+			{
+				"version": "2.0",
+				"released_at": "2011-09-25T19:29:00.000Z",
+				"files": [
+					{
+						"released_at": "2011-09-25T19:29:00.000Z",
+						"flavor": {
+							"orientation": "fs",
+							"lighting": "day"
+						},
+						"compatibility": [
+							{
+								"id": "9.2.1"
+							}
+						],
+						"file": {
+							"id": "w2bm4go1qh",
+							"name": "AbraCaDabra_FS_B2S.vpt",
+							"bytes": 24895488,
+							"mime_type": "application/x-visual-pinball-table"
+						},
+						"thumb": {
+							"url": "/public/files/square/wkh31g11qb.jpg",
+							"width": 120,
+							"height": 120
+						}
+					}
+				]
+			}
+		],
+		"game": {
+			"id": "abra-ca-dabra",
+			"title": "Abra Ca Dabra",
+			"manufacturer": "Gottlieb",
+			"year": 1975
+		},
+		"thumb": {
+			"image": {
+				"url": "/public/files/square/wkb69c1vpb.jpg",
+				"width": 120,
+				"height": 120
+			},
+			"flavor": {
+				"orientation": "fs",
+				"lighting": "day"
+			}
+		}
+	}
+]
