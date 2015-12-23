@@ -19,6 +19,7 @@
 **************************************************************************/
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -269,6 +270,7 @@ namespace VpdbAgent.Libs.ShellLink
     ComImport(),
     Guid("00021401-0000-0000-C000-000000000046")
   ]
+  [ExcludeFromCodeCoverage]
   public class ShellLink  // : IPersistFile, IShellLinkA, IShellLinkW 
   {
   }

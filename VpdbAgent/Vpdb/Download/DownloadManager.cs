@@ -70,8 +70,8 @@ namespace VpdbAgent.Vpdb.Download
 		private readonly ISettingsManager _settingsManager;
 		private readonly IMessageManager _messageManager;
 		private readonly IDatabaseManager _databaseManager;
+		private readonly ILogger _logger;
 		private readonly CrashManager _crashManager;
-		private readonly Logger _logger;
 
 		// props
 		public IObservable<Job> WhenReleaseDownloaded => _whenReleaseDownloaded;
@@ -83,7 +83,7 @@ namespace VpdbAgent.Vpdb.Download
 
 		public DownloadManager(IPlatformManager platformManager, IJobManager jobManager, IVpdbClient vpdbClient, 
 			ISettingsManager settingsManager, IMessageManager messageManager, IDatabaseManager databaseManager,
-			CrashManager crashManager, Logger logger)
+			ILogger logger, CrashManager crashManager)
 		{
 			_platformManager = platformManager;
 			_jobManager = jobManager;
@@ -91,8 +91,8 @@ namespace VpdbAgent.Vpdb.Download
 			_settingsManager = settingsManager;
 			_messageManager = messageManager;
 			_databaseManager = databaseManager;
-			_crashManager = crashManager;
 			_logger = logger;
+			_crashManager = crashManager;
 
 			// setup download callbacks
 			jobManager.WhenDownloaded.Subscribe(OnDownloadCompleted);

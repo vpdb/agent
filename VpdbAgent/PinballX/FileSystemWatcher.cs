@@ -63,9 +63,9 @@ namespace VpdbAgent.PinballX
 	public class FileSystemWatcher : IFileSystemWatcher
 	{
 		// dependencies
-		private readonly Logger _logger;
+		private readonly ILogger _logger;
 
-		public FileSystemWatcher(Logger logger) {
+		public FileSystemWatcher(ILogger logger) {
 			_logger = logger;
 		}
 

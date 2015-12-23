@@ -136,7 +136,7 @@ namespace VpdbAgent.Application
 		// deps
 		private readonly ISettingsManager _settingsManager;
 		private readonly CrashManager _crashManager;
-		private readonly Logger _logger;
+		private readonly ILogger _logger;
 
 		// props
 		public IObservable<bool> Initialized => _initialized;
@@ -146,7 +146,7 @@ namespace VpdbAgent.Application
 		private readonly BehaviorSubject<bool> _initialized = new BehaviorSubject<bool>(false);
 		private readonly Subject<Unit> _save = new Subject<Unit>();
 
-		public DatabaseManager(ISettingsManager settingsManager, CrashManager crashManager, Logger logger)
+		public DatabaseManager(ISettingsManager settingsManager, CrashManager crashManager, ILogger logger)
 		{
 			_settingsManager = settingsManager;
 			_crashManager = crashManager;

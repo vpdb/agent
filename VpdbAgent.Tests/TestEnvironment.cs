@@ -19,6 +19,7 @@ using VpdbAgent.Vpdb;
 using VpdbAgent.Vpdb.Download;
 using VpdbAgent.Vpdb.Models;
 using IDependencyResolver = Splat.IDependencyResolver;
+using ILogger = NLog.ILogger;
 using Settings = VpdbAgent.Application.Settings;
 
 namespace VpdbAgent.Tests
@@ -57,12 +58,18 @@ namespace VpdbAgent.Tests
 
 		private readonly ModernDependencyResolver _locator;
 
-		public TestEnvironment()
+
+		public TestEnvironment(ILogger logger = null)
 		{
 			_locator = new ModernDependencyResolver();
 
 			var game1 = Menu.Games[0];
 			var game2 = Menu.Games[1];
+
+			//--------------------------------------------------------------------------
+			// Fixtures
+			//--------------------------------------------------------------------------
+
 
 			// IMarshallManager
 			MarshallManager.Setup(m => m.ParseIni(PinballXIniPath)).Returns(GetPinballXIni(_ini));
@@ -104,8 +111,8 @@ namespace VpdbAgent.Tests
 			_locator.RegisterLazySingleton(() => Directory.Object, typeof(IDirectory));
 
 			// Logging
-			_locator.RegisterLazySingleton(LogManager.GetCurrentClassLogger, typeof(Logger));
-			_locator.RegisterLazySingleton(() => new Mock<CrashManager>(LogManager.GetCurrentClassLogger()).Object, typeof(CrashManager));
+			_locator.RegisterLazySingleton(() => logger ?? LogManager.GetCurrentClassLogger(), typeof(ILogger));
+			_locator.RegisterLazySingleton(() => new Mock<CrashManager>(_locator.GetService<ILogger>()).Object, typeof(CrashManager));
 
 			// IThreadManager
 			_locator.RegisterLazySingleton(() => new TestThreadManager(), typeof(IThreadManager));
@@ -119,7 +126,7 @@ namespace VpdbAgent.Tests
 			// IVersionManager
 			_locator.RegisterLazySingleton(() => new VersionManager(
 				_locator.GetService<CrashManager>(),
-				_locator.GetService<Logger>()
+				_locator.GetService<ILogger>()
 			), typeof(IVersionManager));
 
 			// IMessageManager
@@ -131,15 +138,15 @@ namespace VpdbAgent.Tests
 			// IRealtimeManager
 			_locator.RegisterLazySingleton(() => new RealtimeManager(
 				_locator.GetService<IVpdbClient>(),
-				_locator.GetService<Logger>()
+				_locator.GetService<ILogger>()
 			), typeof(IRealtimeManager));
 
 			// IJobManager
 			_locator.RegisterLazySingleton(() => new JobManager(
 				_locator.GetService<IDatabaseManager>(),
 				_locator.GetService<IMessageManager>(),
-				_locator.GetService<CrashManager>(),
-				_locator.GetService<Logger>()
+				_locator.GetService<ILogger>(),
+				_locator.GetService<CrashManager>()
 			), typeof(IJobManager));
 
 			// IMenuManager
@@ -150,13 +157,13 @@ namespace VpdbAgent.Tests
 				_locator.GetService<IThreadManager>(),
 				_locator.GetService<IFile>(),
 				_locator.GetService<IDirectory>(),
-				_locator.GetService<Logger>()), typeof(IMenuManager));
+				_locator.GetService<ILogger>()), typeof(IMenuManager));
 
 			// IPlatformManager
 			_locator.RegisterLazySingleton(() => new Application.PlatformManager(
 				_locator.GetService<IMenuManager>(),
 				_locator.GetService<IThreadManager>(),
-				_locator.GetService<Logger>(),
+				_locator.GetService<ILogger>(),
 				_locator
 			), typeof(IPlatformManager));
 
@@ -168,8 +175,8 @@ namespace VpdbAgent.Tests
 				_locator.GetService<ISettingsManager>(),
 				_locator.GetService<IMessageManager>(),
 				_locator.GetService<IDatabaseManager>(),
-				_locator.GetService<CrashManager>(),
-				_locator.GetService<Logger>()
+				_locator.GetService<ILogger>(),
+				_locator.GetService<CrashManager>()
 			), typeof(IDownloadManager));
 
 			// IGameManager
@@ -185,7 +192,7 @@ namespace VpdbAgent.Tests
 				_locator.GetService<IRealtimeManager>(),
 				_locator.GetService<IVisualPinballManager>(),
 				_locator.GetService<IThreadManager>(),
-				_locator.GetService<Logger>()
+				_locator.GetService<ILogger>()
 			), typeof(IGameManager));
 		}
 

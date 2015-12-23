@@ -11,6 +11,7 @@ using Splat;
 using VpdbAgent.Application;
 using VpdbAgent.PinballX;
 using VpdbAgent.PinballX.Models;
+using ILogger = NLog.ILogger;
 
 namespace VpdbAgent.Models
 {
@@ -84,7 +85,7 @@ namespace VpdbAgent.Models
 		private readonly IDependencyResolver _resolver;
 		private readonly IMarshallManager _marshallManager;
 		private readonly IThreadManager _threadManager;
-		private readonly Logger _logger;
+		private readonly ILogger _logger;
 
 		/// <summary>
 		/// The platform specific database
@@ -102,7 +103,7 @@ namespace VpdbAgent.Models
 			_resolver = resolver;
 			_marshallManager = resolver.GetService<IMarshallManager>();
 			_threadManager = resolver.GetService<IThreadManager>();
-			_logger = resolver.GetService<Logger>();
+			_logger = resolver.GetService<ILogger>();
 
 			Name = system.Name;
 			IsEnabled = system.Enabled;

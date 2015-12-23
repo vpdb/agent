@@ -8,6 +8,7 @@ using Akavache;
 using NLog;
 using Splat;
 using VpdbAgent.Common.Extensions;
+using ILogger = NLog.ILogger;
 
 namespace VpdbAgent.Controls
 {
@@ -24,7 +25,7 @@ namespace VpdbAgent.Controls
 		};
 
 		// dependencies
-		private static readonly Logger Logger = Locator.Current.GetService<Logger>();
+		private static readonly ILogger Logger = Locator.Current.GetService<ILogger>();
 		private static readonly IBlobCache Storage = BlobCache.LocalMachine;
 
 		// members

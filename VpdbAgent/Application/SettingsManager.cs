@@ -120,10 +120,10 @@ namespace VpdbAgent.Application
 		private VpdbUserFull _authenticatedUser;
 		private bool _canCancel;
 
-		private readonly Logger _logger;
+		private readonly ILogger _logger;
 		private readonly IBlobCache _storage;
 
-		public SettingsManager(Logger logger)
+		public SettingsManager(ILogger logger)
 		{
 			BlobCache.ApplicationName = DataFolder;
 			_storage = BlobCache.Secure;

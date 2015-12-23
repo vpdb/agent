@@ -24,14 +24,14 @@ namespace VpdbAgent.Vpdb
 	public class RealtimeManager : IRealtimeManager
 	{
 		// dependencies
-		private readonly Logger _logger;
+		private readonly ILogger _logger;
 
 		// events
 		public IObservable<StarEvent> WhenReleaseStarred { get; } = new Subject<StarEvent>();
 		public IObservable<NewVersionEvent> WhenReleaseUpdated { get; } = new Subject<NewVersionEvent>();
 
 
-		public RealtimeManager(IVpdbClient vpdbClient, Logger logger)
+		public RealtimeManager(IVpdbClient vpdbClient, ILogger logger)
 		{
 			_logger = logger;
 

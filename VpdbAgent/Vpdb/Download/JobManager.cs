@@ -70,8 +70,8 @@ namespace VpdbAgent.Vpdb.Download
 		// dependencies
 		private readonly IDatabaseManager _databaseManager;
 		private readonly IMessageManager _messageManager;
+		private readonly ILogger _logger;
 		private readonly CrashManager _crashManager;
-		private readonly Logger _logger;
 
 		// props
 		public ReactiveList<Job> CurrentJobs { get; }
@@ -92,14 +92,14 @@ namespace VpdbAgent.Vpdb.Download
 		/// <summary>
 		/// Constructor sets up queue and creates download folder if non-existing.
 		/// </summary>
-		public JobManager(IDatabaseManager databaseManager, IMessageManager messageManager, CrashManager crashManager, Logger logger)
+		public JobManager(IDatabaseManager databaseManager, IMessageManager messageManager, ILogger logger, CrashManager crashManager)
 		{
 			CurrentJobs = databaseManager.GetJobs();
 
 			_databaseManager = databaseManager;
 			_messageManager = messageManager;
-			_crashManager = crashManager;
 			_logger = logger;
+			_crashManager = crashManager;
 
 			// setup transfer queue
 			_queue = _jobs

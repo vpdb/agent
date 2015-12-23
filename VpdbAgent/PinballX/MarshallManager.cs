@@ -69,10 +69,10 @@ namespace VpdbAgent.PinballX
 	public class MarshallManager : IMarshallManager
 	{
 		// dependencies
-		private readonly Logger _logger;
+		private readonly ILogger _logger;
 		private readonly CrashManager _crashManager;
 
-		public MarshallManager(Logger logger, CrashManager crashManager)
+		public MarshallManager(ILogger logger, CrashManager crashManager)
 		{
 			_logger = logger;
 			_crashManager = crashManager;

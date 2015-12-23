@@ -20,10 +20,10 @@ namespace VpdbAgent.Vpdb.Network
 
 		// deps
 		private readonly IVpdbClient _vpdbClient;
-		private readonly Logger _logger;
+		private readonly ILogger _logger;
 		private readonly CrashManager _crashManager;
 
-		public PusherAuthorizer(IVpdbClient vpdbClient, CrashManager crashManager, Logger logger)
+		public PusherAuthorizer(IVpdbClient vpdbClient, CrashManager crashManager, ILogger logger)
 		{
 			_vpdbClient = vpdbClient;
 			_crashManager = crashManager;

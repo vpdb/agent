@@ -18,14 +18,14 @@ namespace VpdbAgent.Application
 		public const string UpdateFolder = "https://raw.githubusercontent.com/freezy/vpdb-agent/master/Releases"; // @"C:\dev\vpdb-agent\Releases";
 		public static readonly TimeSpan UpdateInterval = TimeSpan.FromDays(1);
 
-		private readonly Logger _logger;
+		private readonly ILogger _logger;
 		private readonly CrashManager _crashManager;
 
 		public IObservable<ReleaseEntry> NewVersionAvailable => _newVersionAvailable;
 
 		private readonly BehaviorSubject<ReleaseEntry> _newVersionAvailable = new BehaviorSubject<ReleaseEntry>(null);
 
-		public VersionManager(CrashManager crashManager, Logger logger)
+		public VersionManager(CrashManager crashManager, ILogger logger)
 		{
 			_logger = logger;
 			_crashManager = crashManager;

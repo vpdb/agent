@@ -14,6 +14,7 @@ using Splat;
 using VpdbAgent.Application;
 using VpdbAgent.Models;
 using VpdbAgent.Vpdb.Models;
+using ILogger = NLog.ILogger;
 
 namespace VpdbAgent.Vpdb.Download
 {
@@ -84,7 +85,7 @@ namespace VpdbAgent.Vpdb.Download
 
 		// dependencies
 		private static readonly IVpdbClient VpdbClient = Locator.CurrentMutable.GetService<IVpdbClient>();
-		private static readonly Logger Logger = Locator.CurrentMutable.GetService<Logger>();
+		private static readonly ILogger Logger = Locator.CurrentMutable.GetService<ILogger>();
 
 		/// <summary>
 		/// Constructor called when de-serializing

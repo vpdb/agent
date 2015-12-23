@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using NLog;
 using Splat;
+using ILogger = NLog.ILogger;
 
 namespace VpdbAgent.VisualPinball
 {
@@ -65,7 +66,7 @@ namespace VpdbAgent.VisualPinball
 	/// </summary>
 	public class BiffSerializer
 	{
-		private static readonly Logger Logger = Locator.CurrentMutable.GetService<Logger>();
+		private static readonly ILogger Logger = Locator.CurrentMutable.GetService<ILogger>();
 
 		/// <summary>
 		/// The entire BIFF data block to handle

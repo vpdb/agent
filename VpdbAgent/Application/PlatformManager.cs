@@ -3,13 +3,13 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
-using NLog;
 using ReactiveUI;
 using Splat;
 using VpdbAgent.Models;
 using VpdbAgent.PinballX;
 using VpdbAgent.PinballX.Models;
 using VpdbAgent.Vpdb.Models;
+using ILogger = NLog.ILogger;
 
 namespace VpdbAgent.Application
 {
@@ -43,12 +43,12 @@ namespace VpdbAgent.Application
 		private readonly IDependencyResolver _resolver;
 		private readonly IMenuManager _menuManager;
 		private readonly IThreadManager _threadManager;
-		private readonly Logger _logger;
+		private readonly ILogger _logger;
 
 		// props
 		public ReactiveList<Platform> Platforms { get; } = new ReactiveList<Platform>();
 
-		public PlatformManager(IMenuManager menuManager, IThreadManager threadManager, Logger logger, IDependencyResolver resolver)
+		public PlatformManager(IMenuManager menuManager, IThreadManager threadManager, ILogger logger, IDependencyResolver resolver)
 		{
 			_menuManager = menuManager;
 			_threadManager = threadManager;

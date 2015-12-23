@@ -77,10 +77,10 @@ namespace VpdbAgent.VisualPinball
 	public class VisualPinballManager : IVisualPinballManager
 	{
 		// deps
-		private readonly Logger _logger;
+		private readonly ILogger _logger;
 		private readonly CrashManager _crashManager;
 
-		public VisualPinballManager(CrashManager crashManager, Logger logger)
+		public VisualPinballManager(CrashManager crashManager, ILogger logger)
 		{
 			_crashManager = crashManager;
 			_logger = logger;

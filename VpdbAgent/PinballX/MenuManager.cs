@@ -115,11 +115,11 @@ namespace VpdbAgent.PinballX
 		private readonly IThreadManager _threadManager;
 		private readonly IFile _file;
 		private readonly IDirectory _dir;
-		private readonly Logger _logger;
+		private readonly ILogger _logger;
 
 		public MenuManager(IFileSystemWatcher fileSystemWatcher, ISettingsManager settingsManager,
 			IMarshallManager marshallManager, IThreadManager threadManager,
-			IFile file, IDirectory dir, Logger logger)
+			IFile file, IDirectory dir, ILogger logger)
 		{
 			_watcher = fileSystemWatcher;
 			_settingsManager = settingsManager;

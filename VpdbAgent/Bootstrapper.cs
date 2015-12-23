@@ -60,7 +60,7 @@ namespace VpdbAgent
 			var settingsManager = deps.GetService<ISettingsManager>();
 			var gameManager = deps.GetService<IGameManager>();
 
-			deps.GetService<NLog.Logger>().Info("Waiting for settings...");
+			deps.GetService<NLog.ILogger>().Info("Waiting for settings...");
 
 			settingsManager.ApiAuthenticated.Subscribe(user => {
 				if (user != null) {
@@ -75,7 +75,7 @@ namespace VpdbAgent
 				}
 				System.Windows.Application.Current.Dispatcher.Invoke(delegate {
 
-					deps.GetService<NLog.Logger>().Info("Got settings!");
+					deps.GetService<NLog.ILogger>().Info("Got settings!");
 					if (settings.IsFirstRun || string.IsNullOrEmpty(settings.ApiKey)) {
 						System.Windows.Application.Current.MainWindow = new MainWindow(this);
 						System.Windows.Application.Current.MainWindow.Show();
@@ -105,39 +105,39 @@ namespace VpdbAgent
 			deps.RegisterConstant(this, typeof(IScreen));
 
 			// services
-			deps.RegisterLazySingleton(NLog.LogManager.GetCurrentClassLogger, typeof(NLog.Logger));
+			deps.RegisterLazySingleton(NLog.LogManager.GetCurrentClassLogger, typeof(NLog.ILogger));
 			deps.RegisterLazySingleton(() => ((App)System.Windows.Application.Current).CrashManager, typeof(CrashManager));
 			deps.RegisterLazySingleton(() => new ThreadManager(), typeof(IThreadManager));
 			deps.RegisterLazySingleton(() => new Directory(), typeof(IDirectory));
 			deps.RegisterLazySingleton(() => new File(), typeof(IFile));
 
 			deps.RegisterLazySingleton(() => new SettingsManager(
-				deps.GetService<NLog.Logger>()
+				deps.GetService<NLog.ILogger>()
 			), typeof(ISettingsManager));
 
 			deps.RegisterLazySingleton(() => new MarshallManager(
-				deps.GetService<NLog.Logger>(),
+				deps.GetService<NLog.ILogger>(),
 				deps.GetService<CrashManager>()
 			), typeof(IMarshallManager));
 
 			deps.RegisterLazySingleton(() => new FileSystemWatcher(
-				deps.GetService<NLog.Logger>()
+				deps.GetService<NLog.ILogger>()
 			), typeof(IFileSystemWatcher));
 
 			deps.RegisterLazySingleton(() => new VersionManager(
 				deps.GetService<CrashManager>(),
-				deps.GetService<NLog.Logger>()
+				deps.GetService<NLog.ILogger>()
 			), typeof(IVersionManager));
 
 			deps.RegisterLazySingleton(() => new VisualPinballManager(
 				deps.GetService<CrashManager>(),
-				deps.GetService<NLog.Logger>()
+				deps.GetService<NLog.ILogger>()
 			), typeof(IVisualPinballManager));
 
 			deps.RegisterLazySingleton(() => new DatabaseManager(
 				deps.GetService<ISettingsManager>(),
 				deps.GetService<CrashManager>(),
-				deps.GetService<NLog.Logger>()
+				deps.GetService<NLog.ILogger>()
 			), typeof(IDatabaseManager));
 
 			deps.RegisterLazySingleton(() => new MessageManager(
@@ -152,13 +152,13 @@ namespace VpdbAgent
 				deps.GetService<IThreadManager>(),
 				deps.GetService<IFile>(),
 				deps.GetService<IDirectory>(),
-				deps.GetService<NLog.Logger>()
+				deps.GetService<NLog.ILogger>()
 			), typeof(IMenuManager));
 
 			deps.RegisterLazySingleton(() => new PlatformManager(
 				deps.GetService<IMenuManager>(),
 				deps.GetService<IThreadManager>(),
-				deps.GetService<NLog.Logger>(),
+				deps.GetService<NLog.ILogger>(),
 				deps
 			), typeof(IPlatformManager));
 
@@ -167,20 +167,20 @@ namespace VpdbAgent
 				deps.GetService<IVersionManager>(),
 				deps.GetService<IMessageManager>(),
 				this,
-				deps.GetService<CrashManager>(),
-				deps.GetService<NLog.Logger>()
+				deps.GetService<NLog.ILogger>(),
+				deps.GetService<CrashManager>()
 			), typeof(IVpdbClient));
 
 			deps.RegisterLazySingleton(() => new RealtimeManager(
 				deps.GetService<IVpdbClient>(),
-				deps.GetService<NLog.Logger>()
+				deps.GetService<NLog.ILogger>()
 			), typeof(IRealtimeManager));
 
 			deps.RegisterLazySingleton(() => new JobManager(
 				deps.GetService<IDatabaseManager>(),
 				deps.GetService<IMessageManager>(),
-				deps.GetService<CrashManager>(),
-				deps.GetService<NLog.Logger>()
+				deps.GetService<NLog.ILogger>(),
+				deps.GetService<CrashManager>()
 			), typeof(IJobManager));
 
 			deps.RegisterLazySingleton(() => new DownloadManager(
@@ -190,8 +190,8 @@ namespace VpdbAgent
 				deps.GetService<ISettingsManager>(),
 				deps.GetService<IMessageManager>(),
 				deps.GetService<IDatabaseManager>(),
-				deps.GetService<CrashManager>(),
-				deps.GetService<NLog.Logger>()
+				deps.GetService<NLog.ILogger>(),
+				deps.GetService<CrashManager>()
 			), typeof(IDownloadManager));
 
 			deps.RegisterLazySingleton(() => new GameManager(
@@ -206,7 +206,7 @@ namespace VpdbAgent
 				deps.GetService<IRealtimeManager>(),
 				deps.GetService<IVisualPinballManager>(),
 				deps.GetService<IThreadManager>(),
-				deps.GetService<NLog.Logger>()
+				deps.GetService<NLog.ILogger>()
 			), typeof(IGameManager));
 
 			// converters

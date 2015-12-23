@@ -32,7 +32,7 @@ namespace VpdbAgent.Tests.Mocks
 
 		private static Stream GetStream(string filebase)
 		{
-			return Assembly.GetManifestResourceStream("VpdbAgent.Tests.Resources." + filebase + ".json");
+			return Assembly.GetManifestResourceStream("VpdbAgent.Tests.Json." + filebase + ".json");
 		}
 	}
 }

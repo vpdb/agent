@@ -22,11 +22,11 @@ namespace VpdbAgent.Application
 	/// </remarks>
 	public class CrashManager
 	{
-		private readonly Logger _logger;
+		private readonly ILogger _logger;
 		private readonly MemoryTarget _log;
 		private readonly RaygunClient _raygun = new RaygunClient("rDGC5mT6YBc77sU8bm5/Jw==");
 
-		public CrashManager(Logger logger)
+		public CrashManager(ILogger logger)
 		{
 			_logger = logger;
 			_log = LogManager.Configuration.FindTargetByName<MemoryTarget>("memory");

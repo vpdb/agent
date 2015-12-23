@@ -92,9 +92,9 @@ namespace VpdbAgent.Vpdb
 		private readonly ISettingsManager _settingsManager;
 		private readonly IVersionManager _versionManager;
 		private readonly IMessageManager _messageManager;
-		private readonly CrashManager _crashManager;
-		private readonly Logger _logger;
+		private readonly ILogger _logger;
 		private readonly IScreen _screen;
+		private readonly CrashManager _crashManager;
 
 		// api
 		public IVpdbApi Api { get; private set; }
@@ -106,14 +106,14 @@ namespace VpdbAgent.Vpdb
 		private Channel _userChannel;
 
 		public VpdbClient(ISettingsManager settingsManager, IVersionManager versionManager, IMessageManager messageManager, 
-			IScreen screen, CrashManager crashManager, Logger logger)
+			IScreen screen, ILogger logger, CrashManager crashManager)
 		{
 			_settingsManager = settingsManager;
 			_versionManager = versionManager;
 			_messageManager = messageManager;
-			_crashManager = crashManager;
 			_logger = logger;
 			_screen = screen;
+			_crashManager = crashManager;
 		}
 
 		public IVpdbClient Initialize()

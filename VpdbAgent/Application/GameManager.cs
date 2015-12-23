@@ -102,7 +102,7 @@ namespace VpdbAgent.Application
 		private readonly IRealtimeManager _realtimeManager;
 		private readonly IVisualPinballManager _visualPinballManager;
 		private readonly IThreadManager _threadManager;
-		private readonly Logger _logger;
+		private readonly ILogger _logger;
 
 		// props
 		public ReactiveList<Game> Games { get; } = new ReactiveList<Game>();
@@ -116,7 +116,7 @@ namespace VpdbAgent.Application
 		public GameManager(IMenuManager menuManager, IVpdbClient vpdbClient, ISettingsManager 
 			settingsManager, IDownloadManager downloadManager, IDatabaseManager databaseManager,
 			IVersionManager versionManager, IPlatformManager platformManager, IMessageManager messageManager,
-			IRealtimeManager realtimeManager, IVisualPinballManager visualPinballManager, IThreadManager threadManager, Logger logger)
+			IRealtimeManager realtimeManager, IVisualPinballManager visualPinballManager, IThreadManager threadManager, ILogger logger)
 		{
 			_menuManager = menuManager;
 			_vpdbClient = vpdbClient;
