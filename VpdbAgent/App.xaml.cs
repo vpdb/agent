@@ -22,7 +22,7 @@ namespace VpdbAgent
 	public partial class App : System.Windows.Application
 	{
 
-		private readonly Logger _logger = LogManager.GetCurrentClassLogger();
+		private readonly ILogger _logger = LogManager.GetCurrentClassLogger();
 		public readonly CrashManager CrashManager;
 
 		private TaskbarIcon _notifyIcon;

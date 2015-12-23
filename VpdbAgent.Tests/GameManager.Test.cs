@@ -59,7 +59,7 @@ namespace VpdbAgent.Tests
 
 			viewModel.IdentifyRelease.Execute(null);
 
-			//game.HasRelease.Should().BeTrue();
+			game.HasRelease.Should().BeTrue();
 		}
 	}
 }

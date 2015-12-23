@@ -216,7 +216,7 @@ namespace VpdbAgent.Tests
 		public readonly PinballXMenu Menu = new PinballXMenu() {
 			Games = new List<PinballXGame> {
 				new PinballXGame {
-					Filename = "AbraCaDabra_FS_B2S_2.0",
+					Filename = "AbraCaDabra_FS_B2S",
 					Description = "Abra Ca Dabra (Gottlieb 1975)",
 					Manufacturer = "Gottlieb",
 					Year = "1975",

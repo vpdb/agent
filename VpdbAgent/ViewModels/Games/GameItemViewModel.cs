@@ -1,15 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reactive.Concurrency;
 using System.Reactive.Linq;
-using NLog;
 using ReactiveUI;
 using Splat;
 using VpdbAgent.Application;
 using VpdbAgent.Vpdb;
 using VpdbAgent.Vpdb.Models;
 using Game = VpdbAgent.Models.Game;
+using ILogger = NLog.ILogger;
 
 namespace VpdbAgent.ViewModels.Games
 {
@@ -18,7 +17,7 @@ namespace VpdbAgent.ViewModels.Games
 		public const long MatchThreshold = 262144;
 
 		// deps
-		private readonly Logger _logger;
+		private readonly ILogger _logger;
 		private readonly IVpdbClient _vpdbClient;
 		private readonly IGameManager _gameManager;
 		private readonly IMessageManager _messageManager;
@@ -54,7 +53,7 @@ namespace VpdbAgent.ViewModels.Games
 		{
 			Game = game;
 
-			_logger = resolver.GetService<Logger>();
+			_logger = resolver.GetService<ILogger>();
 			_vpdbClient = resolver.GetService<IVpdbClient>();
 			_gameManager = resolver.GetService<IGameManager>();
 			_messageManager = resolver.GetService<IMessageManager>();
@@ -70,9 +69,10 @@ namespace VpdbAgent.ViewModels.Games
 
 				var releases = x as GameResultItemViewModel[] ?? x.ToArray();
 				var numMatches = 0;
+				_logger.Info("Found {0} releases for game to identify.", releases.Length);
 				GameResultItemViewModel match = null;
 				foreach (var vm in releases) {
-					if (game.Filename.Equals(vm.TableFile.Reference.Name) && game.FileSize == vm.TableFile.Reference.Bytes) {
+					if (game.Filename == vm.TableFile.Reference.Name && game.FileSize == vm.TableFile.Reference.Bytes) {
 						numMatches++;
 						match = vm;
 					}
@@ -82,10 +82,12 @@ namespace VpdbAgent.ViewModels.Games
 				if (numMatches == 1 && match != null) {
 					_gameManager.LinkRelease(match.Game, match.Release, match.TableFile.Reference.Id);
 					_messageManager.LogReleaseLinked(match.Game, match.Release, match.TableFile.Reference.Id);
+					_logger.Info("File name and size are equal to local release, linking.");
 
 				} else {
 					IdentifiedReleases = releases;
 					HasExecuted = true;
+					_logger.Info("View model updated with identified releases.");
 				}
 			}, exception => _vpdbClient.HandleApiError(exception, "identifying a game by file size"));
 
