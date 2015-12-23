@@ -1,0 +1,204 @@
+{
+	"name_sortable": "Magikus Editon",
+	"name": "Magikus Editon",
+	"description": "Top of the list!",
+	"acknowledgements": "",
+	"modified_at": "2015-12-15T10:34:59.420Z",
+	"created_at": "2015-12-07T20:28:39.661Z",
+	"rating": {
+		"score": 0,
+		"votes": 0,
+		"average": 0
+	},
+	"metrics": {
+		"popularity": 3.4011973816621555
+	},
+	"counter": {
+		"stars": 0,
+		"comments": 0,
+		"downloads": 3
+	},
+	"links": [],
+	"authors": [
+		{
+			"roles": [
+				"Uploader"
+			],
+			"user": {
+				"id": "w2dv9p3qb",
+				"name": "freezy",
+				"username": "freezy",
+				"gravatar_id": "3216e12a740c59824257efe8b806cc7b",
+				"counter": {
+					"comments": 0,
+					"stars": 0
+				}
+			}
+		}
+	],
+	"versions": [
+		{
+			"version": "2.0",
+			"changes": "*Initial release.*",
+			"released_at": "2011-09-25T19:29:00.000Z",
+			"counter": {
+				"comments": 0,
+				"downloads": 2
+			},
+			"files": [
+				{
+					"released_at": "2011-09-25T19:29:00.000Z",
+					"counter": {
+						"downloads": 2
+					},
+					"flavor": {
+						"orientation": "fs",
+						"lighting": "day"
+					},
+					"compatibility": [
+						{
+							"id": "9.2.1",
+							"label": "v9.2.1",
+							"platform": "vp",
+							"major_version": "9",
+							"download_url": "http://www.vpforums.org/index.php?app=downloads&showfile=8793",
+							"built_at": "2014-03-21T00:00:00.000Z",
+							"type": "release",
+							"is_range": false
+						}
+					],
+					"file": {
+						"name": "AbraCaDabra_FS_B2S.vpt",
+						"created_at": "2015-12-07T20:24:43.148Z",
+						"mime_type": "application/x-visual-pinball-table",
+						"file_type": "release",
+						"metadata": {
+							"table_script": "' script line 1\n' script line 2\n' script line 3\n' script line 4\n' script line 5\n' btw, this is version 2.0",
+							"table_description": "Abra Ca Dabra / IPD No. 2 / November 1975 / 1 Player\r\n\r\nv.2.0 \r\n-added analog plunger support\r\n-replaced plastic edges\r\n-B2S v3 resizable backglass\r\n-some new textures\r\n-fixed ball rolling sounds\r\n-fixed bonus/special code\r\n-fixed tilt",
+							"author_website": "",
+							"table_version": "2.0",
+							"release_date": "September 25, 2011",
+							"author_email": "",
+							"table_rules": "ABRA CA DABRA\r\nINSTRUCTIONS\r\n\r\nREPLAY AT 75,000\r\nREPLAY AT 89,000\r\nREPLAY AT 97,000\r\n\r\nREPLAY FOR BEATING HIGHSCORE (only in VP)",
+							"author_name": "Pinuck",
+							"table_name": "Abra Ca Dabra"
+						},
+						"id": "w2bm4go1qh",
+						"url": "/storage/v1/files/w2bm4go1qh.vpt",
+						"bytes": 24895488,
+						"variations": {
+							"screenshot": {
+								"url": "/storage/v1/files/screenshot/w2bm4go1qh.jpg",
+								"is_protected": true
+							}
+						},
+						"is_protected": true,
+						"counter": {
+							"downloads": 2
+						},
+						"cost": 10
+					},
+					"thumb": {
+						"url": "/public/files/square/wkh31g11qb.jpg",
+						"width": 120,
+						"height": 120
+					}
+				}
+			]
+		},
+		{
+			"released_at": "2015-12-15T10:34:59.376Z",
+			"changes": "- Added some silly comments to the table script in order to test patching.",
+			"version": "2.1",
+			"counter": {
+				"comments": 0,
+				"downloads": 1
+			},
+			"files": [
+				{
+					"released_at": "2015-12-15T10:34:59.376Z",
+					"counter": {
+						"downloads": 1
+					},
+					"flavor": {
+						"orientation": "fs",
+						"lighting": "day"
+					},
+					"compatibility": [
+						{
+							"id": "9.9.0",
+							"label": "v9.9.0",
+							"platform": "vp",
+							"major_version": "9",
+							"download_url": "http://www.vpforums.org/index.php?app=downloads&showfile=8793",
+							"built_at": "2014-04-29T00:00:00.000Z",
+							"type": "release",
+							"is_range": false
+						}
+					],
+					"file": {
+						"name": "AbraCaDabra_FS_B2S_2.1.vpt",
+						"created_at": "2015-12-15T10:29:16.041Z",
+						"mime_type": "application/x-visual-pinball-table",
+						"file_type": "release",
+						"metadata": {
+							"table_script": "' script line 1\n' script line 2\n' script line 3\n' script line 4\n' script line 5\n' btw, this is version 2.1!",
+							"table_description": "Abra Ca Dabra / IPD No. 2 / November 1975 / 1 Player\r\n\r\nv.2.0 \r\n-added analog plunger support\r\n-replaced plastic edges\r\n-B2S v3 resizable backglass\r\n-some new textures\r\n-fixed ball rolling sounds\r\n-fixed bonus/special code\r\n-fixed tilt",
+							"author_website": "",
+							"table_version": "2.1",
+							"release_date": "September 25, 2011",
+							"author_email": "",
+							"table_rules": "ABRA CA DABRA\r\nINSTRUCTIONS\r\n\r\nREPLAY AT 75,000\r\nREPLAY AT 89,000\r\nREPLAY AT 97,000\r\n\r\nREPLAY FOR BEATING HIGHSCORE (only in VP)",
+							"author_name": "Pinuck",
+							"table_name": "Abra Ca Dabra"
+						},
+						"id": "q2b86g1tpb",
+						"url": "/storage/v1/files/q2b86g1tpb.vpt",
+						"bytes": 24895488,
+						"variations": {
+							"screenshot": {
+								"url": "/storage/v1/files/screenshot/q2b86g1tpb.jpg",
+								"is_protected": true
+							}
+						},
+						"is_protected": true,
+						"counter": {
+							"downloads": 15
+						},
+						"cost": 10
+					},
+					"thumb": {
+						"url": "/public/files/square/wkb69c1vpb.jpg",
+						"width": 120,
+						"height": 120
+					}
+				}
+			]
+		}
+	],
+	"id": "w2xts7ooqh",
+	"tags": [
+		{
+			"name": "HD",
+			"description": "All textures render crispy at Full HD resolution.",
+			"id": "hd"
+		}
+	],
+	"game": {
+		"id": "abra-ca-dabra",
+		"title": "Abra Ca Dabra",
+		"manufacturer": "Gottlieb",
+		"year": 1975
+	},
+	"thumb": {
+		"image": {
+			"url": "/public/files/square/wkh31g11qb.jpg",
+			"width": 120,
+			"height": 120
+		},
+		"flavor": {
+			"orientation": "fs",
+			"lighting": "day"
+		}
+	}
+}
