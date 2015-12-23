@@ -2,6 +2,8 @@
 using System.IO;
 using System.Linq;
 using FluentAssertions;
+using NLog;
+using NLog.Config;
 using Splat;
 using VpdbAgent.Application;
 using VpdbAgent.PinballX;
@@ -9,23 +11,19 @@ using VpdbAgent.Tests.Mocks;
 using VpdbAgent.ViewModels.Games;
 using Xunit;
 using Xunit.Abstractions;
+using Xunit.NLog.Targets;
 
 namespace VpdbAgent.Tests
 {
-	public class GameManager : IDisposable
+	public class GameManager : BaseTest
 	{
-		private readonly NLog.ILogger _logger;
-
-		public GameManager(ITestOutputHelper outputHelper)
-		{
-			_logger = outputHelper.GetNLogLogger();
-		}
+		public GameManager(ITestOutputHelper outputHelper) : base(outputHelper) { }
 
 		[Fact]
 		public void ShouldInitSuccessfully()
 		{
 			// setup
-			var env = new TestEnvironment(_logger);
+			var env = new TestEnvironment(Logger);
 
 			var menuManager = env.Locator.GetService<IMenuManager>();
 			var gameManager = env.Locator.GetService<IGameManager>();
@@ -49,7 +47,7 @@ namespace VpdbAgent.Tests
 		public void ShouldIdentifyGameInstantly()
 		{
 			// setup
-			var env = new TestEnvironment();
+			var env = new TestEnvironment(Logger);
 			var gameManager = env.Locator.GetService<IGameManager>();
 			env.VpdbApi.Setup(v => v.GetReleasesBySize(24895488, GameItemViewModel.MatchThreshold)).Returns(TestVpdbApi.GetReleasesBySize());
 
@@ -62,11 +60,6 @@ namespace VpdbAgent.Tests
 			viewModel.IdentifyRelease.Execute(null);
 
 			//game.HasRelease.Should().BeTrue();
-		}
-
-		public void Dispose()
-		{
-			_logger.RemoveTestOutputHelper();
 		}
 	}
 }

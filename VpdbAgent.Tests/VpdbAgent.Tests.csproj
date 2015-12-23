@@ -170,16 +170,13 @@
       <HintPath>..\packages\xunit.extensibility.execution.2.1.0\lib\net45\xunit.execution.desktop.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="xunit.NLog, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\xunit.NLog.Common.1.1.0\lib\net\xunit.NLog.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="xunit.NLog.Common, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\xunit.NLog.Common.1.1.0\lib\net\xunit.NLog.Common.dll</HintPath>
+    <Reference Include="xunit.NLog, Version=1.0.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\xunit.NLog.1.0.1\lib\net\xunit.NLog.dll</HintPath>
       <Private>True</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BaseTest.cs" />
     <Compile Include="GameManager.Test.cs" />
     <Compile Include="MenuManager.Test.cs" />
     <Compile Include="Mocks\TestSchedulerManager.cs" />

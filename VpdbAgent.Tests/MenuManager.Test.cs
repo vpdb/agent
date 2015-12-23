@@ -5,16 +5,19 @@ using Splat;
 using VpdbAgent.PinballX;
 using VpdbAgent.PinballX.Models;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace VpdbAgent.Tests
 {
-	public class MenuManager
+	public class MenuManager : BaseTest
 	{
+		public MenuManager(ITestOutputHelper outputHelper) : base(outputHelper) { }
+
 		[Fact]
 		public void ShouldReadInitialSystem()
 		{
 			// setup
-			var env = new TestEnvironment();
+			var env = new TestEnvironment(Logger);
 			env.MarshallManager.Setup(f => f.ParseIni(TestEnvironment.PinballXIniPath)).Returns(TestEnvironment.GetPinballXIni(Ini1));
 			var menuManager = env.Locator.GetService<IMenuManager>();
 
@@ -37,7 +40,7 @@ namespace VpdbAgent.Tests
 		public void ShouldReadInitialSystems()
 		{
 			// setup
-			var env = new TestEnvironment();
+			var env = new TestEnvironment(Logger);
 			env.MarshallManager.Setup(f => f.ParseIni(TestEnvironment.PinballXIniPath)).Returns(TestEnvironment.GetPinballXIni(Ini3));
 			var menuManager = env.Locator.GetService<IMenuManager>();
 
@@ -57,7 +60,7 @@ namespace VpdbAgent.Tests
 		public void ShouldUpdateSystems()
 		{
 			// setup
-			var env = new TestEnvironment();
+			var env = new TestEnvironment(Logger);
 			env.MarshallManager.Setup(f => f.ParseIni(TestEnvironment.PinballXIniPath)).Returns(TestEnvironment.GetPinballXIni(Ini1));
 			var menuManager = env.Locator.GetService<IMenuManager>();
 
@@ -78,7 +81,7 @@ namespace VpdbAgent.Tests
 		public void ShouldParseGames()
 		{
 			// setup
-			var env = new TestEnvironment();
+			var env = new TestEnvironment(Logger);
 			var menu = new PinballXMenu();
 			menu.Games.Add(new PinballXGame() {
 				Filename = "Test_Game",

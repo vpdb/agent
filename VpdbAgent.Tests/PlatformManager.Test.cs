@@ -6,16 +6,19 @@ using VpdbAgent.Application;
 using VpdbAgent.PinballX;
 using VpdbAgent.Vpdb.Models;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace VpdbAgent.Tests
 {
-	public class PlatformManager
+	public class PlatformManager : BaseTest
 	{
+		public PlatformManager(ITestOutputHelper outputHelper) : base(outputHelper) { }
+
 		[Fact]
 		public void ShouldReadInitialPlatformsAndGames()
 		{
 			// setup
-			var env = new TestEnvironment();
+			var env = new TestEnvironment(Logger);
 
 			var menuManager = env.Locator.GetService<IMenuManager>();
 			var platformManager = env.Locator.GetService<IPlatformManager>();
@@ -34,7 +37,7 @@ namespace VpdbAgent.Tests
 		public void ShouldRetrieveCorrectPlatform()
 		{
 			// setup
-			var env = new TestEnvironment();
+			var env = new TestEnvironment(Logger);
 
 			var menuManager = env.Locator.GetService<IMenuManager>();
 			var platformManager = env.Locator.GetService<IPlatformManager>();
