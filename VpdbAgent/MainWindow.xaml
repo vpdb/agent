@@ -17,7 +17,7 @@
         TitleCaps="False"
         GlowBrush="#40000000"
         RenderOptions.ClearTypeHint="Enabled"
-        Icon="vpdb-agent.ico" 
+        Icon="VpdbAgent.ico" 
         d:DataContext="{d:DesignInstance Type=vpdbAgent:Bootstrapper}">
 
     <Controls:MetroWindow.Resources>

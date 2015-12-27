@@ -76,7 +76,7 @@ packaging the builds. In order to release a new version:
 4. In the *Package Manager Console*, type: 
 
    ```
-   PM> nuget pack .\vpdb-agent.nuspec
+   PM> nuget pack .\VpdbAgent\VpdbAgent.nuspec
    PM> squirrel --releasify .\VpdbAgent.0.0.x.nupkg
    ```
 5. Run `.\Releases\Setup.exe` and test

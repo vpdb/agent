@@ -14,7 +14,7 @@
     </ContextMenu>
     
     <tb:TaskbarIcon x:Key="TaskbarIcon" 
-                    IconSource="../vpdb-agent.ico" 
+                    IconSource="../VpdbAgent.ico" 
                     ToolTipText="VPDB Agent"
                     DoubleClickCommand="{Binding ShowWindowCommand}"
                     ContextMenu="{StaticResource SysTrayMenu}">
