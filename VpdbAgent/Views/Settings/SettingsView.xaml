@@ -153,12 +153,12 @@
                     </Grid.ColumnDefinitions>
                     <TextBlock Text="Apply my table script changes to updates" Style="{StaticResource Label}" Grid.Column="0" Margin="15,0,0,0"/>
                     <Button x:Name="PatchTableScriptsInfoButton" Style="{StaticResource ButtonLink}" HorizontalAlignment="Left" Grid.Column="1">
-                        <ctrl:IconControl Data="{StaticResource IconInfoCircle}" Height="16" Width="16" 
+                        <ctrl:IconControl Visibility="Collapsed" Data="{StaticResource IconInfoCircle}" Height="16" Width="16" 
                                           HorizontalAlignment="Left" VerticalAlignment="Center" Margin="15,5,0,0" />
                     </Button>
                     <ToggleButton IsChecked="{Binding PatchTableScripts}" x:Name="PatchTableScripts" Grid.Column="2" Height="20" Margin="5,0,0,0"/>
                 </Grid>
-                <StackPanel Orientation="Vertical" Background="{StaticResource DarkBackgroundBrush}" Margin="-20,0,-20,0">
+                <StackPanel Visibility="Collapsed" Orientation="Vertical" Background="{StaticResource DarkBackgroundBrush}" Margin="-20,0,-20,0">
                     <TextBlock Style="{StaticResource Label}" TextTrimming="None" Margin="35,0,35,0"
                                 Text="When updating a table, create a diff between the script of your outdated table and the original script of the outdated table and apply it to the updated table script." />
                 </StackPanel>

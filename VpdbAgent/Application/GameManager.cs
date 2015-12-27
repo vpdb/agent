@@ -334,8 +334,6 @@ namespace VpdbAgent.Application
 		/// </summary>
 		private void UpdateReleaseData()
 		{
-
-			return;
 			// get local release ids
 			var releaseIds = Games.Where(g => g.HasRelease).Select(g => g.ReleaseId).ToList();
 			if (releaseIds.Count > 0) {
