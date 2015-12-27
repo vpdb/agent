@@ -461,6 +461,7 @@
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
     <AppDesigner Include="Properties\" />
+    <None Include="vpdb-agent.nuspec" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
