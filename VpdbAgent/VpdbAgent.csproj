@@ -52,7 +52,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>vpdb-agent.ico</ApplicationIcon>
+    <ApplicationIcon>VpdbAgent.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject>VpdbAgent.App</StartupObject>
@@ -461,13 +461,13 @@
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
     <AppDesigner Include="Properties\" />
-    <None Include="vpdb-agent.nuspec" />
+    <None Include="VpdbAgent.nuspec" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="vpdb-agent.ico" />
+    <Resource Include="VpdbAgent.ico" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.5">

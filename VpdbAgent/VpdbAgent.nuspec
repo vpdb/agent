@@ -71,8 +71,8 @@
         <file src="bin\Release\System.Reactive.Windows.Threading.dll" target="lib\net45\System.Reactive.Windows.Threading.dll" />
         <file src="bin\Release\System.Reactive.Windows.Threading.xml" target="lib\net45\System.Reactive.Windows.Threading.xml" />
         <file src="bin\Release\System.Windows.Interactivity.dll" target="lib\net45\System.Windows.Interactivity.dll" />
-        <file src="bin\Release\vpdb-agent.exe" target="lib\net45\vpdb-agent.exe" />
-        <file src="bin\Release\vpdb-agent.exe.config" target="lib\net45\vpdb-agent.exe.config" />
+        <file src="bin\Release\VpdbAgent.exe" target="lib\net45\VpdbAgent.exe" />
+        <file src="bin\Release\VpdbAgent.exe.config" target="lib\net45\VpdbAgent.exe.config" />
         <file src="bin\Release\WebSocket4Net.dll" target="lib\net45\WebSocket4Net.dll" />
     </files>
 </package>
