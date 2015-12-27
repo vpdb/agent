@@ -12,7 +12,7 @@
 ### Data
 
 - Receive realtime data through Pusher notifications. If a release is starred at vpdb.io, immediately start downloading (if setting is enabled).
-- **[TODO]** If a release is updated at VPDB, immediately download update.
+- If a release is updated at VPDB, immediately download update.
 - Refresh data on application startup. If a release was starred while VPDB Agent wasn't running, update UI accordingly and download release if setting is enabled.
 
 
@@ -31,16 +31,16 @@
   - ROMs
 - Only download `N` (currently 2) files at the same time
 - Show download status of all current, future and past files in the app's *Downloads* tab
-- **[TODO]** Be able to remove items from the downloads tab
+- Be able to remove items from the downloads tab
 - Be able to clear all processed items from the downloads tab with one button
-- **[WIP]** Apply script changes to updates: When updating a release, apply a diff from the user's script changes to the script of the updated release.
+- Apply script changes to updates: When updating a release, apply a diff from the user's script changes to the script of the updated release.
 - Automatically choose correct flavor based on user's settings (see FAQ)
 
 
 ### Notifications
 
-- **[TODO]** Display a notification when something "interesting" happens (and setting is enabled) and add an entry to the log list.
-- **[TODO]** Always display a notification when something failed and user interaction is necessary.
+- Display a notification when something "interesting" happens (and setting is enabled) and add an entry to the log list.
+- Always display a notification when something failed and user interaction is necessary.
 
 
 ### Application
