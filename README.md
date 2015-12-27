@@ -42,6 +42,8 @@ For more details, see [FEATURES](FEATURES.md).
 - [Akavache](https://github.com/akavache/Akavache) for settings storage and image caching
 - [NotifyIcon](http://www.hardcodet.net/wpf-notifyicon) for tray features
 - [OpenMcdf](http://sourceforge.net/projects/openmcdf/) for reading and writing VP's OLE Compound format
+- [XUnit](https://xunit.github.io/), [Moq](https://github.com/Moq/moq4/wiki/Quickstart) and [Fluent Assertions](https://github.com/dennisdoomen/fluentassertions/wiki) for unit tests
+
 
 ## Tests
 
