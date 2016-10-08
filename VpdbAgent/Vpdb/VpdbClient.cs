@@ -234,7 +234,7 @@ namespace VpdbAgent.Vpdb
 		{
 
 			// initialize pusher
-			if (_pusher == null) {
+			if (_pusher == null && user.ChannelConfig != null) {
 				_pusher = new Pusher(user.ChannelConfig.ApiKey, new PusherOptions() {
 					Encrypted = true,
 					Authorizer = new PusherAuthorizer(this, _crashManager, _logger)
@@ -245,7 +245,7 @@ namespace VpdbAgent.Vpdb
 			var isSameConnection = !isNewConnection && _connectedApiEndpoint.Equals(_settingsManager.Settings.Endpoint);
 			var isDifferentConnection = !isNewConnection && !isSameConnection;
 
-			if (isNewConnection) {
+			if (isNewConnection && _pusher != null) {
 				_logger.Info("Setting up Pusher...");
 
 				_pusher.ConnectionStateChanged += PusherConnectionStateChanged;
@@ -259,7 +259,7 @@ namespace VpdbAgent.Vpdb
 				_userChannel.Unsubscribe();
 			}
 
-			if (isNewConnection || isDifferentConnection) {
+			if (_pusher != null && (isNewConnection || isDifferentConnection)) {
 				_logger.Info("Subscribing to user channel.");
 				_userChannel = _pusher.Subscribe("private-user-" + user.Id);
 				_userChannel.Subscribed += PusherSubscribed;

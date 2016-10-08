@@ -202,13 +202,13 @@ namespace VpdbAgent.Vpdb.Download
 				// check if backglass image needs to be downloaded
 				var backglassImagePath = Path.Combine(pbxPlatform.MediaPath, Job.MediaBackglassImages);
 				if (!FileBaseExists(backglassImagePath, gameName)) {
-					_jobManager.AddJob(new Job(release, game.Media["backglass"], FileType.BackglassImage, vpdbPlatform));
+					_jobManager.AddJob(new Job(release, game.Backglass, FileType.BackglassImage, vpdbPlatform));
 				}
 
 				// check if wheel image needs to be downloaded
 				var wheelImagePath = Path.Combine(pbxPlatform.MediaPath, Job.MediaWheelImages);
 				if (!FileBaseExists(wheelImagePath, gameName)) {
-					_jobManager.AddJob(new Job(release, game.Media["logo"], FileType.WheelImage, vpdbPlatform));
+					_jobManager.AddJob(new Job(release, game.Logo, FileType.WheelImage, vpdbPlatform));
 				}
 
 				// queue table shot

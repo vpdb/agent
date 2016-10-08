@@ -102,8 +102,10 @@ namespace VpdbAgent.PinballX
 					var watcher = (new FilesystemWatchCache()).Register(sysPath);
 					result = result == null ? watcher : result.Merge(watcher);
 				});
+			return result != null 
+				? result.Where(f => Regex.IsMatch(Path.GetExtension(f), pattern, RegexOptions.IgnoreCase)) 
+				: Observable.Empty<string>();
 
-			return result.Where(f => Regex.IsMatch(Path.GetExtension(f), pattern, RegexOptions.IgnoreCase));
 		}
 	}
 }
