@@ -23,8 +23,8 @@ namespace VpdbAgent.ViewModels.Games
 		public IReactiveDerivedList<GameItemViewModel> Games { get; }
 
 		// commands
-		public ReactiveCommand<object> FilterPlatforms { get; } = ReactiveCommand.Create();
-		public ReactiveCommand<object> IdentifyAll { get; } = ReactiveCommand.Create();
+		//public ReactiveCommand<Unit, Unit> FilterPlatforms { get; }
+		public ReactiveCommand<Unit, Unit> IdentifyAll { get; }
 
 		// privates
 		private readonly ReactiveList<string> _platformFilter = new ReactiveList<string>();
@@ -59,7 +59,7 @@ namespace VpdbAgent.ViewModels.Games
 
 
 			// todo check if we can simplify this.
-			IdentifyAll.Subscribe(_ => {
+			IdentifyAll = ReactiveCommand.Create(() => {
 
 				/*
 				Games
@@ -83,11 +83,12 @@ namespace VpdbAgent.ViewModels.Games
 					.Where(g => !g.HasExecuted && !g.Game.HasRelease && !g.IsExecuting)
 					.StepInterval(TimeSpan.FromMilliseconds(200)) // don't DOS the server...
 					.Subscribe(g => {
-						System.Windows.Application.Current.Dispatcher.Invoke(async () => {
-							var result = await g.IdentifyRelease.ExecuteAsyncTask();
-							if (result.Count == 0) {
-								g.CloseResults.Execute(null);
-							}
+						System.Windows.Application.Current.Dispatcher.Invoke(() => {
+							g.IdentifyRelease.Execute().Subscribe(result => {
+								if (result.Count == 0) {
+									g.CloseResults.Execute();
+								}
+							});
 						});
 					});
 			});

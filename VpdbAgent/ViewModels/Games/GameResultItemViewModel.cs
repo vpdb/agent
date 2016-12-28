@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reactive;
 using System.Windows.Input;
 using ReactiveUI;
 using Splat;
@@ -20,7 +21,7 @@ namespace VpdbAgent.ViewModels.Games
 		public readonly VpdbTableFile TableFile;
 
 		// commands
-		public ReactiveCommand<object> SelectResult { get; protected set; } = ReactiveCommand.Create();
+		public ReactiveCommand<Unit, Unit> SelectResult { get; protected set; }
 
 		public GameResultItemViewModel(Game game, VpdbRelease release, VpdbVersion version, VpdbTableFile tableFile, ICommand closeCommand)
 		{
@@ -29,8 +30,7 @@ namespace VpdbAgent.ViewModels.Games
 			Release = release;
 			TableFile = tableFile;
 
-			SelectResult.Subscribe(_ =>
-			{
+			SelectResult = ReactiveCommand.Create(() => {
 				GameManager.LinkRelease(Game, release, tableFile.Reference.Id);
 				MessageManager.LogReleaseLinked(game, release, tableFile.Reference.Id);
 

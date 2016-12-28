@@ -81,7 +81,7 @@ namespace VpdbAgent.Tests
 			var game = gameManager.Games[0];
 			var viewModel = new GameItemViewModel(game, env.Locator);
 
-			viewModel.IdentifyRelease.Execute(null);
+			viewModel.IdentifyRelease.Execute();
 
 			// assert
 			gameManagerMock.Verify(gm => gm.LinkRelease(
@@ -105,7 +105,7 @@ namespace VpdbAgent.Tests
 			var game = gameManager.Games[0];
 			var viewModel = new GameItemViewModel(game, env.Locator);
 
-			viewModel.IdentifyRelease.Execute(null);
+			viewModel.IdentifyRelease.Execute();
 
 			// assert
 			viewModel.IdentifiedReleases.Should().HaveCount(2);

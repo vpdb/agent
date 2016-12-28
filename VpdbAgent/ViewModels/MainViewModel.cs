@@ -24,9 +24,9 @@ namespace VpdbAgent.ViewModels
 		private static readonly Version AppVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
 
 		// commands
-		public ReactiveCommand<object> GotoSettings { get; protected set; }
-		public ReactiveCommand<object> RestartApp = ReactiveCommand.Create();
-		public ReactiveCommand<object> CloseUpdateNotice = ReactiveCommand.Create();
+		public ReactiveCommand<Unit, IRoutableViewModel> GotoSettings { get; protected set; }
+		public ReactiveCommand<Unit, Unit> RestartApp;
+		public ReactiveCommand<Unit, Unit> CloseUpdateNotice;
 
 		// screen
 		public IScreen HostScreen { get; protected set; }
@@ -53,7 +53,8 @@ namespace VpdbAgent.ViewModels
 			Games = new GamesViewModel(Locator.Current);
 			Downloads = new DownloadsViewModel(Locator.Current.GetService<IJobManager>());
 			Messsages = new MessagesViewModel(Locator.Current.GetService<IDatabaseManager>(), Locator.Current.GetService<IMessageManager>());
-			GotoSettings = ReactiveCommand.CreateAsyncObservable(_ => screen.Router.Navigate.ExecuteAsync(new SettingsViewModel(screen, settingsManager, versionManager, Locator.Current.GetService<IGameManager>())));
+
+			GotoSettings = ReactiveCommand.CreateFromObservable(() => screen.Router.Navigate.Execute(new SettingsViewModel(screen, settingsManager, versionManager, Locator.Current.GetService<IGameManager>())));
 
 			// login status
 			settingsManager.WhenAnyValue(sm => sm.AuthenticatedUser)
@@ -66,12 +67,12 @@ namespace VpdbAgent.ViewModels
 				.Subscribe(newRelease => {
 					ShowUpdateNotice = true;
 				});
-			CloseUpdateNotice.Subscribe(_ => {
-				ShowUpdateNotice = false;
-			});
+
+			// update notice close button
+			CloseUpdateNotice = ReactiveCommand.Create(() => { ShowUpdateNotice = false; });
 
 			// restart button
-			RestartApp.Subscribe(_ => { UpdateManager.RestartApp(); });
+			RestartApp = ReactiveCommand.Create(() => { UpdateManager.RestartApp(); });
 		}
 	}
 }

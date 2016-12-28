@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Reactive;
 using System.Reactive.Linq;
 using System.Windows;
 using System.Windows.Documents;
@@ -10,6 +11,7 @@ using ReactiveUI;
 using Splat;
 using VpdbAgent.Vpdb;
 using VpdbAgent.Vpdb.Download;
+using ReactiveCommand = ReactiveUI.ReactiveCommand;
 
 namespace VpdbAgent.ViewModels.Downloads
 {
@@ -28,9 +30,9 @@ namespace VpdbAgent.ViewModels.Downloads
 
 
 		// commands
-		public ReactiveCommand<object> CancelJob { get; protected set; } = ReactiveCommand.Create();
-		public ReactiveCommand<object> DeleteJob { get; protected set; } = ReactiveCommand.Create();
-		public ReactiveCommand<object> RetryJob { get; protected set; } = ReactiveCommand.Create();
+		public ReactiveCommand<Unit, Unit> CancelJob { get; }
+		public ReactiveCommand<Unit, Unit> DeleteJob { get; }
+		public ReactiveCommand<Unit, Unit> RetryJob { get; }
 
 		// label props
 		public string DownloadSizeFormatted { get { return _downloadSizeFormatted; } set { this.RaiseAndSetIfChanged(ref _downloadSizeFormatted, value); } }
@@ -126,13 +128,13 @@ namespace VpdbAgent.ViewModels.Downloads
 				});
 
 			// abort job on command
-			CancelJob.Subscribe(_ => { Job.Cancel(); });
+			CancelJob = ReactiveCommand.Create(() => { Job.Cancel(); });
 
 			// retry job
-			RetryJob.Subscribe(_ => { JobManager.RetryJob(Job); });
+			RetryJob = ReactiveCommand.Create(() => { JobManager.RetryJob(Job); });
 			
 			// delete job
-			DeleteJob.Subscribe(_ => { JobManager.DeleteJob(Job); });
+			DeleteJob = ReactiveCommand.Create(() => { JobManager.DeleteJob(Job); });
 
 			// setup icon
 			SetupFileIcon();

@@ -6,6 +6,7 @@ using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using NuGet;
 using ReactiveUI;
 using VpdbAgent.Vpdb;
 using VpdbAgent.Vpdb.Download;

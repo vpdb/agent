@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive;
 using System.Reactive.Linq;
 using ReactiveUI;
 using Splat;
@@ -23,9 +24,9 @@ namespace VpdbAgent.ViewModels.Games
 		private readonly IMessageManager _messageManager;
 
 		// commands
-		public ReactiveCommand<List<VpdbRelease>> IdentifyRelease { get; protected set; }
-		public ReactiveCommand<object> CloseResults { get; } = ReactiveCommand.Create();
-		public ReactiveCommand<object> SyncToggled { get; } = ReactiveCommand.Create();
+		public ReactiveCommand<Unit, List<VpdbRelease>> IdentifyRelease { get; protected set; }
+		public ReactiveCommand<Unit, Unit> CloseResults { get; }
+		//public ReactiveCommand<Unit, Unit> SyncToggled { get; }
 
 		// data
 		public Game Game { get; }
@@ -60,7 +61,7 @@ namespace VpdbAgent.ViewModels.Games
 			var threadManager = resolver.GetService<IThreadManager>();
 
 			// release identify
-			IdentifyRelease = ReactiveCommand.CreateAsyncObservable(_ => _vpdbClient.Api.GetReleasesBySize(Game.FileSize, MatchThreshold).SubscribeOn(threadManager.WorkerScheduler));
+			IdentifyRelease = ReactiveCommand.CreateFromObservable(() => _vpdbClient.Api.GetReleasesBySize(Game.FileSize, MatchThreshold).SubscribeOn(threadManager.WorkerScheduler));
 			IdentifyRelease.Select(releases => releases
 				.Select(release => new {release, release.Versions})
 				.SelectMany(x => x.Versions.Select(version => new {x.release, version, version.Files}))
@@ -92,9 +93,7 @@ namespace VpdbAgent.ViewModels.Games
 				}
 			}, exception => _vpdbClient.HandleApiError(exception, "identifying a game by file size"));
 
-			//SyncToggled
-			//	.Where(_ => Game.IsSynced && Game.HasRelease)
-			//	.Subscribe(_ => { GameManager.Sync(Game); });
+			//SyncToggled = ReactiveCommand.Create(() => { GameManager.Sync(Game); }, Game.IsSynced && Game.HasRelease);
 
 			// handle errors
 			IdentifyRelease.ThrownExceptions.Subscribe(e => { _logger.Error(e, "Error matching game."); });
@@ -106,7 +105,7 @@ namespace VpdbAgent.ViewModels.Games
 			IdentifyRelease.Select(r => r.Count > 0).Subscribe(hasResults => { HasResults = hasResults; });
 
 			// close button
-			CloseResults.Subscribe(_ => { HasExecuted = false; });
+			CloseResults = ReactiveCommand.Create(() => { HasExecuted = false; });
 
 			// identify button visibility
 			this.WhenAny(

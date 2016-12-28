@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
@@ -55,10 +56,10 @@ namespace VpdbAgent.ViewModels.Settings
 		public string UrlPathSegment => "settings";
 
 		// commands
-		public ReactiveCommand<Dictionary<string, string>> SaveSettings { get; }
-		public ReactiveCommand<object> ChooseFolder { get; } = ReactiveCommand.Create();
-		public ReactiveCommand<object> CloseSettings { get; } = ReactiveCommand.Create();
-		public ReactiveCommand<object> ShowPatchTableInfo { get; } = ReactiveCommand.Create();
+		public ReactiveCommand<Unit, Dictionary<string, string>> SaveSettings { get; }
+		public ReactiveCommand<Unit, Unit> ChooseFolder { get; }
+		public CombinedReactiveCommand<Unit, Unit> CloseSettings { get; }
+		public ReactiveCommand<Unit, Unit> ShowPatchTableInfo { get; }
 
 		// privates
 		private string _apiKey;
@@ -107,7 +108,7 @@ namespace VpdbAgent.ViewModels.Settings
 			DownloadLighting = _settingsManager.Settings.DownloadLighting;
 			DownloadLightingFallback = _settingsManager.Settings.DownloadLightingFallback;
 
-			SaveSettings = ReactiveCommand.CreateAsyncTask(_ => Save());
+			SaveSettings = ReactiveCommand.CreateFromTask(_ => Save());
 			SaveSettings.IsExecuting.ToProperty(this, vm => vm.IsValidating, out _isValidating);
 			SaveSettings.ThrownExceptions.Subscribe(e =>
 			{
@@ -115,8 +116,8 @@ namespace VpdbAgent.ViewModels.Settings
 				Console.WriteLine("Exception while saving settings.");
 			});
 
-			ChooseFolder.Subscribe(_ => OpenFolderDialog());
-			CloseSettings.InvokeCommand(HostScreen.Router, r => r.NavigateBack);
+			ChooseFolder = ReactiveCommand.Create(OpenFolderDialog);
+			CloseSettings = ReactiveCommand.CreateCombined(new[] { HostScreen.Router.NavigateBack });
 
 			_settingsManager.WhenAnyValue(sm => sm.Settings.IsFirstRun).ToProperty(this, vm => vm.IsFirstRun, out _isFirstRun);
 			_settingsManager.WhenAnyValue(sm => sm.CanCancel)
@@ -197,7 +198,7 @@ namespace VpdbAgent.ViewModels.Settings
 							HostScreen.Router.NavigateAndReset.Execute(new MainViewModel(HostScreen, _settingsManager, _versionManager));
 
 						} else {
-							HostScreen.Router.NavigateBack.Execute(null);
+							HostScreen.Router.NavigateBack.Execute();
 						}
 					});
 				});

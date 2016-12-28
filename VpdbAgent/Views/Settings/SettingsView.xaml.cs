@@ -27,14 +27,14 @@ namespace VpdbAgent.Views.Settings
 				d(this.OneWayBind(ViewModel, vm => vm.PbxFolder, v => v.PbxFolder.Text));
 
 				// error fields
-				d(this.OneWayBind(ViewModel, vm => vm.Errors, v => v.PbxFolderErrorPanel.Visibility, null, "PbxFolder"));
-				d(this.OneWayBind(ViewModel, vm => vm.Errors, v => v.PbxFolderError.Text, null, "PbxFolder"));
-				d(this.OneWayBind(ViewModel, vm => vm.Errors, v => v.ApiKeyErrorPanel.Visibility, null, "ApiKey"));
-				d(this.OneWayBind(ViewModel, vm => vm.Errors, v => v.ApiKeyError.Text, null, "ApiKey"));
-				d(this.OneWayBind(ViewModel, vm => vm.Errors, v => v.AuthErrorPanel.Visibility, null, "Auth"));
-				d(this.OneWayBind(ViewModel, vm => vm.Errors, v => v.AuthError.Text, null, "Auth"));
-				d(this.OneWayBind(ViewModel, vm => vm.Errors, v => v.XmlFileVpErrorPanel.Visibility, null, "XmlFileVP"));
-				d(this.OneWayBind(ViewModel, vm => vm.Errors, v => v.XmlFileVpError.Text, null, "XmlFileVP"));
+				d(this.OneWayBind(ViewModel, vm => vm.Errors, v => v.PbxFolderErrorPanel.Visibility));
+				d(this.OneWayBind(ViewModel, vm => vm.Errors, v => v.PbxFolderError.Text));
+				d(this.OneWayBind(ViewModel, vm => vm.Errors, v => v.ApiKeyErrorPanel.Visibility));
+				d(this.OneWayBind(ViewModel, vm => vm.Errors, v => v.ApiKeyError.Text));
+				d(this.OneWayBind(ViewModel, vm => vm.Errors, v => v.AuthErrorPanel.Visibility));
+				d(this.OneWayBind(ViewModel, vm => vm.Errors, v => v.AuthError.Text));
+				d(this.OneWayBind(ViewModel, vm => vm.Errors, v => v.XmlFileVpErrorPanel.Visibility));
+				d(this.OneWayBind(ViewModel, vm => vm.Errors, v => v.XmlFileVpError.Text));
 
 				// commands
 				d(this.BindCommand(ViewModel, vm => vm.ChooseFolder, v => v.PinballXFolderButton));
