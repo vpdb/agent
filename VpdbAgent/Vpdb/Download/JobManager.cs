@@ -170,7 +170,7 @@ namespace VpdbAgent.Vpdb.Download
 		{
 			var dest = Path.Combine(_downloadPath, job.File.Name);
 
-			_logger.Info("Starting downloading of {0} to {1}", job.Uri, dest);
+			_logger.Info("Starting downloading of {0} to {1}", job.File.Uri, dest);
 
 			// setup cancelation
 			token.Register(job.Client.CancelAsync);
@@ -180,9 +180,9 @@ namespace VpdbAgent.Vpdb.Download
 
 			// do the grunt work
 			try {
-				await job.Client.DownloadFileTaskAsync(job.Uri, dest);
+				await job.Client.DownloadFileTaskAsync(job.File.Uri, dest);
 				job.OnSuccess();
-				_logger.Info("Finished downloading of {0}", job.Uri);
+				_logger.Info("Finished downloading of {0}", job.File.Uri);
 			} catch (WebException e) {
 				if (e.Status == WebExceptionStatus.RequestCanceled) {
 					job.OnCancelled();

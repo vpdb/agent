@@ -26,7 +26,7 @@ namespace VpdbAgent.ViewModels.Games
 		// commands
 		public ReactiveCommand<Unit, List<VpdbRelease>> IdentifyRelease { get; protected set; }
 		public ReactiveCommand<Unit, Unit> CloseResults { get; }
-		//public ReactiveCommand<Unit, Unit> SyncToggled { get; }
+		public ReactiveCommand<Unit, Unit> SyncToggled { get; }
 
 		// data
 		public Game Game { get; }
@@ -93,7 +93,8 @@ namespace VpdbAgent.ViewModels.Games
 				}
 			}, exception => _vpdbClient.HandleApiError(exception, "identifying a game by file size"));
 
-			//SyncToggled = ReactiveCommand.Create(() => { GameManager.Sync(Game); }, Game.IsSynced && Game.HasRelease);
+			var canSync = this.WhenAnyValue(x => x.Game.IsSynced, x => x.Game.HasRelease, (isSynced, hasRelease) => isSynced && hasRelease);
+			SyncToggled = ReactiveCommand.Create(() => { _gameManager.Sync(Game); }, canSync);
 
 			// handle errors
 			IdentifyRelease.ThrownExceptions.Subscribe(e => { _logger.Error(e, "Error matching game."); });

@@ -15,9 +15,13 @@ namespace VpdbAgent.Vpdb
 	public interface IRealtimeManager
 	{
 		/// <summary>
-		/// Produces a value when a release has been starred.
+		/// Produces a value when a release has been starred or unstarred.
 		/// </summary>
 		IObservable<StarEvent> WhenReleaseStarred { get; }
+
+		/// <summary>
+		/// Produces a value when a release has been updated with a new version or file.
+		/// </summary>
 		IObservable<NewVersionEvent> WhenReleaseUpdated { get; }
 	}
 

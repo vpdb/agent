@@ -17,9 +17,17 @@ namespace VpdbAgent.Vpdb.Models
 		public VpdbCounter Counter { get; set; }
 		public bool IsActive { get; set; }
 		public bool IsProtected { get; set; }
-		public string Url { get; set; }
+		public string Url {
+			get { return _url; }
+			set {
+				_url = value;
+				Uri = new Uri(value);
+			}
+		}
+		public Uri Uri { get; private set; }
 
 		private string _name;
+		private string _url;
 
 		public override string ToString()
 		{

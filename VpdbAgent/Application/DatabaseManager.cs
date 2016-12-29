@@ -182,8 +182,10 @@ namespace VpdbAgent.Application
 		public VpdbVersion GetVersion(string releaseId, string fileId)
 		{
 			if (releaseId == null || !Database.Releases.ContainsKey(releaseId)) {
+				_logger.Warn("Release with ID \"{0}\" not found when retrieving version.", releaseId);
 				return null;
 			}
+
 			// todo add map to make it fast
 			return Database.Releases[releaseId].Versions
 				.FirstOrDefault(v => v.Files.Contains(v.Files.FirstOrDefault(f => f.Reference.Id == fileId)));
@@ -191,8 +193,8 @@ namespace VpdbAgent.Application
 
 		public VpdbTableFile GetTableFile(string releaseId, string fileId)
 		{
-			
 			if (releaseId == null || !Database.Releases.ContainsKey(releaseId)) {
+				_logger.Warn("Release with ID \"{0}\" not found when retrieving table file.", releaseId);
 				return null;
 			}
 			// todo add map to make it fast
@@ -204,6 +206,7 @@ namespace VpdbAgent.Application
 		public VpdbFile GetFile(string fileId)
 		{
 			if (fileId == null || !Database.Files.ContainsKey(fileId)) {
+				_logger.Warn("File with ID \"{0}\" not found.", fileId);
 				return null;
 			}
 			return Database.Files[fileId];

@@ -15,7 +15,9 @@ namespace VpdbAgent.Vpdb.Models
 
 		[DataMember] public DateTime ReleasedAt { get; set; }
 		[DataMember] public VpdbFlavor Flavor { get; set; }
-		[DataMember] public Dictionary<string, VpdbFile> Media { get; set; }
+		[DataMember] public VpdbFile PlayfieldImage { get; set; }
+		[DataMember] public VpdbFile PlayfieldVideo { get; set; }
+		//[DataMember] public Dictionary<string, VpdbFile> Media { get; set; }
 		[DataMember] public List<VpdbCompatibility> Compatibility;
 		[DataMember] [JsonProperty(PropertyName = "file")] public VpdbFile Reference { get; set; }
 		[DataMember] public VpdbImage Thumb { get { return _thumb; } set { this.RaiseAndSetIfChanged(ref _thumb, value); } }

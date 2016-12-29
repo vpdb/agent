@@ -214,7 +214,7 @@ namespace VpdbAgent.Vpdb.Download
 				// queue table shot
 				var tableImage = Path.Combine(pbxPlatform.MediaPath, Job.MediaTableImages);
 				if (!FileBaseExists(tableImage, gameName)) {
-					_jobManager.AddJob(new Job(release, tableFile.Media["playfield_image"], FileType.TableImage, vpdbPlatform));
+					_jobManager.AddJob(new Job(release, tableFile.PlayfieldImage, FileType.TableImage, vpdbPlatform));
 				}
 
 				// todo check for ROM to be downloaded

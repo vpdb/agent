@@ -9,6 +9,7 @@ using System.Net;
 using System.Net.Http;
 using System.Reactive.Subjects;
 using System.Text;
+using NLog.Fluent;
 using VpdbAgent.Vpdb.Network;
 using PusherClient;
 using ReactiveUI;
@@ -137,6 +138,8 @@ namespace VpdbAgent.Vpdb
 			_settingsManager.ApiAuthenticated.Subscribe(user => {
 				if (user != null && user.Permissions.Messages?.Contains("receive") == true) {
 					SetupPusher(user);
+				} else {
+					_logger.Debug("Pusher disabled due to insufficient permissions.");
 				}
 			}, exception => HandleApiError(exception, "subscribing to ApiAuthenticated for Pusher"));
 
@@ -260,7 +263,7 @@ namespace VpdbAgent.Vpdb
 			}
 
 			if (_pusher != null && (isNewConnection || isDifferentConnection)) {
-				_logger.Info("Subscribing to user channel.");
+				_logger.Info("Subscribing to user channel...");
 				_userChannel = _pusher.Subscribe("private-user-" + user.Id);
 				_userChannel.Subscribed += PusherSubscribed;
 			}
@@ -284,7 +287,7 @@ namespace VpdbAgent.Vpdb
 		{
 			// todo handle
 			((Subject<Channel>)UserChannel).OnNext(_userChannel);
-			_logger.Info("Subscribed to channel.");
+			_logger.Info("Subscribed to Pusher channel \"{0}\".", _userChannel.Name);
 		}
 		#endregion
 	}

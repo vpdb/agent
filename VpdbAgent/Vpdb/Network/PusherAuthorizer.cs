@@ -16,7 +16,7 @@ namespace VpdbAgent.Vpdb.Network
 {
 	public class PusherAuthorizer : IAuthorizer
 	{
-		private const string Endpoint = "/api/v1/messages/authenticate";
+		private const string Endpoint = "/v1/messages/authenticate";
 
 		// deps
 		private readonly IVpdbClient _vpdbClient;

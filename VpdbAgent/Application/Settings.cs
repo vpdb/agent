@@ -145,7 +145,7 @@ namespace VpdbAgent.Application
 			ApiKey = await storage.GetOrCreateObject("ApiKey", () => "");
 			AuthUser = await storage.GetOrCreateObject("AuthUser", () => "");
 			AuthPass = await storage.GetOrCreateObject("AuthPass", () => "");
-			Endpoint = await storage.GetOrCreateObject("Endpoint", () => "https://staging.vpdb.io/api");
+			Endpoint = await storage.GetOrCreateObject("Endpoint", () => "https://api.vpdb.io");
 			PbxFolder = await storage.GetOrCreateObject("PbxFolder", () => "");
 			SyncStarred = await storage.GetOrCreateObject("SyncStarred", () => true);
 			MinimizeToTray = await storage.GetOrCreateObject("MinimizeToTray", () => false);

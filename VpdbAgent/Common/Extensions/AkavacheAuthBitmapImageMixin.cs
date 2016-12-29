@@ -31,7 +31,7 @@ namespace VpdbAgent.Common.Extensions
 		/// Observable is guaranteed to be returned on the UI thread.</returns>
 		public static IObservable<IBitmap> LoadImageFromVpdb(this IBlobCache This, string url, bool fetchAlways = false, float? desiredWidth = null, float? desiredHeight = null, DateTimeOffset? absoluteExpiration = null)
 		{
-			return This.DownloadUrl(VpdbClient.GetUri(url).AbsoluteUri, VpdbClient.GetAuthHeaders(), fetchAlways, absoluteExpiration)
+			return This.DownloadUrl(new Uri(url).AbsoluteUri, VpdbClient.GetAuthHeaders(), fetchAlways, absoluteExpiration)
 				.SelectMany(ThrowOnBadImageBuffer)
 				.SelectMany(x => BytesToImage(x, desiredWidth, desiredHeight));
 		}

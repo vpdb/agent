@@ -248,6 +248,8 @@ namespace VpdbAgent.Application
 			// starring
 			_realtimeManager.WhenReleaseStarred.Subscribe(msg => {
 
+				_logger.Debug("Got star for release {0}", msg.Id);
+
 				// release starred
 				if (msg.Starred) {
 					var game = OnStarRelease(msg.Id, true);

@@ -60,10 +60,6 @@ namespace VpdbAgent.Vpdb.Download
 		private ObservableAsPropertyHelper<VpdbTableFile> _tableFile;
 		private ObservableAsPropertyHelper<VpdbFile> _file;
 
-		// uri
-		public Uri Uri => _uri.Value;
-		private ObservableAsPropertyHelper<Uri> _uri;
-
 		public readonly WebClient Client;
 
 		// convenience props
@@ -90,20 +86,23 @@ namespace VpdbAgent.Vpdb.Download
 		/// <summary>
 		/// Constructor called when de-serializing
 		/// </summary>
-		public Job()
+		public Job(string releaseId, VpdbFile file)
 		{
+			// store file object in global db
+			DatabaseManager.AddOrReplaceFile(file);
+
+			ReleaseId = releaseId;
+			FileId = file.Id;
+
 			// setup output props only once database is ready, otherwise we end up with null values.
 			DatabaseManager.Initialized
 				.Where(isInitialized => isInitialized)
 				.Subscribe(isInitialized => {
 
-					this.WhenAnyValue(j => j.ReleaseId).Select(releaseId => DatabaseManager.GetRelease(ReleaseId)).ToProperty(this, j => j.Release, out _release);
-					this.WhenAnyValue(j => j.FileId).Select(fileId => DatabaseManager.GetVersion(ReleaseId, fileId)).ToProperty(this, j => j.Version, out _version);
-					this.WhenAnyValue(j => j.FileId).Select(fileId => DatabaseManager.GetTableFile(ReleaseId, fileId)).ToProperty(this, j => j.TableFile, out _tableFile);
-					this.WhenAnyValue(j => j.FileId).Select(fileId => DatabaseManager.GetFile(fileId)).ToProperty(this, j => j.File, out _file);
-
-					// uri
-					this.WhenAnyValue(j => j.File).Where(f => f != null).Select(f => VpdbClient.GetUri(f.Url)).ToProperty(this, x => x.Uri, out _uri);
+					this.WhenAnyValue(j => j.ReleaseId).Select(rid => DatabaseManager.GetRelease(ReleaseId)).ToProperty(this, j => j.Release, out _release);
+					this.WhenAnyValue(j => j.FileId).Select(fid => DatabaseManager.GetVersion(ReleaseId, fid)).ToProperty(this, j => j.Version, out _version);
+					this.WhenAnyValue(j => j.FileId).Select(fid => DatabaseManager.GetTableFile(ReleaseId, fid)).ToProperty(this, j => j.TableFile, out _tableFile);
+					this.WhenAnyValue(j => j.FileId).Select(fid => DatabaseManager.GetFile(fid)).ToProperty(this, j => j.File, out _file);
 				});
 
 			_whenStatusChanges.Subscribe(status => {
@@ -120,17 +119,12 @@ namespace VpdbAgent.Vpdb.Download
 		/// <param name="tableFile">File of the release to be downloaded</param>
 		/// <param name="filetype">File type</param>
 		/// <param name="platform">Platform the file belongs to</param>
-		public Job(VpdbRelease release, VpdbTableFile tableFile, FileType filetype, VpdbTableFile.VpdbPlatform platform) : this()
+		public Job(VpdbRelease release, VpdbTableFile tableFile, FileType filetype, VpdbTableFile.VpdbPlatform platform) : this(release.Id, tableFile.Reference)
 		{
-			// store file object in global db
-			DatabaseManager.AddOrReplaceFile(tableFile.Reference);
-
-			FileId = tableFile.Reference.Id;
-			ReleaseId = release.Id;
 			FileType = filetype;
 			Thumb = tableFile.Thumb;
 			Platform = platform;
-			Logger.Info("Creating new release download job for {0} {1}.", filetype, Uri.AbsoluteUri);
+			Logger.Info("Creating new release download job for {0} {1}.", filetype, File.Uri.AbsoluteUri);
 		}
 
 		/// <summary>
@@ -141,17 +135,12 @@ namespace VpdbAgent.Vpdb.Download
 		/// <param name="file">File to be downloaded</param>
 		/// <param name="filetype">File type</param>
 		/// <param name="platform">Platform the file belongs to</param>
-		public Job(VpdbRelease release, VpdbFile file, FileType filetype, VpdbTableFile.VpdbPlatform platform) : this()
+		public Job(VpdbRelease release, VpdbFile file, FileType filetype, VpdbTableFile.VpdbPlatform platform) : this(release.Id, file)
 		{
-			// store file object in global db
-			DatabaseManager.AddOrReplaceFile(file);
-
-			FileId = file.Id;
-			ReleaseId = release.Id;
 			FileType = filetype;
 			Platform = platform;
 			Thumb = release.Thumb?.Image;
-			Logger.Info("Creating new download job for {0} {1}.", filetype, Uri.AbsoluteUri);
+			Logger.Info("Creating new download job for {0} {1}.", filetype, File.Uri.AbsoluteUri);
 		}
 
 		/// <summary>
