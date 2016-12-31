@@ -6,6 +6,7 @@ using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using JetBrains.Annotations;
 using Newtonsoft.Json;
 using NLog;
 using ReactiveUI;
@@ -69,7 +70,7 @@ namespace VpdbAgent.Application
 		/// </summary>
 		/// <param name="fileId">File ID</param>
 		/// <returns></returns>
-		VpdbFile GetFile(string fileId);
+		[CanBeNull] VpdbFile GetFile([CanBeNull] string fileId);
 
 		/// <summary>
 		/// Updates the database with updated release data for a given release
