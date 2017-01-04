@@ -58,7 +58,7 @@ so you can easily debug. Coverage is still poor but increasing.
 The goal is to touch current XML files that make the PinballX database only
 when necessary (i.e. a release is updated). Instead, we keep a `vpdb.json` in
 each folder that contains the additional data we need to work with. This file
-basically serves as our local database is updated as the XMLs are changed 
+basically serves as our local database and is updated as the XMLs are changed 
 manually or by another application.
 
 As for adding new games, the user can choose between a separate custom list or

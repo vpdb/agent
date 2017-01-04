@@ -83,10 +83,23 @@ namespace VpdbAgent.Vpdb.Download
 		private static readonly IVpdbClient VpdbClient = Locator.CurrentMutable.GetService<IVpdbClient>();
 		private static readonly ILogger Logger = Locator.CurrentMutable.GetService<ILogger>();
 
+		public Job() {
+
+			// setup output props only once database is ready, otherwise we end up with null values.
+			DatabaseManager.Initialized
+				.Where(isInitialized => isInitialized)
+				.Subscribe(isInitialized => {
+					this.WhenAnyValue(j => j.ReleaseId).Select(rid => DatabaseManager.GetRelease(ReleaseId)).ToProperty(this, j => j.Release, out _release);
+					this.WhenAnyValue(j => j.FileId).Select(fid => DatabaseManager.GetVersion(ReleaseId, fid)).ToProperty(this, j => j.Version, out _version);
+					this.WhenAnyValue(j => j.FileId).Select(fid => DatabaseManager.GetTableFile(ReleaseId, fid)).ToProperty(this, j => j.TableFile, out _tableFile);
+					this.WhenAnyValue(j => j.FileId).Select(fid => DatabaseManager.GetFile(fid)).ToProperty(this, j => j.File, out _file);
+				});
+		}
+
 		/// <summary>
 		/// Constructor called when de-serializing
 		/// </summary>
-		public Job(string releaseId, VpdbFile file)
+		private Job(string releaseId, VpdbFile file)
 		{
 			// store file object in global db
 			DatabaseManager.AddOrReplaceFile(file);
@@ -94,7 +107,6 @@ namespace VpdbAgent.Vpdb.Download
 			ReleaseId = releaseId;
 			FileId = file.Id;
 
-			// setup output props only once database is ready, otherwise we end up with null values.
 			DatabaseManager.Initialized
 				.Where(isInitialized => isInitialized)
 				.Subscribe(isInitialized => {

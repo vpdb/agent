@@ -217,7 +217,7 @@ namespace VpdbAgent.Vpdb.Download
 					_jobManager.AddJob(new Job(release, tableFile.PlayfieldImage, FileType.TableImage, vpdbPlatform));
 				}
 
-				// todo check for ROM to be downloaded
+				// todo check for ROM to be downloaded, path at HKEY_CURRENT_USER\SOFTWARE\Freeware\Visual PinMame\globals
 				// todo also queue all remaining non-table files of the release.
 
 				// queue for download

@@ -70,7 +70,7 @@ namespace VpdbAgent.Application
 		/// </summary>
 		/// <param name="fileId">File ID</param>
 		/// <returns></returns>
-		[CanBeNull] VpdbFile GetFile([CanBeNull] string fileId);
+		VpdbFile GetFile(string fileId);
 
 		/// <summary>
 		/// Updates the database with updated release data for a given release

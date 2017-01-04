@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 
 namespace VpdbAgent.Common.Filesystem
 {
-
 	/// <summary>
 	/// A non-static interface wrapped around <see cref="System.IO.File"/> 
 	/// operations that can be switched out in unit tests.
