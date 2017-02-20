@@ -7,6 +7,7 @@ using IniParser.Model;
 using Newtonsoft.Json;
 using NLog;
 using VpdbAgent.Application;
+using VpdbAgent.Data.Json;
 using VpdbAgent.Models;
 using VpdbAgent.PinballX.Models;
 using VpdbAgent.Vpdb.Network;
@@ -28,12 +29,28 @@ namespace VpdbAgent.PinballX
 		/// <param name="path">Absolute path to .ini file</param>
 		/// <returns>Parsed data or null if failed.</returns>
 		IniData ParseIni(string path);
+		
+		/// <summary>
+		/// Writes the data to the internal .json file for a given platform.
+		/// </summary>
+		/// <param name="data">Data file to marshal</param>
+		/// <param name="dataFile">Absolute path to the data file</param>
+		void MarshallPlatformData(PlatformData data, string dataFile);
+
+		/// <summary>
+		/// Reads the internal .json file of a given platform and returns the 
+		/// unmarshalled data object.
+		/// </summary>
+		/// <param name="databaseFile">Absolute path of the data file to read</param>
+		/// <returns>Deserialized object or empty data if no file exists or parsing error</returns>
+		PlatformData UnmarshallPlatformData(string databaseFile);
 
 		/// <summary>
 		/// Writes the database to the internal .json file for a given platform.
 		/// </summary>
 		/// <param name="database">Database file to marshal</param>
 		/// <param name="databaseFile">Absolute path of the database file</param>
+		[Obsolete("Use MarshallPlatformData()")]
 		void MarshallPlatformDatabase(PlatformDatabase database, string databaseFile);
 
 		/// <summary>
@@ -42,6 +59,7 @@ namespace VpdbAgent.PinballX
 		/// </summary>
 		/// <param name="databaseFile">Absolute path of the database file to read</param>
 		/// <returns>Deserialized object or empty database if no file exists or parsing error</returns>
+		[Obsolete("Use UnmarshallPlatformData()")]
 		PlatformDatabase UnmarshallPlatformDatabase(string databaseFile);
 
 		/// <summary>
@@ -94,52 +112,52 @@ namespace VpdbAgent.PinballX
 			Formatting = Formatting.Indented
 		};
 
-		public PlatformDatabase UnmarshallPlatformDatabase(string databaseFile)
+		public PlatformData UnmarshallPlatformData(string databaseFile)
 		{
 			if (!File.Exists(databaseFile)) {
-				return new PlatformDatabase();
+				return new PlatformData();
 			}
 
-			_logger.Info("Reading game database from {0}...", databaseFile);
+			_logger.Info("Reading platform data from {0}...", databaseFile);
 			try {
 				using (var sr = new StreamReader(databaseFile))
 				using (JsonReader reader = new JsonTextReader(sr)) {
 					try {
-						var db = _serializer.Deserialize<PlatformDatabase>(reader);
+						var db = _serializer.Deserialize<PlatformData>(reader);
 						reader.Close();
-						return db ?? new PlatformDatabase();
+						return db ?? new PlatformData();
 					} catch (Exception e) {
 						_logger.Error(e, "Error parsing vpdb.json, deleting and ignoring.");
 						_crashManager.Report(e, "json");
 						reader.Close();
 						File.Delete(databaseFile);
-						return new PlatformDatabase();
+						return new PlatformData();
 					}
 				}
 			} catch (Exception e) {
 				_logger.Error(e, "Error reading vpdb.json, deleting and ignoring.");
 				_crashManager.Report(e, "json");
-				return new PlatformDatabase();
+				return new PlatformData();
 			}
 		}
 
-		public void MarshallPlatformDatabase(PlatformDatabase database, string databaseFile)
+		public void MarshallPlatformData(PlatformData data, string dataFile)
 		{
 			// don't do anything for non-existent folder
-			var dbFolder = Path.GetDirectoryName(databaseFile);
-			if (dbFolder != null && databaseFile != null && !Directory.Exists(dbFolder)) {
+			var dbFolder = Path.GetDirectoryName(dataFile);
+			if (dbFolder != null && dataFile != null && !Directory.Exists(dbFolder)) {
 				_logger.Warn("Directory {0} does not exist, not writing vpdb.json.", dbFolder);
 				return;
 			}
 
 			try {
-				using (var sw = new StreamWriter(databaseFile))
+				using (var sw = new StreamWriter(dataFile))
 				using (JsonWriter writer = new JsonTextWriter(sw)) {
-					_serializer.Serialize(writer, database);
+					_serializer.Serialize(writer, data);
 				}
-				_logger.Debug("Wrote vpdb.json back to {0}", databaseFile);
+				_logger.Debug("Wrote vpdb.json back to {0}", dataFile);
 			} catch (Exception e) {
-				_logger.Error(e, "Error writing vpdb.json to {0}", databaseFile);
+				_logger.Error(e, "Error writing vpdb.json to {0}", dataFile);
 				_crashManager.Report(e, "json");
 			}
 		}
@@ -181,5 +199,57 @@ namespace VpdbAgent.PinballX
 			}
 
 		}
+
+		#region Obsolete
+		public void MarshallPlatformDatabase(PlatformDatabase database, string databaseFile)
+		{
+			// don't do anything for non-existent folder
+			var dbFolder = Path.GetDirectoryName(databaseFile);
+			if (dbFolder != null && databaseFile != null && !Directory.Exists(dbFolder)) {
+				_logger.Warn("Directory {0} does not exist, not writing vpdb.json.", dbFolder);
+				return;
+			}
+
+			try {
+				using (var sw = new StreamWriter(databaseFile))
+				using (JsonWriter writer = new JsonTextWriter(sw)) {
+					_serializer.Serialize(writer, database);
+				}
+				_logger.Debug("Wrote vpdb.json back to {0}", databaseFile);
+			} catch (Exception e) {
+				_logger.Error(e, "Error writing vpdb.json to {0}", databaseFile);
+				_crashManager.Report(e, "json");
+			}
+		}
+
+		public PlatformDatabase UnmarshallPlatformDatabase(string databaseFile)
+		{
+			if (!File.Exists(databaseFile)) {
+				return new PlatformDatabase();
+			}
+
+			_logger.Info("Reading game database from {0}...", databaseFile);
+			try {
+				using (var sr = new StreamReader(databaseFile))
+				using (JsonReader reader = new JsonTextReader(sr)) {
+					try {
+						var db = _serializer.Deserialize<PlatformDatabase>(reader);
+						reader.Close();
+						return db ?? new PlatformDatabase();
+					} catch (Exception e) {
+						_logger.Error(e, "Error parsing vpdb.json, deleting and ignoring.");
+						_crashManager.Report(e, "json");
+						reader.Close();
+						File.Delete(databaseFile);
+						return new PlatformDatabase();
+					}
+				}
+			} catch (Exception e) {
+				_logger.Error(e, "Error reading vpdb.json, deleting and ignoring.");
+				_crashManager.Report(e, "json");
+				return new PlatformDatabase();
+			}
+		}
+		#endregion
 	}
 }

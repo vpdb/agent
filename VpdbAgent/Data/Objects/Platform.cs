@@ -5,16 +5,15 @@ using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using NLog;
 using ReactiveUI;
 using Splat;
 using VpdbAgent.Application;
-using VpdbAgent.Data.Objects;
+using VpdbAgent.Data.Json;
 using VpdbAgent.PinballX;
 using VpdbAgent.PinballX.Models;
 using ILogger = NLog.ILogger;
 
-namespace VpdbAgent.Models
+namespace VpdbAgent.Data.Objects
 {
 	/// <summary>
 	/// PinballX's "system". Note that this entity is never serialized
@@ -77,9 +76,9 @@ namespace VpdbAgent.Models
 		public string MediaPath { get; set; }
 
 		/// <summary>
-		/// Absolute path to our internal database JSON file.
+		/// Absolute path to our internal JSON file.
 		/// </summary>
-		public string DatabaseFile => DatabasePath + @"\vpdb.json";
+		public string DataFile => DatabasePath + @"\vpdb.json";
 		#endregion
 
 		// dependencies
@@ -89,23 +88,25 @@ namespace VpdbAgent.Models
 		private readonly ILogger _logger;
 
 		/// <summary>
-		/// The platform specific database
+		/// The platform specific data
 		/// </summary>
-		private readonly PlatformDatabase _database;
+		private readonly PlatformData _data;
 
 		/// <summary>
 		/// All attached games
 		/// </summary>
-		public readonly ReactiveList<Game> Games = new ReactiveList<Game>();
-		public readonly Subject<Unit> GamePropertyChanged = new Subject<Unit>();
+		public readonly ReactiveList<Mapping> Mappings = new ReactiveList<Mapping>();
+		public readonly Subject<Unit> MappingPropertyChanged = new Subject<Unit>();
 
 		public Platform(PinballXSystem system, IDependencyResolver resolver)
 		{
+			// deps
 			_resolver = resolver;
 			_marshallManager = resolver.GetService<IMarshallManager>();
 			_threadManager = resolver.GetService<IThreadManager>();
 			_logger = resolver.GetService<ILogger>();
 
+			// props
 			Name = system.Name;
 			IsEnabled = system.Enabled;
 			WorkingPath = system.WorkingPath;
@@ -116,12 +117,13 @@ namespace VpdbAgent.Models
 			DatabasePath = system.DatabasePath;
 			MediaPath = system.MediaPath;
 
-			_database = _marshallManager.UnmarshallPlatformDatabase(DatabaseFile);
+			// members
+			_data = _marshallManager.UnmarshallPlatformData(DataFile);
 
-			UpdateGames(system);
+			UpdateMappings(system);
 
 			// save changes
-			GamePropertyChanged
+			MappingPropertyChanged
 				.ObserveOn(Scheduler.Default)
 				//.Sample(TimeSpan.FromSeconds(1)) // disable for now, causes timing issues when updating a release (xml gets updated, platform re-parsed, json re-read but json is still the old, non-updated one, resulting in the new version not being displayed.)
 				.Subscribe(_ => Save());
@@ -133,8 +135,8 @@ namespace VpdbAgent.Models
 		/// <returns></returns>
 		public Platform Save()
 		{
-			_database.Games = Games;
-			_marshallManager.MarshallPlatformDatabase(_database, DatabaseFile);
+			_data.Mappings = Mappings;
+			_marshallManager.MarshallPlatformData(_data, DataFile);
 			return this;
 		}
 
@@ -142,70 +144,65 @@ namespace VpdbAgent.Models
 		/// Updates the games coming from XML files of PinballX.ini
 		/// </summary>
 		/// <param name="system">System with games attached</param>
-		private void UpdateGames(PinballXSystem system)
+		private void UpdateMappings(PinballXSystem system)
 		{
-			_database.Games = MergeGames(system);
+			_data.Mappings = MergeMappings(system);
 			_threadManager.MainDispatcher.Invoke(delegate {
-				using (Games.SuppressChangeNotifications()) {
+				using (Mappings.SuppressChangeNotifications()) {
 					// todo make this more intelligent by diff'ing and changing instead of drop-and-create
-					Games.Clear();
-					Games.AddRange(_database.Games);
+					Mappings.Clear();
+					Mappings.AddRange(_data.Mappings);
 				}
 			});
 		}
 
 		/// <summary>
 		/// Takes games parsed from the XML database of a system and merges
-		/// them with the local .json database (and saves the result back to
+		/// them with the local .json mappings (and saves the result back to
 		/// the .json).
 		/// </summary>
 		/// <param name="system">System in which the game changed</param>
-		private IEnumerable<Game> MergeGames(PinballXSystem system)
+		private IEnumerable<Mapping> MergeMappings(PinballXSystem system)
 		{
-			var xmlGames = system.Games;
-			List<Game> mergedGames;
-			if (_database == null) {
-				_logger.Warn("No vpdb.json at {0}", DatabaseFile);
-				mergedGames = MergeGames(xmlGames, new List<Game>());
-			} else {
-				_logger.Info("Found and parsed vpdb.json at {0}", DatabaseFile);
-				mergedGames = MergeGames(xmlGames, _database.Games);
+			if (_data == null) {
+				_logger.Warn("No vpdb.json at {0}", DataFile);
+				return MergeMappings(system.Games, new List<Mapping>());
 			}
-
-			return mergedGames;
+			_logger.Info("Found and parsed vpdb.json at {0}", DataFile);
+			return MergeMappings(system.Games, _data.Mappings);
 		}
 
 		/// <summary>
 		/// Merges a list of games parsed from an .XML file with a list of 
-		/// games read from the internal .json database file
+		/// mappings read from the .json file.
 		/// </summary>
 		/// <param name="xmlGames">Games read from an .XML file</param>
-		/// <param name="jsonGames">Games read from the internal .json database</param>
+		/// <param name="jsonMappings">Games read from the internal .json database</param>
 		/// <returns>List of merged games</returns>
-		private List<Game> MergeGames(IEnumerable<PinballXGame> xmlGames, IEnumerable<Game> jsonGames)
+		private IEnumerable<Mapping> MergeMappings(IEnumerable<PinballXGame> xmlGames, IEnumerable<Mapping> jsonMappings)
 		{
-			_logger.Info("MergeGames() START");
+			_logger.Info("MergeMappings() START");
 
-			var games = new List<Game>();
-			var enumerableGames = jsonGames as Game[] ?? jsonGames.ToArray();
+			var mappings = new List<Mapping>();
+			var enumerableMappings = jsonMappings as Mapping[] ?? jsonMappings.ToArray();
 			var enumerableXmlGames = xmlGames as PinballXGame[] ?? xmlGames.ToArray();
 
 			// ReSharper disable once LoopCanBeConvertedToQuery
 			foreach (var xmlGame in enumerableXmlGames) {
-				var jsonGame = enumerableGames.FirstOrDefault(g => (g.Id.Equals(xmlGame.Description)));
-				games.Add(jsonGame == null
-					? new Game(xmlGame, this, _resolver)
-					: jsonGame.Merge(xmlGame, this)
+				var mapping = enumerableMappings.FirstOrDefault(m => (m.Id.Equals(xmlGame.Description)));
+				mappings.Add(mapping == null
+					? new Mapping(xmlGame, this, _resolver)
+					: mapping.Update(xmlGame, this)
 				);
 			}
 
-			_logger.Info("MergeGames() DONE");
-			return games;
+			_logger.Info("MergeMappings() DONE");
+			return mappings;
 		}
 
 		public override string ToString()
 		{
-			return $"[Platform] {Name} ({Games.Count})";
+			return $"[Platform] {Name} ({Mappings.Count})";
 		}
 	}
 }

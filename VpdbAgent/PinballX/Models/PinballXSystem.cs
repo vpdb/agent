@@ -2,8 +2,8 @@
 using System;
 using System.IO;
 using ReactiveUI;
-using VpdbAgent.Models;
 using VpdbAgent.Application;
+using VpdbAgent.Data.Objects;
 
 namespace VpdbAgent.PinballX.Models
 {
@@ -25,13 +25,13 @@ namespace VpdbAgent.PinballX.Models
 		public string TablePath { get; set; }
 		public string Executable { get; set; }
 		public string Parameters { get; set; }
-		public Platform.PlatformType Type { get; set; }
+		public PlatformType Type { get; set; }
 
 		// convenient props
 		public string DatabasePath { get; set; }
 		public string MediaPath { get; set; }
 
-		// data props
+		// games
 		public ReactiveList<PinballXGame> Games { get; } = new ReactiveList<PinballXGame>();
 
 		public PinballXSystem(ISettingsManager settingsManager)
@@ -43,28 +43,28 @@ namespace VpdbAgent.PinballX.Models
 		{
 			var systemType = data["SystemType"];
 			if ("0".Equals(systemType)) {
-				Type = Platform.PlatformType.Custom;
+				Type = PlatformType.Custom;
 			} else if ("1".Equals(systemType)) {
-				Type = Platform.PlatformType.VP;
+				Type = PlatformType.VP;
 			} else if ("2".Equals(systemType)) {
-				Type = Platform.PlatformType.FP;
+				Type = PlatformType.FP;
 			}
 			Name = data["Name"];
 
 			SetByData(data);
 		}
 
-		public PinballXSystem(Platform.PlatformType type, KeyDataCollection data, ISettingsManager settingsManager) : this(settingsManager)
+		public PinballXSystem(PlatformType type, KeyDataCollection data, ISettingsManager settingsManager) : this(settingsManager)
 		{
 			Type = type;
 			switch (type) {
-				case Platform.PlatformType.VP:
+				case PlatformType.VP:
 					Name = "Visual Pinball";
 					break;
-				case Platform.PlatformType.FP:
+				case PlatformType.FP:
 					Name = "Future Pinball";
 					break;
-				case Platform.PlatformType.Custom:
+				case PlatformType.Custom:
 					Name = "Custom";
 					break;
 				default:

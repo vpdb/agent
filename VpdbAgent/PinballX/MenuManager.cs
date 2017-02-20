@@ -14,8 +14,10 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using VpdbAgent.Application;
 using VpdbAgent.Common.Filesystem;
+using VpdbAgent.Data.Objects;
 using VpdbAgent.Models;
 using VpdbAgent.Vpdb.Download;
+using Platform = VpdbAgent.Models.Platform;
 
 namespace VpdbAgent.PinballX
 {
@@ -177,7 +179,7 @@ namespace VpdbAgent.PinballX
 		public PinballXGame AddGame(PinballXGame game, string databasePath)
 		{
 			// read current xml
-			var xmlPath = Path.Combine(databasePath, _settingsManager.Settings.XmlFile[Platform.PlatformType.VP] + ".xml"); // todo make platform dynamic
+			var xmlPath = Path.Combine(databasePath, _settingsManager.Settings.XmlFile[PlatformType.VP] + ".xml"); // todo make platform dynamic
 
 			if (_settingsManager.Settings.ReformatXml || !_file.Exists(xmlPath)) {
 				var menu = _marshallManager.UnmarshallXml(xmlPath);
@@ -356,10 +358,10 @@ namespace VpdbAgent.PinballX
 			var data = _marshallManager.ParseIni(iniPath);
 			if (data != null) {
 				if (data["VisualPinball"] != null) {
-					systems.Add(new PinballXSystem(Platform.PlatformType.VP, data["VisualPinball"], _settingsManager));
+					systems.Add(new PinballXSystem(PlatformType.VP, data["VisualPinball"], _settingsManager));
 				}
 				if (data["FuturePinball"] != null) {
-					systems.Add(new PinballXSystem(Platform.PlatformType.FP, data["FuturePinball"], _settingsManager));
+					systems.Add(new PinballXSystem(PlatformType.FP, data["FuturePinball"], _settingsManager));
 				}
 				
 				for (var i = 0; i < 20; i++) {
