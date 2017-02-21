@@ -365,8 +365,9 @@ namespace VpdbAgent.PinballX
 				}
 				
 				for (var i = 0; i < 20; i++) {
-					if (data["System_" + i] != null) {
-						systems.Add(new PinballXSystem(data["System_" + i], _settingsManager));
+					var systemName = "System_" + i;
+					if (data[systemName] != null && data[systemName].Count > 0) {
+						systems.Add(new PinballXSystem(data[systemName], _settingsManager));
 					}
 				}
 			}
