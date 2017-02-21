@@ -29,6 +29,21 @@ namespace VpdbAgent.Vpdb.Models
 		private string _name;
 		private string _url;
 
+		public void Update(VpdbFile file)
+		{
+			Name = file.Name;
+			Bytes = file.Bytes;
+			CreatedAt = file.CreatedAt;
+			MimeType = file.MimeType;
+			FileType = file.FileType;
+			Metadata = file.Metadata;
+			Variations = file.Variations;
+			Counter = file.Counter;
+			IsActive = file.IsActive;
+			IsProtected = file.IsProtected;
+			Url = file.Url;
+		}
+
 		public override string ToString()
 		{
 			return $"{Name} ({Id})";
