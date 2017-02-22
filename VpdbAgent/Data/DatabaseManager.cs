@@ -166,9 +166,11 @@ namespace VpdbAgent.Data
 
 			// relational mappings
 			_mapper.Entity<VpdbGame>()
+				.Id(g => g.Id, false)
 				.DbRef(g => g.Backglass, VpdbFiles)
 				.DbRef(g => g.Logo, VpdbFiles);
 			_mapper.Entity<VpdbRelease>()
+				.Id(r => r.Id, false)
 				.DbRef(r => r.Game, VpdbGames);
 			_mapper.Entity<VpdbTableFile>()
 				.DbRef(f => f.Reference, VpdbFiles)
@@ -176,6 +178,8 @@ namespace VpdbAgent.Data
 				.DbRef(f => f.PlayfieldVideo, VpdbFiles);
 			_mapper.Entity<VpdbAuthor>()
 				.DbRef(r => r.User, VpdbUsers);
+			_mapper.Entity<VpdbFile>()
+				.Id(f => f.Id, false);
 
 			// db & collections
 			_db = new LiteDatabase(Path.Combine(_settingsManager.Settings.PbxFolder, @"Databases\vpdb.db"));
@@ -183,10 +187,6 @@ namespace VpdbAgent.Data
 			_messages = _db.GetCollection<Message>(Messages);
 			_releases = _db.GetCollection<VpdbRelease>(VpdbReleases);
 			_files = _db.GetCollection<VpdbFile>(VpdbFiles);
-
-			// indexes
-			_releases.EnsureIndex(x => x.Id);
-			_files.EnsureIndex(x => x.Id);
 
 			_logger.Info("Global database with {0} release(s) loaded.", _releases.Count());
 			_initialized.OnNext(true);
