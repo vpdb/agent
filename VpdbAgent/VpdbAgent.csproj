@@ -271,6 +271,7 @@
     <Compile Include="Common\Filesystem\File.cs" />
     <Compile Include="Data\DatabaseManager.cs" />
     <Compile Include="Data\Json\Mapping.cs" />
+    <Compile Include="Data\Objects\AggregatedGame.cs" />
     <Compile Include="Data\Objects\Platform.cs" />
     <Compile Include="Data\Json\PlatformData.cs" />
     <Compile Include="Data\Objects\PlatformType.cs" />

@@ -46,10 +46,10 @@ namespace VpdbAgent.ViewModels.Games
 			);
 
 			// push all games into AllGames as view models and sorted
-			_allGames = gameManager.Games.CreateDerivedCollection(
-				game => new GameItemViewModel(game, resolver) { IsVisible = IsGameVisible(game) },
-				gameViewModel => true,
-				(x, y) => string.Compare(x.Game.Id, y.Game.Id, StringComparison.Ordinal)
+			_allGames = gameManager.AggregatedGames.CreateDerivedCollection(
+				game => new GameItemViewModel(game, resolver) { IsVisible = true /*IsGameVisible(game)*/ },
+				gameViewModel => true,                                                   // filter
+				(x, y) => string.Compare(x.Game.FileName, y.Game.FileName, StringComparison.Ordinal) // order
 			);
 
 			// push filtered game view models into Games
@@ -59,6 +59,7 @@ namespace VpdbAgent.ViewModels.Games
 
 
 			// todo check if we can simplify this.
+			/*
 			IdentifyAll = ReactiveCommand.Create(() => {
 
 				/*
@@ -76,7 +77,7 @@ namespace VpdbAgent.ViewModels.Games
 								x.game.CloseResults.Execute(null);
 							});
 						}
-					});*/
+					});*
 
 				Games
 					.ToObservable()
@@ -91,7 +92,7 @@ namespace VpdbAgent.ViewModels.Games
 							});
 						});
 					});
-			});
+			});*/
 		}
 
 
@@ -141,12 +142,12 @@ namespace VpdbAgent.ViewModels.Games
 		/// </summary>
 		/// <param name="args">Change arguments from ReactiveList</param>
 		private void RefreshGameVisibility(Unit args)
-		{
+		{/*
 			using (_allGames.SuppressChangeNotifications()) {
 				foreach (var gameViewModel in _allGames) {
 					gameViewModel.IsVisible = IsGameVisible(gameViewModel.Game);
 				}
-			}
+			}*/
 		}
 
 		/// <summary>

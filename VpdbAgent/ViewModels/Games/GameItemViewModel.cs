@@ -6,6 +6,7 @@ using System.Reactive.Linq;
 using ReactiveUI;
 using Splat;
 using VpdbAgent.Application;
+using VpdbAgent.Data.Objects;
 using VpdbAgent.Vpdb;
 using VpdbAgent.Vpdb.Models;
 using Game = VpdbAgent.Models.Game;
@@ -29,7 +30,7 @@ namespace VpdbAgent.ViewModels.Games
 		public ReactiveCommand<Unit, Unit> SyncToggled { get; }
 
 		// data
-		public Game Game { get; }
+		public AggregatedGame Game { get; }
 
 		// needed for filters
 		private bool _isVisible = true;
@@ -50,7 +51,7 @@ namespace VpdbAgent.ViewModels.Games
 		private bool _hasExecuted;
 		private bool _hasResults;
 
-		public GameItemViewModel(Game game, IDependencyResolver resolver)
+		public GameItemViewModel(AggregatedGame game, IDependencyResolver resolver)
 		{
 			Game = game;
 
@@ -61,6 +62,7 @@ namespace VpdbAgent.ViewModels.Games
 			var threadManager = resolver.GetService<IThreadManager>();
 
 			// release identify
+			/*
 			IdentifyRelease = ReactiveCommand.CreateFromObservable(() => _vpdbClient.Api.GetReleasesBySize(Game.FileSize, MatchThreshold).SubscribeOn(threadManager.WorkerScheduler));
 			IdentifyRelease.Select(releases => releases
 				.Select(release => new {release, release.Versions})
@@ -92,9 +94,11 @@ namespace VpdbAgent.ViewModels.Games
 					HasExecuted = true;
 				}
 			}, exception => _vpdbClient.HandleApiError(exception, "identifying a game by file size"));
+			
 
 			var canSync = this.WhenAnyValue(x => x.Game.IsSynced, x => x.Game.HasRelease, (isSynced, hasRelease) => isSynced && hasRelease);
 			SyncToggled = ReactiveCommand.Create(() => { _gameManager.Sync(Game); }, canSync);
+			*/
 
 			// handle errors
 			IdentifyRelease.ThrownExceptions.Subscribe(e => { _logger.Error(e, "Error matching game."); });
@@ -109,12 +113,14 @@ namespace VpdbAgent.ViewModels.Games
 			CloseResults = ReactiveCommand.Create(() => { HasExecuted = false; });
 
 			// identify button visibility
+			/*
 			this.WhenAny(
 				vm => vm.HasExecuted, 
 				vm => vm.Game.HasRelease,
 				vm => vm.IsExecuting,
 				(hasExecuted, hasRelease, isExecuting) => !hasExecuted.Value && !hasRelease.Value && !isExecuting.Value
 			).ToProperty(this, vm => vm.ShowIdentifyButton, out _showIdentifyButton);
+			*/
 		}
 
 		public override string ToString()

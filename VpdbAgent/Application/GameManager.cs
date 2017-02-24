@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using NLog;
 using ReactiveUI;
 using SynchrotronNet;
+using VpdbAgent.Data.Objects;
 using VpdbAgent.PinballX;
 using VpdbAgent.PinballX.Models;
 using VpdbAgent.VisualPinball;
@@ -51,7 +52,9 @@ namespace VpdbAgent.Application
 		/// </summary>
 		ReactiveList<Game> Games { get; }
 
-		/// <summary>
+		ReactiveList<AggregatedGame> AggregatedGames { get; }
+
+			/// <summary>
 		/// A one-time message fired when everything has been initialized and
 		/// GUI can start adding its own subscriptions without re-updating
 		/// during initialization.
@@ -106,6 +109,7 @@ namespace VpdbAgent.Application
 
 		// props
 		public ReactiveList<Game> Games { get; } = new ReactiveList<Game>();
+		public ReactiveList<AggregatedGame> AggregatedGames { get; } = new ReactiveList<AggregatedGame>();
 		public IObservable<Unit> Initialized => _initialized;
 
 		// privates
@@ -216,7 +220,8 @@ namespace VpdbAgent.Application
 				_platformManager.Platforms.Changed                                                      // one of the games changes
 					.SelectMany(_ => _platformManager.Platforms.Select(x => x.Games.Changed).Merge())
 					.Select(_ => Unit.Default),
-				_platformManager.Platforms.Changed.Select(_ => Unit.Default));                          // one of the platforms changes
+				_platformManager.Platforms.Changed.Select(_ => Unit.Default)                            // one of the platforms changes
+			);
 
 			whenPlatformsOrGamesInThosePlatformsChange
 				.StartWith(Unit.Default)
