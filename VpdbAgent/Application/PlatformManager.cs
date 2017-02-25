@@ -57,6 +57,7 @@ namespace VpdbAgent.Application
 
 			var systems = _menuManager.Systems;
 
+			/*
 			// populate platforms when system change
 			systems.Changed
 				.Skip(1)
@@ -69,7 +70,7 @@ namespace VpdbAgent.Application
 				.SelectMany(_ => systems
 					.Select(system => system.Games.Changed.Select(__ => system))
 				.Merge())
-			.Subscribe(UpdatePlatform);
+			.Subscribe(UpdatePlatform);*/
 		}
 
 		public Platform FindPlatform(VpdbTableFile tableFile)

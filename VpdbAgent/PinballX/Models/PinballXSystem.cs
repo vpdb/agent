@@ -13,19 +13,25 @@ namespace VpdbAgent.PinballX.Models
 	/// This comes live from PinballX.ini and resides only in memory. It's 
 	/// updated when PinballX.ini changes.
 	/// </summary>
-	public class PinballXSystem
+	public class PinballXSystem : ReactiveObject
 	{
 		// deps
 		private readonly ISettingsManager _settingsManager;
 
 		// from pinballx.ini
 		public string Name { get; set; }
-		public bool Enabled { get; set; }
+		public bool Enabled { get { return _enabled; } set { this.RaiseAndSetIfChanged(ref _enabled, value); } }
 		public string WorkingPath { get; set; }
-		public string TablePath { get; set; }
-		public string Executable { get; set; }
+		public string TablePath { get { return _tablePath; } set { this.RaiseAndSetIfChanged(ref _tablePath, value); } }
+		public string Executable { get { return _executable; } set { this.RaiseAndSetIfChanged(ref _executable, value); } }
 		public string Parameters { get; set; }
-		public PlatformType Type { get; set; }
+		public PlatformType Type { get { return _type; } set { this.RaiseAndSetIfChanged(ref _type, value); } }
+
+		// watched props
+		private bool _enabled;
+		private string _tablePath;
+		private string _executable;
+		private PlatformType _type;
 
 		// convenient props
 		public string DatabasePath { get; set; }

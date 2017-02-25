@@ -138,9 +138,11 @@ namespace VpdbAgent.PinballX
 			var iniPath = _settingsManager.Settings.PbxFolder + @"\Config\PinballX.ini";
 			var dbPath = _settingsManager.Settings.PbxFolder + @"\Databases\";
 
-			Systems.ItemsAdded.Subscribe(_ => _logger.Info("Systems Items Added."));
-			Systems.ItemsRemoved.Subscribe(_ => _logger.Info("Systems Items Removed."));
+			Systems.ItemsAdded.Subscribe(s => _logger.Info("Systems Items {0} Added.", s.Name));
+			Systems.ItemsRemoved.Subscribe(s => _logger.Info("Systems Item {0} Removed.", s.Name));
 			Systems.ShouldReset.Subscribe(_ => _logger.Info("Systems Items Should Reset."));
+			Systems.ItemChanged.Subscribe(e => _logger.Info("Systems Item Changed: {0}", e.Sender.Name));
+
 			/*
 			// parse games when systems change
 			Systems.Changed
@@ -299,23 +301,19 @@ namespace VpdbAgent.PinballX
 					}
 					return;
 				}
-				_logger.Info("Updating {0} systems with {1} new systems.", Systems.Count, systems.Count());
 				var remainingSystems = new HashSet<string>(Systems.Select(s => s.Name));
 				foreach (var newSystem in systems) {
 					var oldSystem = Systems.FirstOrDefault(s => s.Name == newSystem.Name);
 					if (oldSystem == null) {
 						Systems.Add(newSystem);
-						_logger.Info("Adding new system {0}.", newSystem.Name);
 					} else if (!oldSystem.Equals(newSystem)) {
 						oldSystem.Update(newSystem);
 						remainingSystems.Remove(oldSystem.Name);
-						_logger.Info("Updating system {0}.", oldSystem.Name);
 					} else {
 						remainingSystems.Remove(oldSystem.Name);
 					}
 				}
 				foreach (var removedSystem in remainingSystems) {
-					_logger.Info("Removing system {0}.", removedSystem);
 					Systems.Remove(Systems.FirstOrDefault(s => s.Name == removedSystem));
 				}
 			});
