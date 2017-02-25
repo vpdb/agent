@@ -138,6 +138,10 @@ namespace VpdbAgent.PinballX
 			var iniPath = _settingsManager.Settings.PbxFolder + @"\Config\PinballX.ini";
 			var dbPath = _settingsManager.Settings.PbxFolder + @"\Databases\";
 
+			Systems.ItemsAdded.Subscribe(_ => _logger.Info("Systems Items Added."));
+			Systems.ItemsRemoved.Subscribe(_ => _logger.Info("Systems Items Removed."));
+			Systems.ShouldReset.Subscribe(_ => _logger.Info("Systems Items Should Reset."));
+			/*
 			// parse games when systems change
 			Systems.Changed
 				.ObserveOn(_threadManager.WorkerScheduler)
@@ -165,7 +169,7 @@ namespace VpdbAgent.PinballX
 							_tableFileRemoved.OnNext(f);
 						}
 					});
-			});
+			});*/
 
 			// update systems when ini changes (also, kick it off now)
 			_watcher.FileWatcher(iniPath)
@@ -289,10 +293,30 @@ namespace VpdbAgent.PinballX
 
 			// treat result back on main thread
 			_threadManager.MainDispatcher.Invoke(delegate {
-				using (Systems.SuppressChangeNotifications()) {
-					// todo make this more intelligent by diff'ing and changing instead of drop-and-create
-					Systems.Clear();
-					Systems.AddRange(systems);
+				if (Systems.IsEmpty) {
+					using (Systems.SuppressChangeNotifications()) {
+						Systems.AddRange(systems);
+					}
+					return;
+				}
+				_logger.Info("Updating {0} systems with {1} new systems.", Systems.Count, systems.Count());
+				var remainingSystems = new HashSet<string>(Systems.Select(s => s.Name));
+				foreach (var newSystem in systems) {
+					var oldSystem = Systems.FirstOrDefault(s => s.Name == newSystem.Name);
+					if (oldSystem == null) {
+						Systems.Add(newSystem);
+						_logger.Info("Adding new system {0}.", newSystem.Name);
+					} else if (!oldSystem.Equals(newSystem)) {
+						oldSystem.Update(newSystem);
+						remainingSystems.Remove(oldSystem.Name);
+						_logger.Info("Updating system {0}.", oldSystem.Name);
+					} else {
+						remainingSystems.Remove(oldSystem.Name);
+					}
+				}
+				foreach (var removedSystem in remainingSystems) {
+					_logger.Info("Removing system {0}.", removedSystem);
+					Systems.Remove(Systems.FirstOrDefault(s => s.Name == removedSystem));
 				}
 			});
 		}

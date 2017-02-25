@@ -74,6 +74,22 @@ namespace VpdbAgent.PinballX.Models
 		}
 
 		/// <summary>
+		/// Copies data over from another system
+		/// </summary>
+		/// <param name="system">New system</param>
+		/// <returns></returns>
+		public PinballXSystem Update(PinballXSystem system)
+		{
+			Enabled = system.Enabled;
+			WorkingPath = system.WorkingPath;
+			TablePath = system.TablePath;
+			Executable = system.Executable;
+			Parameters = system.Parameters;
+			Type = system.Type;
+			return this;
+		}
+
+		/// <summary>
 		/// Copies system data from PinballX.ini to our object.
 		/// TODO validate (e.g. no TablePath should result at least in an error (now it crashes))
 		/// </summary>
@@ -88,6 +104,28 @@ namespace VpdbAgent.PinballX.Models
 
 			DatabasePath = Path.Combine(_settingsManager.Settings.PbxFolder, "Databases", Name);
 			MediaPath = Path.Combine(_settingsManager.Settings.PbxFolder, "Media", Name);
+		}
+
+		public override bool Equals(object obj)
+		{
+			if (ReferenceEquals(null, obj)) {
+				return false;
+			}
+			if (ReferenceEquals(this, obj)) {
+				return true;
+			}
+			var system = obj as PinballXSystem;
+			if (system == null) {
+				return false;
+			}
+			return 
+				Name == system.Name &&
+				Enabled == system.Enabled &&
+				WorkingPath == system.WorkingPath &&
+				TablePath == system.TablePath &&
+				Executable == system.Executable &&
+				Parameters == system.Parameters &&
+				Type == system.Type;
 		}
 
 		public override string ToString()
