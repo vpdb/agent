@@ -1,10 +1,11 @@
 ﻿using System.Xml.Serialization;
+using ReactiveUI;
 using VpdbAgent.Models;
 
 namespace VpdbAgent.PinballX.Models
 {
 	[XmlRoot("game")]
-	public class PinballXGame
+	public class PinballXGame : ReactiveObject
 	{
 	
 		// "official hyperpin" fields
@@ -15,7 +16,7 @@ namespace VpdbAgent.PinballX.Models
 		/// apart from the latter including extension if file exists.
 		/// </summary>
 		[XmlAttribute("name")]
-		public string Filename { get; set; }
+		public string Filename { get { return _fileName; } set { this.RaiseAndSetIfChanged(ref _fileName, value); } }
 
 		/// <summary>
 		/// The identifier used also for media. Maps to <see cref="Game.Id"/>.
@@ -42,20 +43,71 @@ namespace VpdbAgent.PinballX.Models
 		public string HideBackglass { get; set; }
 
 		[XmlElement("enabled")]
-		public string Enabled { get; set; }
+		public string Enabled { get { return _enabled; } set { this.RaiseAndSetIfChanged(ref _enabled, value); } }
 
 		[XmlElement("rating")]
 		public double Rating { get; set; }
 
 		[XmlElement("AlternateExe")]
-		public string AlternateExe { get; set; }
+		public string AlternateExe { get { return _alternateExe; } set { this.RaiseAndSetIfChanged(ref _alternateExe, value); } }
 
 		[XmlElement("SendKeysOnStart")]
 		public string SendKeysOnStart { get; set; }
 
-		// vpdb fields (not serialized)
+
+		// internal fields (not serialized)
 		// ----------------------------------
 		[XmlIgnore]
 		public string DatabaseFile { get; set; }
+
+		[XmlIgnore]
+		public PinballXSystem PinballXSystem { get; set; }
+
+
+		// watched props
+		private string _fileName;
+		private string _alternateExe;
+		private string _enabled;
+
+		public void Update(PinballXGame newGame)
+		{
+			Filename = newGame.Filename;
+			Manufacturer = newGame.Manufacturer;
+			Year = newGame.Year;
+			Type = newGame.Type;
+			HideDmd = newGame.HideDmd;
+			HideBackglass = newGame.HideBackglass;
+			Enabled = newGame.Enabled;
+			Rating = newGame.Rating;
+			AlternateExe = newGame.AlternateExe;
+			SendKeysOnStart = newGame.SendKeysOnStart;
+		}
+
+		public override bool Equals(object obj)
+		{
+			if (ReferenceEquals(null, obj)) {
+				return false;
+			}
+			if (ReferenceEquals(this, obj)) {
+				return true;
+			}
+			var game = obj as PinballXGame;
+			if (game == null) {
+				return false;
+			}
+
+			// really, we only care about those.
+			return 
+				Filename == game.Filename &&
+				Description == game.Description &&
+				Enabled == game.Enabled &&
+				AlternateExe == game.AlternateExe;
+		}
+		
+		public override int GetHashCode()
+		{
+			// ReSharper disable once NonReadonlyMemberInGetHashCode
+			return Description.GetHashCode();
+		}
 	}
 }

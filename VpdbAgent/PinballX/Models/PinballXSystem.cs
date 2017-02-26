@@ -134,6 +134,12 @@ namespace VpdbAgent.PinballX.Models
 				Type == system.Type;
 		}
 
+		public override int GetHashCode()
+		{
+			// ReSharper disable once NonReadonlyMemberInGetHashCode
+			return Name.GetHashCode();
+		}
+
 		public override string ToString()
 		{
 			return $"[System] {Name} ({Games.Count})";

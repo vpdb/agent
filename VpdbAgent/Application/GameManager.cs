@@ -178,7 +178,7 @@ namespace VpdbAgent.Application
 			}
 
 			_databaseManager.Initialize();
-			_menuManager.Initialize();
+			_menuManager.Initialize(AggregatedGames);
 			_vpdbClient.Initialize();
 			_versionManager.Initialize();
 

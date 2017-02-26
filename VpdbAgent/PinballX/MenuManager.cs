@@ -40,7 +40,7 @@ namespace VpdbAgent.PinballX
 		/// initial update.
 		/// </summary>
 		/// <returns>This instance</returns>
-		IMenuManager Initialize();
+		IMenuManager Initialize(ReactiveList<AggregatedGame> games);
 
 		/// <summary>
 		/// Adds a new game to the PinballX database.
@@ -108,6 +108,7 @@ namespace VpdbAgent.PinballX
 		private readonly Subject<Unit> _initialized = new Subject<Unit>();
 		private readonly Subject<string> _tableFileChanged = new Subject<string>();
 		private readonly Subject<string> _tableFileRemoved = new Subject<string>();
+		private ReactiveList<AggregatedGame> _games;
 		private bool _isInitialized;
 
 		// dependencies
@@ -132,16 +133,22 @@ namespace VpdbAgent.PinballX
 			_logger = logger;
 		}
 	
-		public IMenuManager Initialize()
+		public IMenuManager Initialize(ReactiveList<AggregatedGame> games)
 		{
 			// todo if we want to support changing pxb folder in the app without restarting, make this dynamic.
 			var iniPath = _settingsManager.Settings.PbxFolder + @"\Config\PinballX.ini";
 			var dbPath = _settingsManager.Settings.PbxFolder + @"\Databases\";
 
+			_games = games;
+
 			Systems.ItemsAdded.Subscribe(s => _logger.Info("Systems Items {0} Added.", s.Name));
 			Systems.ItemsRemoved.Subscribe(s => _logger.Info("Systems Item {0} Removed.", s.Name));
 			Systems.ShouldReset.Subscribe(_ => _logger.Info("Systems Items Should Reset."));
 			Systems.ItemChanged.Subscribe(e => _logger.Info("Systems Item Changed: {0}", e.Sender.Name));
+
+			Systems.ShouldReset
+				.ObserveOn(_threadManager.WorkerScheduler)
+				.Subscribe(UpdateGames);
 
 			/*
 			// parse games when systems change
@@ -323,8 +330,8 @@ namespace VpdbAgent.PinballX
 		/// Updates all games of all systems.
 		/// </summary>
 		/// <remarks>Triggered when systems change</remarks>
-		/// <param name="args">Useless changed event args from ReactiveList</param>
-		private void UpdateGames(NotifyCollectionChangedEventArgs args)
+		/// <param name="unit">Useless changed event args from ReactiveList</param>
+		private void UpdateGames(Unit unit)
 		{
 			_logger.Info("Parsing all games for all systems...");
 			foreach (var system in Systems) {
@@ -357,13 +364,33 @@ namespace VpdbAgent.PinballX
 		{
 			_logger.Info("Parsing games for {0} - ({1})...", system, databaseFile ?? "all games");
 			var games = ParseGames(system, databaseFile);
-			using (system.Games.SuppressChangeNotifications()) {
-				if (databaseFile == null) {
-					system.Games.Clear();
-				} else {
-					system.Games.RemoveAll(system.Games.Where(game => databaseFile.Equals(game.DatabaseFile)).ToList());
+
+			if (_games.IsEmpty) {
+				using (Systems.SuppressChangeNotifications()) {
+					_games.AddRange(games.Select(g => new AggregatedGame(g)));
 				}
-				system.Games.AddRange(games);
+				return;
+			}
+
+			var selectedGames = _games.Where(g => ReferenceEquals(g.PinballXGame?.PinballXSystem, system)).ToList();
+			if (databaseFile != null) {
+				selectedGames = selectedGames.Where(g => g.PinballXGame.DatabaseFile == databaseFile).ToList();
+			}
+
+			var remainingGames = new HashSet<string>(selectedGames.Select(g => g.PinballXGame.Description));
+			foreach (var newGame in games) {
+				var oldGame = selectedGames.FirstOrDefault(g => ReferenceEquals(g.PinballXGame?.PinballXSystem, system) && g.PinballXGame?.Description == newGame.Description);
+				if (oldGame == null) {
+					_games.Add(new AggregatedGame(newGame));
+				} else if (!oldGame.PinballXGame.Equals(newGame)) {
+					oldGame.PinballXGame.Update(newGame);
+					remainingGames.Remove(newGame.Description);
+				} else {
+					remainingGames.Remove(newGame.Description);
+				}
+			}
+			foreach (var removedGame in remainingGames) {
+				_games.Remove(_games.FirstOrDefault(g => g.PinballXGame?.Description == removedGame));
 			}
 		}
 
@@ -427,7 +454,10 @@ namespace VpdbAgent.PinballX
 						continue;
 					}
 					var menu = _marshallManager.UnmarshallXml(filePath);
-					menu.Games.ForEach(game => game.DatabaseFile = currentDatabaseFile);
+					menu.Games.ForEach(game => {
+						game.PinballXSystem = system;
+						game.DatabaseFile = currentDatabaseFile;
+					});
 					games.AddRange(menu.Games);
 					fileCount++;
 				}
