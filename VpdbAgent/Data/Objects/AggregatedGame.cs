@@ -13,6 +13,10 @@ namespace VpdbAgent.Data.Objects
 		public long FileSize { get; set; }
 		public PinballXGame PinballXGame { get; set; }
 
+		public bool HasMapping => false;
+		public bool HasLocalFile => false;
+		public bool HasPinballXGame => PinballXGame != null;
+
 		public AggregatedGame(PinballXGame game)
 		{
 			PinballXGame = game;

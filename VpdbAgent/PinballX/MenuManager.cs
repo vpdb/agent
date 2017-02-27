@@ -353,9 +353,10 @@ namespace VpdbAgent.PinballX
 		/// Triggered by XML changes. Updating means:
 		///  
 		/// <list type="number">
-		/// 		<item><term> Parsing all XML files of the system </term></item>
-		/// 		<item><term> Reading all games in the XML files </term></item>
-		/// 		<item><term> Setting <see cref="PinballXSystem.Games">Games</see> of the system </term></item>
+		/// 		<item><term> Parse all XML files (or just the one specified) of the system </term></item>
+		/// 		<item><term> Go through Global Games and try to match parsed games by description </term></item>
+		/// 		<item><term> If found, update data, otherwise add </term></item>
+		/// 		<item><term> If not found, remove from Global Games if there aren't any other references</term></item>
 		/// </list>
 		/// </remarks>
 		/// <param name="system">System to update</param>
@@ -377,21 +378,19 @@ namespace VpdbAgent.PinballX
 				selectedGames = selectedGames.Where(g => g.PinballXGame.DatabaseFile == databaseFile).ToList();
 			}
 
-			var remainingGames = new HashSet<string>(selectedGames.Select(g => g.PinballXGame.Description));
+			var remainingGames = new HashSet<AggregatedGame>(selectedGames);
 			foreach (var newGame in games) {
 				var oldGame = selectedGames.FirstOrDefault(g => ReferenceEquals(g.PinballXGame?.PinballXSystem, system) && g.PinballXGame?.Description == newGame.Description);
 				if (oldGame == null) {
 					_games.Add(new AggregatedGame(newGame));
 				} else if (!oldGame.PinballXGame.Equals(newGame)) {
 					oldGame.PinballXGame.Update(newGame);
-					remainingGames.Remove(newGame.Description);
+					remainingGames.Remove(oldGame);
 				} else {
-					remainingGames.Remove(newGame.Description);
+					remainingGames.Remove(oldGame);
 				}
 			}
-			foreach (var removedGame in remainingGames) {
-				_games.Remove(_games.FirstOrDefault(g => g.PinballXGame?.Description == removedGame));
-			}
+			_games.RemoveAll(remainingGames.Where(g => !g.HasLocalFile && !g.HasMapping));
 		}
 
 		/// <summary>
