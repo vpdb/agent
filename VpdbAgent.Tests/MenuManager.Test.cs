@@ -1,7 +1,9 @@
 ﻿using System.IO;
 using System.Linq;
 using FluentAssertions;
+using ReactiveUI;
 using Splat;
+using VpdbAgent.Data.Objects;
 using VpdbAgent.PinballX;
 using VpdbAgent.PinballX.Models;
 using Xunit;
@@ -22,7 +24,7 @@ namespace VpdbAgent.Tests
 			var menuManager = env.Locator.GetService<IMenuManager>();
 
 			// test 
-			menuManager.Initialize();
+			menuManager.Initialize(new ReactiveList<AggregatedGame>());
 
 			// assert
 			menuManager.Systems.ToList().Should()

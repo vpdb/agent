@@ -141,14 +141,20 @@ namespace VpdbAgent.PinballX
 
 			_games = games;
 
-			Systems.ItemsAdded.Subscribe(s => _logger.Info("Systems Items {0} Added.", s.Name));
+			Systems.ItemsAdded.Subscribe(s => _logger.Info("Systems Item {0} Added.", s.Name));
 			Systems.ItemsRemoved.Subscribe(s => _logger.Info("Systems Item {0} Removed.", s.Name));
 			Systems.ShouldReset.Subscribe(_ => _logger.Info("Systems Items Should Reset."));
 			Systems.ItemChanged.Subscribe(e => _logger.Info("Systems Item Changed: {0}", e.Sender.Name));
 
-			Systems.ShouldReset
-				.ObserveOn(_threadManager.WorkerScheduler)
-				.Subscribe(UpdateGames);
+			Systems.ShouldReset.Subscribe(_ => Systems.ToList().ForEach((s => s.DatabaseChanged.Subscribe(dbFile => _logger.Info("DB file {0} changed.", dbFile)))));
+			Systems.ShouldReset.Subscribe(_ => Systems.ToList().ForEach((s => s.DatabaseCreated.Subscribe(dbFile => _logger.Info("DB file {0} created.", dbFile)))));
+			Systems.ShouldReset.Subscribe(_ => Systems.ToList().ForEach((s => s.DatabaseDeleted.Subscribe(dbFile => _logger.Info("DB file {0} deleted.", dbFile)))));
+			Systems.ShouldReset.Subscribe(_ => Systems.ToList().ForEach((s => s.DatabaseRenamed.Subscribe(f => _logger.Info("DB file {0} renamed to {1}.", f.Item1, f.Item2)))));
+
+			// in the beginning when there are no systems, we'll get ShouldReset, so update all.
+			//Systems.ShouldReset
+			//	.ObserveOn(_threadManager.WorkerScheduler)
+			//	.Subscribe(UpdateGames);
 
 			/*
 			// parse games when systems change

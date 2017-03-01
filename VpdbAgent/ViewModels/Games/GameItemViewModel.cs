@@ -41,15 +41,15 @@ namespace VpdbAgent.ViewModels.Games
 		public IEnumerable<GameResultItemViewModel> IdentifiedReleases { get { return _identifiedReleases; } set { this.RaiseAndSetIfChanged(ref _identifiedReleases, value); } }
 
 		// statuses
-		public bool IsExecuting => _isExecuting.Value;
-		public bool ShowIdentifyButton => _showIdentifyButton.Value;
-		public bool HasExecuted { get { return _hasExecuted; } set { this.RaiseAndSetIfChanged(ref _hasExecuted, value); } }
-		public bool HasResults { get { return _hasResults; } set { this.RaiseAndSetIfChanged(ref _hasResults, value); } }
+//		public bool IsExecuting => _isExecuting.Value;
+//		public bool ShowIdentifyButton => _showIdentifyButton.Value;
+//		public bool HasExecuted { get { return _hasExecuted; } set { this.RaiseAndSetIfChanged(ref _hasExecuted, value); } }
+//		public bool HasResults { get { return _hasResults; } set { this.RaiseAndSetIfChanged(ref _hasResults, value); } }
 
-		private readonly ObservableAsPropertyHelper<bool> _showIdentifyButton;
-		private readonly ObservableAsPropertyHelper<bool> _isExecuting;
-		private bool _hasExecuted;
-		private bool _hasResults;
+//		private readonly ObservableAsPropertyHelper<bool> _showIdentifyButton;
+//		private readonly ObservableAsPropertyHelper<bool> _isExecuting;
+//		private bool _hasExecuted;
+//		private bool _hasResults;
 
 		public GameItemViewModel(AggregatedGame game, IDependencyResolver resolver)
 		{
@@ -98,7 +98,7 @@ namespace VpdbAgent.ViewModels.Games
 
 			var canSync = this.WhenAnyValue(x => x.Game.IsSynced, x => x.Game.HasRelease, (isSynced, hasRelease) => isSynced && hasRelease);
 			SyncToggled = ReactiveCommand.Create(() => { _gameManager.Sync(Game); }, canSync);
-			*/
+			
 
 			// handle errors
 			IdentifyRelease.ThrownExceptions.Subscribe(e => { _logger.Error(e, "Error matching game."); });
@@ -110,7 +110,7 @@ namespace VpdbAgent.ViewModels.Games
 			IdentifyRelease.Select(r => r.Count > 0).Subscribe(hasResults => { HasResults = hasResults; });
 
 			// close button
-			CloseResults = ReactiveCommand.Create(() => { HasExecuted = false; });
+			CloseResults = ReactiveCommand.Create(() => { HasExecuted = false; });*/
 
 			// identify button visibility
 			/*

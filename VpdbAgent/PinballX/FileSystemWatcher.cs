@@ -7,6 +7,7 @@ using System.Linq;
 using VpdbAgent.Common;
 using VpdbAgent.PinballX.Models;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Text.RegularExpressions;
 
 namespace VpdbAgent.PinballX
@@ -34,6 +35,20 @@ namespace VpdbAgent.PinballX
 
 		/// <summary>
 		/// Returns an observable that will receive events when XML files within
+		/// a given folder.
+		/// </summary>
+		/// 
+		/// <remarks>
+		/// Non-existent database folders will be ignored.
+		/// </remarks>
+		/// 
+		/// <param name="dbPath">Path of PinballX's database folder</param>
+		/// <param name="system">System to watch</param>
+		/// <returns>Observable that receives the absolute path of the database file that changed</returns>
+		IObservable<string> FolderWatcher(string dbPath, PinballXSystem system);
+		
+		/// <summary>
+		/// Returns an observable that will receive events when XML files within
 		/// any of the provided systems' database folders change.
 		/// </summary>
 		/// 
@@ -44,6 +59,7 @@ namespace VpdbAgent.PinballX
 		/// <param name="dbPath">Path of PinballX's database folder</param>
 		/// <param name="systems">List of systems to watch</param>
 		/// <returns>Observable that receives the absolute path of the database file that changed</returns>
+		[Obsolete("Use FolderWatcher.")]
 		IObservable<string> DatabaseWatcher(string dbPath, IList<PinballXSystem> systems);
 
 		/// <summary>
@@ -73,6 +89,17 @@ namespace VpdbAgent.PinballX
 		{
 			_logger.Info("Watching {0}", filePath);
 			return (new FilesystemWatchCache()).Register(Path.GetDirectoryName(filePath), Path.GetFileName(filePath));
+		}
+
+		public IObservable<string> FolderWatcher(string dbPath, PinballXSystem system)
+		{
+			var sysPath = dbPath + system.Name  + @"\";
+			const string filter = "*.xml";
+			if (Directory.Exists(sysPath)) {
+				_logger.Info("Watching {0}{1}", sysPath, filter);
+				return (new FilesystemWatchCache()).Register(sysPath, filter);
+			}
+			return new Subject<string>();
 		}
 
 		public IObservable<string> DatabaseWatcher(string dbPath, IList<PinballXSystem> systems)

@@ -1,6 +1,9 @@
 ﻿using IniParser.Model;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Reactive.Disposables;
+using System.Reactive.Linq;
 using ReactiveUI;
 using VpdbAgent.Application;
 using VpdbAgent.Data.Objects;
@@ -13,7 +16,7 @@ namespace VpdbAgent.PinballX.Models
 	/// This comes live from PinballX.ini and resides only in memory. It's 
 	/// updated when PinballX.ini changes.
 	/// </summary>
-	public class PinballXSystem : ReactiveObject
+	public class PinballXSystem : ReactiveObject, IDisposable
 	{
 		// deps
 		private readonly ISettingsManager _settingsManager;
@@ -27,6 +30,12 @@ namespace VpdbAgent.PinballX.Models
 		public string Parameters { get; set; }
 		public PlatformType Type { get { return _type; } set { this.RaiseAndSetIfChanged(ref _type, value); } }
 
+		// database watchers
+		public IObservable<string> DatabaseChanged;
+		public IObservable<string> DatabaseCreated;
+		public IObservable<string> DatabaseDeleted;
+		public IObservable<Tuple<string, string>> DatabaseRenamed;
+
 		// watched props
 		private bool _enabled;
 		private string _tablePath;
@@ -39,6 +48,9 @@ namespace VpdbAgent.PinballX.Models
 
 		// games
 		public ReactiveList<PinballXGame> Games { get; } = new ReactiveList<PinballXGame>();
+
+		// internal props
+		private System.IO.FileSystemWatcher _fsw;
 
 		public PinballXSystem(ISettingsManager settingsManager)
 		{
@@ -58,6 +70,7 @@ namespace VpdbAgent.PinballX.Models
 			Name = data["Name"];
 
 			SetByData(data);
+			SetupWatchers();
 		}
 
 		public PinballXSystem(PlatformType type, KeyDataCollection data, ISettingsManager settingsManager) : this(settingsManager)
@@ -77,6 +90,7 @@ namespace VpdbAgent.PinballX.Models
 					throw new ArgumentOutOfRangeException(nameof(type), type, null);
 			}
 			SetByData(data);
+			SetupWatchers();
 		}
 
 		/// <summary>
@@ -93,6 +107,31 @@ namespace VpdbAgent.PinballX.Models
 			Parameters = system.Parameters;
 			Type = system.Type;
 			return this;
+		}
+
+		private void SetupWatchers()
+		{
+			var dbPath = _settingsManager.Settings.PbxFolder + @"\Databases\" + Name;
+			_fsw = new System.IO.FileSystemWatcher(dbPath, "*.xml");
+			Console.WriteLine("Watching XML files at {0}...", dbPath);
+			DatabaseChanged = Observable
+					.FromEventPattern<FileSystemEventHandler, FileSystemEventArgs>(x => _fsw.Changed += x, x => _fsw.Changed -= x)
+					.Throttle(TimeSpan.FromMilliseconds(250), RxApp.TaskpoolScheduler)
+					.Select(x => x.EventArgs.FullPath);
+			DatabaseCreated = Observable
+					.FromEventPattern<FileSystemEventHandler, FileSystemEventArgs>(x => _fsw.Created += x, x => _fsw.Created -= x)
+					.Throttle(TimeSpan.FromMilliseconds(250), RxApp.TaskpoolScheduler)
+					.Select(x => x.EventArgs.FullPath);
+			DatabaseDeleted = Observable
+					.FromEventPattern<FileSystemEventHandler, FileSystemEventArgs>(x => _fsw.Deleted += x, x => _fsw.Deleted -= x)
+					.Throttle(TimeSpan.FromMilliseconds(250), RxApp.TaskpoolScheduler)
+					.Select(x => x.EventArgs.FullPath);
+			DatabaseRenamed = Observable
+					.FromEventPattern<RenamedEventHandler, FileSystemEventArgs>(x => _fsw.Renamed += x, x => _fsw.Renamed -= x)
+					.Throttle(TimeSpan.FromMilliseconds(250), RxApp.TaskpoolScheduler)
+					.Select(x => new Tuple<string, string>(((RenamedEventArgs)x.EventArgs).OldFullPath, x.EventArgs.FullPath));
+
+			_fsw.EnableRaisingEvents = true;
 		}
 
 		/// <summary>
@@ -140,9 +179,14 @@ namespace VpdbAgent.PinballX.Models
 			return Name.GetHashCode();
 		}
 
+		public void Dispose()
+		{
+			_fsw.Dispose();
+		}
+
 		public override string ToString()
 		{
-			return $"[System] {Name} ({Games.Count})";
+			return $"[System] {Name} ({Games.Count} games)";
 		}
 	}
 }

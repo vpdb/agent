@@ -44,7 +44,7 @@
 
                 <!-- title -->
                 <Label Grid.Column="0" Margin="0,0,0,-10" Grid.ColumnSpan="2">
-                    <TextBlock Text="{Binding Game.Id}" TextTrimming="CharacterEllipsis" FontSize="22" FontWeight="Bold" />
+                    <TextBlock Text="{Binding Game.PinballXGame.Description}" TextTrimming="CharacterEllipsis" FontSize="22" FontWeight="Bold" />
                 </Label>
 
                 <!-- controls -->

@@ -39,7 +39,9 @@ namespace VpdbAgent.Application
 		/// <returns>This instance</returns>
 		public CrashManager Report(Exception exception)
 		{
+#if !DEBUG
 			_raygun.SendInBackground(exception, null, GetLogs());
+#endif
 			return this;
 		}
 
@@ -51,8 +53,10 @@ namespace VpdbAgent.Application
 		/// <returns>This instance</returns>
 		public CrashManager Report(Exception exception, string tag)
 		{
+#if !DEBUG
 			IList<string> tags = new List<string>() { tag };
 			_raygun.SendInBackground(exception, tags, GetLogs());
+#endif
 			return this;
 		}
 

@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Windows;
-using System.Windows.Controls;
 using Devart.Controls;
 using ReactiveUI;
 using VpdbAgent.ViewModels.Games;
@@ -11,7 +10,7 @@ namespace VpdbAgent.Views.Games
 	/// Interaction logic for GameTemplate.xaml
 	/// </summary>
 	[ExcludeFromCodeCoverage]
-	public partial class GameItemView : UserControl, IViewFor<GameItemViewModel>, IHeightMeasurer
+	public partial class GameItemView : IViewFor<GameItemViewModel>, IHeightMeasurer
 	{
 		public GameItemView()
 		{
@@ -26,7 +25,7 @@ namespace VpdbAgent.Views.Games
 		#region ViewModel
 		public GameItemViewModel ViewModel
 		{
-			get { return (GameItemViewModel)this.GetValue(ViewModelProperty); }
+			get { return (GameItemViewModel)GetValue(ViewModelProperty); }
 			set { SetValue(ViewModelProperty, value); }
 		}
 
