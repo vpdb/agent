@@ -5,6 +5,7 @@ using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Reactive;
+using System.Reactive.Disposables;
 using System.Xml.Serialization;
 using ReactiveUI;
 using VpdbAgent.PinballX.Models;
@@ -17,6 +18,7 @@ using VpdbAgent.Common.Filesystem;
 using VpdbAgent.Data.Objects;
 using VpdbAgent.Models;
 using VpdbAgent.Vpdb.Download;
+using static System.Windows.Application;
 using Platform = VpdbAgent.Models.Platform;
 
 namespace VpdbAgent.PinballX
@@ -108,6 +110,7 @@ namespace VpdbAgent.PinballX
 		private readonly Subject<Unit> _initialized = new Subject<Unit>();
 		private readonly Subject<string> _tableFileChanged = new Subject<string>();
 		private readonly Subject<string> _tableFileRemoved = new Subject<string>();
+		private readonly Dictionary<PinballXSystem, IDisposable> _systemDisposables = new Dictionary<PinballXSystem, IDisposable>();
 		private ReactiveList<AggregatedGame> _games;
 		private bool _isInitialized;
 
@@ -141,15 +144,14 @@ namespace VpdbAgent.PinballX
 
 			_games = games;
 
+			Systems.ShouldReset.Subscribe(_ => _logger.Info("Systems Items Should Reset."));
 			Systems.ItemsAdded.Subscribe(s => _logger.Info("Systems Item {0} Added.", s.Name));
 			Systems.ItemsRemoved.Subscribe(s => _logger.Info("Systems Item {0} Removed.", s.Name));
-			Systems.ShouldReset.Subscribe(_ => _logger.Info("Systems Items Should Reset."));
 			Systems.ItemChanged.Subscribe(e => _logger.Info("Systems Item Changed: {0}", e.Sender.Name));
 
-			Systems.ShouldReset.Subscribe(_ => Systems.ToList().ForEach((s => s.DatabaseChanged.Subscribe(dbFile => _logger.Info("DB file {0} changed.", dbFile)))));
-			Systems.ShouldReset.Subscribe(_ => Systems.ToList().ForEach((s => s.DatabaseCreated.Subscribe(dbFile => _logger.Info("DB file {0} created.", dbFile)))));
-			Systems.ShouldReset.Subscribe(_ => Systems.ToList().ForEach((s => s.DatabaseDeleted.Subscribe(dbFile => _logger.Info("DB file {0} deleted.", dbFile)))));
-			Systems.ShouldReset.Subscribe(_ => Systems.ToList().ForEach((s => s.DatabaseRenamed.Subscribe(f => _logger.Info("DB file {0} renamed to {1}.", f.Item1, f.Item2)))));
+			Systems.ShouldReset.ObserveOn(_threadManager.WorkerScheduler).Subscribe(_ => SetupSystems());
+			Systems.ItemsAdded.Subscribe(SetupSystem);
+			Systems.ItemsRemoved.Subscribe(RemoveSystem);
 
 			// in the beginning when there are no systems, we'll get ShouldReset, so update all.
 			//Systems.ShouldReset
@@ -193,6 +195,34 @@ namespace VpdbAgent.PinballX
 				.Subscribe(UpdateSystems);
 
 			return this;
+		}
+
+		private void SetupSystems()
+		{
+			_logger.Info("Setting up all systems...");
+			Systems.ToList().ForEach(SetupSystem);
+			UpdateGames();
+		}
+
+		private void SetupSystem(PinballXSystem system)
+		{
+			if (_systemDisposables.ContainsKey(system)) {
+				return;
+			}
+			var disp = new CompositeDisposable {
+				system.DatabaseChanged.Subscribe(databaseFile => UpdateGames(system, Path.GetFileName(databaseFile))),
+				system.DatabaseCreated.Subscribe(databaseFile => UpdateGames(system, Path.GetFileName(databaseFile))),
+				system.DatabaseDeleted.Subscribe(databaseFile => RemoveGames(system, Path.GetFileName(databaseFile))),
+				system.DatabaseRenamed.Subscribe(f => RenameDatabase(system, Path.GetFileName(f.Item1), Path.GetFileName(f.Item2)))
+			};
+			_systemDisposables.Add(system, disp);
+		}
+
+		private void RemoveSystem(PinballXSystem system)
+		{
+			_logger.Info("Removing system {0}.", system.Name);
+			_systemDisposables[system]?.Dispose();
+			_systemDisposables.Remove(system);
 		}
 
 		public PinballXGame AddGame(PinballXGame game, string databasePath)
@@ -336,8 +366,7 @@ namespace VpdbAgent.PinballX
 		/// Updates all games of all systems.
 		/// </summary>
 		/// <remarks>Triggered when systems change</remarks>
-		/// <param name="unit">Useless changed event args from ReactiveList</param>
-		private void UpdateGames(Unit unit)
+		private void UpdateGames()
 		{
 			_logger.Info("Parsing all games for all systems...");
 			foreach (var system in Systems) {
@@ -369,34 +398,78 @@ namespace VpdbAgent.PinballX
 		/// <param name="databaseFile">Filename without path. If set, only updates games for given XML file.</param>
 		private void UpdateGames(PinballXSystem system, string databaseFile = null)
 		{
-			_logger.Info("Parsing games for {0} - ({1})...", system, databaseFile ?? "all games");
-			var games = ParseGames(system, databaseFile);
-
-			if (_games.IsEmpty) {
-				using (Systems.SuppressChangeNotifications()) {
-					_games.AddRange(games.Select(g => new AggregatedGame(g)));
-				}
+			if (!system.Enabled) {
+				_logger.Info("Ignoring disabled system \"{0}\".", system.Name);
 				return;
 			}
 
+			// read games from XML
+			_logger.Info("Parsing games for {0} ({1})...", system, databaseFile ?? "all games");
+			var games = ParseGames(system, databaseFile);
+
+			// if Global Games are empty, don't bother identifiying and add them all
+			if (_games.IsEmpty) {
+				Current.Dispatcher.Invoke(() => {
+					using (_games.SuppressChangeNotifications()) {
+						_games.AddRange(games.Select(g => new AggregatedGame(g)));
+					}
+				});
+				_logger.Info("Added {0} games.", games.Count());
+				return;
+			}
+
+			// otherwise, retrieve the systems games from Global Games.
 			var selectedGames = _games.Where(g => ReferenceEquals(g.PinballXGame?.PinballXSystem, system)).ToList();
 			if (databaseFile != null) {
 				selectedGames = selectedGames.Where(g => g.PinballXGame.DatabaseFile == databaseFile).ToList();
 			}
 
-			var remainingGames = new HashSet<AggregatedGame>(selectedGames);
+			var toRemovedGames = new HashSet<AggregatedGame>(selectedGames); 
+			var added = 0;
+
+			// now try to match to see if we need to add or update
 			foreach (var newGame in games) {
 				var oldGame = selectedGames.FirstOrDefault(g => ReferenceEquals(g.PinballXGame?.PinballXSystem, system) && g.PinballXGame?.Description == newGame.Description);
+				
+				// no match, add
 				if (oldGame == null) {
-					_games.Add(new AggregatedGame(newGame));
+					Current.Dispatcher.Invoke(() => _games.Add(new AggregatedGame(newGame)));
+					added++;
+
+				// match and not equal, so update.
 				} else if (!oldGame.PinballXGame.Equals(newGame)) {
-					oldGame.PinballXGame.Update(newGame);
-					remainingGames.Remove(oldGame);
+					Current.Dispatcher.Invoke(() => oldGame.PinballXGame.Update(newGame));
+					toRemovedGames.Remove(oldGame);
+
+				// match but equal, ignore.
 				} else {
-					remainingGames.Remove(oldGame);
+					toRemovedGames.Remove(oldGame);
 				}
 			}
-			_games.RemoveAll(remainingGames.Where(g => !g.HasLocalFile && !g.HasMapping));
+
+			// remove from Global Games. TODO: only remove if (!g.HasLocalFile && !g.HasMapping) and update others.
+			Current.Dispatcher.Invoke(() => _games.RemoveAll(toRemovedGames));
+			_logger.Info("Added {0} games, removing {1}", added, toRemovedGames.Count);
+
+		}
+
+		private void RemoveGames(PinballXSystem system, string databaseFile)
+		{
+			var games = _games.Where(g => ReferenceEquals(g.PinballXGame?.PinballXSystem, system) && databaseFile == g.PinballXGame?.DatabaseFile);
+			var aggregatedGames = games as AggregatedGame[] ?? games.ToArray();
+			_logger.Info("PinballX database {0} removed, removing {1} files for {2}", databaseFile, aggregatedGames.Count(), system.Name);
+			using (_games.SuppressChangeNotifications()) {
+				_games.RemoveAll(aggregatedGames);
+			}
+		}
+
+		private void RenameDatabase(PinballXSystem system, string databaseOld, string databaseNew)
+		{
+			_logger.Info("PinballX database {0} renamed from {1} to {2}.", system.Name, databaseOld, databaseNew);
+			_games
+				.Where(g => ReferenceEquals(g.PinballXGame?.PinballXSystem, system) && g.PinballXGame?.DatabaseFile == databaseOld)
+				.ToList()
+				.ForEach(g => g.PinballXGame.DatabaseFile = databaseNew);
 		}
 
 		/// <summary>
@@ -440,7 +513,7 @@ namespace VpdbAgent.PinballX
 		/// <param name="system">System to parse games for</param>
 		/// <param name="databaseFile">If set, only parse games for given XML file</param>
 		/// <returns>Parsed games</returns>
-		private IEnumerable<PinballXGame> ParseGames(PinballXSystem system, string databaseFile = null)
+		private List<PinballXGame> ParseGames(PinballXSystem system, string databaseFile = null)
 		{
 			if (system == null) {
 				_logger.Warn("Unknown system, not parsing games.");

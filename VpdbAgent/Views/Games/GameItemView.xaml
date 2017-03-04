@@ -29,8 +29,8 @@
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
-        <c:CachedImage ImageUrl="{Binding Game.File.Thumb.Url}" Width="70" Height="70"
-                    Grid.Column="0" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="0,10,0,0" />
+        <!--c:CachedImage ImageUrl="{Binding Game.File.Thumb.Url}" Width="70" Height="70"
+                    Grid.Column="0" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="0,10,0,0" /-->
 
         <StackPanel Grid.Column="1" Orientation="Vertical">
 
@@ -48,18 +48,18 @@
                 </Label>
 
                 <!-- controls -->
-                <StackPanel Visibility="{Binding Path=Game.HasRelease, Converter={StaticResource TrueToVisible}}" Grid.Column="2" Orientation="Horizontal" Margin="0,5,0,0">
+                <!--StackPanel Visibility="{Binding Path=Game.HasRelease, Converter={StaticResource TrueToVisible}}" Grid.Column="2" Orientation="Horizontal" Margin="0,5,0,0">
                     <c:IconControl Foreground="{Binding Path=Game.Release.Starred, Converter={StaticResource TrueToPrimary}}" 
                                    Data="{StaticResource IconStar}" Height="18" Width="18" Margin="10,-2,12,0"/>
                     <ToggleButton Command="{Binding SyncToggled}" IsChecked="{Binding Game.IsSynced}" 
                                   x:Name="SyncButton" Height="20" Margin="5,0,17,0"/>
                     <c:LabelFor Target="{x:Reference SyncButton}" Foreground="{Binding ElementName=SyncButton, Path=Background}" 
                                 Content="SYNC" FontSize="15" Margin="0,0,10,0" />
-                </StackPanel>
+                </-->
             </Grid>
 
             <!-- second row -->
-            <TextBlock Visibility="{Binding Path=Game.HasRelease, Converter={StaticResource TrueToVisible}}"
+            <!--TextBlock Visibility="{Binding Path=Game.HasRelease, Converter={StaticResource TrueToVisible}}"
                        Style="{StaticResource Label}" Margin="5,0,0,-5">
                 <TextBlock.Inlines>
                     <Run Text="{Binding Path=Game.Release.Name, UpdateSourceTrigger=PropertyChanged}"/>
@@ -67,21 +67,21 @@
                     <Run Text=" by" FontStyle="Italic"/>
                     <Run Text="{Binding Path=Game.Release.AuthorNames, Mode=OneWay}" FontStyle="Italic"/>
                 </TextBlock.Inlines>
-            </TextBlock>
+            </TextBlock-->
             
             <!-- third row -->
-            <Grid Margin="0,0,0,10">
+            <!-- Grid Margin="0,0,0,10">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <!-- filename -->
+                <!- - filename - -
                 <Label Grid.Column="0">
                     <TextBlock Text="{Binding Game.Filename}" Background="{Binding Path=Game.Exists, Converter={StaticResource FalseToRed}}" TextTrimming="CharacterEllipsis"/>
                 </Label>
 
-                <!-- identify button -->
+                <!- - identify button - -
                 <Button IsEnabled="{Binding Game.Exists}" Command="{Binding IdentifyRelease}" 
                         Visibility="{Binding Path=ShowIdentifyButton, Converter={StaticResource TrueToVisible}}" 
                         Style="{StaticResource ButtonLine}" 
@@ -92,24 +92,24 @@
                 </Viewbox>
                 <Label Visibility="{Binding Path=Game.HasUpdate, Converter={StaticResource TrueToVisible}}" 
                        Grid.Column="1" Content="Update available" Margin="0,0,10,0" FontStyle="Italic" Foreground="{StaticResource PrimaryColorBrush}"/>
-            </Grid>
+            </-->
 
             <!-- release results -->
-            <Expander IsExpanded="{Binding HasExecuted}" Style="{StaticResource AnimatedExpander}">
+            <!-- Expander IsExpanded="{Binding HasExecuted}" Style="{StaticResource AnimatedExpander}">
                 <Grid Margin="-105,0,-10,0" Background="{StaticResource DarkBackgroundBrush}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="110" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
 
-                    <!-- close button -->
+                    <!- - close button - ->
                     <Button Command="{Binding CloseResults}" Style="{StaticResource IconButton}" Grid.Column="0" Width="40" Height="40" VerticalAlignment="Top" HorizontalAlignment="Left">
                         <c:IconControl Height="12" Width="12" Foreground="{StaticResource LabelTextBrush}" Data="{StaticResource IconClose}" />
                     </Button>
 
                     <StackPanel Grid.Column="1" Orientation="Vertical" Margin="0,5,10,5">
 
-                        <!-- no match found -->
+                        <!- - no match found - ->
                         <Grid Visibility="{Binding Path=HasResults, Converter={StaticResource TrueToCollapsed}}" Margin="0,5,10,5">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
@@ -120,7 +120,7 @@
                             <Button Command="{Binding CloseResults}" Grid.Column="1" Style="{StaticResource ButtonSolidSmall}" Content="CLOSE" HorizontalAlignment="Right"/>
                         </Grid>
 
-                        <!-- result list -->
+                        <!- - result list - ->
                         <ItemsControl ItemsSource="{Binding IdentifiedReleases}" Visibility="{Binding Path=HasResults, Converter={StaticResource TrueToVisible}}" Margin="0,10,0,10">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
@@ -131,7 +131,7 @@
 
                     </StackPanel>
                 </Grid>
-            </Expander>
+            </-->
             <!--rx:ViewModelViewHost ViewModel="{Binding ReleaseResults}" Visibility="{Binding Path=HasExecuted, Converter={StaticResource TrueToVisible}}" HorizontalContentAlignment="Stretch" /-->
 
             <!-- separator -->

@@ -5,8 +5,10 @@ using System.IO;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using ReactiveUI;
+using Splat;
 using VpdbAgent.Application;
 using VpdbAgent.Data.Objects;
+using ILogger = NLog.ILogger;
 
 namespace VpdbAgent.PinballX.Models
 {
@@ -51,6 +53,7 @@ namespace VpdbAgent.PinballX.Models
 
 		// internal props
 		private System.IO.FileSystemWatcher _fsw;
+		private static readonly ILogger Logger = Locator.CurrentMutable.GetService<ILogger>();
 
 		public PinballXSystem(ISettingsManager settingsManager)
 		{
@@ -113,7 +116,7 @@ namespace VpdbAgent.PinballX.Models
 		{
 			var dbPath = _settingsManager.Settings.PbxFolder + @"\Databases\" + Name;
 			_fsw = new System.IO.FileSystemWatcher(dbPath, "*.xml");
-			Console.WriteLine("Watching XML files at {0}...", dbPath);
+			Logger.Info("Watching XML files at {0}...", dbPath);
 			DatabaseChanged = Observable
 					.FromEventPattern<FileSystemEventHandler, FileSystemEventArgs>(x => _fsw.Changed += x, x => _fsw.Changed -= x)
 					.Throttle(TimeSpan.FromMilliseconds(250), RxApp.TaskpoolScheduler)
@@ -186,7 +189,7 @@ namespace VpdbAgent.PinballX.Models
 
 		public override string ToString()
 		{
-			return $"[System] {Name} ({Games.Count} games)";
+			return $"System {Name}";
 		}
 	}
 }
