@@ -405,7 +405,7 @@ namespace VpdbAgent.PinballX
 
 			// read games from XML
 			_logger.Info("Parsing games for {0} ({1})...", system, databaseFile ?? "all games");
-			var games = ParseGames(system, databaseFile);
+			var games = ParseGames(system, databaseFile).Where(g => g.Enabled == null || "true".Equals(g.Enabled, StringComparison.InvariantCultureIgnoreCase));
 
 			// if Global Games are empty, don't bother identifiying and add them all
 			if (_games.IsEmpty) {
