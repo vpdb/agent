@@ -163,14 +163,14 @@ namespace VpdbAgent.Models
 		private IEnumerable<Game> MergeGames(PinballXSystem system)
 		{
 			var xmlGames = system.Games;
-			List<Game> mergedGames;
-			if (_database == null) {
+			List<Game> mergedGames = new List<Game>();
+			/*if (_database == null) {
 				_logger.Warn("No vpdb.json at {0}", DatabaseFile);
 				mergedGames = MergeGames(xmlGames, new List<Game>());
 			} else {
 				_logger.Info("Found and parsed vpdb.json at {0}", DatabaseFile);
 				mergedGames = MergeGames(xmlGames, _database.Games);
-			}
+			}*/
 
 			return mergedGames;
 		}

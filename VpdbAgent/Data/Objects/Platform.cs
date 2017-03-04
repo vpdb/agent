@@ -164,12 +164,13 @@ namespace VpdbAgent.Data.Objects
 		/// <param name="system">System in which the game changed</param>
 		private IEnumerable<Mapping> MergeMappings(PinballXSystem system)
 		{
-			if (_data == null) {
+			return new List<Mapping>();
+			/*if (_data == null) {
 				_logger.Warn("No vpdb.json at {0}", DataFile);
 				return MergeMappings(system.Games, new List<Mapping>());
 			}
 			_logger.Info("Found and parsed vpdb.json at {0}", DataFile);
-			return MergeMappings(system.Games, _data.Mappings);
+			return MergeMappings(system.Games, _data.Mappings);*/
 		}
 
 		/// <summary>

@@ -58,7 +58,7 @@ namespace VpdbAgent.PinballX.Models
 		// internal fields (not serialized)
 		// ----------------------------------
 		[XmlIgnore]
-		public string DatabaseFile { get; set; }
+		public string DatabaseFile { get { return _databaseFile; } set { this.RaiseAndSetIfChanged(ref _databaseFile, value); } }
 
 		[XmlIgnore]
 		public PinballXSystem PinballXSystem { get; set; }
@@ -68,6 +68,7 @@ namespace VpdbAgent.PinballX.Models
 		private string _fileName;
 		private string _alternateExe;
 		private string _enabled;
+		private string _databaseFile;
 
 		public void Update(PinballXGame newGame)
 		{

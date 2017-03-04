@@ -136,7 +136,7 @@ namespace VpdbAgent.Application
 			_logger = logger;
 
 			// setup game change listener once all games are fetched.
-			_menuManager.Initialized.Subscribe(_ => SetupGameChanges());
+			//_menuManager.Initialized.Subscribe(_ => SetupGameChanges());
 
 			// update releases from VPDB on the first run, but delay it a bit so it 
 			// doesn't do all that shit at the same time!
@@ -177,13 +177,67 @@ namespace VpdbAgent.Application
 				throw new InvalidOperationException("Must initialize settings before game manager.");
 			}
 
+			_menuManager.GamesUpdated.Subscribe(d => OnPinballXGamesUpdated(d.Item1, d.Item2, d.Item3));
+
 			_databaseManager.Initialize();
-			_menuManager.Initialize(AggregatedGames);
+			_menuManager.Initialize();
 			_vpdbClient.Initialize();
 			_versionManager.Initialize();
 
 			// validate settings and retrieve profile
 			Task.Run(async () => await _settingsManager.Validate(_settingsManager.Settings, _messageManager));
+
+			
+		}
+
+		public void OnPinballXGamesUpdated(PinballXSystem system, string databaseFile, List<PinballXGame> games)
+		{
+			// if Global Games are empty, don't bother identifiying and add them all
+			if (AggregatedGames.IsEmpty) {
+				_threadManager.MainDispatcher.Invoke(() => {
+					using (AggregatedGames.SuppressChangeNotifications()) {
+						AggregatedGames.AddRange(games.Select(g => new AggregatedGame(g)));
+					}
+				});
+				_logger.Info("Added {0} games.", games.Count());
+				return;
+			}
+
+			// otherwise, retrieve the systems games from Global Games.
+			var selectedGames = AggregatedGames.Where(g => ReferenceEquals(g.PinballXGame?.PinballXSystem, system)).ToList();
+			if (databaseFile != null) {
+				// not only for performance reasons: remaining items in selectedGames will be removed.
+				selectedGames = selectedGames.Where(g => g.PinballXGame.DatabaseFile == databaseFile).ToList();
+			}
+
+			var toRemovedGames = new HashSet<AggregatedGame>(selectedGames); 
+			var added = 0;
+			var updated = 0;
+
+			// now try to match to see if we need to add or update
+			foreach (var newGame in games) {
+				var oldGame = selectedGames.FirstOrDefault(g => ReferenceEquals(g.PinballXGame?.PinballXSystem, system) && g.PinballXGame?.Description == newGame.Description);
+				
+				// no match, add
+				if (oldGame == null) {
+					_threadManager.MainDispatcher.Invoke(() => AggregatedGames.Add(new AggregatedGame(newGame)));
+					added++;
+
+				// match and not equal, so update.
+				} else if (!oldGame.PinballXGame.Equals(newGame)) {
+					_threadManager.MainDispatcher.Invoke(() => oldGame.PinballXGame.Update(newGame));
+					toRemovedGames.Remove(oldGame);
+					updated++;
+
+				// match but equal, ignore.
+				} else {
+					toRemovedGames.Remove(oldGame);
+				}
+			}
+
+			// remove from Global Games. TODO: only remove if (!g.HasLocalFile && !g.HasMapping) and update others.
+			_threadManager.MainDispatcher.Invoke(() => AggregatedGames.RemoveAll(toRemovedGames));
+			_logger.Info("Added {0} games, removed {1}, updated {2}.", added, toRemovedGames.Count, updated);
 		}
 
 		public void LinkRelease(Game game, VpdbRelease release, string fileId)
