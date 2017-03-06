@@ -22,9 +22,10 @@ namespace VpdbAgent.PinballX.Models
 	/// This comes live from PinballX.ini and resides only in memory. It's 
 	/// updated when PinballX.ini changes.
 	/// 
-	/// As soon as it's instantiated, its XML database files are parsed and
-	/// watched, meaning at every moment, current games can be retrieved through
-	/// <see cref="Games"/> and future changes through <see cref="GamesUpdated"/>.
+	/// When it's initialized, its XML database files are parsed and watched, 
+	/// meaning as soon as it's part of <see cref="MenuManager.Systems"/>, 
+	/// current games can be retrieved through <see cref="Games"/> and future
+	/// changes through <see cref="GamesUpdated"/>.
 	/// </remarks>
 	public class PinballXSystem : ReactiveObject, IDisposable
 	{
@@ -112,7 +113,6 @@ namespace VpdbAgent.PinballX.Models
 			Name = data["Name"];
 
 			SetByData(data);
-			Initialize();
 		}
 
 		/// <summary>
@@ -141,14 +141,13 @@ namespace VpdbAgent.PinballX.Models
 					throw new ArgumentOutOfRangeException(nameof(type), type, null);
 			}
 			SetByData(data);
-			Initialize();
 		}
 
 		/// <summary>
 		/// Parses all games from all available XML database files and sets up
 		/// file system watchers.
 		/// </summary>
-		private void Initialize()
+		public void Initialize()
 		{
 			if (_dir.Exists(DatabasePath)) {
 
@@ -190,6 +189,7 @@ namespace VpdbAgent.PinballX.Models
 			} else {
 				_logger.Warn("Invalid database path \"{0}\" for system \"{1}\", ignoring.", DatabasePath, Name);
 			}
+			this.WhenAnyValue(s => s.Enabled).Subscribe(enabled => _logger.Info("--> enabled flag changed to {0} for {1}.", enabled, Name));
 		}
 
 		/// <summary>
@@ -374,7 +374,7 @@ namespace VpdbAgent.PinballX.Models
 
 		public override string ToString()
 		{
-			return $"System {Name}";
+			return $"system \"{Name}\"";
 		}
 	}
 }

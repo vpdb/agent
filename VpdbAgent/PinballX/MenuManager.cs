@@ -215,6 +215,7 @@ namespace VpdbAgent.PinballX
 			_threadManager.MainDispatcher.Invoke(delegate {
 				if (Systems.IsEmpty) {
 					using (Systems.SuppressChangeNotifications()) {
+						systems.ToList().ForEach(s => s.Initialize());
 						Systems.AddRange(systems);
 					}
 					return;
@@ -223,6 +224,7 @@ namespace VpdbAgent.PinballX
 				foreach (var newSystem in systems) {
 					var oldSystem = Systems.FirstOrDefault(s => s.Name == newSystem.Name);
 					if (oldSystem == null) {
+						newSystem.Initialize();
 						Systems.Add(newSystem);
 					} else if (!oldSystem.Equals(newSystem)) {
 						oldSystem.Update(newSystem);
@@ -387,7 +389,7 @@ namespace VpdbAgent.PinballX
 		/// Parses PinballX.ini and reads all systems from it.
 		/// </summary>
 		/// <returns>Parsed systems</returns>
-		private IEnumerable<PinballXSystem> ParseSystems(string iniPath)
+		private List<PinballXSystem> ParseSystems(string iniPath)
 		{
 			var systems = new List<PinballXSystem>();
 			// only notify after this block
