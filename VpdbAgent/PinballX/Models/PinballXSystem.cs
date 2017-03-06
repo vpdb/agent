@@ -144,52 +144,73 @@ namespace VpdbAgent.PinballX.Models
 		}
 
 		/// <summary>
-		/// Parses all games from all available XML database files and sets up
-		/// file system watchers.
+		/// Sets up a watcher for <see cref="Enabled"/> that either creates or 
+		/// destroys the file system watchers.
 		/// </summary>
 		public void Initialize()
 		{
-			if (_dir.Exists(DatabasePath)) {
-
-				// kick off
-				GetDatbaseFiles().ForEach(UpdateGames);
-
-				// then setup watchers
-				_fsw = new System.IO.FileSystemWatcher(DatabasePath, "*.xml");
-				_logger.Info("Watching XML files at {0}...", DatabasePath);
-				_disposables.Add(_fsw);
-
-				// file changed
-				_disposables.Add(Observable
-						.FromEventPattern<FileSystemEventHandler, FileSystemEventArgs>(x => _fsw.Changed += x, x => _fsw.Changed -= x)
-						.Throttle(TimeSpan.FromMilliseconds(250), RxApp.TaskpoolScheduler)
-						.Where(x => x.EventArgs.FullPath != null)
-						.Subscribe(x => UpdateGames(x.EventArgs.FullPath)));
-
-				// file created
-				_disposables.Add(Observable
-						.FromEventPattern<FileSystemEventHandler, FileSystemEventArgs>(x => _fsw.Created += x, x => _fsw.Created -= x)
-						.Throttle(TimeSpan.FromMilliseconds(250), RxApp.TaskpoolScheduler)
-						.Subscribe(x => UpdateGames(x.EventArgs.FullPath)));
-
-				// file deleted
-				_disposables.Add(Observable
-						.FromEventPattern<FileSystemEventHandler, FileSystemEventArgs>(x => _fsw.Deleted += x, x => _fsw.Deleted -= x)
-						.Throttle(TimeSpan.FromMilliseconds(250), RxApp.TaskpoolScheduler)
-						.Subscribe(x => RemoveGames(x.EventArgs.FullPath)));
-
-				// file renamed
-				_disposables.Add(Observable
-						.FromEventPattern<RenamedEventHandler, FileSystemEventArgs>(x => _fsw.Renamed += x, x => _fsw.Renamed -= x)
-						.Throttle(TimeSpan.FromMilliseconds(250), RxApp.TaskpoolScheduler)
-						.Subscribe(x => RenameDatabase(((RenamedEventArgs)x.EventArgs).OldFullPath, x.EventArgs.FullPath)));
-
-				_fsw.EnableRaisingEvents = true;
-
-			} else {
-				_logger.Warn("Invalid database path \"{0}\" for system \"{1}\", ignoring.", DatabasePath, Name);
+			if (!_dir.Exists(DatabasePath)) {
+				_logger.Warn("Invalid database path \"{0}\" for {1}, ignoring.", DatabasePath, this);
+				return;
 			}
-			this.WhenAnyValue(s => s.Enabled).Subscribe(enabled => _logger.Info("--> enabled flag changed to {0} for {1}.", enabled, Name));
+			this.WhenAnyValue(s => s.Enabled).Subscribe(enabled => {
+				if (enabled) {
+					EnableSystem();
+				} else {
+					DisableSystem();
+				}
+			});
+		}
+
+		/// <summary>
+		/// Parses all games from all available XML database files and sets up
+		/// file system watchers.
+		/// </summary>
+		private void EnableSystem()
+		{
+			// kick off
+			GetDatbaseFiles().ForEach(UpdateGames);
+
+			// then setup watchers
+			_fsw = new System.IO.FileSystemWatcher(DatabasePath, "*.xml");
+			_logger.Info("Watching XML files at {0}...", DatabasePath);
+			_disposables.Add(_fsw);
+
+			// file changed
+			_disposables.Add(Observable
+					.FromEventPattern<FileSystemEventHandler, FileSystemEventArgs>(x => _fsw.Changed += x, x => _fsw.Changed -= x)
+					.Throttle(TimeSpan.FromMilliseconds(250), RxApp.TaskpoolScheduler)
+					.Where(x => x.EventArgs.FullPath != null)
+					.Subscribe(x => UpdateGames(x.EventArgs.FullPath)));
+
+			// file created
+			_disposables.Add(Observable
+					.FromEventPattern<FileSystemEventHandler, FileSystemEventArgs>(x => _fsw.Created += x, x => _fsw.Created -= x)
+					.Throttle(TimeSpan.FromMilliseconds(250), RxApp.TaskpoolScheduler)
+					.Subscribe(x => UpdateGames(x.EventArgs.FullPath)));
+
+			// file deleted
+			_disposables.Add(Observable
+					.FromEventPattern<FileSystemEventHandler, FileSystemEventArgs>(x => _fsw.Deleted += x, x => _fsw.Deleted -= x)
+					.Throttle(TimeSpan.FromMilliseconds(250), RxApp.TaskpoolScheduler)
+					.Subscribe(x => RemoveGames(x.EventArgs.FullPath)));
+
+			// file renamed
+			_disposables.Add(Observable
+					.FromEventPattern<RenamedEventHandler, FileSystemEventArgs>(x => _fsw.Renamed += x, x => _fsw.Renamed -= x)
+					.Throttle(TimeSpan.FromMilliseconds(250), RxApp.TaskpoolScheduler)
+					.Subscribe(x => RenameDatabase(((RenamedEventArgs)x.EventArgs).OldFullPath, x.EventArgs.FullPath)));
+
+			_fsw.EnableRaisingEvents = true;
+		}
+
+		/// <summary>
+		/// Removes all games and file watchers.
+		/// </summary>
+		private void DisableSystem()
+		{
+			GetDatbaseFiles().ForEach(RemoveGames);
+			_disposables.Clear();
 		}
 
 		/// <summary>
@@ -207,11 +228,6 @@ namespace VpdbAgent.PinballX.Models
 				return;
 			}
 			var databaseFile = Path.GetFileName(databaseFilePath);
-			if (!Enabled) {
-				_logger.Info("Ignoring disabled system \"{0}\".", Name);
-				_gamesUpdated.OnNext(new Tuple<string, List<PinballXGame>>(databaseFile, new List<PinballXGame>()));
-				return;
-			}
 
 			// read enabled games from XML
 			_logger.Info("Parsing games for {0} ({1})...", this, databaseFile);

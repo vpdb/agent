@@ -209,25 +209,25 @@ namespace VpdbAgent.PinballX
 		private void UpdateSystems(string iniPath)
 		{
 			// here, we're on a worker thread.
-			var systems = ParseSystems(iniPath);
+			var parsedSystems = ParseSystems(iniPath);
 
 			// treat result back on main thread
 			_threadManager.MainDispatcher.Invoke(delegate {
 				if (Systems.IsEmpty) {
 					using (Systems.SuppressChangeNotifications()) {
-						systems.ToList().ForEach(s => s.Initialize());
-						Systems.AddRange(systems);
+						parsedSystems.ForEach(s => s.Initialize());
+						Systems.AddRange(parsedSystems);
 					}
 					return;
 				}
 				var remainingSystems = new HashSet<string>(Systems.Select(s => s.Name));
-				foreach (var newSystem in systems) {
-					var oldSystem = Systems.FirstOrDefault(s => s.Name == newSystem.Name);
+				foreach (var parsedSystem in parsedSystems) {
+					var oldSystem = Systems.FirstOrDefault(s => s.Name == parsedSystem.Name);
 					if (oldSystem == null) {
-						newSystem.Initialize();
-						Systems.Add(newSystem);
-					} else if (!oldSystem.Equals(newSystem)) {
-						oldSystem.Update(newSystem);
+						parsedSystem.Initialize();
+						Systems.Add(parsedSystem);
+					} else if (!oldSystem.Equals(parsedSystem)) {
+						oldSystem.Update(parsedSystem);
 						remainingSystems.Remove(oldSystem.Name);
 					} else {
 						remainingSystems.Remove(oldSystem.Name);
