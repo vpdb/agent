@@ -190,6 +190,25 @@ namespace VpdbAgent.Application
 			
 		}
 
+		/// <summary>
+		/// Merges changed games from PinballX into Global Games.
+		/// </summary>
+		/// 
+		/// <remarks>
+		/// This is triggered on <see cref="PinballXSystem.GamesUpdated"/>. The
+		/// received list is then merged into <see cref="AggregatedGames"/>,
+		/// while only data that has changed is updated.
+		/// 
+		/// In a nutshell, this is how it's done:
+		///  <list type="number">
+		///			<item><term> Go through Global Games and try to match parsed games by description </term></item>
+		/// 		<item><term> If found, update data, otherwise add </term></item>
+		/// 		<item><term> If not found, remove from Global Games if there aren't any other references, otherwise only remove PinballX reference </term></item>
+		/// </list>
+		/// </remarks>
+		/// <param name="system"></param>
+		/// <param name="databaseFile"></param>
+		/// <param name="games"></param>
 		public void OnPinballXGamesUpdated(PinballXSystem system, string databaseFile, List<PinballXGame> games)
 		{
 			// if Global Games are empty, don't bother identifiying and add them all

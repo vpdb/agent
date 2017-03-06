@@ -147,8 +147,8 @@ namespace VpdbAgent.PinballX
 			Systems.ItemsRemoved.Subscribe(s => _logger.Info("Systems Item {0} Removed.", s.Name));
 			Systems.ItemChanged.Subscribe(e => _logger.Info("Systems Item Changed: {0}", e.Sender.Name));
 
-			Systems.ShouldReset.ObserveOn(_threadManager.WorkerScheduler).Subscribe(_ => SetupSystems());
-			Systems.ItemsAdded.Subscribe(SetupSystem);
+			Systems.ShouldReset.ObserveOn(_threadManager.WorkerScheduler).Subscribe(_ => ResetSystems());
+			Systems.ItemsAdded.Subscribe(AddSystem);
 			Systems.ItemsRemoved.Subscribe(RemoveSystem);
 
 			// in the beginning when there are no systems, we'll get ShouldReset, so update all.
@@ -195,28 +195,89 @@ namespace VpdbAgent.PinballX
 			return this;
 		}
 
-		private void SetupSystems()
+		/// <summary>
+		/// Updates all systems.
+		/// 
+		/// Parses .ini file and subscribes to parsed systems.
+		/// </summary>
+		/// <remarks>
+		/// Triggered at startup and when <c>PinballX.ini</c> changes.
+		/// 
+		/// Only updates changed systems.
+		/// </remarks>
+		/// <param name="iniPath">Path to PinballX.ini</param>
+		private void UpdateSystems(string iniPath)
 		{
-			_logger.Info("Setting up all systems...");
-			_systemDisposables.Keys.ToList().ForEach(RemoveSystem);
-			Systems.ToList().ForEach(SetupSystem);
+			// here, we're on a worker thread.
+			var systems = ParseSystems(iniPath);
+
+			// treat result back on main thread
+			_threadManager.MainDispatcher.Invoke(delegate {
+				if (Systems.IsEmpty) {
+					using (Systems.SuppressChangeNotifications()) {
+						Systems.AddRange(systems);
+					}
+					return;
+				}
+				var remainingSystems = new HashSet<string>(Systems.Select(s => s.Name));
+				foreach (var newSystem in systems) {
+					var oldSystem = Systems.FirstOrDefault(s => s.Name == newSystem.Name);
+					if (oldSystem == null) {
+						Systems.Add(newSystem);
+					} else if (!oldSystem.Equals(newSystem)) {
+						oldSystem.Update(newSystem);
+						remainingSystems.Remove(oldSystem.Name);
+					} else {
+						remainingSystems.Remove(oldSystem.Name);
+					}
+				}
+				foreach (var removedSystem in remainingSystems) {
+					Systems.Remove(Systems.FirstOrDefault(s => s.Name == removedSystem));
+				}
+			});
 		}
 
-		private void SetupSystem(PinballXSystem system)
+		/// <summary>
+		/// Clears all current system subscriptions and resubscribes to new systems.
+		/// </summary>
+		private void ResetSystems()
 		{
+			_logger.Info("Resetting all systems...");
+			_systemDisposables.Keys.ToList().ForEach(RemoveSystem);
+			Systems.ToList().ForEach(AddSystem);
+		}
+
+		/// <summary>
+		/// Subscribes to a given system if not already subscribed and kicks 
+		/// off <see cref="GamesUpdated"/>.
+		/// </summary>
+		/// <param name="system">System to kick-off and subscribe</param>
+		private void AddSystem(PinballXSystem system)
+		{
+			// skip if already subscribed
 			if (_systemDisposables.ContainsKey(system)) {
 				return;
 			}
+			// kick off current games
 			system.Games.Keys.ToList().ForEach(databaseFile => {
 				_gamesUpdated.OnNext(new Tuple<PinballXSystem, string, List<PinballXGame>>(system, databaseFile, system.Games[databaseFile]));
 			});
+			// subscribe to future changes
 			_systemDisposables.Add(system, system.GamesUpdated.Subscribe(x => _gamesUpdated.OnNext(new Tuple<PinballXSystem, string, List<PinballXGame>>(system, x.Item1, x.Item2))));
 		}
 
+		/// <summary>
+		/// Unsubscribes from a system and announce to <see cref="GamesUpdated"/>.
+		/// </summary>
+		/// <param name="system">System to unsubscribe from</param>
 		private void RemoveSystem(PinballXSystem system)
 		{
 			_logger.Info("Removing system \"{0}\".", system.Name);
+			
+			// announce system removal
 			system.Games.Keys.ToList().ForEach(databaseFile => _gamesUpdated.OnNext(new Tuple<PinballXSystem, string, List<PinballXGame>>(system, databaseFile, new List<PinballXGame>())));
+
+			// unsubscribe
 			_systemDisposables[system]?.Dispose();
 			_systemDisposables.Remove(system);
 		}
@@ -323,42 +384,6 @@ namespace VpdbAgent.PinballX
 		}
 
 		/// <summary>
-		/// Updates all systems.
-		/// </summary>
-		/// <remarks>Triggered at startup and when <c>PinballX.ini</c> changes.</remarks>
-		/// <param name="iniPath">Path to PinballX.ini</param>
-		private void UpdateSystems(string iniPath)
-		{
-			// here, we're on a worker thread.
-			var systems = ParseSystems(iniPath);
-
-			// treat result back on main thread
-			_threadManager.MainDispatcher.Invoke(delegate {
-				if (Systems.IsEmpty) {
-					using (Systems.SuppressChangeNotifications()) {
-						Systems.AddRange(systems);
-					}
-					return;
-				}
-				var remainingSystems = new HashSet<string>(Systems.Select(s => s.Name));
-				foreach (var newSystem in systems) {
-					var oldSystem = Systems.FirstOrDefault(s => s.Name == newSystem.Name);
-					if (oldSystem == null) {
-						Systems.Add(newSystem);
-					} else if (!oldSystem.Equals(newSystem)) {
-						oldSystem.Update(newSystem);
-						remainingSystems.Remove(oldSystem.Name);
-					} else {
-						remainingSystems.Remove(oldSystem.Name);
-					}
-				}
-				foreach (var removedSystem in remainingSystems) {
-					Systems.Remove(Systems.FirstOrDefault(s => s.Name == removedSystem));
-				}
-			});
-		}
-
-		/// <summary>
 		/// Parses PinballX.ini and reads all systems from it.
 		/// </summary>
 		/// <returns>Parsed systems</returns>
@@ -371,16 +396,16 @@ namespace VpdbAgent.PinballX
 			var data = _marshallManager.ParseIni(iniPath);
 			if (data != null) {
 				if (data["VisualPinball"] != null) {
-					systems.Add(new PinballXSystem(PlatformType.VP, data["VisualPinball"], _settingsManager, _marshallManager, _dir));
+					systems.Add(new PinballXSystem(PlatformType.VP, data["VisualPinball"], _settingsManager, _marshallManager, _logger, _dir));
 				}
 				if (data["FuturePinball"] != null) {
-					systems.Add(new PinballXSystem(PlatformType.FP, data["FuturePinball"], _settingsManager, _marshallManager, _dir));
+					systems.Add(new PinballXSystem(PlatformType.FP, data["FuturePinball"], _settingsManager, _marshallManager, _logger, _dir));
 				}
 				
 				for (var i = 0; i < 20; i++) {
 					var systemName = "System_" + i;
 					if (data[systemName] != null && data[systemName].Count > 0) {
-						systems.Add(new PinballXSystem(data[systemName], _settingsManager, _marshallManager, _dir));
+						systems.Add(new PinballXSystem(data[systemName], _settingsManager, _marshallManager, _logger, _dir));
 					}
 				}
 			}
