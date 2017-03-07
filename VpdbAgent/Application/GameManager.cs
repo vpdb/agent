@@ -153,8 +153,8 @@ namespace VpdbAgent.Application
 			Games.Changed.Subscribe(_ => CheckGameLinks());
 
 			// setup handlers for table file changes
-			_menuManager.TableFileChanged.Subscribe(OnTableFileChanged);
-			_menuManager.TableFileRemoved.Subscribe(OnTableFileRemoved);
+			_menuManager.TableFileChanged.Throttle(TimeSpan.FromMilliseconds(250)).Subscribe(OnTableFileChanged);
+			_menuManager.TableFileRemoved.Throttle(TimeSpan.FromMilliseconds(250)).Subscribe(OnTableFileRemoved);
 
 			// when game is linked or unlinked, update profile with channel info
 			IDisposable gameLinked = null;
@@ -561,11 +561,13 @@ namespace VpdbAgent.Application
 		/// <param name="path">Absolute path of the file</param>
 		private void OnTableFileChanged(string path)
 		{
+			_logger.Info("--- Table file changed: {0}", path);
+			/*
 			Games
 				.Where(g => g.Filename != null)
 				.Where(g => Path.GetFileNameWithoutExtension(g.Filename).Equals(Path.GetFileNameWithoutExtension(path)))
 				.ToList()
-				.ForEach(g => { g.Exists = true; });
+				.ForEach(g => { g.Exists = true; });*/
 		}
 
 		/// <summary>
@@ -574,11 +576,12 @@ namespace VpdbAgent.Application
 		/// <param name="path">Absolute path of the file</param>
 		private void OnTableFileRemoved(string path)
 		{
-			Games
+			_logger.Info("--- Table file removed: {0}", path);
+			/*Games
 				.Where(g => g.Filename != null)
 				.Where(g => g.Filename.Equals(Path.GetFileName(path)))
 				.ToList()
-				.ForEach(g => { g.Exists = false; });
+				.ForEach(g => { g.Exists = false; });*/
 		}
 
 		/// <summary>

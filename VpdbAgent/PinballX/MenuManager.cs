@@ -73,15 +73,19 @@ namespace VpdbAgent.PinballX
 		/// <summary>
 		/// Systems parsed from <c>PinballX.ini</c>.
 		/// </summary>
+		/// TODO make private
 		ReactiveList<PinballXSystem> Systems { get; }
 
 		/// <summary>
-		/// A one-time messenger that announces that the all systems have been 
-		/// parsed and <see cref="Systems"/> is filled up with all available
-		/// games.
+		/// Produces a value every time any data in any database file changes,
+		/// or if database files are removed, added or renamed.
 		/// </summary>
-		//IObservable<Unit> Initialized { get; }
-
+		/// <remarks>
+		/// Note that the returned the list of games is always exhaustive, i.e. games 
+		/// not in that list for the given database file are to be removed. For 
+		/// example, when a database file is deleted, this will produce a Tuple with 
+		/// the deleted database filename and an empty list.
+		/// </remarks>
 		IObservable<Tuple<PinballXSystem, string, List<PinballXGame>>> GamesUpdated { get; }
 
 		/// <summary>
@@ -113,7 +117,6 @@ namespace VpdbAgent.PinballX
 		private readonly Subject<string> _tableFileChanged = new Subject<string>();
 		private readonly Subject<string> _tableFileRemoved = new Subject<string>();
 		private readonly Dictionary<PinballXSystem, IDisposable> _systemDisposables = new Dictionary<PinballXSystem, IDisposable>();
-		private bool _isInitialized;
 
 		// dependencies
 		private readonly IFileSystemWatcher _watcher;
@@ -147,9 +150,15 @@ namespace VpdbAgent.PinballX
 			Systems.ItemsRemoved.Subscribe(s => _logger.Info("Systems Item {0} Removed.", s.Name));
 			Systems.ItemChanged.Subscribe(e => _logger.Info("Systems Item Changed: {0}", e.Sender.Name));
 
+			// setup game relay
 			Systems.ShouldReset.ObserveOn(_threadManager.WorkerScheduler).Subscribe(_ => ResetSystems());
 			Systems.ItemsAdded.Subscribe(AddSystem);
 			Systems.ItemsRemoved.Subscribe(RemoveSystem);
+
+			// setup table file watcher
+			Systems.ShouldReset.ObserveOn(_threadManager.WorkerScheduler).Subscribe(_ => UpdateTableWatchers());
+			//Systems.ItemsAdded.ObserveOn(_threadManager.WorkerScheduler).Subscribe(_ => UpdateTableWatchers());
+			Systems.ItemsRemoved.ObserveOn(_threadManager.WorkerScheduler).Subscribe(_ => UpdateTableWatchers());
 
 			// in the beginning when there are no systems, we'll get ShouldReset, so update all.
 			//Systems.ShouldReset
@@ -176,7 +185,7 @@ namespace VpdbAgent.PinballX
 
 				// table files
 				tableWatcher?.Dispose();
-				tableWatcher = _watcher.TablesWatcher(Systems)
+				tableWatcher = _watcher.WatchTables(Systems)
 					.Subscribe(f => {
 						if (_file.Exists(f)) {
 							_tableFileChanged.OnNext(f);
@@ -193,6 +202,17 @@ namespace VpdbAgent.PinballX
 				.Subscribe(UpdateSystems);
 
 			return this;
+		}
+
+		private void UpdateTableWatchers()
+		{
+			_watcher.WatchTables(Systems).Subscribe(f => {
+				if (_file.Exists(f)) {
+					_tableFileChanged.OnNext(f);
+				} else {
+					_tableFileRemoved.OnNext(f);
+				}
+			});
 		}
 
 		/// <summary>
@@ -215,7 +235,7 @@ namespace VpdbAgent.PinballX
 			_threadManager.MainDispatcher.Invoke(delegate {
 				if (Systems.IsEmpty) {
 					using (Systems.SuppressChangeNotifications()) {
-						parsedSystems.ForEach(s => s.Initialize());
+						parsedSystems.ForEach(InitSystem);
 						Systems.AddRange(parsedSystems);
 					}
 					return;
@@ -224,7 +244,7 @@ namespace VpdbAgent.PinballX
 				foreach (var parsedSystem in parsedSystems) {
 					var oldSystem = Systems.FirstOrDefault(s => s.Name == parsedSystem.Name);
 					if (oldSystem == null) {
-						parsedSystem.Initialize();
+						InitSystem(parsedSystem);
 						Systems.Add(parsedSystem);
 					} else if (!oldSystem.Equals(parsedSystem)) {
 						oldSystem.Update(parsedSystem);
@@ -238,6 +258,12 @@ namespace VpdbAgent.PinballX
 				}
 			});
 		}
+
+		private void InitSystem(PinballXSystem system) {
+			system.Initialize();
+			system.WhenAnyValue(s => s.Enabled, s => s.TablePath).Subscribe(_ => UpdateTableWatchers());
+		}
+				
 
 		/// <summary>
 		/// Clears all current system subscriptions and resubscribes to new systems.

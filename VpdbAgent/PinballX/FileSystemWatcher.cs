@@ -63,16 +63,19 @@ namespace VpdbAgent.PinballX
 		IObservable<string> DatabaseWatcher(string dbPath, IList<PinballXSystem> systems);
 
 		/// <summary>
-		/// Watches all table files for all enabled systems.
+		/// Watches all table files for all provided systems.
 		/// </summary>
 		/// <remarks>
 		/// Note that multiple systems can point to the same table folder, so all 
 		/// that is returned is the path of the changed file and the system where it
 		/// belongs to has to be found out from there.
+		/// 
+		/// Also note that always the same observable is returned and removed watches
+		/// are automatically disposed, so there is no need to dispose this Oberservable.
 		/// </remarks>
 		/// <param name="systems">Systems</param>
 		/// <returns>Observable that receives the absolute path of any changed table file</returns>
-		IObservable<string> TablesWatcher(IList<PinballXSystem> systems);
+		IObservable<string> WatchTables(IList<PinballXSystem> systems);
 	}
 
 	[ExcludeFromCodeCoverage]
@@ -80,6 +83,10 @@ namespace VpdbAgent.PinballX
 	{
 		// dependencies
 		private readonly ILogger _logger;
+
+		// internal props
+		private readonly Dictionary<string, IDisposable> _tableWatches = new Dictionary<string, IDisposable>();
+		private readonly Subject<string> _tableWatcher = new Subject<string>();
 
 		public FileSystemWatcher(ILogger logger) {
 			_logger = logger;
@@ -114,25 +121,39 @@ namespace VpdbAgent.PinballX
 			return result;
 		}
 
-		public IObservable<string> TablesWatcher(IList<PinballXSystem> systems)
+		public IObservable<string> WatchTables(IList<PinballXSystem> systems)
 		{
 			const string pattern = @"^\.vp[tx]$";
-			IObservable<string> result = null;
-			systems
+			var oldPaths = new HashSet<string>(_tableWatches.Keys);
+			var newPaths = systems
 				.Where(s => s.Enabled)
 				.Select(s => s.TablePath + @"\")
 				.Distinct()
-				.Where(Directory.Exists)
-				.ToList()
-				.ForEach(sysPath => {
-					_logger.Info("Watching {0}*.vp[tx]", sysPath);
-					var watcher = (new FilesystemWatchCache()).Register(sysPath);
-					result = result == null ? watcher : result.Merge(watcher);
-				});
-			return result != null 
-				? result.Where(f => Regex.IsMatch(Path.GetExtension(f), pattern, RegexOptions.IgnoreCase)) 
-				: Observable.Empty<string>();
+				.Where(Directory.Exists);
 
+			foreach (var newPath in newPaths) {
+				
+				// start watching new paths
+				if (!oldPaths.Contains(newPath)) {
+					var watcher = (new FilesystemWatchCache()).Register(newPath)
+						.Where(f => Regex.IsMatch(Path.GetExtension(f), pattern, RegexOptions.IgnoreCase))
+						.Subscribe(_tableWatcher.OnNext);
+					_tableWatches.Add(newPath, watcher);
+					_logger.Info("Started watching table folder {0}", newPath);
+
+				// ignore already watching paths
+				} else {
+					oldPaths.Remove(newPath);
+				}
+			}
+			// stop watching non-provided paths
+			foreach (var oldPath in oldPaths) {
+				_tableWatches[oldPath].Dispose();
+				_tableWatches.Remove(oldPath);
+				_logger.Info("Stopped watching table folder {0}", oldPath);
+			}
+
+			return _tableWatcher;
 		}
 	}
 }

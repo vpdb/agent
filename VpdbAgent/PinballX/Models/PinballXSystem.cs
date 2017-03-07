@@ -211,6 +211,7 @@ namespace VpdbAgent.PinballX.Models
 		{
 			GetDatbaseFiles().ForEach(RemoveGames);
 			_disposables.Clear();
+			_logger.Info("Stopped watching XML files at {0}...", DatabasePath);
 		}
 
 		/// <summary>
