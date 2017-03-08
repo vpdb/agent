@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using NuGet;
 using ReactiveUI;
 using VpdbAgent.Application;
 using VpdbAgent.Common.Filesystem;
@@ -169,7 +170,7 @@ namespace VpdbAgent.PinballX.Models
 		private void EnableSystem()
 		{
 			// kick off
-			GetDatbaseFiles().ForEach(UpdateGames);
+			GetDatabaseFiles().ForEach(UpdateGames);
 
 			// then setup watchers
 			_fsw = new System.IO.FileSystemWatcher(DatabasePath, "*.xml");
@@ -209,9 +210,11 @@ namespace VpdbAgent.PinballX.Models
 		/// </summary>
 		private void DisableSystem()
 		{
-			GetDatbaseFiles().ForEach(RemoveGames);
+			GetDatabaseFiles().ForEach(RemoveGames);
+			if (!_disposables.IsEmpty()) {
+				_logger.Info("Stopped watching XML files at {0}...", DatabasePath);
+			}
 			_disposables.Clear();
-			_logger.Info("Stopped watching XML files at {0}...", DatabasePath);
 		}
 
 		/// <summary>
@@ -300,7 +303,7 @@ namespace VpdbAgent.PinballX.Models
 					}
 					var menu = _marshallManager.UnmarshallXml(filePath);
 					menu.Games.ForEach(game => {
-						game.PinballXSystem = this;
+						game.System = this;
 						game.DatabaseFile = currentDatabaseFile;
 					});
 					games.AddRange(menu.Games);
@@ -348,7 +351,7 @@ namespace VpdbAgent.PinballX.Models
 		/// Returns all database files of this system.
 		/// </summary>
 		/// <returns>List of full paths to database files</returns>
-		private List<string> GetDatbaseFiles()
+		private List<string> GetDatabaseFiles()
 		{
 			return _dir
 				.GetFiles(DatabasePath)

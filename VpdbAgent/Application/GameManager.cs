@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using NLog;
 using ReactiveUI;
 using SynchrotronNet;
+using VpdbAgent.Common.Filesystem;
 using VpdbAgent.Data.Objects;
 using VpdbAgent.PinballX;
 using VpdbAgent.PinballX.Models;
@@ -105,6 +106,7 @@ namespace VpdbAgent.Application
 		private readonly IRealtimeManager _realtimeManager;
 		private readonly IVisualPinballManager _visualPinballManager;
 		private readonly IThreadManager _threadManager;
+		private readonly IFile _file;
 		private readonly ILogger _logger;
 
 		// props
@@ -120,7 +122,8 @@ namespace VpdbAgent.Application
 		public GameManager(IMenuManager menuManager, IVpdbClient vpdbClient, ISettingsManager 
 			settingsManager, IDownloadManager downloadManager, IDatabaseManager databaseManager,
 			IVersionManager versionManager, IPlatformManager platformManager, IMessageManager messageManager,
-			IRealtimeManager realtimeManager, IVisualPinballManager visualPinballManager, IThreadManager threadManager, ILogger logger)
+			IRealtimeManager realtimeManager, IVisualPinballManager visualPinballManager, IThreadManager threadManager, 
+			IFile file, ILogger logger)
 		{
 			_menuManager = menuManager;
 			_vpdbClient = vpdbClient;
@@ -133,10 +136,8 @@ namespace VpdbAgent.Application
 			_realtimeManager = realtimeManager;
 			_visualPinballManager = visualPinballManager;
 			_threadManager = threadManager;
+			_file = file;
 			_logger = logger;
-
-			// setup game change listener once all games are fetched.
-			//_menuManager.Initialized.Subscribe(_ => SetupGameChanges());
 
 			// update releases from VPDB on the first run, but delay it a bit so it 
 			// doesn't do all that shit at the same time!
@@ -155,6 +156,8 @@ namespace VpdbAgent.Application
 			// setup handlers for table file changes
 			_menuManager.TableFileChanged.Throttle(TimeSpan.FromMilliseconds(250)).Subscribe(OnTableFileChanged);
 			_menuManager.TableFileRemoved.Throttle(TimeSpan.FromMilliseconds(250)).Subscribe(OnTableFileRemoved);
+			_menuManager.TableFolderAdded.Subscribe(OnTableFolderAdded);
+			_menuManager.TableFolderRemoved.Subscribe(OnTableFolderRemoved);
 
 			// when game is linked or unlinked, update profile with channel info
 			IDisposable gameLinked = null;
@@ -177,7 +180,7 @@ namespace VpdbAgent.Application
 				throw new InvalidOperationException("Must initialize settings before game manager.");
 			}
 
-			_menuManager.GamesUpdated.Subscribe(d => OnPinballXGamesUpdated(d.Item1, d.Item2, d.Item3));
+			_menuManager.GamesUpdated.Subscribe(d => UpdateXmlGames(d.Item1, d.Item2, d.Item3));
 
 			_databaseManager.Initialize();
 			_menuManager.Initialize();
@@ -204,59 +207,142 @@ namespace VpdbAgent.Application
 		///			<item><term> Go through Global Games and try to match parsed games by description </term></item>
 		/// 		<item><term> If found, update data, otherwise add </term></item>
 		/// 		<item><term> If not found, remove from Global Games if there aren't any other references, otherwise only remove PinballX reference </term></item>
-		/// </list>
+		///  </list>
 		/// </remarks>
 		/// <param name="system"></param>
 		/// <param name="databaseFile"></param>
-		/// <param name="games"></param>
-		public void OnPinballXGamesUpdated(PinballXSystem system, string databaseFile, List<PinballXGame> games)
+		/// <param name="xmlGames"></param>
+		public void UpdateXmlGames(PinballXSystem system, string databaseFile, List<PinballXGame> xmlGames)
 		{
 			// if Global Games are empty, don't bother identifiying and add them all
 			if (AggregatedGames.IsEmpty) {
 				_threadManager.MainDispatcher.Invoke(() => {
 					using (AggregatedGames.SuppressChangeNotifications()) {
-						AggregatedGames.AddRange(games.Select(g => new AggregatedGame(g)));
+						AggregatedGames.AddRange(xmlGames.Select(g => new AggregatedGame(g, _file)));
 					}
 				});
-				_logger.Info("Added {0} games.", games.Count());
+				_logger.Info("Added {0} games from PinballX database.", xmlGames.Count());
 				return;
 			}
 
 			// otherwise, retrieve the systems games from Global Games.
-			var selectedGames = AggregatedGames.Where(g => ReferenceEquals(g.PinballXGame?.PinballXSystem, system)).ToList();
+			var selectedGames = AggregatedGames.Where(g => ReferenceEquals(g.XmlGame?.System, system)).ToList();
 			if (databaseFile != null) {
 				// not only for performance reasons: remaining items in selectedGames will be removed.
-				selectedGames = selectedGames.Where(g => g.PinballXGame.DatabaseFile == databaseFile).ToList();
+				selectedGames = selectedGames.Where(g => g.XmlGame.DatabaseFile == databaseFile).ToList();
 			}
 
-			var toRemovedGames = new HashSet<AggregatedGame>(selectedGames); 
+			var remainingGames = new HashSet<AggregatedGame>(selectedGames); 
 			var added = 0;
 			var updated = 0;
 
 			// now try to match to see if we need to add or update
-			foreach (var newGame in games) {
-				var oldGame = selectedGames.FirstOrDefault(g => ReferenceEquals(g.PinballXGame?.PinballXSystem, system) && g.PinballXGame?.Description == newGame.Description);
+			foreach (var newGame in xmlGames) {
+
+				// todo could also use an index
+				var oldGame = selectedGames.FirstOrDefault(g => ReferenceEquals(g.XmlGame?.System, system) && g.XmlGame?.Description == newGame.Description);
 				
 				// no match, add
 				if (oldGame == null) {
-					_threadManager.MainDispatcher.Invoke(() => AggregatedGames.Add(new AggregatedGame(newGame)));
+					_threadManager.MainDispatcher.Invoke(() => AggregatedGames.Add(new AggregatedGame(newGame, _file)));
 					added++;
 
 				// match and not equal, so update.
-				} else if (!oldGame.PinballXGame.Equals(newGame)) {
-					_threadManager.MainDispatcher.Invoke(() => oldGame.PinballXGame.Update(newGame));
-					toRemovedGames.Remove(oldGame);
+				} else if (!oldGame.EqualsXmlGame(newGame)) {
+					_threadManager.MainDispatcher.Invoke(() => oldGame.Update(newGame));
+					remainingGames.Remove(oldGame);
 					updated++;
 
 				// match but equal, ignore.
 				} else {
-					toRemovedGames.Remove(oldGame);
+					remainingGames.Remove(oldGame);
 				}
 			}
 
-			// remove from Global Games. TODO: only remove if (!g.HasLocalFile && !g.HasMapping) and update others.
-			_threadManager.MainDispatcher.Invoke(() => AggregatedGames.RemoveAll(toRemovedGames));
-			_logger.Info("Added {0} games, removed {1}, updated {2}.", added, toRemovedGames.Count, updated);
+			// remove from Global Games if no other links.
+			var gamesToRemove = remainingGames.Where(g => !g.HasLocalFile && g.HasMapping);
+			_threadManager.MainDispatcher.Invoke(() => AggregatedGames.RemoveAll(gamesToRemove));
+			_logger.Info("Added {0} games, removed {1}, updated {2} from PinballX database.", added, gamesToRemove.Count(), updated);
+		}
+
+		private void UpdateLocalFiles(string tablePath, List<string> filePaths)
+		{
+			var selectedGames = AggregatedGames.Where(g => 
+				g.HasLocalFile && 
+				PathHelper.NormalizePath(Path.GetDirectoryName(g.FileId)) == tablePath
+			).ToList();
+			var remainingGames = new HashSet<AggregatedGame>(selectedGames);
+			var gamesToAdd = new List<AggregatedGame>();
+			var updated = 0;
+
+			foreach (var newPath in filePaths) {
+				var found = false;
+
+				// todo use fileid-based index of O(n) instead of current O(n^2)
+				AggregatedGames
+					.Where(game => game.EqualsFileId(newPath))
+					.ToList()
+					.ForEach(oldGame => {
+						found = true;
+						updated++;
+						_threadManager.MainDispatcher.Invoke(() => oldGame.Update(newPath));
+						if (remainingGames.Contains(oldGame)) {
+							remainingGames.Remove(oldGame);
+						}
+					});
+				if (!found) {
+					gamesToAdd.Add(new AggregatedGame(newPath, _file));
+				}
+			}
+
+			// add games
+			_threadManager.MainDispatcher.Invoke(() => AggregatedGames.AddRange(gamesToAdd));
+
+			// remove from Global Games if no other links.
+			var gamesToRemove = remainingGames.Where(g => !g.HasXmlGame && g.HasMapping);
+			_threadManager.MainDispatcher.Invoke(() => AggregatedGames.RemoveAll(gamesToRemove));
+			_logger.Info("Added {0} games, removed {1}, updated {2} from file system.", gamesToAdd.Count, gamesToRemove.Count(), updated);
+		}
+
+		private void OnTableFolderAdded(string path)
+		{
+			UpdateLocalFiles(path, _menuManager.GetTableFiles(path));
+		}
+
+		private void OnTableFolderRemoved(string path)
+		{
+			_logger.Info("--- Table folder removed: {0}", path);
+		}
+
+		/// <summary>
+		/// A table file has been changed or added (or renamed to given path).
+		/// </summary>
+		/// <param name="path">Absolute path of the file</param>
+		private void OnTableFileChanged(string path)
+		{
+			_logger.Info("--- Table file changed: {0}", path);
+
+			var games = AggregatedGames.Where(g => path.Equals(g.FilePath));
+			/*
+			Games
+				.Where(g => g.Filename != null)
+				.Where(g => Path.GetFileNameWithoutExtension(g.Filename).Equals(Path.GetFileNameWithoutExtension(path)))
+				.ToList()
+				.ForEach(g => { g.Exists = true; });*/
+		}
+
+		/// <summary>
+		/// A table file has been deleted (or renamed from given path).
+		/// </summary>
+		/// <param name="path">Absolute path of the file</param>
+		private void OnTableFileRemoved(string path)
+		{
+			_logger.Info("--- Table file removed: {0}", path);
+			/*Games
+				.Where(g => g.Filename != null)
+				.Where(g => g.Filename.Equals(Path.GetFileName(path)))
+				.ToList()
+				.ForEach(g => { g.Exists = false; });*/
 		}
 
 		public void LinkRelease(Game game, VpdbRelease release, string fileId)
@@ -553,35 +639,6 @@ namespace VpdbAgent.Application
 			game.PatchedTableScript = patchedScript;
 
 			_logger.Info("Successfully wrote back script to table file.");
-		}
-
-		/// <summary>
-		/// A table file has been changed or added (or renamed to given path).
-		/// </summary>
-		/// <param name="path">Absolute path of the file</param>
-		private void OnTableFileChanged(string path)
-		{
-			_logger.Info("--- Table file changed: {0}", path);
-			/*
-			Games
-				.Where(g => g.Filename != null)
-				.Where(g => Path.GetFileNameWithoutExtension(g.Filename).Equals(Path.GetFileNameWithoutExtension(path)))
-				.ToList()
-				.ForEach(g => { g.Exists = true; });*/
-		}
-
-		/// <summary>
-		/// A table file has been deleted (or renamed from given path).
-		/// </summary>
-		/// <param name="path">Absolute path of the file</param>
-		private void OnTableFileRemoved(string path)
-		{
-			_logger.Info("--- Table file removed: {0}", path);
-			/*Games
-				.Where(g => g.Filename != null)
-				.Where(g => g.Filename.Equals(Path.GetFileName(path)))
-				.ToList()
-				.ForEach(g => { g.Exists = false; });*/
 		}
 
 		/// <summary>

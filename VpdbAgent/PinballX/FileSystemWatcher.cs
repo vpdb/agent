@@ -9,6 +9,8 @@ using VpdbAgent.PinballX.Models;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text.RegularExpressions;
+using VpdbAgent.Common.Filesystem;
+using Directory = System.IO.Directory;
 
 namespace VpdbAgent.PinballX
 {
@@ -76,15 +78,24 @@ namespace VpdbAgent.PinballX
 		/// <param name="systems">Systems</param>
 		/// <returns>Observable that receives the absolute path of any changed table file</returns>
 		IObservable<string> WatchTables(IList<PinballXSystem> systems);
+
+		IObservable<string> TableFolderAdded { get; }
+		IObservable<string> TableFolderRemoved { get; }
 	}
 
 	[ExcludeFromCodeCoverage]
 	public class FileSystemWatcher : IFileSystemWatcher
 	{
+		// observers
+		public IObservable<string> TableFolderAdded => _tableFolderAdded;
+		public IObservable<string> TableFolderRemoved => _tableFolderRemoved;
+
 		// dependencies
 		private readonly ILogger _logger;
 
 		// internal props
+		private readonly Subject<string> _tableFolderAdded = new Subject<string>();
+		private readonly Subject<string> _tableFolderRemoved = new Subject<string>();
 		private readonly Dictionary<string, IDisposable> _tableWatches = new Dictionary<string, IDisposable>();
 		private readonly Subject<string> _tableWatcher = new Subject<string>();
 
@@ -127,7 +138,7 @@ namespace VpdbAgent.PinballX
 			var oldPaths = new HashSet<string>(_tableWatches.Keys);
 			var newPaths = systems
 				.Where(s => s.Enabled)
-				.Select(s => s.TablePath + @"\")
+				.Select(s => PathHelper.NormalizePath(s.TablePath) + @"\")
 				.Distinct()
 				.Where(Directory.Exists);
 
@@ -139,6 +150,7 @@ namespace VpdbAgent.PinballX
 						.Where(f => Regex.IsMatch(Path.GetExtension(f), pattern, RegexOptions.IgnoreCase))
 						.Subscribe(_tableWatcher.OnNext);
 					_tableWatches.Add(newPath, watcher);
+					_tableFolderAdded.OnNext(newPath);
 					_logger.Info("Started watching table folder {0}", newPath);
 
 				// ignore already watching paths
@@ -150,6 +162,7 @@ namespace VpdbAgent.PinballX
 			foreach (var oldPath in oldPaths) {
 				_tableWatches[oldPath].Dispose();
 				_tableWatches.Remove(oldPath);
+				_tableFolderRemoved.OnNext(oldPath);
 				_logger.Info("Stopped watching table folder {0}", oldPath);
 			}
 

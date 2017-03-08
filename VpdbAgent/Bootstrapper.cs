@@ -206,6 +206,7 @@ namespace VpdbAgent
 				deps.GetService<IRealtimeManager>(),
 				deps.GetService<IVisualPinballManager>(),
 				deps.GetService<IThreadManager>(),
+				deps.GetService<IFile>(),
 				deps.GetService<NLog.ILogger>()
 			), typeof(IGameManager));
 

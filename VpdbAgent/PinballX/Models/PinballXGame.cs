@@ -61,7 +61,7 @@ namespace VpdbAgent.PinballX.Models
 		public string DatabaseFile { get { return _databaseFile; } set { this.RaiseAndSetIfChanged(ref _databaseFile, value); } }
 
 		[XmlIgnore]
-		public PinballXSystem PinballXSystem { get; set; }
+		public PinballXSystem System { get; set; }
 
 
 		// watched props

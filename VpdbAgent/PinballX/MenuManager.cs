@@ -97,6 +97,10 @@ namespace VpdbAgent.PinballX
 		/// A table file has been deleted (or renamed from given path).
 		/// </summary>
 		IObservable<string> TableFileRemoved { get; }
+
+		IObservable<string> TableFolderAdded { get; }
+		IObservable<string> TableFolderRemoved { get; }
+		List<string> GetTableFiles(string path);
 	}
 
 	/// <summary>
@@ -110,7 +114,9 @@ namespace VpdbAgent.PinballX
 		public IObservable<Tuple<PinballXSystem, string, List<PinballXGame>>> GamesUpdated => _gamesUpdated;
 		public IObservable<string> TableFileChanged => _tableFileChanged;
 		public IObservable<string> TableFileRemoved => _tableFileRemoved;
-		
+		public IObservable<string> TableFolderAdded => _watcher.TableFolderAdded;
+		public IObservable<string> TableFolderRemoved => _watcher.TableFolderRemoved;
+
 		// privates
 		private readonly Subject<Unit> _initialized = new Subject<Unit>();
 		private readonly Subject<Tuple<PinballXSystem, string, List<PinballXGame>>> _gamesUpdated = new Subject<Tuple<PinballXSystem, string, List<PinballXGame>>>();
@@ -157,44 +163,8 @@ namespace VpdbAgent.PinballX
 
 			// setup table file watcher
 			Systems.ShouldReset.ObserveOn(_threadManager.WorkerScheduler).Subscribe(_ => UpdateTableWatchers());
-			//Systems.ItemsAdded.ObserveOn(_threadManager.WorkerScheduler).Subscribe(_ => UpdateTableWatchers());
 			Systems.ItemsRemoved.ObserveOn(_threadManager.WorkerScheduler).Subscribe(_ => UpdateTableWatchers());
-
-			// in the beginning when there are no systems, we'll get ShouldReset, so update all.
-			//Systems.ShouldReset
-			//	.ObserveOn(_threadManager.WorkerScheduler)
-			//	.Subscribe(UpdateGames);
-
-			/*
-			// parse games when systems change
-			Systems.Changed
-				.ObserveOn(_threadManager.WorkerScheduler)
-				.Subscribe(UpdateGames);
-
-			// parse games when .xmls change
-			IDisposable xmlWatcher = null;
-			IDisposable tableWatcher = null;
-			Systems.Changed.Subscribe(systems => {
-
-				// database files
-				xmlWatcher?.Dispose();
-				xmlWatcher = _watcher.DatabaseWatcher(dbPath, Systems)
-					.ObserveOn(_threadManager.WorkerScheduler)
-					.Select(path => new { path, system = Systems.FirstOrDefault(s => s.DatabasePath.Equals(Path.GetDirectoryName(path))) })
-					.Subscribe(x => UpdateGames(x.system, Path.GetFileName(x.path)));
-
-				// table files
-				tableWatcher?.Dispose();
-				tableWatcher = _watcher.WatchTables(Systems)
-					.Subscribe(f => {
-						if (_file.Exists(f)) {
-							_tableFileChanged.OnNext(f);
-						} else {
-							_tableFileRemoved.OnNext(f);
-						}
-					});
-			});*/
-
+		
 			// update systems when ini changes (also, kick it off now)
 			_watcher.FileWatcher(iniPath)
 				.StartWith(iniPath)                             // kick-off without waiting for first file change
@@ -309,6 +279,14 @@ namespace VpdbAgent.PinballX
 			_systemDisposables[system]?.Dispose();
 			_systemDisposables.Remove(system);
 		}
+
+		public List<string> GetTableFiles(string path)
+		{
+			return _dir
+				.GetFiles(path)
+				.Where(filePath => ".vpt".Equals(Path.GetExtension(filePath), StringComparison.InvariantCultureIgnoreCase) || ".vpx".Equals(Path.GetExtension(filePath), StringComparison.InvariantCultureIgnoreCase)) 
+				.ToList();
+		} 
 
 		public PinballXGame AddGame(PinballXGame game, string databasePath)
 		{

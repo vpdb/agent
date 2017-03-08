@@ -269,6 +269,7 @@
     <Compile Include="Common\Extensions\Common.cs" />
     <Compile Include="Common\Filesystem\Directory.cs" />
     <Compile Include="Common\Filesystem\File.cs" />
+    <Compile Include="Common\Filesystem\PathHelper.cs" />
     <Compile Include="Data\DatabaseManager.cs" />
     <Compile Include="Data\Json\Mapping.cs" />
     <Compile Include="Data\Objects\AggregatedGame.cs" />
