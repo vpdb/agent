@@ -99,11 +99,22 @@ namespace VpdbAgent.Data.Objects
 			return this;
 		}
 
+		public void ClearXmlGame()
+		{
+			XmlGame = null;
+		}
+
 		public AggregatedGame Update(string filePath)
 		{
 			FilePath = filePath;
 			FileSize = _file.FileSize(filePath);
 			return this;
+		}
+
+		public void ClearLocalFile()
+		{
+			FilePath = null;
+			FileSize = 0;
 		}
 
 		public bool EqualsXmlGame(PinballXGame xmlGame)
@@ -113,9 +124,6 @@ namespace VpdbAgent.Data.Objects
 
 		public bool EqualsFileId(string filePath)
 		{
-			Console.WriteLine("---------------------------------------------------------");
-			Console.WriteLine(Path.Combine(Path.GetDirectoryName(filePath), Path.GetFileNameWithoutExtension(filePath)));
-			Console.WriteLine(FileId);
 			return Path.Combine(Path.GetDirectoryName(filePath), Path.GetFileNameWithoutExtension(filePath)) == FileId;
 		}
 	}
