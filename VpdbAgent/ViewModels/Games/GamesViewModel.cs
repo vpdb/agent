@@ -7,8 +7,9 @@ using ReactiveUI;
 using Splat;
 using VpdbAgent.Application;
 using VpdbAgent.Common.Extensions;
-using VpdbAgent.Models;
+using VpdbAgent.Data.Objects;
 using Game = VpdbAgent.Models.Game;
+using Platform = VpdbAgent.Models.Platform;
 
 namespace VpdbAgent.ViewModels.Games
 {
@@ -47,8 +48,8 @@ namespace VpdbAgent.ViewModels.Games
 
 			// push all games into AllGames as view models and sorted
 			_allGames = gameManager.AggregatedGames.CreateDerivedCollection(
-				game => new GameItemViewModel(game, resolver) { IsVisible = true /*IsGameVisible(game)*/ },
-				gameViewModel => true,                                                   // filter
+				game => new GameItemViewModel(game, resolver) { IsVisible = IsGameVisible(game) },
+				gameViewModel => true,																 // filter
 				(x, y) => string.Compare(x.Game.FileName, y.Game.FileName, StringComparison.Ordinal) // order
 			);
 
@@ -161,6 +162,11 @@ namespace VpdbAgent.ViewModels.Games
 		private bool IsGameVisible(Game game)
 		{
 			return game.Platform.IsEnabled && _platformFilter.Contains(game.Platform.Name);
+		}
+
+		private bool IsGameVisible(AggregatedGame game)
+		{
+			return game.Enabled;
 		}
 
 		/// <summary>

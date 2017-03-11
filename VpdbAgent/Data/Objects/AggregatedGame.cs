@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ReactiveUI;
@@ -52,12 +53,17 @@ namespace VpdbAgent.Data.Objects
 		/// </summary>
 		public PinballXGame XmlGame { get { return _xmlGame; } set { this.RaiseAndSetIfChanged(ref _xmlGame, value); } }
 
+		public bool Enabled => _enabled == null || _enabled.Value;
+
 		// deps
 		private readonly IFile _file;
 
 		// watched props
 		private string _filePath;
 		private PinballXGame _xmlGame;
+
+		// generated props
+		private readonly ObservableAsPropertyHelper<bool> _enabled;
 
 		// status props
 		public bool HasMapping => false;
@@ -76,9 +82,15 @@ namespace VpdbAgent.Data.Objects
 			_file = file;
 		}
 
-		public AggregatedGame(PinballXGame game, IFile file) : this(file)
+		public AggregatedGame(PinballXGame xmlGame, IFile file) : this(file)
 		{
-			Update(game);
+			Update(xmlGame);
+
+			// Enabled
+			XmlGame.WhenAnyValue(g => g.Enabled)
+				.Select(e => "true".Equals(e, StringComparison.InvariantCultureIgnoreCase))
+				.Do(e => Console.WriteLine("------ setting enabled = {0} ({1})", e, FileId))
+				.ToProperty(this, game => game.Enabled, out _enabled);
 		}
 
 		public AggregatedGame(string filePath, IFile file) : this(file)

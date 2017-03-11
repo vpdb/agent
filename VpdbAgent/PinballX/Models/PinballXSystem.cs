@@ -177,29 +177,36 @@ namespace VpdbAgent.PinballX.Models
 			_logger.Info("Watching XML files at {0}...", DatabasePath);
 			_disposables.Add(_fsw);
 
+			var trottle = TimeSpan.FromMilliseconds(100); // file changes are triggered multiple times
+			var delay = TimeSpan.FromMilliseconds(500);  // avoid concurrent read/write access
+
 			// file changed
 			_disposables.Add(Observable
 					.FromEventPattern<FileSystemEventHandler, FileSystemEventArgs>(x => _fsw.Changed += x, x => _fsw.Changed -= x)
-					.Throttle(TimeSpan.FromMilliseconds(250), RxApp.TaskpoolScheduler)
+					.Throttle(trottle, RxApp.TaskpoolScheduler)
 					.Where(x => x.EventArgs.FullPath != null)
+					.Delay(delay)
 					.Subscribe(x => UpdateGames(x.EventArgs.FullPath)));
 
 			// file created
 			_disposables.Add(Observable
 					.FromEventPattern<FileSystemEventHandler, FileSystemEventArgs>(x => _fsw.Created += x, x => _fsw.Created -= x)
-					.Throttle(TimeSpan.FromMilliseconds(250), RxApp.TaskpoolScheduler)
+					.Throttle(trottle, RxApp.TaskpoolScheduler)
+					.Delay(delay)
 					.Subscribe(x => UpdateGames(x.EventArgs.FullPath)));
 
 			// file deleted
 			_disposables.Add(Observable
 					.FromEventPattern<FileSystemEventHandler, FileSystemEventArgs>(x => _fsw.Deleted += x, x => _fsw.Deleted -= x)
-					.Throttle(TimeSpan.FromMilliseconds(250), RxApp.TaskpoolScheduler)
+					.Throttle(trottle, RxApp.TaskpoolScheduler)
+					.Delay(delay)
 					.Subscribe(x => RemoveGames(x.EventArgs.FullPath)));
 
 			// file renamed
 			_disposables.Add(Observable
 					.FromEventPattern<RenamedEventHandler, FileSystemEventArgs>(x => _fsw.Renamed += x, x => _fsw.Renamed -= x)
-					.Throttle(TimeSpan.FromMilliseconds(250), RxApp.TaskpoolScheduler)
+					.Throttle(trottle, RxApp.TaskpoolScheduler)
+					.Delay(delay)
 					.Subscribe(x => RenameDatabase(((RenamedEventArgs)x.EventArgs).OldFullPath, x.EventArgs.FullPath)));
 
 			_fsw.EnableRaisingEvents = true;
@@ -238,7 +245,7 @@ namespace VpdbAgent.PinballX.Models
 			Games[databaseFile] = ParseGames(databaseFile);
 
 			// filter disabled games
-			var games = Games[databaseFile].Where(g => g.Enabled == null || "true".Equals(g.Enabled, StringComparison.InvariantCultureIgnoreCase)).ToList();
+			var games = Games[databaseFile]; //.Where(g => g.Enabled == null || "true".Equals(g.Enabled, StringComparison.InvariantCultureIgnoreCase)).ToList();
 
 			// trigger update
 			_gamesUpdated.OnNext(new Tuple<string, List<PinballXGame>>(databaseFile, games));
