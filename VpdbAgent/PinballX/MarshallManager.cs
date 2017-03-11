@@ -197,7 +197,6 @@ namespace VpdbAgent.PinballX
 				_logger.Error(e, "Error writing XML to {0}: {1}", filepath, e.Message);
 				_crashManager.Report(e, "xml");
 			}
-
 		}
 
 		#region Obsolete

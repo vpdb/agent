@@ -246,6 +246,10 @@ namespace VpdbAgent.Application
 
 					// todo could also use an index
 					var oldGame = selectedGames.FirstOrDefault(g => ReferenceEquals(g.XmlGame?.System, system) && g.XmlGame?.Description == newGame.Description);
+					// fallback: match by file id
+					if (oldGame == null) {
+						oldGame = AggregatedGames.FirstOrDefault(g => g.FileId == Path.Combine(newGame.System.TablePath, Path.GetFileName(newGame.Filename)));
+					}
 				
 					// no match, add
 					if (oldGame == null) {
@@ -360,15 +364,20 @@ namespace VpdbAgent.Application
 		/// <param name="path">Absolute path of the file</param>
 		private void OnTableFileChanged(string path)
 		{
-			_logger.Info("--- Table file changed: {0}", path);
-
-			var games = AggregatedGames.Where(g => path.Equals(g.FilePath));
-			/*
-			Games
-				.Where(g => g.Filename != null)
-				.Where(g => Path.GetFileNameWithoutExtension(g.Filename).Equals(Path.GetFileNameWithoutExtension(path)))
+			var found = false;
+			// todo use fileid-based index
+			AggregatedGames
+				.Where(game => game.EqualsFileId(path))
 				.ToList()
-				.ForEach(g => { g.Exists = true; });*/
+				.ForEach(oldGame => {
+					found = true;
+					_threadManager.MainDispatcher.Invoke(() => oldGame.Update(path));
+					_logger.Info("Updated {0} from file system.", path);
+				});
+			if (!found) {
+				_threadManager.MainDispatcher.Invoke(() => AggregatedGames.Add(new AggregatedGame(path, _file)));
+				_logger.Info("Added {0} from file system.", path);
+			}
 		}
 
 		/// <summary>
@@ -377,13 +386,31 @@ namespace VpdbAgent.Application
 		/// <param name="path">Absolute path of the file</param>
 		private void OnTableFileRemoved(string path)
 		{
-			_logger.Info("--- Table file removed: {0}", path);
-			/*Games
-				.Where(g => g.Filename != null)
-				.Where(g => g.Filename.Equals(Path.GetFileName(path)))
-				.ToList()
-				.ForEach(g => { g.Exists = false; });*/
+			var matchedGames = AggregatedGames.Where(game => game.EqualsFileId(path)).ToList();
+			// remove or clear games
+			_threadManager.MainDispatcher.Invoke(() => {
+				foreach (var game in matchedGames) {
+					if (!game.HasXmlGame && !game.HasMapping) {
+						AggregatedGames.Remove(game);
+						_logger.Info("Removed {0} from file system.", path);
+					} else {
+						game.ClearLocalFile();
+						_logger.Info("Cleared {0} from file system.", path);
+					}
+				}
+			});
 		}
+
+
+
+
+
+
+
+
+
+
+
 
 		public void LinkRelease(Game game, VpdbRelease release, string fileId)
 		{
