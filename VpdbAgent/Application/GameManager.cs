@@ -51,11 +51,11 @@ namespace VpdbAgent.Application
 		/// <see cref="PinballXGame"/> and upstream changes are written
 		/// to the .json file sitting in the system's database folder.
 		/// </summary>
+		[Obsolete]
 		ReactiveList<Game> Games { get; }
-
 		ReactiveList<AggregatedGame> AggregatedGames { get; }
 
-			/// <summary>
+		/// <summary>
 		/// A one-time message fired when everything has been initialized and
 		/// GUI can start adding its own subscriptions without re-updating
 		/// during initialization.
@@ -173,12 +173,15 @@ namespace VpdbAgent.Application
 			if (string.IsNullOrEmpty(_settingsManager.Settings.ApiKey)) {
 				throw new InvalidOperationException("Must initialize settings before game manager.");
 			}
-			
+
+			var trottle = TimeSpan.FromMilliseconds(100); // file changes are triggered multiple times
+			var delay = TimeSpan.FromMilliseconds(500);   // let props update first
+
 			// setup handlers for table file changes
-			_menuManager.TableFileChanged.Throttle(TimeSpan.FromMilliseconds(250)).Subscribe(OnTableFileChanged);
-			_menuManager.TableFileRemoved.Throttle(TimeSpan.FromMilliseconds(250)).Subscribe(OnTableFileRemoved);
-			_menuManager.TableFolderAdded.Subscribe(OnTableFolderAdded);
-			_menuManager.TableFolderRemoved.Subscribe(OnTableFolderRemoved);
+			_menuManager.TableFileChanged.Throttle(trottle).Subscribe(OnTableFileChanged);
+			_menuManager.TableFileRemoved.Throttle(trottle).Subscribe(OnTableFileRemoved);
+			_menuManager.TableFolderAdded.Delay(delay).Subscribe(path => MergeLocalFiles(path, _menuManager.GetTableFiles(path)));
+			_menuManager.TableFolderRemoved.Delay(delay).Subscribe(path => MergeLocalFiles(path, new List<string>()));
 
 			// setup handler for xml database changes
 			_menuManager.GamesUpdated.Subscribe(d => MergeXmlGames(d.Item1, d.Item2, d.Item3));
@@ -190,8 +193,6 @@ namespace VpdbAgent.Application
 
 			// validate settings and retrieve profile
 			Task.Run(async () => await _settingsManager.Validate(_settingsManager.Settings, _messageManager));
-
-			
 		}
 
 		/// <summary>
@@ -199,20 +200,18 @@ namespace VpdbAgent.Application
 		/// </summary>
 		/// 
 		/// <remarks>
+		/// The provided games list is exhaustive, meaning existing games of
+		/// the given system and database file are to be removed. Provide an
+		/// empty list to remove all of them.
+		/// 
 		/// This is triggered on <see cref="PinballXSystem.GamesUpdated"/>. The
 		/// received list is then merged into <see cref="AggregatedGames"/>,
 		/// while only data that has changed is updated.
-		/// 
-		/// In a nutshell, this is how it's done:
-		///  <list type="number">
-		///			<item><term> Go through Global Games and try to match parsed games by description </term></item>
-		/// 		<item><term> If found, update data, otherwise add </term></item>
-		/// 		<item><term> If not found, remove from Global Games if there aren't any other references, otherwise only remove PinballX reference </term></item>
-		///  </list>
 		/// </remarks>
-		/// <param name="system"></param>
-		/// <param name="databaseFile"></param>
-		/// <param name="xmlGames"></param>
+		/// 
+		/// <param name="system">System of the updated games</param>
+		/// <param name="databaseFile">Database file of the updated games</param>
+		/// <param name="xmlGames">Parsed games</param>
 		public void MergeXmlGames(PinballXSystem system, string databaseFile, List<PinballXGame> xmlGames)
 		{
 			lock (AggregatedGames) {
@@ -228,12 +227,12 @@ namespace VpdbAgent.Application
 					return;
 				}
 
-				// otherwise, retrieve the systems games from Global Games.
-				var selectedGames = AggregatedGames.Where(g => ReferenceEquals(g.XmlGame?.System, system)).ToList();
-				if (databaseFile != null) {
-					// not only for performance reasons: remaining items in selectedGames will be removed.
-					selectedGames = selectedGames.Where(g => g.XmlGame.DatabaseFile == databaseFile).ToList();
-				}
+				// otherwise, retrieve the system's games from Global Games.
+				var selectedGames = AggregatedGames.Where(g => 
+					g.XmlGame != null &&
+					ReferenceEquals(g.XmlGame.System, system) && 
+					g.XmlGame.DatabaseFile == databaseFile
+				).ToList();
 
 				var remainingGames = new HashSet<AggregatedGame>(selectedGames); 
 				var gamesToAdd = new List<AggregatedGame>();
@@ -245,11 +244,8 @@ namespace VpdbAgent.Application
 				foreach (var newGame in xmlGames) {
 
 					// todo could also use an index
-					var oldGame = selectedGames.FirstOrDefault(g => ReferenceEquals(g.XmlGame?.System, system) && g.XmlGame?.Description == newGame.Description);
-					// fallback: match by file id
-					if (oldGame == null) {
-						oldGame = AggregatedGames.FirstOrDefault(g => g.FileId == Path.Combine(newGame.System.TablePath, Path.GetFileName(newGame.Filename)));
-					}
+					var fileId = Path.Combine(newGame.System.TablePath, Path.GetFileName(newGame.Filename));
+					var oldGame = AggregatedGames.FirstOrDefault(g => g.FileId == fileId);
 				
 					// no match, add
 					if (oldGame == null) {
@@ -290,13 +286,30 @@ namespace VpdbAgent.Application
 			}
 		}
 
-		private void MergeLocalFiles(string tablePath, List<string> filePaths)
+		/// <summary>
+		/// Merges table files of a table folder into Global Games.
+		/// </summary>
+		/// 
+		/// <remarks>
+		/// The provided games list is exhaustive, meaning existing games 
+		/// within the given path are to be removed. Provide an empty list to 
+		/// remove all of them.
+		/// 
+		/// This is triggered on <see cref="MenuManager.TableFolderAdded"/> and
+		/// <see cref="MenuManager.TableFolderRemoved"/>. The received list is 
+		/// then merged into <see cref="AggregatedGames"/>, while only data that
+		/// has changed is updated.
+		/// </remarks>
+		/// <param name="tablePath">Absolute path to table folder</param>
+		/// <param name="filePaths">List of absolute paths to table files</param>
+		private void MergeLocalFiles(string tablePath, IEnumerable<string> filePaths)
 		{
 			lock (AggregatedGames) {
 
+				tablePath = PathHelper.NormalizePath(tablePath);
 				var selectedGames = AggregatedGames.Where(g => 
 					g.HasLocalFile && 
-					PathHelper.NormalizePath(Path.GetDirectoryName(g.FileId)) == PathHelper.NormalizePath(tablePath)
+					PathHelper.NormalizePath(Path.GetDirectoryName(g.FileId)) == tablePath
 				).ToList();
 				var remainingGames = new HashSet<AggregatedGame>(selectedGames);
 				var gamesToAdd = new List<AggregatedGame>();
@@ -309,6 +322,7 @@ namespace VpdbAgent.Application
 					var found = false;
 
 					// todo use fileid-based index of O(n) instead of current O(n^2)
+					// todo use selectedGames instead of AggregatedGames
 					AggregatedGames
 						.Where(game => game.EqualsFileId(newPath))
 						.ToList()
@@ -348,35 +362,31 @@ namespace VpdbAgent.Application
 			}
 		}
 
-		private void OnTableFolderAdded(string path)
-		{
-			MergeLocalFiles(path, _menuManager.GetTableFiles(path));
-		}
-
-		private void OnTableFolderRemoved(string path)
-		{
-			MergeLocalFiles(path, new List<string>());
-		}
-
 		/// <summary>
 		/// A table file has been changed or added (or renamed to given path).
 		/// </summary>
 		/// <param name="path">Absolute path of the file</param>
 		private void OnTableFileChanged(string path)
 		{
-			var found = false;
-			// todo use fileid-based index
-			AggregatedGames
-				.Where(game => game.EqualsFileId(path))
-				.ToList()
-				.ForEach(oldGame => {
-					found = true;
-					_threadManager.MainDispatcher.Invoke(() => oldGame.Update(path));
-					_logger.Info("Updated {0} from file system.", path);
-				});
-			if (!found) {
-				_threadManager.MainDispatcher.Invoke(() => AggregatedGames.Add(new AggregatedGame(path, _file)));
-				_logger.Info("Added {0} from file system.", path);
+			lock (AggregatedGames) {
+				var found = false;
+				// todo use fileid-based index
+				AggregatedGames
+					.Where(game => game.EqualsFileId(path))
+					.ToList()
+					.ForEach(oldGame => {
+						found = true;
+						_threadManager.MainDispatcher.Invoke(() => oldGame.Update(path));
+						if (oldGame.XmlGame == null) {
+							_logger.Info("Updated {0} from file system.", path);
+						} else {
+							_logger.Info("Updated {0} from file system ({1}).", path, oldGame.XmlGame.Description);
+						}
+					});
+				if (!found) {
+					_threadManager.MainDispatcher.Invoke(() => AggregatedGames.Add(new AggregatedGame(path, _file)));
+					_logger.Info("Added {0} from file system.", path);
+				}
 			}
 		}
 
@@ -386,19 +396,21 @@ namespace VpdbAgent.Application
 		/// <param name="path">Absolute path of the file</param>
 		private void OnTableFileRemoved(string path)
 		{
-			var matchedGames = AggregatedGames.Where(game => game.EqualsFileId(path)).ToList();
-			// remove or clear games
-			_threadManager.MainDispatcher.Invoke(() => {
-				foreach (var game in matchedGames) {
-					if (!game.HasXmlGame && !game.HasMapping) {
-						AggregatedGames.Remove(game);
-						_logger.Info("Removed {0} from file system.", path);
-					} else {
-						game.ClearLocalFile();
-						_logger.Info("Cleared {0} from file system.", path);
+			lock (AggregatedGames) {
+				var matchedGames = AggregatedGames.Where(game => game.EqualsFileId(path)).ToList();
+				// remove or clear games
+				_threadManager.MainDispatcher.Invoke(() => {
+					foreach (var game in matchedGames) {
+						if (!game.HasXmlGame && !game.HasMapping) {
+							AggregatedGames.Remove(game);
+							_logger.Info("Removed {0} from file system.", path);
+						} else {
+							game.ClearLocalFile();
+							_logger.Info("Cleared {0} from file system.", path);
+						}
 					}
-				}
-			});
+				});
+			}
 		}
 
 

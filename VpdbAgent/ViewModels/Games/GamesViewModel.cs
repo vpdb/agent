@@ -48,7 +48,7 @@ namespace VpdbAgent.ViewModels.Games
 
 			// push all games into AllGames as view models and sorted
 			_allGames = gameManager.AggregatedGames.CreateDerivedCollection(
-				game => new GameItemViewModel(game, resolver) { IsVisible = IsGameVisible(game) },
+				game => new GameItemViewModel(game, resolver) { IsVisible = true /*IsGameVisible(game)*/ },
 				gameViewModel => true,																 // filter
 				(x, y) => string.Compare(x.Game.FileName, y.Game.FileName, StringComparison.Ordinal) // order
 			);

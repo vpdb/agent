@@ -10,6 +10,7 @@ using ReactiveUI;
 using VpdbAgent.PinballX.Models;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Xml;
 using VpdbAgent.Application;
@@ -200,6 +201,8 @@ namespace VpdbAgent.PinballX
 		{
 			// here, we're on a worker thread.
 			var parsedSystems = ParseSystems(iniPath);
+			var added = 0;
+			var updated = 0;
 
 			// treat result back on main thread
 			_threadManager.MainDispatcher.Invoke(delegate {
@@ -216,9 +219,11 @@ namespace VpdbAgent.PinballX
 					if (oldSystem == null) {
 						InitSystem(parsedSystem);
 						Systems.Add(parsedSystem);
+						added++;
 					} else if (!oldSystem.Equals(parsedSystem)) {
 						oldSystem.Update(parsedSystem);
 						remainingSystems.Remove(oldSystem.Name);
+						updated++;
 					} else {
 						remainingSystems.Remove(oldSystem.Name);
 					}
@@ -226,6 +231,7 @@ namespace VpdbAgent.PinballX
 				foreach (var removedSystem in remainingSystems) {
 					Systems.Remove(Systems.FirstOrDefault(s => s.Name == removedSystem));
 				}
+				_logger.Info("{0} systems updated, {1} added, {2} removed.", updated, added, remainingSystems.Count);
 			});
 		}
 
@@ -397,7 +403,6 @@ namespace VpdbAgent.PinballX
 		{
 			var systems = new List<PinballXSystem>();
 			// only notify after this block
-			_logger.Info("Parsing systems from {0}", iniPath);
 
 			var data = _marshallManager.ParseIni(iniPath);
 			if (data != null) {
@@ -415,7 +420,7 @@ namespace VpdbAgent.PinballX
 					}
 				}
 			}
-			_logger.Info("Done, {0} systems parsed.", systems.Count);
+			_logger.Info("Parsed {0} systems from {1}.", systems.Count, iniPath);
 
 			return systems;
 		}

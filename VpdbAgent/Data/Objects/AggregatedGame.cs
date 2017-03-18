@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using ReactiveUI;
 using VpdbAgent.Common.Filesystem;
 using VpdbAgent.PinballX.Models;
@@ -36,7 +37,7 @@ namespace VpdbAgent.Data.Objects
 		/// <remarks>
 		/// Used to identify from any source.
 		/// </remarks>
-		public string FileId { get; private set; }
+		public string FileId => _fileId.Value;
 
 		/// <summary>
 		/// Absolute file path to physical file or null if file doesn't exist
@@ -64,6 +65,7 @@ namespace VpdbAgent.Data.Objects
 
 		// generated props
 		private readonly ObservableAsPropertyHelper<bool> _enabled;
+		private readonly ObservableAsPropertyHelper<string> _fileId;
 
 		// status props
 		public bool HasMapping => false;
@@ -82,27 +84,36 @@ namespace VpdbAgent.Data.Objects
 			_file = file;
 		}
 
-		public AggregatedGame(PinballXGame xmlGame, IFile file) : this(file)
+		public AggregatedGame([NotNull] PinballXGame xmlGame, IFile file) : this(file)
 		{
 			Update(xmlGame);
 
 			// Enabled
 			XmlGame.WhenAnyValue(g => g.Enabled)
 				.Select(e => "true".Equals(e, StringComparison.InvariantCultureIgnoreCase))
-				.Do(e => Console.WriteLine("------ setting enabled = {0} ({1})", e, FileId))
 				.ToProperty(this, game => game.Enabled, out _enabled);
+
+			// FileId
+			XmlGame.WhenAnyValue(g => g.System.TablePath, g => g.Filename)
+				.Select(x => Path.Combine(x.Item1, x.Item2))
+				.ToProperty(this, game => game.FileId, out _fileId);
+
+			// Unlink local file when table path changes.
+			XmlGame.WhenAnyValue(g => g.System.TablePath).Subscribe(newPath => ClearLocalFile());
 		}
 
-		public AggregatedGame(string filePath, IFile file) : this(file)
+		public AggregatedGame([NotNull] string filePath, IFile file) : this(file)
 		{
-			FileId = Path.Combine(Path.GetDirectoryName(filePath), Path.GetFileNameWithoutExtension(filePath));
+			// FileId
+			this.WhenAnyValue(g => g.FilePath)
+				.Select(filepath => Path.Combine(Path.GetDirectoryName(filePath), Path.GetFileNameWithoutExtension(filePath)))
+				.ToProperty(this, game => game.FileId, out _fileId);
+
 			Update(filePath);
 		}
 
 		public AggregatedGame Update(PinballXGame xmlGame)
 		{
-			FileId = Path.Combine(xmlGame.System.TablePath, xmlGame.Filename);
-
 			if (XmlGame == null) {
 				XmlGame = xmlGame;
 			} else {

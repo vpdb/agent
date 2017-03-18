@@ -22,7 +22,7 @@ namespace VpdbAgent.PinballX.Models
 		/// The identifier used also for media. Maps to <see cref="Game.Id"/>.
 		/// </summary>
 		[XmlElement("description")]
-		public string Description { get; set; }
+		public string Description { get { return _description; } set { this.RaiseAndSetIfChanged(ref _description, value); } }
 
 		[XmlElement("manufacturer")]
 		public string Manufacturer { get; set; }
@@ -66,6 +66,7 @@ namespace VpdbAgent.PinballX.Models
 
 		// watched props
 		private string _fileName;
+		private string _description;
 		private string _alternateExe;
 		private string _enabled;
 		private string _databaseFile;
@@ -73,6 +74,7 @@ namespace VpdbAgent.PinballX.Models
 		public void Update(PinballXGame newGame)
 		{
 			Filename = newGame.Filename;
+			Description = newGame.Description;
 			Manufacturer = newGame.Manufacturer;
 			Year = newGame.Year;
 			Type = newGame.Type;
