@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using JetBrains.Annotations;
 using NuGet;
 using ReactiveUI;
 using VpdbAgent.Application;
@@ -241,7 +242,6 @@ namespace VpdbAgent.PinballX.Models
 			var databaseFile = Path.GetFileName(databaseFilePath);
 
 			// read enabled games from XML
-			_logger.Info("Parsing games for {0} ({1})...", this, databaseFile);
 			Games[databaseFile] = ParseGames(databaseFile);
 
 			// filter disabled games
@@ -288,36 +288,27 @@ namespace VpdbAgent.PinballX.Models
 		/// <summary>
 		/// Parses all games for a given system.
 		/// </summary>
+		/// 
 		/// <remarks>
-		/// "Parsing" means reading and unmarshalling all XML files in the 
+		/// "Parsing" means reading and unmarshalling the given XML file in the 
 		/// system's database folder.
 		/// </remarks>
-		/// <param name="databaseFile">If set, only parse games for given XML file</param>
+		/// 
+		/// <param name="databaseFile">XML file to parse</param>
 		/// <returns>Parsed games</returns>
-		private List<PinballXGame> ParseGames(string databaseFile = null)
+		private List<PinballXGame> ParseGames([NotNull] string databaseFile)
 		{
-			_logger.Info("Parsing games at {0}", DatabasePath);
-
+			var xmlPath = Path.Combine(DatabasePath, databaseFile);
 			var games = new List<PinballXGame>();
-			var fileCount = 0;
 			if (_dir.Exists(DatabasePath)) {
-				foreach (var filePath in _dir.GetFiles(DatabasePath).Where(filePath => ".xml".Equals(Path.GetExtension(filePath), StringComparison.InvariantCultureIgnoreCase)))
-				{
-					var currentDatabaseFile = Path.GetFileName(filePath);
-					// if database file is specified, drop everything else
-					if (databaseFile != null && !databaseFile.Equals(currentDatabaseFile)) {
-						continue;
-					}
-					var menu = _marshallManager.UnmarshallXml(filePath);
-					menu.Games.ForEach(game => {
-						game.System = this;
-						game.DatabaseFile = currentDatabaseFile;
-					});
-					games.AddRange(menu.Games);
-					fileCount++;
-				}
+				var menu = _marshallManager.UnmarshallXml(xmlPath);
+				menu.Games.ForEach(game => {
+					game.System = this;
+					game.DatabaseFile = databaseFile;
+				});
+				games.AddRange(menu.Games);
 			}
-			_logger.Debug("Parsed {0} games from {1} XML file(s) at {2}.", games.Count, fileCount, DatabasePath);
+			_logger.Debug("Parsed {0} games from {1}.", games.Count, xmlPath);
 			return games;
 		}
 		

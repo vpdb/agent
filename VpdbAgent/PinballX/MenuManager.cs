@@ -152,11 +152,6 @@ namespace VpdbAgent.PinballX
 			// todo if we want to support changing pbx folder in the app without restarting, make this dynamic.
 			var iniPath = _settingsManager.Settings.PbxFolder + @"\Config\PinballX.ini";
 
-			Systems.ShouldReset.Subscribe(_ => _logger.Info("Systems Items Should Reset."));
-			Systems.ItemsAdded.Subscribe(s => _logger.Info("Systems Item {0} Added.", s.Name));
-			Systems.ItemsRemoved.Subscribe(s => _logger.Info("Systems Item {0} Removed.", s.Name));
-			Systems.ItemChanged.Subscribe(e => _logger.Info("Systems Item Changed: {0}", e.Sender.Name));
-
 			// setup game relay
 			Systems.ShouldReset.ObserveOn(_threadManager.WorkerScheduler).Subscribe(_ => ResetSystems());
 			Systems.ItemsAdded.Subscribe(AddSystem);

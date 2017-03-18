@@ -154,10 +154,10 @@ namespace VpdbAgent.Application
 			_logger = logger;
 
 			// throttle saving
-			_save
+			/*_save
 				.ObserveOn(Scheduler.Default)
 				.Sample(TimeSpan.FromMilliseconds(500))
-				.Subscribe(_ => { MarshallDatabase(); });
+				.Subscribe(_ => { MarshallDatabase(); });*/
 		}
 
 		public IDatabaseManager Initialize()
