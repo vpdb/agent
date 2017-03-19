@@ -111,7 +111,7 @@ namespace VpdbAgent.Application
 
 		// props
 		public ReactiveList<Game> Games { get; } = new ReactiveList<Game>();
-		public ReactiveList<AggregatedGame> AggregatedGames { get; } = new ReactiveList<AggregatedGame>();
+		public ReactiveList<AggregatedGame> AggregatedGames { get; } = new ReactiveList<AggregatedGame> { ChangeTrackingEnabled = true };
 		public IObservable<Unit> Initialized => _initialized;
 
 		// privates
@@ -177,9 +177,14 @@ namespace VpdbAgent.Application
 			var trottle = TimeSpan.FromMilliseconds(100); // file changes are triggered multiple times
 			var delay = TimeSpan.FromMilliseconds(500);   // let props update first
 
-			// setup handlers for table file changes
-			_menuManager.TableFileChanged.Throttle(trottle).Subscribe(OnTableFileChanged);
-			_menuManager.TableFileRemoved.Throttle(trottle).Subscribe(OnTableFileRemoved);
+			// setup handlers for table file changes TODO implement properly (specially rename)
+			_menuManager.TableFileCreated.Subscribe(OnTableFileChanged);
+			_menuManager.TableFileChanged.Subscribe(OnTableFileChanged);
+			_menuManager.TableFileDeleted.Subscribe(OnTableFileDeleted);
+			_menuManager.TableFileRenamed.Subscribe(x => {
+				OnTableFileDeleted(x.Item1);
+				OnTableFileChanged(x.Item2);
+			});
 			_menuManager.TableFolderAdded.Delay(delay).Subscribe(path => MergeLocalFiles(path, _menuManager.GetTableFiles(path)));
 			_menuManager.TableFolderRemoved.Delay(delay).Subscribe(path => MergeLocalFiles(path, new List<string>()));
 
@@ -190,6 +195,7 @@ namespace VpdbAgent.Application
 			_menuManager.Initialize();
 			_vpdbClient.Initialize();
 			_versionManager.Initialize();
+			_initialized.OnNext(Unit.Default);
 
 			// validate settings and retrieve profile
 			Task.Run(async () => await _settingsManager.Validate(_settingsManager.Settings, _messageManager));
@@ -322,7 +328,6 @@ namespace VpdbAgent.Application
 					var found = false;
 
 					// todo use fileid-based index of O(n) instead of current O(n^2)
-					// todo use selectedGames instead of AggregatedGames
 					AggregatedGames
 						.Where(game => game.EqualsFileId(newPath))
 						.ToList()
@@ -363,7 +368,7 @@ namespace VpdbAgent.Application
 		}
 
 		/// <summary>
-		/// A table file has been changed or added (or renamed to given path).
+		/// A table file has been changed or created.
 		/// </summary>
 		/// <param name="path">Absolute path of the file</param>
 		private void OnTableFileChanged(string path)
@@ -394,7 +399,7 @@ namespace VpdbAgent.Application
 		/// A table file has been deleted (or renamed from given path).
 		/// </summary>
 		/// <param name="path">Absolute path of the file</param>
-		private void OnTableFileRemoved(string path)
+		private void OnTableFileDeleted(string path)
 		{
 			lock (AggregatedGames) {
 				var matchedGames = AggregatedGames.Where(game => game.EqualsFileId(path)).ToList();

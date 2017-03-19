@@ -59,10 +59,10 @@
             </Grid>
 
 
-            <Label Margin="0,0,0,-10">
-                <TextBlock Text="{Binding Game.FileId}" TextTrimming="CharacterEllipsis" FontSize="12" FontWeight="Bold" />
+            <Label Margin="0,0,0,0">
+                <TextBlock Text="{Binding Game.FileId}" TextTrimming="CharacterEllipsis" FontSize="16"/>
             </Label>
-            <Label Margin="0,0,0,-10">
+            <Label Margin="0,0,0,0">
                 <TextBlock Text="{Binding Game.FileName}" TextTrimming="CharacterEllipsis" FontSize="22" FontWeight="Bold" />
             </Label>
 

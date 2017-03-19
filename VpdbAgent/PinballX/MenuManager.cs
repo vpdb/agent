@@ -90,14 +90,25 @@ namespace VpdbAgent.PinballX
 		IObservable<Tuple<PinballXSystem, string, List<PinballXGame>>> GamesUpdated { get; }
 
 		/// <summary>
-		/// A table file has been changed or added (or renamed to given path).
+		/// A table file has been edited
+		/// </summary>
+		/// 
+		IObservable<string> TableFileCreated { get; }
+
+		/// <summary>
+		/// A table file has been updated
 		/// </summary>
 		IObservable<string> TableFileChanged { get; }
 
 		/// <summary>
-		/// A table file has been deleted (or renamed from given path).
+		/// A table file has been renamed
 		/// </summary>
-		IObservable<string> TableFileRemoved { get; }
+		IObservable<Tuple<string, string>> TableFileRenamed { get; }
+
+		/// <summary>
+		/// A table file has been deleted
+		/// </summary>
+		IObservable<string> TableFileDeleted { get; }
 
 		IObservable<string> TableFolderAdded { get; }
 		IObservable<string> TableFolderRemoved { get; }
@@ -113,16 +124,18 @@ namespace VpdbAgent.PinballX
 		public ReactiveList<PinballXSystem> Systems { get; } = new ReactiveList<PinballXSystem>();
 		public IObservable<Unit> Initialized => _initialized;
 		public IObservable<Tuple<PinballXSystem, string, List<PinballXGame>>> GamesUpdated => _gamesUpdated;
-		public IObservable<string> TableFileChanged => _tableFileChanged;
-		public IObservable<string> TableFileRemoved => _tableFileRemoved;
+
+		public IObservable<string> TableFileCreated => _watcher.TableFileCreated;
+		public IObservable<string> TableFileChanged => _watcher.TableFileChanged;
+		public IObservable<Tuple<string, string>> TableFileRenamed => _watcher.TableFileRenamed;
+		public IObservable<string> TableFileDeleted  => _watcher.TableFileDeleted;
+
 		public IObservable<string> TableFolderAdded => _watcher.TableFolderAdded;
 		public IObservable<string> TableFolderRemoved => _watcher.TableFolderRemoved;
 
 		// privates
 		private readonly Subject<Unit> _initialized = new Subject<Unit>();
 		private readonly Subject<Tuple<PinballXSystem, string, List<PinballXGame>>> _gamesUpdated = new Subject<Tuple<PinballXSystem, string, List<PinballXGame>>>();
-		private readonly Subject<string> _tableFileChanged = new Subject<string>();
-		private readonly Subject<string> _tableFileRemoved = new Subject<string>();
 		private readonly Dictionary<PinballXSystem, IDisposable> _systemDisposables = new Dictionary<PinballXSystem, IDisposable>();
 
 		// dependencies
@@ -172,13 +185,7 @@ namespace VpdbAgent.PinballX
 
 		private void UpdateTableWatchers()
 		{
-			_watcher.WatchTables(Systems).Subscribe(f => {
-				if (_file.Exists(f)) {
-					_tableFileChanged.OnNext(f);
-				} else {
-					_tableFileRemoved.OnNext(f);
-				}
-			});
+			_watcher.WatchTables(Systems);
 		}
 
 		/// <summary>

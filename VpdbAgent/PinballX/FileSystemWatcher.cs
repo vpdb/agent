@@ -4,11 +4,13 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Reactive.Disposables;
 using VpdbAgent.Common;
 using VpdbAgent.PinballX.Models;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text.RegularExpressions;
+using ReactiveUI;
 using VpdbAgent.Common.Filesystem;
 using Directory = System.IO.Directory;
 
@@ -34,36 +36,7 @@ namespace VpdbAgent.PinballX
 		/// <param name="filePath">Full path to file to watch</param>
 		/// <returns></returns>
 		IObservable<string> FileWatcher(string filePath);
-
-		/// <summary>
-		/// Returns an observable that will receive events when XML files within
-		/// a given folder.
-		/// </summary>
-		/// 
-		/// <remarks>
-		/// Non-existent database folders will be ignored.
-		/// </remarks>
-		/// 
-		/// <param name="dbPath">Path of PinballX's database folder</param>
-		/// <param name="system">System to watch</param>
-		/// <returns>Observable that receives the absolute path of the database file that changed</returns>
-		IObservable<string> FolderWatcher(string dbPath, PinballXSystem system);
 		
-		/// <summary>
-		/// Returns an observable that will receive events when XML files within
-		/// any of the provided systems' database folders change.
-		/// </summary>
-		/// 
-		/// <remarks>
-		/// Non-existent database folders will be ignored.
-		/// </remarks>
-		/// 
-		/// <param name="dbPath">Path of PinballX's database folder</param>
-		/// <param name="systems">List of systems to watch</param>
-		/// <returns>Observable that receives the absolute path of the database file that changed</returns>
-		[Obsolete("Use FolderWatcher.")]
-		IObservable<string> DatabaseWatcher(string dbPath, IList<PinballXSystem> systems);
-
 		/// <summary>
 		/// Watches all table files for all provided systems.
 		/// </summary>
@@ -76,11 +49,15 @@ namespace VpdbAgent.PinballX
 		/// are automatically disposed, so there is no need to dispose this Oberservable.
 		/// </remarks>
 		/// <param name="systems">Systems</param>
-		/// <returns>Observable that receives the absolute path of any changed table file</returns>
-		IObservable<string> WatchTables(IList<PinballXSystem> systems);
+		void WatchTables(IList<PinballXSystem> systems);
 
 		IObservable<string> TableFolderAdded { get; }
 		IObservable<string> TableFolderRemoved { get; }
+
+		IObservable<string> TableFileCreated { get; }
+		IObservable<string> TableFileChanged { get; }
+		IObservable<Tuple<string, string>> TableFileRenamed { get; }
+		IObservable<string> TableFileDeleted { get; }
 	}
 
 	[ExcludeFromCodeCoverage]
@@ -90,14 +67,23 @@ namespace VpdbAgent.PinballX
 		public IObservable<string> TableFolderAdded => _tableFolderAdded;
 		public IObservable<string> TableFolderRemoved => _tableFolderRemoved;
 
+		public IObservable<string> TableFileCreated => _tableFileCreated;
+		public IObservable<string> TableFileChanged => _tableFileChanged;
+		public IObservable<Tuple<string, string>> TableFileRenamed => _tableFileRenamed;
+		public IObservable<string> TableFileDeleted => _tableFileDeleted;
+
 		// dependencies
 		private readonly ILogger _logger;
 
 		// internal props
 		private readonly Subject<string> _tableFolderAdded = new Subject<string>();
 		private readonly Subject<string> _tableFolderRemoved = new Subject<string>();
+		private readonly Subject<string> _tableFileCreated = new Subject<string>();
+		private readonly Subject<string> _tableFileChanged = new Subject<string>();
+		private readonly Subject<Tuple<string, string>> _tableFileRenamed = new Subject<Tuple<string, string>>();
+		private readonly Subject<string> _tableFileDeleted = new Subject<string>();
+
 		private readonly Dictionary<string, IDisposable> _tableWatches = new Dictionary<string, IDisposable>();
-		private readonly Subject<string> _tableWatcher = new Subject<string>();
 
 		public FileSystemWatcher(ILogger logger) {
 			_logger = logger;
@@ -109,32 +95,10 @@ namespace VpdbAgent.PinballX
 			return (new FilesystemWatchCache()).Register(Path.GetDirectoryName(filePath), Path.GetFileName(filePath));
 		}
 
-		public IObservable<string> FolderWatcher(string dbPath, PinballXSystem system)
-		{
-			var sysPath = dbPath + system.Name  + @"\";
-			const string filter = "*.xml";
-			if (Directory.Exists(sysPath)) {
-				_logger.Info("Watching {0}{1}", sysPath, filter);
-				return (new FilesystemWatchCache()).Register(sysPath, filter);
-			}
-			return new Subject<string>();
-		}
-
-		public IObservable<string> DatabaseWatcher(string dbPath, IList<PinballXSystem> systems)
-		{
-			const string filter = "*.xml";
-			IObservable<string> result = null;
-			foreach (var sysPath in systems.Select(system => dbPath + system.Name + @"\").Where(Directory.Exists)) {
-				_logger.Info("Watching {0}{1}", sysPath, filter);
-				var watcher = (new FilesystemWatchCache()).Register(sysPath, filter);
-				result = result == null ? watcher : result.Merge(watcher);
-			}
-			return result;
-		}
-
-		public IObservable<string> WatchTables(IList<PinballXSystem> systems)
+		public void WatchTables(IList<PinballXSystem> systems)
 		{
 			const string pattern = @"^\.vp[tx]$";
+			var trottle = TimeSpan.FromMilliseconds(100); // file changes are triggered multiple times
 			var oldPaths = new HashSet<string>(_tableWatches.Keys);
 			var newPaths = systems
 				.Where(s => s.Enabled)
@@ -143,13 +107,42 @@ namespace VpdbAgent.PinballX
 				.Where(Directory.Exists);
 
 			foreach (var newPath in newPaths) {
-				
+				var disposables = new CompositeDisposable();
+				var fsw = new System.IO.FileSystemWatcher(newPath);
+				disposables.Add(fsw);
+
 				// start watching new paths
 				if (!oldPaths.Contains(newPath)) {
-					var watcher = (new FilesystemWatchCache()).Register(newPath)
-						.Where(f => Regex.IsMatch(Path.GetExtension(f), pattern, RegexOptions.IgnoreCase))
-						.Subscribe(_tableWatcher.OnNext);
-					_tableWatches.Add(newPath, watcher);
+
+					// file changed
+					disposables.Add(Observable
+							.FromEventPattern<FileSystemEventHandler, FileSystemEventArgs>(x => fsw.Changed += x, x => fsw.Changed -= x)
+							.Throttle(trottle, RxApp.TaskpoolScheduler)
+							.Where(x => x.EventArgs.FullPath != null && Regex.IsMatch(Path.GetExtension(x.EventArgs.FullPath), pattern, RegexOptions.IgnoreCase))
+							.Subscribe(x => _tableFileChanged.OnNext(x.EventArgs.FullPath)));
+
+					// file created
+					disposables.Add(Observable
+							.FromEventPattern<FileSystemEventHandler, FileSystemEventArgs>(x => fsw.Created += x, x => fsw.Created -= x)
+							.Where(x => x.EventArgs.FullPath != null && Regex.IsMatch(Path.GetExtension(x.EventArgs.FullPath), pattern, RegexOptions.IgnoreCase))
+							.Subscribe(x => _tableFileCreated.OnNext(x.EventArgs.FullPath)));
+
+					// file deleted
+					disposables.Add(Observable
+							.FromEventPattern<FileSystemEventHandler, FileSystemEventArgs>(x => fsw.Deleted += x, x => fsw.Deleted -= x)
+							.Where(x => x.EventArgs.FullPath != null && Regex.IsMatch(Path.GetExtension(x.EventArgs.FullPath), pattern, RegexOptions.IgnoreCase))
+							.Subscribe(x => _tableFileDeleted.OnNext(x.EventArgs.FullPath)));
+
+					// file renamed
+					disposables.Add(Observable
+							.FromEventPattern<RenamedEventHandler, FileSystemEventArgs>(x => fsw.Renamed += x, x => fsw.Renamed -= x)
+							.Throttle(trottle, RxApp.TaskpoolScheduler)
+							.Where(x => x.EventArgs.FullPath != null && Regex.IsMatch(Path.GetExtension(x.EventArgs.FullPath), pattern, RegexOptions.IgnoreCase))
+							.Subscribe(x => _tableFileRenamed.OnNext(new Tuple<string, string>(((RenamedEventArgs)x.EventArgs).OldFullPath, x.EventArgs.FullPath))));
+
+					fsw.EnableRaisingEvents = true;
+
+					_tableWatches.Add(newPath, disposables);
 					_tableFolderAdded.OnNext(newPath);
 					_logger.Info("Started watching table folder {0}", newPath);
 
@@ -158,6 +151,7 @@ namespace VpdbAgent.PinballX
 					oldPaths.Remove(newPath);
 				}
 			}
+
 			// stop watching non-provided paths
 			foreach (var oldPath in oldPaths) {
 				_tableWatches[oldPath].Dispose();
@@ -165,8 +159,6 @@ namespace VpdbAgent.PinballX
 				_tableFolderRemoved.OnNext(oldPath);
 				_logger.Info("Stopped watching table folder {0}", oldPath);
 			}
-
-			return _tableWatcher;
 		}
 	}
 }

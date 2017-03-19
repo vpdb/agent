@@ -37,7 +37,7 @@ namespace VpdbAgent.ViewModels.Games
 			var gameManager = resolver.GetService<IGameManager>();
 
 			// setup init listener
-			gameManager.Initialized.Subscribe(_ => SetupTracking());
+			//gameManager.Initialized.Subscribe(_ => SetupTracking());
 
 			// create platforms, filtered and sorted
 			Platforms = _platformManager.Platforms.CreateDerivedCollection(
@@ -57,7 +57,6 @@ namespace VpdbAgent.ViewModels.Games
 			Games = _allGames.CreateDerivedCollection(
 				gameViewModel => gameViewModel, 
 				gameViewModel => gameViewModel.IsVisible);
-
 
 			// todo check if we can simplify this.
 			/*
