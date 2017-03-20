@@ -111,7 +111,6 @@ This means that Global Games don't contain any game-related data which can't be 
 
 ### Data Flow
 
-
 #### PinballX
 
 It all starts with `PinballX.ini`. On any changes and on application start-up, it's parsed and a list of systems is created. On start-up, all systems are initialized, on changes only new systems are initialized, which results in a Observable of every system's `Enabled` attribute.
@@ -120,11 +119,16 @@ This Observable fires initially and in the future when `PinballX.ini` is updated
 
 This is where the Game Manager comes in, which manages the Global Games. It subscribes to a `GamesUpdated` Observable, which fires every time an XML database file from PinballX is updated, added, created or renamed. The Game Manager then checks which data needs to be updated and only touches concerned objects. Since Global Games is a reactive list containing reactive objects, changes are immediately relayed to the UI.
 
-Global Games is a flat structure. While systems also contain lists of their proper games, this nested structure serves only for internal usage, for example for knowning which objects to remove in case an XML database file gets deletd.
+Global Games is a flat structure. While systems each also contain a list of their games, this nested structure serves only for internal usage, for example for knowing which objects to remove in case an XML database file gets deleted.
 
 #### File System
 
-Since table file locations are defined `PinballX.ini`, the file system watcher subscribes to the parsed systems as well, but not only to the `Enabled` property but also to the `TablePath` property. Since table paths can overlap, it keeps a decoupled global list of folders to watch.
+The file system watcher subscribes to the parsed systems as well, but not only to the `Enabled` property but also to the `TablePath` property. The result is an observable collection of all active table paths from `PinballX.ini`.
+
+This collection is watched and results in the file watchers that trigger on file changes in the table folders. Those are relayed to the Game Manager, which merges changes similarly to the XML database into Global Games.
+
+#### Mappings
+
 
 
 ## Other Data
