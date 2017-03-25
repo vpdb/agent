@@ -54,6 +54,8 @@ namespace VpdbAgent.Data.Objects
 		/// </summary>
 		public PinballXGame XmlGame { get { return _xmlGame; } set { this.RaiseAndSetIfChanged(ref _xmlGame, value); } }
 
+		public string FileName => _fileName.Value;
+
 		public bool Enabled => _enabled == null || _enabled.Value;
 
 		// deps
@@ -66,14 +68,12 @@ namespace VpdbAgent.Data.Objects
 		// generated props
 		private readonly ObservableAsPropertyHelper<bool> _enabled;
 		private readonly ObservableAsPropertyHelper<string> _fileId;
+		private ObservableAsPropertyHelper<string> _fileName;
 
 		// status props
 		public bool HasMapping => false;
 		public bool HasLocalFile => FilePath != null;
 		public bool HasXmlGame => XmlGame != null;
-
-		// convenient props
-		public string FileName => Path.GetFileName(FilePath);
 
 		/// <summary>
 		/// Base constructor
@@ -82,6 +82,19 @@ namespace VpdbAgent.Data.Objects
 		private AggregatedGame(IFile file)
 		{
 			_file = file;
+
+			// FileName
+			this.WhenAnyValue(x => x.XmlGame).Subscribe(xmlGame => {
+				if (xmlGame == null) {
+					this.WhenAnyValue(g => g.FilePath)
+						.Select(Path.GetFileName)
+						.ToProperty(this, game => game.FileName, out _fileName);
+				} else {
+					this.WhenAnyValue(x => x.FilePath, x => x.XmlGame.Filename)
+						.Select(x => x.Item1 != null ? Path.GetFileName(x.Item1) : x.Item2)
+						.ToProperty(this, game => game.FileName, out _fileName);
+				}
+			});
 		}
 
 		public AggregatedGame([NotNull] PinballXGame xmlGame, IFile file) : this(file)
@@ -131,6 +144,7 @@ namespace VpdbAgent.Data.Objects
 		{
 			FilePath = filePath;
 			FileSize = _file.FileSize(filePath);
+
 			return this;
 		}
 

@@ -43,7 +43,7 @@
                 </Grid.ColumnDefinitions>
 
                 <!-- title -->
-                <Label Grid.Column="0" Margin="0,0,0,-10" Grid.ColumnSpan="2">
+                <Label Grid.Column="0" Margin="0,0,0,-10" Grid.ColumnSpan="2" Visibility="{Binding Path=Game.HasXmlGame, Converter={StaticResource TrueToVisible}}">
                     <TextBlock Text="{Binding Game.XmlGame.Description}" TextTrimming="CharacterEllipsis" FontSize="22" FontWeight="Bold" />
                 </Label>
 
@@ -58,15 +58,6 @@
                 </-->
             </Grid>
 
-
-            <Label Margin="0,0,0,0">
-                <TextBlock Text="{Binding Game.FileId}" TextTrimming="CharacterEllipsis" FontSize="16"/>
-            </Label>
-            <Label Margin="0,0,0,0">
-                <TextBlock Text="{Binding Game.FileName}" TextTrimming="CharacterEllipsis" FontSize="22" FontWeight="Bold" />
-            </Label>
-
-
             <!-- second row -->
             <!--TextBlock Visibility="{Binding Path=Game.HasRelease, Converter={StaticResource TrueToVisible}}"
                        Style="{StaticResource Label}" Margin="5,0,0,-5">
@@ -79,18 +70,18 @@
             </TextBlock-->
             
             <!-- third row -->
-            <!-- Grid Margin="0,0,0,10">
+            <Grid Margin="0,0,0,10">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <!- - filename - -
+                <!-- filename -->
                 <Label Grid.Column="0">
-                    <TextBlock Text="{Binding Game.Filename}" Background="{Binding Path=Game.Exists, Converter={StaticResource FalseToRed}}" TextTrimming="CharacterEllipsis"/>
+                    <TextBlock Text="{Binding Game.FileName}" Background="{Binding Path=Game.HasLocalFile, Converter={StaticResource FalseToRed}}" TextTrimming="CharacterEllipsis"/>
                 </Label>
 
-                <!- - identify button - -
+                <!-- identify button - ->
                 <Button IsEnabled="{Binding Game.Exists}" Command="{Binding IdentifyRelease}" 
                         Visibility="{Binding Path=ShowIdentifyButton, Converter={StaticResource TrueToVisible}}" 
                         Style="{StaticResource ButtonLine}" 
@@ -101,7 +92,8 @@
                 </Viewbox>
                 <Label Visibility="{Binding Path=Game.HasUpdate, Converter={StaticResource TrueToVisible}}" 
                        Grid.Column="1" Content="Update available" Margin="0,0,10,0" FontStyle="Italic" Foreground="{StaticResource PrimaryColorBrush}"/>
-            </-->
+                -->
+            </Grid>
 
             <!-- release results -->
             <!-- Expander IsExpanded="{Binding HasExecuted}" Style="{StaticResource AnimatedExpander}">

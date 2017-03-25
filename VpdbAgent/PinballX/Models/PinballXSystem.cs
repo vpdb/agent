@@ -283,6 +283,8 @@ namespace VpdbAgent.PinballX.Models
 			var databaseNew = Path.GetFileName(newDatabaseFilePath);
 			_logger.Info("PinballX database {0} renamed from {1} to {2}.", Name, databaseOld, databaseNew);
 			Games[databaseOld].ToList().ForEach(g => g.DatabaseFile = databaseNew);
+			Games[databaseNew] = Games[databaseOld];
+			Games.Remove(databaseOld);
 		}
 
 		/// <summary>

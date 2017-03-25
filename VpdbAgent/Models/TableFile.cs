@@ -8,6 +8,7 @@ using VpdbAgent.PinballX.Models;
 
 namespace VpdbAgent.Models
 {
+	[Obsolete("Don't know WTF this is for")]
 	public class TableFile
 	{
 		/// <summary>

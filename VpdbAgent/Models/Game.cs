@@ -20,6 +20,7 @@ namespace VpdbAgent.Models
 	/// Saves itself automatically if <see cref="ReleaseId"/>, 
 	/// <see cref="FileId"/> or <see cref="IsSynced"/> change.
 	/// </summary>
+	[Obsolete("Use AggregatedGame")]
 	public class Game : ReactiveObject, IComparable<Game>
 	{
 		/// <summary>

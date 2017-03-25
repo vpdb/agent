@@ -20,6 +20,7 @@ namespace VpdbAgent.Models
 	/// PinballX's "system". Note that this entity is never serialized
 	/// and resides only in memory.
 	/// </summary>
+	[Obsolete]
 	public class Platform : ReactiveObject
 	{
 		#region Properties
