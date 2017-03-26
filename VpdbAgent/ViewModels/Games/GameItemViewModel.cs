@@ -9,7 +9,6 @@ using VpdbAgent.Application;
 using VpdbAgent.Data.Objects;
 using VpdbAgent.Vpdb;
 using VpdbAgent.Vpdb.Models;
-using Game = VpdbAgent.Models.Game;
 using ILogger = NLog.ILogger;
 
 namespace VpdbAgent.ViewModels.Games
@@ -41,15 +40,15 @@ namespace VpdbAgent.ViewModels.Games
 		public IEnumerable<GameResultItemViewModel> IdentifiedReleases { get { return _identifiedReleases; } set { this.RaiseAndSetIfChanged(ref _identifiedReleases, value); } }
 
 		// statuses
-//		public bool IsExecuting => _isExecuting.Value;
-//		public bool ShowIdentifyButton => _showIdentifyButton.Value;
-//		public bool HasExecuted { get { return _hasExecuted; } set { this.RaiseAndSetIfChanged(ref _hasExecuted, value); } }
-//		public bool HasResults { get { return _hasResults; } set { this.RaiseAndSetIfChanged(ref _hasResults, value); } }
+		public bool IsExecuting => _isExecuting.Value;
+		public bool ShowIdentifyButton => _showIdentifyButton.Value;
+		public bool HasExecuted { get { return _hasExecuted; } set { this.RaiseAndSetIfChanged(ref _hasExecuted, value); } }
+		public bool HasResults { get { return _hasResults; } set { this.RaiseAndSetIfChanged(ref _hasResults, value); } }
 
-//		private readonly ObservableAsPropertyHelper<bool> _showIdentifyButton;
-//		private readonly ObservableAsPropertyHelper<bool> _isExecuting;
-//		private bool _hasExecuted;
-//		private bool _hasResults;
+		private readonly ObservableAsPropertyHelper<bool> _showIdentifyButton;
+		private readonly ObservableAsPropertyHelper<bool> _isExecuting;
+		private bool _hasExecuted;
+		private bool _hasResults;
 
 		public GameItemViewModel(AggregatedGame game, IDependencyResolver resolver)
 		{
@@ -62,8 +61,10 @@ namespace VpdbAgent.ViewModels.Games
 			var threadManager = resolver.GetService<IThreadManager>();
 
 			// release identify
-			/*
-			IdentifyRelease = ReactiveCommand.CreateFromObservable(() => _vpdbClient.Api.GetReleasesBySize(Game.FileSize, MatchThreshold).SubscribeOn(threadManager.WorkerScheduler));
+			var canIdentify = this.WhenAnyValue(
+				x => x.Game.HasLocalFile, x => x.Game.HasMapping, x => x.Game.HasXmlGame, 
+				(hasLocalFile, hasMapping, hasXmlGame) => hasLocalFile && hasMapping && !hasXmlGame);
+			IdentifyRelease = ReactiveCommand.CreateFromObservable(() => _vpdbClient.Api.GetReleasesBySize(Game.FileSize, MatchThreshold).SubscribeOn(threadManager.WorkerScheduler), canIdentify);
 			IdentifyRelease.Select(releases => releases
 				.Select(release => new {release, release.Versions})
 				.SelectMany(x => x.Versions.Select(version => new {x.release, version, version.Files}))
@@ -75,7 +76,7 @@ namespace VpdbAgent.ViewModels.Games
 				_logger.Info("Found {0} releases for game to identify.", releases.Length);
 				GameResultItemViewModel match = null;
 				foreach (var vm in releases) {
-					if (game.Filename == vm.TableFile.Reference.Name && game.FileSize == vm.TableFile.Reference.Bytes) {
+					if (game.FileName == vm.TableFile.Reference.Name && game.FileSize == vm.TableFile.Reference.Bytes) {
 						numMatches++;
 						match = vm;
 					}
@@ -85,8 +86,8 @@ namespace VpdbAgent.ViewModels.Games
 				// if file name and file size are identical, directly match.
 				if (numMatches == 1 && match != null) {
 					_logger.Info("File name and size are equal to local release, linking.");
-					_gameManager.LinkRelease(match.Game, match.Release, match.TableFile.Reference.Id);
-					_messageManager.LogReleaseLinked(match.Game, match.Release, match.TableFile.Reference.Id);
+					//_gameManager.LinkRelease(match.Game, match.Release, match.TableFile.Reference.Id);
+					//_messageManager.LogReleaseLinked(match.Game, match.Release, match.TableFile.Reference.Id);
 
 				} else {
 					_logger.Info("View model updated with identified releases.");
@@ -96,31 +97,29 @@ namespace VpdbAgent.ViewModels.Games
 			}, exception => _vpdbClient.HandleApiError(exception, "identifying a game by file size"));
 			
 
-			var canSync = this.WhenAnyValue(x => x.Game.IsSynced, x => x.Game.HasRelease, (isSynced, hasRelease) => isSynced && hasRelease);
-			SyncToggled = ReactiveCommand.Create(() => { _gameManager.Sync(Game); }, canSync);
-			
+			//var canSync = this.WhenAnyValue(x => x.Game.IsSynced, x => x.Game.HasRelease, (isSynced, hasRelease) => isSynced && hasRelease);
+			//SyncToggled = ReactiveCommand.Create(() => { _gameManager.Sync(Game); }, canSync);
+
 
 			// handle errors
 			IdentifyRelease.ThrownExceptions.Subscribe(e => { _logger.Error(e, "Error matching game."); });
-
-			// spinner
-			IdentifyRelease.IsExecuting.ToProperty(this, vm => vm.IsExecuting, out _isExecuting);
 
 			// result switch
 			IdentifyRelease.Select(r => r.Count > 0).Subscribe(hasResults => { HasResults = hasResults; });
 
 			// close button
-			CloseResults = ReactiveCommand.Create(() => { HasExecuted = false; });*/
+			CloseResults = ReactiveCommand.Create(() => { HasExecuted = false; });
+
+			// spinner
+			IdentifyRelease.IsExecuting.ToProperty(this, vm => vm.IsExecuting, out _isExecuting);
 
 			// identify button visibility
-			/*
 			this.WhenAny(
 				vm => vm.HasExecuted, 
-				vm => vm.Game.HasRelease,
+				vm => vm.Game.HasMapping,
 				vm => vm.IsExecuting,
 				(hasExecuted, hasRelease, isExecuting) => !hasExecuted.Value && !hasRelease.Value && !isExecuting.Value
 			).ToProperty(this, vm => vm.ShowIdentifyButton, out _showIdentifyButton);
-			*/
 		}
 
 		public override string ToString()

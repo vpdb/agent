@@ -81,16 +81,21 @@
                     <TextBlock Text="{Binding Game.FileName}" Background="{Binding Path=Game.HasLocalFile, Converter={StaticResource FalseToRed}}" TextTrimming="CharacterEllipsis"/>
                 </Label>
 
-                <!-- identify button - ->
-                <Button IsEnabled="{Binding Game.Exists}" Command="{Binding IdentifyRelease}" 
-                        Visibility="{Binding Path=ShowIdentifyButton, Converter={StaticResource TrueToVisible}}" 
-                        Style="{StaticResource ButtonLine}" 
-                        Grid.Column="1" Content="IDENTIFY" HorizontalAlignment="Right" Margin="0,-5,10,-5"/>
+                <!-- identify button -->
+                <Button IsEnabled="{Binding Game.HasLocalFile}" Command="{Binding IdentifyRelease}" 
+                    Visibility="{Binding Path=ShowIdentifyButton, Converter={StaticResource TrueToVisible}}" 
+                    Style="{StaticResource ButtonLine}" 
+                    Grid.Column="1" Content="IDENTIFY" HorizontalAlignment="Right" Margin="0,-3,10,-8"/>
+
+                <!-- spinner -->
                 <Viewbox Grid.Column="1" StretchDirection="Both" Stretch="Uniform" 
-                         Height="24" Width="24" HorizontalAlignment="Right" Margin="0,0,10,0">
+                    Height="24" Width="24" HorizontalAlignment="Right" Margin="0,0,10,0">
+
                     <loadin:LoadingIndicator Foreground="{StaticResource PrimaryColorBrush}" SpeedRatio="1" IsActive="{Binding IsExecuting}" Style="{DynamicResource LoadingIndicatorArcsStyle}"/>
                 </Viewbox>
-                <Label Visibility="{Binding Path=Game.HasUpdate, Converter={StaticResource TrueToVisible}}" 
+                
+                <!-- update notice -->
+                <!--Label Visibility="{Binding Path=Game.HasUpdate, Converter={StaticResource TrueToVisible}}" 
                        Grid.Column="1" Content="Update available" Margin="0,0,10,0" FontStyle="Italic" Foreground="{StaticResource PrimaryColorBrush}"/>
                 -->
             </Grid>
