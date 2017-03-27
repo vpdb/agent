@@ -25,34 +25,19 @@ namespace VpdbAgent.Application
 	/// <summary>
 	/// Our internal game API.
 	/// 
-	/// It manages the games that are defined in the user's XML database of
-	/// PinballX. However, since we're dealing with more data than what's in
-	/// those XMLs, we keep our own data structure in JSON files.
-	/// 
-	/// JSON files are system-specific, meaning for every system defined in
-	/// PinballX (we call them "Platforms"), there is one JSON file. Games
-	/// are always linked to the respective system so we know where to retrieve
-	/// table files, media etc.
-	/// 
-	/// This is how the JSON files are generated:
-	///   1. GameManager instantiates MenuManager which parses PinballX.ini
-	///   2. GameManager loops through parsed systems and retrieves local vpdb.jsons
-	///   3. GameManager merges games from MenuManager and vpdb.json to new vpdb.jsons
-	///   4. GameManager dumps new vpdb.jsons
-	/// 
-	/// Everything is event- or subscription based, since we want to automatically
-	/// repeat the process when relevant files change. 
+	/// This deals with aggregating data from the different sources but also
+	/// acts as an entry point for the UI to do certain tasks.
 	/// </summary>
 	public interface IGameManager
 	{
 		/// <summary>
-		/// Games are 2-way mapped to <see cref="Game"/>, where downstream 
-		/// changes (e.g. XMLs in PinballX's database folder change) come from
-		/// <see cref="PinballXGame"/> and upstream changes are written
-		/// to the .json file sitting in the system's database folder.
+		/// A list we call "Global Games" aka the important stuff.
 		/// </summary>
-		[Obsolete]
-		ReactiveList<Game> Games { get; }
+		/// 
+		/// <remarks>
+		/// This lists consists of data from the file system (table files), the
+		/// PinballX XML database files, and Mappings from `vpdb.json`.
+		/// </remarks>
 		ReactiveList<AggregatedGame> AggregatedGames { get; }
 
 		/// <summary>
@@ -63,8 +48,11 @@ namespace VpdbAgent.Application
 		IObservable<Unit> Initialized { get; }
 
 		/// <summary>
-		/// Initializes the menu manager, which basically starts watching
-		/// relevant files.
+		/// While all the services can be instantiated at application start-up,
+		/// we need some conditions met (configuration) before we can start
+		/// with the business logic (namely watchin stuff on the file system).
+		/// 
+		/// Run this when configuration is set and validated.
 		/// </summary>
 		/// <returns>This instance</returns>
 		void Initialize();
@@ -110,13 +98,11 @@ namespace VpdbAgent.Application
 		private readonly ILogger _logger;
 
 		// props
-		public ReactiveList<Game> Games { get; } = new ReactiveList<Game>();
 		public ReactiveList<AggregatedGame> AggregatedGames { get; } = new ReactiveList<AggregatedGame> { ChangeTrackingEnabled = true };
 		public IObservable<Unit> Initialized => _initialized;
 
 		// privates
 		private readonly Subject<Unit> _initialized = new Subject<Unit>();
-		private bool _isInitialized;
 		private readonly List<Tuple<string, string, string>> _gamesToLink = new List<Tuple<string, string, string>>();
 
 		public GameManager(IMenuManager menuManager, IVpdbClient vpdbClient, ISettingsManager 
@@ -151,17 +137,17 @@ namespace VpdbAgent.Application
 			_downloadManager.WhenReleaseDownloaded.Subscribe(OnReleaseDownloaded);
 
 			// link games if new games are added 
-			Games.Changed.Subscribe(_ => CheckGameLinks());
+			//Games.Changed.Subscribe(_ => CheckGameLinks());
 
 			// when game is linked or unlinked, update profile with channel info
-			IDisposable gameLinked = null;
+			/*IDisposable gameLinked = null;
 			Games.Changed.Subscribe(_ => {
 				gameLinked?.Dispose();
 				gameLinked = Games
 					.Select(g => g.Changed.Where(x => x.PropertyName == "ReleaseId"))
 					.Merge()
 					.Subscribe(__ => UpdateChannelConfig());
-			});
+			});*/
 
 			// setup pusher messages
 			SetupRealtime();
@@ -174,19 +160,18 @@ namespace VpdbAgent.Application
 				throw new InvalidOperationException("Must initialize settings before game manager.");
 			}
 
-			var trottle = TimeSpan.FromMilliseconds(100); // file changes are triggered multiple times
 			var delay = TimeSpan.FromMilliseconds(500);   // let props update first
 
 			// setup handlers for table file changes TODO implement properly (specially rename)
-			_menuManager.TableFileCreated.Subscribe(OnTableFileChanged);
-			_menuManager.TableFileChanged.Subscribe(OnTableFileChanged);
-			_menuManager.TableFileDeleted.Subscribe(OnTableFileDeleted);
-			_menuManager.TableFileRenamed.Subscribe(x => {
+			_menuManager.TableFileCreated.ObserveOn(_threadManager.WorkerScheduler).Subscribe(OnTableFileChanged);
+			_menuManager.TableFileChanged.ObserveOn(_threadManager.WorkerScheduler).Subscribe(OnTableFileChanged);
+			_menuManager.TableFileDeleted.ObserveOn(_threadManager.WorkerScheduler).Subscribe(OnTableFileDeleted);
+			_menuManager.TableFileRenamed.ObserveOn(_threadManager.WorkerScheduler).Subscribe(x => {
 				OnTableFileDeleted(x.Item1);
 				OnTableFileChanged(x.Item2);
 			});
-			_menuManager.TableFolderAdded.Delay(delay).Subscribe(path => MergeLocalFiles(path, _menuManager.GetTableFiles(path)));
-			_menuManager.TableFolderRemoved.Delay(delay).Subscribe(path => MergeLocalFiles(path, new List<string>()));
+			_menuManager.TableFolderAdded.ObserveOn(_threadManager.WorkerScheduler).Delay(delay).Subscribe(path => MergeLocalFiles(path, _menuManager.GetTableFiles(path)));
+			_menuManager.TableFolderRemoved.ObserveOn(_threadManager.WorkerScheduler).Delay(delay).Subscribe(path => MergeLocalFiles(path, new List<string>()));
 
 			// setup handler for xml database changes
 			_menuManager.GamesUpdated.Subscribe(d => MergeXmlGames(d.Item1, d.Item2, d.Item3));
@@ -420,14 +405,11 @@ namespace VpdbAgent.Application
 
 
 
+		// --------------------------------------------------------------------------------------------------------------
+		// --------------------------------------------------------------------------------------------------------------
+		// still dragons below
 
-
-
-
-
-
-
-
+		public ReactiveList<Game> Games { get; } = new ReactiveList<Game>();
 
 		public void LinkRelease(Game game, VpdbRelease release, string fileId)
 		{
@@ -446,46 +428,6 @@ namespace VpdbAgent.Application
 		{
 			_downloadManager.DownloadRelease(game.ReleaseId, game.FileId);
 			return this;
-		}
-
-		/// <summary>
-		/// Sets up a listener that updates our global game list when either games
-		/// added or removed, or platforms are added or removed.
-		/// </summary>
-		/// <seealso cref="http://stackoverflow.com/questions/15254708/"/>
-		/// <remarks>
-		/// This 
-		/// </remarks>
-		private void SetupGameChanges()
-		{
-			// here we push all games in all platforms into the Games list.
-			var whenPlatformsOrGamesInThosePlatformsChange = Observable.Merge(
-				_platformManager.Platforms.Changed                                                      // one of the games changes
-					.SelectMany(_ => _platformManager.Platforms.Select(x => x.Games.Changed).Merge())
-					.Select(_ => Unit.Default),
-				_platformManager.Platforms.Changed.Select(_ => Unit.Default)                            // one of the platforms changes
-			);
-
-			whenPlatformsOrGamesInThosePlatformsChange
-				.StartWith(Unit.Default)
-				.Select(_ => _platformManager.Platforms.SelectMany(x => x.Games).ToList())
-				.Where(games => games.Count > 0)
-				.Subscribe(games => {
-					_threadManager.MainDispatcher.Invoke(delegate {
-						// TODO better logic
-						using (Games.SuppressChangeNotifications()) {
-							Games.Clear();
-							Games.AddRange(games);
-						}
-						_logger.Info("Set {0} games.", games.Count);
-
-						if (!_isInitialized) {
-							_initialized.OnNext(Unit.Default);
-							_initialized.OnCompleted();
-							_isInitialized = true;
-						}
-					});
-				});
 		}
 
 		/// <summary>

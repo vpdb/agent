@@ -90,27 +90,40 @@ namespace VpdbAgent.PinballX
 		IObservable<Tuple<PinballXSystem, string, List<PinballXGame>>> GamesUpdated { get; }
 
 		/// <summary>
-		/// A table file has been edited
+		/// A table file has been edited.
 		/// </summary>
 		/// 
 		IObservable<string> TableFileCreated { get; }
 
 		/// <summary>
-		/// A table file has been updated
+		/// A table file has been updated.
 		/// </summary>
 		IObservable<string> TableFileChanged { get; }
 
 		/// <summary>
-		/// A table file has been renamed
+		/// A table file has been renamed.
 		/// </summary>
 		IObservable<Tuple<string, string>> TableFileRenamed { get; }
 
 		/// <summary>
-		/// A table file has been deleted
+		/// A table file has been deleted.
 		/// </summary>
 		IObservable<string> TableFileDeleted { get; }
 
+		/// <summary>
+		/// A table folder has been added.
+		/// </summary>
+		/// 
+		/// <remarks>
+		/// Usually happens when a new system is added. However, if the system's
+		/// table folder is already watched because it's the same as for an already
+		/// existing system, this won't fire.
+		/// </remarks>
 		IObservable<string> TableFolderAdded { get; }
+
+		/// <summary>
+		/// A table folder has been removed.
+		/// </summary>
 		IObservable<string> TableFolderRemoved { get; }
 		List<string> GetTableFiles(string path);
 	}
@@ -171,8 +184,8 @@ namespace VpdbAgent.PinballX
 			Systems.ItemsRemoved.Subscribe(RemoveSystem);
 
 			// setup table file watcher
-			Systems.ShouldReset.ObserveOn(_threadManager.WorkerScheduler).Subscribe(_ => UpdateTableWatchers());
-			Systems.ItemsRemoved.ObserveOn(_threadManager.WorkerScheduler).Subscribe(_ => UpdateTableWatchers());
+			Systems.ShouldReset.ObserveOn(_threadManager.WorkerScheduler).Subscribe(_ => _watcher.WatchTables(Systems));
+			Systems.ItemsRemoved.ObserveOn(_threadManager.WorkerScheduler).Subscribe(_ => _watcher.WatchTables(Systems));
 		
 			// update systems when ini changes (also, kick it off now)
 			_watcher.FileWatcher(iniPath)
@@ -181,11 +194,6 @@ namespace VpdbAgent.PinballX
 				.Subscribe(UpdateSystems);
 
 			return this;
-		}
-
-		private void UpdateTableWatchers()
-		{
-			_watcher.WatchTables(Systems);
 		}
 
 		/// <summary>
@@ -207,7 +215,7 @@ namespace VpdbAgent.PinballX
 			var updated = 0;
 
 			// treat result back on main thread
-			_threadManager.MainDispatcher.Invoke(delegate {
+			_threadManager.MainDispatcher.Invoke(() => {
 				if (Systems.IsEmpty) {
 					using (Systems.SuppressChangeNotifications()) {
 						parsedSystems.ForEach(InitSystem);
@@ -237,12 +245,19 @@ namespace VpdbAgent.PinballX
 			});
 		}
 
+		/// <summary>
+		/// Enables XML database and table folder watching for the given system.
+		/// </summary>
+		/// <param name="system">System to initialize</param>
 		private void InitSystem(PinballXSystem system) {
+
+			// xml database watching (triggered on change of system's `Enabled`)
 			system.Initialize();
-			system.WhenAnyValue(s => s.Enabled, s => s.TablePath).Subscribe(_ => UpdateTableWatchers());
+
+			// folder watching: submit all systems to IFileSystemWatcher to figure out what to do
+			system.WhenAnyValue(s => s.Enabled, s => s.TablePath).Subscribe(_ => _watcher.WatchTables(Systems));
 		}
 				
-
 		/// <summary>
 		/// Clears all current system subscriptions and resubscribes to new systems.
 		/// </summary>
@@ -288,13 +303,26 @@ namespace VpdbAgent.PinballX
 			_systemDisposables.Remove(system);
 		}
 
+		/// <summary>
+		/// Returns a list of all vpt/vpx files in a given folder.
+		/// </summary>
+		/// TODO support other systems than VP
+		/// <param name="path">Path to table folder</param>
+		/// <returns>List of absolute file paths to table files</returns>
 		public List<string> GetTableFiles(string path)
 		{
 			return _dir
 				.GetFiles(path)
 				.Where(filePath => ".vpt".Equals(Path.GetExtension(filePath), StringComparison.InvariantCultureIgnoreCase) || ".vpx".Equals(Path.GetExtension(filePath), StringComparison.InvariantCultureIgnoreCase)) 
 				.ToList();
-		} 
+		}
+
+
+
+
+		// --------------------------------------------------------------------------------------------------------------
+		// --------------------------------------------------------------------------------------------------------------
+		// still dragons below
 
 		public PinballXGame AddGame(PinballXGame game, string databasePath)
 		{
@@ -387,7 +415,6 @@ namespace VpdbAgent.PinballX
 				_marshallManager.MarshallXml(menu, xmlPath);
 
 			} else {
-
 				var xml = _file.ReadAllText(xmlPath);
 				xml = xml.Replace($"name=\"{oldFileName}\"", $"name=\"{newFilename}\"");
 				_file.WriteAllText(xmlPath, xml);

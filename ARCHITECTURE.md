@@ -55,13 +55,13 @@ VPDB Agent is watching the configuration file for changes and updates the data i
 
 VPDB Agent displays data from VPDB such as release names, authors, dates and thumbnails. Data is fetched from VPDB when identifying a release and saved in a local database based on LiteDB. The data is the same as received from VPDB and therefore acts as a cache.
 
-Data from this cache is only used to display richer content in the UI, i.e. Games in the cache won't show up in Global Games unless there exists a Mapping for it (see next section).
+Data from this cache is only used to display richer content in the UI, i.e. games in the cache won't show up in Global Games unless there exists a Mapping for it (see next section).
 
 When VPDB Agent is running, updates from VPDB are pushed directly to the client. When starting up, VPDB Agent checks for updates.
 
 ## Mapping
 
-When linking local data to VPDB, VPDB Agent needs a way of persisting that mapping in a transparent way. For that, it creates a `vpdb.json` file in every system folder. Such a file looks something like this:
+When linking local data to VPDB, VPDB Agent needs a way of persisting that mapping in a transparent way. For that, it creates a `vpdb.json` file in every system's `database` folder. Such a file looks something like this:
 
 ```json
 {

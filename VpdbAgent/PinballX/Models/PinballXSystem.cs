@@ -69,8 +69,8 @@ namespace VpdbAgent.PinballX.Models
 		public IObservable<Tuple<string, List<PinballXGame>>> GamesUpdated => _gamesUpdated;
 		
 		// convenient props
-		public string DatabasePath { get; set; }
-		public string MediaPath { get; set; }
+		public string DatabasePath { get; private set; }
+		public string MediaPath { get; private set; }
 
 		// watched props
 		private bool _enabled;
@@ -81,7 +81,7 @@ namespace VpdbAgent.PinballX.Models
 		// internal props
 		private System.IO.FileSystemWatcher _fsw;
 		private readonly Subject<Tuple<string, List<PinballXGame>>> _gamesUpdated = new Subject<Tuple<string, List<PinballXGame>>>();
-		private readonly CompositeDisposable _disposables = new CompositeDisposable();
+		private readonly CompositeDisposable _watchers = new CompositeDisposable();
 
 		/// <summary>
 		/// Base constructor
@@ -147,7 +147,7 @@ namespace VpdbAgent.PinballX.Models
 
 		/// <summary>
 		/// Sets up a watcher for <see cref="Enabled"/> that either creates or 
-		/// destroys the file system watchers.
+		/// destroys the XML database watchers.
 		/// </summary>
 		public void Initialize()
 		{
@@ -157,32 +157,40 @@ namespace VpdbAgent.PinballX.Models
 			}
 			this.WhenAnyValue(s => s.Enabled).Subscribe(enabled => {
 				if (enabled) {
-					EnableSystem();
+					// kick off and watch
+					GetDatabaseFiles().ForEach(UpdateGames);
+					EnableWatchers();
+
 				} else {
-					DisableSystem();
+					// clear games and destroy watchers
+					GetDatabaseFiles().ForEach(RemoveGames);
+					DisableWatchers();
 				}
 			});
 		}
 
 		/// <summary>
-		/// Parses all games from all available XML database files and sets up
-		/// file system watchers.
+		/// Sets up file system watchers for XML database files.
 		/// </summary>
-		private void EnableSystem()
+		/// 
+		/// <remarks>
+		/// Note that we don't manage watching of pinball tables here, because
+		/// multiple system can use the same table folder, which would result 
+		/// in duplicate watchers. Thus, table files are watched at 
+		/// <see cref="FileSystemWatcher"/>.
+		/// </remarks>
+		private void EnableWatchers()
 		{
-			// kick off
-			GetDatabaseFiles().ForEach(UpdateGames);
-
-			// then setup watchers
+			// setup watchers
 			_fsw = new System.IO.FileSystemWatcher(DatabasePath, "*.xml");
 			_logger.Info("Watching XML files at {0}...", DatabasePath);
-			_disposables.Add(_fsw);
+			_watchers.Add(_fsw);
 
 			var trottle = TimeSpan.FromMilliseconds(100); // file changes are triggered multiple times
 			var delay = TimeSpan.FromMilliseconds(500);  // avoid concurrent read/write access
 
 			// file changed
-			_disposables.Add(Observable
+			_watchers.Add(Observable
 					.FromEventPattern<FileSystemEventHandler, FileSystemEventArgs>(x => _fsw.Changed += x, x => _fsw.Changed -= x)
 					.Throttle(trottle, RxApp.TaskpoolScheduler)
 					.Where(x => x.EventArgs.FullPath != null)
@@ -190,21 +198,21 @@ namespace VpdbAgent.PinballX.Models
 					.Subscribe(x => UpdateGames(x.EventArgs.FullPath)));
 
 			// file created
-			_disposables.Add(Observable
+			_watchers.Add(Observable
 					.FromEventPattern<FileSystemEventHandler, FileSystemEventArgs>(x => _fsw.Created += x, x => _fsw.Created -= x)
 					.Throttle(trottle, RxApp.TaskpoolScheduler)
 					.Delay(delay)
 					.Subscribe(x => UpdateGames(x.EventArgs.FullPath)));
 
 			// file deleted
-			_disposables.Add(Observable
+			_watchers.Add(Observable
 					.FromEventPattern<FileSystemEventHandler, FileSystemEventArgs>(x => _fsw.Deleted += x, x => _fsw.Deleted -= x)
 					.Throttle(trottle, RxApp.TaskpoolScheduler)
 					.Delay(delay)
 					.Subscribe(x => RemoveGames(x.EventArgs.FullPath)));
 
 			// file renamed
-			_disposables.Add(Observable
+			_watchers.Add(Observable
 					.FromEventPattern<RenamedEventHandler, FileSystemEventArgs>(x => _fsw.Renamed += x, x => _fsw.Renamed -= x)
 					.Throttle(trottle, RxApp.TaskpoolScheduler)
 					.Delay(delay)
@@ -214,24 +222,25 @@ namespace VpdbAgent.PinballX.Models
 		}
 
 		/// <summary>
-		/// Removes all games and file watchers.
+		/// Destroys all file watchers.
 		/// </summary>
-		private void DisableSystem()
+		private void DisableWatchers()
 		{
-			GetDatabaseFiles().ForEach(RemoveGames);
-			if (!_disposables.IsEmpty()) {
+			if (!_watchers.IsEmpty()) {
 				_logger.Info("Stopped watching XML files at {0}...", DatabasePath);
 			}
-			_disposables.Clear();
+			_watchers.Clear();
 		}
 
 		/// <summary>
 		/// Updates all games of a given XML database file.
 		/// </summary>
+		/// 
 		/// <remarks>
 		/// Updating means parsing data from the XML file, saving it in <see cref="Games"/>
 		/// and triggering an update through <see cref="GamesUpdated"/>.
 		/// </remarks>
+		/// 
 		/// <param name="databaseFilePath">Full path to database file</param>
 		private void UpdateGames(string databaseFilePath)
 		{
@@ -244,19 +253,18 @@ namespace VpdbAgent.PinballX.Models
 			// read enabled games from XML
 			Games[databaseFile] = ParseGames(databaseFile);
 
-			// filter disabled games
-			var games = Games[databaseFile]; //.Where(g => g.Enabled == null || "true".Equals(g.Enabled, StringComparison.InvariantCultureIgnoreCase)).ToList();
-
 			// trigger update
-			_gamesUpdated.OnNext(new Tuple<string, List<PinballXGame>>(databaseFile, games));
+			_gamesUpdated.OnNext(new Tuple<string, List<PinballXGame>>(databaseFile, Games[databaseFile]));
 		}
 
 		/// <summary>
 		/// Removes all games of a given XML database file.
 		/// </summary>
+		/// 
 		/// <remarks>
 		/// This means that the database file was deleted.
 		/// </remarks>
+		/// 
 		/// <param name="databaseFilePath">Full path to database file</param>
 		private void RemoveGames(string databaseFilePath)
 		{
@@ -282,7 +290,11 @@ namespace VpdbAgent.PinballX.Models
 			var databaseOld = Path.GetFileName(oldDatabaseFilePath);
 			var databaseNew = Path.GetFileName(newDatabaseFilePath);
 			_logger.Info("PinballX database {0} renamed from {1} to {2}.", Name, databaseOld, databaseNew);
+			
+			// update properties of concerned games
 			Games[databaseOld].ToList().ForEach(g => g.DatabaseFile = databaseNew);
+
+			// rename key
 			Games[databaseNew] = Games[databaseOld];
 			Games.Remove(databaseOld);
 		}
@@ -343,8 +355,8 @@ namespace VpdbAgent.PinballX.Models
 			Executable = data["Executable"];
 			Parameters = data["Parameters"];
 
-			DatabasePath = Path.Combine(_settingsManager.Settings.PbxFolder, "Databases", Name);
-			MediaPath = Path.Combine(_settingsManager.Settings.PbxFolder, "Media", Name);
+			DatabasePath = PathHelper.NormalizePath(Path.Combine(_settingsManager.Settings.PbxFolder, "Databases", Name));
+			MediaPath = PathHelper.NormalizePath(Path.Combine(_settingsManager.Settings.PbxFolder, "Media", Name));
 		}
 
 		/// <summary>
@@ -389,7 +401,7 @@ namespace VpdbAgent.PinballX.Models
 
 		public void Dispose()
 		{
-			_disposables.Dispose();
+			_watchers.Dispose();
 		}
 
 		public override string ToString()

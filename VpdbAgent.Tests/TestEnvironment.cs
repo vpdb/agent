@@ -82,8 +82,8 @@ namespace VpdbAgent.Tests
 
 			// IFileSystemWatcher
 			FileSystemWatcher.Setup(f => f.FileWatcher(PinballXIniPath)).Returns(PinballXIniWatcher);
-			FileSystemWatcher.Setup(f => f.DatabaseWatcher(It.IsAny<string>(), It.IsAny<IList<PinballXSystem>>())).Returns(DatabaseWatcher);
-			FileSystemWatcher.Setup(f => f.TablesWatcher(It.IsAny<IList<PinballXSystem>>())).Returns(TableWatcher);
+			//FileSystemWatcher.Setup(f => f.DatabaseWatcher(It.IsAny<string>(), It.IsAny<IList<PinballXSystem>>())).Returns(DatabaseWatcher);
+			//FileSystemWatcher.Setup(f => f.TablesWatcher(It.IsAny<IList<PinballXSystem>>())).Returns(TableWatcher);
 			_locator.RegisterLazySingleton(() => FileSystemWatcher.Object, typeof(IFileSystemWatcher));
 
 			// ISettingsManager
@@ -198,6 +198,7 @@ namespace VpdbAgent.Tests
 				_locator.GetService<IRealtimeManager>(),
 				_locator.GetService<IVisualPinballManager>(),
 				_locator.GetService<IThreadManager>(),
+				_locator.GetService<IFile>(),
 				_locator.GetService<ILogger>()
 			), typeof(IGameManager));
 		}
