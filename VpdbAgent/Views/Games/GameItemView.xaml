@@ -81,11 +81,21 @@
                     <TextBlock Text="{Binding Game.FileName}" Background="{Binding Path=Game.HasLocalFile, Converter={StaticResource FalseToRed}}" TextTrimming="CharacterEllipsis"/>
                 </Label>
 
-                <!-- identify button -->
-                <Button IsEnabled="{Binding Game.HasLocalFile}" Command="{Binding IdentifyRelease}" 
-                    Visibility="{Binding Path=ShowIdentifyButton, Converter={StaticResource TrueToVisible}}" 
-                    Style="{StaticResource ButtonLine}" 
-                    Grid.Column="1" Content="IDENTIFY" HorizontalAlignment="Right" Margin="0,-3,10,-8"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+
+                    <!-- hide button -->
+                    <Button
+                        Visibility="{Binding Path=ShowHideButton, Converter={StaticResource TrueToVisible}}" 
+                        Style="{StaticResource ButtonLine}" 
+                        Grid.Column="1" Content="HIDE" HorizontalAlignment="Right" Margin="0,-3,10,-8"/>
+                    
+                    <!-- identify button -->
+                    <Button Command="{Binding IdentifyRelease}" 
+                        Visibility="{Binding Path=ShowIdentifyButton, Converter={StaticResource TrueToVisible}}" 
+                        Style="{StaticResource ButtonLine}" 
+                        Grid.Column="1" Content="IDENTIFY" HorizontalAlignment="Right" Margin="0,-3,10,-8"/>
+
+                </StackPanel>
 
                 <!-- spinner -->
                 <Viewbox Grid.Column="1" StretchDirection="Both" Stretch="Uniform" 
@@ -101,7 +111,7 @@
             </Grid>
 
             <!-- release results -->
-            <!-- Expander IsExpanded="{Binding HasExecuted}" Style="{StaticResource AnimatedExpander}">
+            <!-- Expander IsExpanded="{Binding ShowResults}" Style="{StaticResource AnimatedExpander}">
                 <Grid Margin="-105,0,-10,0" Background="{StaticResource DarkBackgroundBrush}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="110" />
@@ -138,7 +148,7 @@
                     </StackPanel>
                 </Grid>
             </-->
-            <!--rx:ViewModelViewHost ViewModel="{Binding ReleaseResults}" Visibility="{Binding Path=HasExecuted, Converter={StaticResource TrueToVisible}}" HorizontalContentAlignment="Stretch" /-->
+            <!--rx:ViewModelViewHost ViewModel="{Binding ReleaseResults}" Visibility="{Binding Path=ShowResults, Converter={StaticResource TrueToVisible}}" HorizontalContentAlignment="Stretch" /-->
 
             <!-- separator -->
             <Border BorderBrush="#40ffffff" BorderThickness="0 0 0 1" Margin="5,0,0,0"/>

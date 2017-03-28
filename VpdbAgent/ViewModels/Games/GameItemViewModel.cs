@@ -42,12 +42,14 @@ namespace VpdbAgent.ViewModels.Games
 		// statuses
 		public bool IsExecuting => _isExecuting.Value;
 		public bool ShowIdentifyButton => _showIdentifyButton.Value;
-		public bool HasExecuted { get { return _hasExecuted; } set { this.RaiseAndSetIfChanged(ref _hasExecuted, value); } }
+		public bool ShowHideButton => _showHideButton.Value;
+		public bool ShowResults { get { return _showResults; } set { this.RaiseAndSetIfChanged(ref _showResults, value); } }
 		public bool HasResults { get { return _hasResults; } set { this.RaiseAndSetIfChanged(ref _hasResults, value); } }
 
 		private readonly ObservableAsPropertyHelper<bool> _showIdentifyButton;
+		private readonly ObservableAsPropertyHelper<bool> _showHideButton;
 		private readonly ObservableAsPropertyHelper<bool> _isExecuting;
-		private bool _hasExecuted;
+		private bool _showResults;
 		private bool _hasResults;
 
 		public GameItemViewModel(AggregatedGame game, IDependencyResolver resolver)
@@ -61,10 +63,7 @@ namespace VpdbAgent.ViewModels.Games
 			var threadManager = resolver.GetService<IThreadManager>();
 
 			// release identify
-			var canIdentify = this.WhenAnyValue(
-				x => x.Game.HasLocalFile, x => x.Game.HasMapping, x => x.Game.HasXmlGame, 
-				(hasLocalFile, hasMapping, hasXmlGame) => hasLocalFile && hasMapping && !hasXmlGame);
-			IdentifyRelease = ReactiveCommand.CreateFromObservable(() => _vpdbClient.Api.GetReleasesBySize(Game.FileSize, MatchThreshold).SubscribeOn(threadManager.WorkerScheduler), canIdentify);
+			IdentifyRelease = ReactiveCommand.CreateFromObservable(() => _vpdbClient.Api.GetReleasesBySize(Game.FileSize, MatchThreshold).SubscribeOn(threadManager.WorkerScheduler));
 			IdentifyRelease.Select(releases => releases
 				.Select(release => new {release, release.Versions})
 				.SelectMany(x => x.Versions.Select(version => new {x.release, version, version.Files}))
@@ -92,14 +91,12 @@ namespace VpdbAgent.ViewModels.Games
 				} else {
 					_logger.Info("View model updated with identified releases.");
 					IdentifiedReleases = releases;
-					HasExecuted = true;
+					ShowResults = true;
 				}
 			}, exception => _vpdbClient.HandleApiError(exception, "identifying a game by file size"));
-			
 
 			//var canSync = this.WhenAnyValue(x => x.Game.IsSynced, x => x.Game.HasRelease, (isSynced, hasRelease) => isSynced && hasRelease);
 			//SyncToggled = ReactiveCommand.Create(() => { _gameManager.Sync(Game); }, canSync);
-
 
 			// handle errors
 			IdentifyRelease.ThrownExceptions.Subscribe(e => { _logger.Error(e, "Error matching game."); });
@@ -108,18 +105,27 @@ namespace VpdbAgent.ViewModels.Games
 			IdentifyRelease.Select(r => r.Count > 0).Subscribe(hasResults => { HasResults = hasResults; });
 
 			// close button
-			CloseResults = ReactiveCommand.Create(() => { HasExecuted = false; });
+			CloseResults = ReactiveCommand.Create(() => { ShowResults = false; });
 
 			// spinner
 			IdentifyRelease.IsExecuting.ToProperty(this, vm => vm.IsExecuting, out _isExecuting);
 
 			// identify button visibility
 			this.WhenAny(
-				vm => vm.HasExecuted, 
-				vm => vm.Game.HasMapping,
+				vm => vm.Game.HasLocalFile,
+				vm => vm.ShowResults, 
 				vm => vm.IsExecuting,
-				(hasExecuted, hasRelease, isExecuting) => !hasExecuted.Value && !hasRelease.Value && !isExecuting.Value
+				(hasLocalFile, showResults, isExecuting) => hasLocalFile.Value && !showResults.Value && !isExecuting.Value
 			).ToProperty(this, vm => vm.ShowIdentifyButton, out _showIdentifyButton);
+
+			this.WhenAny(
+				vm => vm.Game.HasLocalFile,
+				vm => vm.Game.HasMapping,
+				vm => vm.Game.HasXmlGame,
+				vm => vm.ShowResults,
+				vm => vm.IsExecuting,
+				(hasLocalFile, hasMapping, hasXmlGame, showResults, isExecuting) => hasLocalFile.Value && !hasMapping.Value && !hasXmlGame.Value && !showResults.Value && !isExecuting.Value
+			).ToProperty(this, vm => vm.ShowHideButton, out _showHideButton);
 		}
 
 		public override string ToString()
