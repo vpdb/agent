@@ -83,6 +83,12 @@
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal">
 
+                    <!-- remove from db button -->
+                    <Button
+                        Visibility="{Binding Path=ShowRemoveFromDbButton, Converter={StaticResource TrueToVisible}}" 
+                        Style="{StaticResource ButtonLine}" 
+                        Grid.Column="1" Content="REMOVE FROM DB" HorizontalAlignment="Right" Margin="0,-3,10,-8"/>
+
                     <!-- hide button -->
                     <Button
                         Visibility="{Binding Path=ShowHideButton, Converter={StaticResource TrueToVisible}}" 
@@ -99,7 +105,7 @@
 
                 <!-- spinner -->
                 <Viewbox Grid.Column="1" StretchDirection="Both" Stretch="Uniform" 
-                    Height="24" Width="24" HorizontalAlignment="Right" Margin="0,0,10,0">
+                    Height="24" Width="24" HorizontalAlignment="Right" Margin="0,4,10,0">
 
                     <loadin:LoadingIndicator Foreground="{StaticResource PrimaryColorBrush}" SpeedRatio="1" IsActive="{Binding IsExecuting}" Style="{DynamicResource LoadingIndicatorArcsStyle}"/>
                 </Viewbox>
