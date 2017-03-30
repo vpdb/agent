@@ -158,27 +158,6 @@ namespace VpdbAgent.Models
 
 		public Game() : this(Locator.Current) { }
 
-		public Game(PinballXGame xmlGame, Platform platform, IDependencyResolver dependencyResolver) : this(dependencyResolver)
-		{
-			Update(platform);
-			UpdateFromGame(xmlGame, platform.TablePath);
-		}
-
-		public Game Merge(PinballXGame xmlGame, Platform platform)
-		{
-			Update(platform);
-			UpdateFromGame(xmlGame, platform.TablePath);
-			return this;
-		}
-
-		private void Update(Platform platform)
-		{
-			Platform = platform;
-
-			// save to disk if these attributes change
-			this.WhenAny(g => g.ReleaseId, g => g.FileId, g => g.IsSynced, g => g.PreviousFileId, g => g.PatchedTableScript, (rid, fid, s, pfid, script) => Unit.Default)
-				.Subscribe(Platform.GamePropertyChanged);
-		}
 
 		private void UpdateFromGame(PinballXGame xmlGame, string tablePath)
 		{

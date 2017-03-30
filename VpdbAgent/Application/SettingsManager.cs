@@ -16,9 +16,8 @@ using Newtonsoft.Json;
 using NLog;
 using ReactiveUI;
 using Refit;
-using VpdbAgent.Data.Objects;
 using VpdbAgent.Libs.ShellLink;
-using VpdbAgent.Models;
+using VpdbAgent.PinballX.Models;
 using VpdbAgent.Vpdb;
 using VpdbAgent.Vpdb.Models;
 using VpdbAgent.Vpdb.Network;
@@ -158,7 +157,7 @@ namespace VpdbAgent.Application
 
 			// xml file name
 			var badFilenameChars = new Regex("[\\\\" + Regex.Escape(new string(Path.GetInvalidPathChars())) + "]");
-			var filename = settings.XmlFile[PlatformType.VP];
+			var filename = settings.XmlFile[Platform.VP];
 			if (string.IsNullOrWhiteSpace(filename)) {
 				errors.Add("XmlFileVP", "You need to provide a file name for the XML database.");
 			} else if (badFilenameChars.IsMatch(filename)) {

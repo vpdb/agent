@@ -10,6 +10,7 @@ using NLog;
 using ReactiveUI;
 using VpdbAgent.Application;
 using VpdbAgent.Models;
+using VpdbAgent.PinballX.Models;
 using VpdbAgent.Vpdb.Models;
 
 namespace VpdbAgent.Vpdb.Download
@@ -261,13 +262,13 @@ namespace VpdbAgent.Vpdb.Download
 		/// Moves a downloaded file to the table folder of the platform.
 		/// </summary>
 		/// <param name="job">Job of downloaded file</param>
-		/// <param name="platform">Platform of the downloaded file</param>
-		private void MoveDownloadedFile(Job job, Platform platform)
+		/// <param name="system">System of the downloaded file</param>
+		private void MoveDownloadedFile(Job job, PinballXSystem system)
 		{
 			// move downloaded file to table folder
 			if (job.FilePath != null && File.Exists(job.FilePath)) {
 				try {
-					var dest = job.GetFileDestination(platform);
+					var dest = job.GetFileDestination(system);
 					if (dest != null && !File.Exists(dest)) {
 						_logger.Info("Moving downloaded file from {0} to {1}...", job.FilePath, dest);
 						File.Move(job.FilePath, dest);

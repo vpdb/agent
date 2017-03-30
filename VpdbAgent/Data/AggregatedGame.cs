@@ -1,16 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reactive.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using JetBrains.Annotations;
 using ReactiveUI;
 using VpdbAgent.Common.Filesystem;
 using VpdbAgent.PinballX.Models;
 
-namespace VpdbAgent.Data.Objects
+namespace VpdbAgent.Data
 {
 	/// <summary>
 	/// A game, aggregated from the PinballX XML database, table file from the 

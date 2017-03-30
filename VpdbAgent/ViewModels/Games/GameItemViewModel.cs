@@ -6,7 +6,7 @@ using System.Reactive.Linq;
 using ReactiveUI;
 using Splat;
 using VpdbAgent.Application;
-using VpdbAgent.Data.Objects;
+using VpdbAgent.Data;
 using VpdbAgent.Vpdb;
 using VpdbAgent.Vpdb.Models;
 using ILogger = NLog.ILogger;

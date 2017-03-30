@@ -6,10 +6,10 @@ using NLog;
 using ReactiveUI;
 using Splat;
 using VpdbAgent.Application;
-using VpdbAgent.Common.Extensions;
-using VpdbAgent.Data.Objects;
+using VpdbAgent.Data;
+using VpdbAgent.PinballX;
+using VpdbAgent.PinballX.Models;
 using Game = VpdbAgent.Models.Game;
-using Platform = VpdbAgent.Models.Platform;
 
 namespace VpdbAgent.ViewModels.Games
 {
@@ -20,7 +20,7 @@ namespace VpdbAgent.ViewModels.Games
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		// data
-		public IReactiveDerivedList<Platform> Platforms { get; }
+		public IReactiveDerivedList<PinballXSystem> Systems { get; }
 		public IReactiveDerivedList<GameItemViewModel> Games { get; }
 
 		// commands
@@ -28,21 +28,22 @@ namespace VpdbAgent.ViewModels.Games
 		public ReactiveCommand<Unit, Unit> IdentifyAll { get; }
 
 		// privates
-		private readonly ReactiveList<string> _platformFilter = new ReactiveList<string>();
+		private readonly ReactiveList<string> _systemFilter = new ReactiveList<string>();
 		private readonly IReactiveDerivedList<GameItemViewModel> _allGames;
 
 		public GamesViewModel(IDependencyResolver resolver)
 		{
 			_platformManager = resolver.GetService<IPlatformManager>();
+			var menuManager = resolver.GetService<IMenuManager>();
 			var gameManager = resolver.GetService<IGameManager>();
 
 			// setup init listener
 			//gameManager.Initialized.Subscribe(_ => SetupTracking());
 
 			// create platforms, filtered and sorted
-			Platforms = _platformManager.Platforms.CreateDerivedCollection(
+			Systems = menuManager.Systems.CreateDerivedCollection(
 				platform => platform,
-				platform => platform.IsEnabled,
+				platform => platform.Enabled,
 				(x, y) => string.Compare(x.Name, y.Name, StringComparison.Ordinal)
 			);
 
@@ -57,42 +58,6 @@ namespace VpdbAgent.ViewModels.Games
 			Games = _allGames.CreateDerivedCollection(
 				gameViewModel => gameViewModel, 
 				gameViewModel => gameViewModel.IsVisible);
-
-			// todo check if we can simplify this.
-			/*
-			IdentifyAll = ReactiveCommand.Create(() => {
-
-				/*
-				Games
-					.ToObservable()
-					.Where(g => g.ShowIdentifyButton)
-					.StepInterval(TimeSpan.FromMilliseconds(200)) // don't DOS the server...
-					.Select(g => Observable.DeferAsync(async token =>
-						Observable.Return(await System.Windows.Application.Current. // must be on main thread
-							Dispatcher.Invoke(async () => new { game = g, result = await g.IdentifyRelease.ExecuteAsyncTask() }))))
-					.Merge(1)
-					.Subscribe(x => {
-						if (x.result.Count == 0) {
-							System.Windows.Application.Current.Dispatcher.Invoke(delegate {
-								x.game.CloseResults.Execute(null);
-							});
-						}
-					});*
-
-				Games
-					.ToObservable()
-					.Where(g => !g.HasExecuted && !g.Game.HasRelease && !g.IsExecuting)
-					.StepInterval(TimeSpan.FromMilliseconds(200)) // don't DOS the server...
-					.Subscribe(g => {
-						System.Windows.Application.Current.Dispatcher.Invoke(() => {
-							g.IdentifyRelease.Execute().Subscribe(result => {
-								if (result.Count == 0) {
-									g.CloseResults.Execute();
-								}
-							});
-						});
-					});
-			});*/
 		}
 
 
@@ -103,7 +68,7 @@ namespace VpdbAgent.ViewModels.Games
 		private void SetupTracking()
 		{
 			// update platform filter when platforms change
-			Platforms.Changed
+			Systems.Changed
 				.Select(_ => Unit.Default)
 				.StartWith(Unit.Default)
 				.Subscribe(UpdatePlatforms);
@@ -116,7 +81,7 @@ namespace VpdbAgent.ViewModels.Games
 			});
 
 			// update games view models when platform filter changes
-			_platformFilter.Changed
+			_systemFilter.Changed
 				.Select(_ => Unit.Default)
 				.StartWith(Unit.Default)
 				.Subscribe(RefreshGameVisibility);
@@ -130,9 +95,9 @@ namespace VpdbAgent.ViewModels.Games
 		public void OnPlatformFilterChanged(string platformName, bool isChecked)
 		{
 			if (isChecked) {
-				_platformFilter.Add(platformName);
+				_systemFilter.Add(platformName);
 			} else {
-				_platformFilter.Remove(platformName);
+				_systemFilter.Remove(platformName);
 			}
 		}
 
@@ -158,11 +123,6 @@ namespace VpdbAgent.ViewModels.Games
 		/// </summary>
 		/// <param name="game">Game</param>
 		/// <returns>True if visible, false otherwise</returns>
-		private bool IsGameVisible(Game game)
-		{
-			return game.Platform.IsEnabled && _platformFilter.Contains(game.Platform.Name);
-		}
-
 		private bool IsGameVisible(AggregatedGame game)
 		{
 			return game.Enabled;
@@ -175,11 +135,11 @@ namespace VpdbAgent.ViewModels.Games
 		private void UpdatePlatforms(Unit args)
 		{
 			// populate filter
-			using (_platformFilter.SuppressChangeNotifications()) {
-				_platformFilter.Clear();
-				_platformFilter.AddRange(Platforms.Select(p => p.Name));
+			using (_systemFilter.SuppressChangeNotifications()) {
+				_systemFilter.Clear();
+				_systemFilter.AddRange(Systems.Select(p => p.Name));
 			}
-			Logger.Info("We've got {0} platforms, {2} visible, {1} in total.", Platforms.Count, _platformManager.Platforms.Count, _platformFilter.Count);
+			Logger.Info("We've got {0} platforms, {2} visible, {1} in total.", Systems.Count, _platformManager.Platforms.Count, _systemFilter.Count);
 
 		}
 	}

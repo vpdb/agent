@@ -8,8 +8,7 @@ using System.Windows.Forms;
 using NLog;
 using ReactiveUI;
 using VpdbAgent.Application;
-using VpdbAgent.Data.Objects;
-using Platform = VpdbAgent.Models.Platform;
+using VpdbAgent.PinballX.Models;
 
 namespace VpdbAgent.ViewModels.Settings
 {
@@ -102,7 +101,7 @@ namespace VpdbAgent.ViewModels.Settings
 			PatchTableScripts = _settingsManager.Settings.PatchTableScripts;
 			MinimizeToTray = _settingsManager.Settings.MinimizeToTray;
 			ReformatXml = _settingsManager.Settings.ReformatXml;
-			XmlFileVP = _settingsManager.Settings.XmlFile[PlatformType.VP];
+			XmlFileVP = _settingsManager.Settings.XmlFile[Platform.VP];
 			StartWithWindows = _settingsManager.Settings.StartWithWindows;
 			DownloadOrientation = _settingsManager.Settings.DownloadOrientation;
 			DownloadOrientationFallback = _settingsManager.Settings.DownloadOrientationFallback;
@@ -180,7 +179,7 @@ namespace VpdbAgent.ViewModels.Settings
 			settings.PatchTableScripts = _patchTableScripts;
 			settings.MinimizeToTray = _minimizeToTray;
 			settings.ReformatXml = _reformatXml;
-			settings.XmlFile = new Dictionary<PlatformType, string> {{ PlatformType.VP, _xmlFileVP }};
+			settings.XmlFile = new Dictionary<Platform, string> {{ Platform.VP, _xmlFileVP }};
 			settings.StartWithWindows = _startWithWindows;
 			settings.DownloadOrientation = _downloadOrientation;
 			settings.DownloadOrientationFallback = _downloadOrientationFallback;

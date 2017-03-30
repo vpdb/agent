@@ -1,6 +1,5 @@
 ﻿using IniParser.Model;
 using System;
-using System.CodeDom;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -12,8 +11,6 @@ using NuGet;
 using ReactiveUI;
 using VpdbAgent.Application;
 using VpdbAgent.Common.Filesystem;
-using VpdbAgent.Data.Json;
-using VpdbAgent.Data.Objects;
 using ILogger = NLog.ILogger;
 
 namespace VpdbAgent.PinballX.Models
@@ -47,7 +44,7 @@ namespace VpdbAgent.PinballX.Models
 		public string TablePath { get { return _tablePath; } set { this.RaiseAndSetIfChanged(ref _tablePath, value); } }
 		public string Executable { get { return _executable; } set { this.RaiseAndSetIfChanged(ref _executable, value); } }
 		public string Parameters { get; set; }
-		public PlatformType Type { get { return _type; } set { this.RaiseAndSetIfChanged(ref _type, value); } }
+		public Platform Type { get { return _type; } set { this.RaiseAndSetIfChanged(ref _type, value); } }
 
 		/// <summary>
 		/// Read-only cache of parsed games.
@@ -74,15 +71,10 @@ namespace VpdbAgent.PinballX.Models
 		public IObservable<Tuple<string, List<PinballXGame>>> GamesUpdated => _gamesUpdated;
 
 		/// <summary>
-		/// Produces a list of Mappings every time the JSON file is updated,
-		/// added or removed.
+		/// Triggers every time the mapping file (`vpdb.json`) for this system is
+		/// updated, created or removed.
 		/// </summary>
-		/// 
-		/// <remarks>
-		/// The list is exhaustive, i.e. mappings not in that list are to be 
-		/// removed.
-		/// </remarks>
-		public IObservable<List<Mapping>> MappingsUpdated => _mappingsUpdated;
+		public IObservable<string> MappingFileUpdated => _mappingFileUpdated;
 
 		// convenient props
 		public string DatabasePath { get; private set; }
@@ -92,14 +84,14 @@ namespace VpdbAgent.PinballX.Models
 		private bool _enabled;
 		private string _tablePath;
 		private string _executable;
-		private PlatformType _type;
+		private Platform _type;
 
 		// internal props
 		private System.IO.FileSystemWatcher _fsw;
 		private readonly Subject<Tuple<string, List<PinballXGame>>> _gamesUpdated = new Subject<Tuple<string, List<PinballXGame>>>();
-		private readonly Subject<List<Mapping>> _mappingsUpdated = new Subject<List<Mapping>>();
+		private readonly Subject<string> _mappingFileUpdated = new Subject<string>();
 		private readonly CompositeDisposable _databaseWatchers = new CompositeDisposable();
-		private IDisposable _mappingWatcher;
+		private IDisposable _mappingFileWatcher;
 
 		/// <summary>
 		/// Base constructor
@@ -119,17 +111,18 @@ namespace VpdbAgent.PinballX.Models
 		/// <param name="data">Data of .ini section</param>
 		/// <param name="settingsManager">Settings dependency</param>
 		/// <param name="marshallManager">Marshaller dependency</param>
+		/// <param name="watcher">File watcher dependency</param>
 		/// <param name="logger">Logger dependency</param>
 		/// <param name="dir">Directory wrapper dependency</param>
 		public PinballXSystem(KeyDataCollection data, ISettingsManager settingsManager, IMarshallManager marshallManager, IFileSystemWatcher watcher, ILogger logger, IDirectory dir) : this(settingsManager, marshallManager, watcher, logger, dir)
 		{
 			var systemType = data["SystemType"];
 			if ("0".Equals(systemType)) {
-				Type = PlatformType.Custom;
+				Type = Platform.Custom;
 			} else if ("1".Equals(systemType)) {
-				Type = PlatformType.VP;
+				Type = Platform.VP;
 			} else if ("2".Equals(systemType)) {
-				Type = PlatformType.FP;
+				Type = Platform.FP;
 			}
 			Name = data["Name"];
 
@@ -143,19 +136,20 @@ namespace VpdbAgent.PinballX.Models
 		/// <param name="data">Data of .ini section</param>
 		/// <param name="settingsManager">Settings dependency</param>
 		/// <param name="marshallManager">Marshaller dependency</param>
+		/// <param name="watcher">File watcher dependency</param>
 		/// <param name="logger">Logger dependency</param>
 		/// <param name="dir">Directory wrapper dependency</param>
-		public PinballXSystem(PlatformType type, KeyDataCollection data, ISettingsManager settingsManager, IMarshallManager marshallManager, IFileSystemWatcher watcher, ILogger logger, IDirectory dir) : this(settingsManager, marshallManager, watcher, logger, dir)
+		public PinballXSystem(Platform type, KeyDataCollection data, ISettingsManager settingsManager, IMarshallManager marshallManager, IFileSystemWatcher watcher, ILogger logger, IDirectory dir) : this(settingsManager, marshallManager, watcher, logger, dir)
 		{
 			Type = type;
 			switch (type) {
-				case PlatformType.VP:
+				case Platform.VP:
 					Name = "Visual Pinball";
 					break;
-				case PlatformType.FP:
+				case Platform.FP:
 					Name = "Future Pinball";
 					break;
-				case PlatformType.Custom:
+				case Platform.Custom:
 					Name = "Custom";
 					break;
 				default:
@@ -174,6 +168,7 @@ namespace VpdbAgent.PinballX.Models
 				_logger.Warn("Invalid database path \"{0}\" for {1}, ignoring.", DatabasePath, this);
 				return;
 			}
+
 			// watch xml database files
 			this.WhenAnyValue(s => s.Enabled).Subscribe(enabled => {
 				if (enabled) {
@@ -190,10 +185,10 @@ namespace VpdbAgent.PinballX.Models
 
 			// watch mappings
 			var mappingPath = Path.Combine(DatabasePath, "vpdb.json");
-			_watcher.FileWatcher(mappingPath)
-				.StartWith(mappingPath)                         // kick-off without waiting for first file change
-				//.SubscribeOn(_threadManager.WorkerScheduler)    // do work on background thread
-				.Subscribe(UpdateMappings);
+			_mappingFileWatcher = _watcher.FileWatcher(mappingPath)
+				.StartWith(mappingPath)                          // kick-off without waiting for first file change
+				//.SubscribeOn(_threadManager.WorkerScheduler)   // do work on background thread
+				.Subscribe(_mappingFileUpdated);
 		}
 
 		/// <summary>
@@ -353,12 +348,6 @@ namespace VpdbAgent.PinballX.Models
 			return games;
 		}
 
-		private void UpdateMappings(string dbPath)
-		{
-			// parse vpdb.json
-			// send result to _mappingsUpdated
-		}
-
 		/// <summary>
 		/// Copies data over from another system
 		/// </summary>
@@ -435,11 +424,33 @@ namespace VpdbAgent.PinballX.Models
 		public void Dispose()
 		{
 			_databaseWatchers.Dispose();
+			_mappingFileWatcher.Dispose();
 		}
 
 		public override string ToString()
 		{
 			return $"system \"{Name}\"";
 		}
+	}
+
+	/// <summary>
+	/// Different types of systems.
+	/// </summary>
+	public enum Platform
+	{
+		/// <summary>
+		/// Visual Pinball
+		/// </summary>
+		VP,
+
+		/// <summary>
+		/// Future Pinball
+		/// </summary>
+		FP,
+
+		/// <summary>
+		/// Anything else
+		/// </summary>
+		Custom
 	}
 }

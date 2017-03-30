@@ -7,9 +7,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Akavache;
 using ReactiveUI;
-using VpdbAgent.Data.Objects;
+using VpdbAgent.PinballX.Models;
 using VpdbAgent.Vpdb.Models;
-using Platform = VpdbAgent.Models.Platform;
 
 namespace VpdbAgent.Application
 {
@@ -66,7 +65,7 @@ namespace VpdbAgent.Application
 		/// <see cref="Data.Objects.PlatformType"/>), value is file name without 
 		/// extension.
 		/// </summary>
-		public Dictionary<PlatformType, string> XmlFile { get { return _xmlFile; } set { this.RaiseAndSetIfChanged(ref _xmlFile, value); } }
+		public Dictionary<Platform, string> XmlFile { get { return _xmlFile; } set { this.RaiseAndSetIfChanged(ref _xmlFile, value); } }
 
 		/// <summary>
 		/// If true, download all starred/synced releases on startup.
@@ -126,7 +125,7 @@ namespace VpdbAgent.Application
 		private bool _minimizeToTray;
 		private bool _startWithWindows;
 		private bool _reformatXml;
-		private Dictionary<PlatformType, string> _xmlFile;
+		private Dictionary<Platform, string> _xmlFile;
 		private bool _downloadOnStartup;
 		private bool _patchTableScripts;
 		private SettingsManager.Orientation _downloadOrientation;
@@ -152,7 +151,7 @@ namespace VpdbAgent.Application
 			MinimizeToTray = await storage.GetOrCreateObject("MinimizeToTray", () => false);
 			StartWithWindows = await storage.GetOrCreateObject("StartWithWindows", () => false);
 			ReformatXml = await storage.GetOrCreateObject("ReformatXml", () => false);
-			XmlFile = await storage.GetOrCreateObject("XmlFile", () => new Dictionary<PlatformType, string> {{ PlatformType.VP, "Visual Pinball" }});
+			XmlFile = await storage.GetOrCreateObject("XmlFile", () => new Dictionary<Platform, string> {{ Platform.VP, "Visual Pinball" }});
 			DownloadOnStartup = await storage.GetOrCreateObject("DownloadOnStartup", () => false);
 			PatchTableScripts = await storage.GetOrCreateObject("PatchTableScripts", () => true);
 			DownloadOrientation = await storage.GetOrCreateObject("DownloadOrientation", () => SettingsManager.Orientation.Portrait);
@@ -200,7 +199,7 @@ namespace VpdbAgent.Application
 			to.MinimizeToTray = from.MinimizeToTray;
 			to.StartWithWindows = from.StartWithWindows;
 			to.ReformatXml = from.ReformatXml;
-			to.XmlFile = new Dictionary<PlatformType, string>(from.XmlFile);
+			to.XmlFile = new Dictionary<Platform, string>(from.XmlFile);
 			to.DownloadOnStartup = from.DownloadOnStartup;
 			to.PatchTableScripts = from.PatchTableScripts;
 			to.DownloadOrientation = from.DownloadOrientation;

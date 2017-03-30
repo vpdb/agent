@@ -20,21 +20,21 @@ namespace VpdbAgent.Application
 		/// meaning that if systems change (e.g. <c>PinballX.ini</c> is 
 		/// manually updated), they are updated but not vice versa.
 		/// </summary>
-		ReactiveList<Platform> Platforms { get; }
+		ReactiveList<PinballXSystem> Platforms { get; }
 
 		/// <summary>
 		/// Retrieves a platform for a given table file's VPDB-platform attribute
 		/// </summary>
 		/// <param name="tableFile">Table file</param>
 		/// <returns>Platform or null if not found</returns>
-		Platform FindPlatform(VpdbTableFile tableFile);
+		PinballXSystem FindPlatform(VpdbTableFile tableFile);
 
 		/// <summary>
 		/// Retrieves a platform for a given VPDB-platform
 		/// </summary>
 		/// <param name="platform">Platform definition at VPDB</param>
 		/// <returns>Local platform object</returns>
-		Platform FindPlatform(VpdbTableFile.VpdbPlatform platform);
+		PinballXSystem FindPlatform(VpdbTableFile.VpdbPlatform platform);
 	}
 
 	public class PlatformManager : IPlatformManager
@@ -46,7 +46,7 @@ namespace VpdbAgent.Application
 		private readonly ILogger _logger;
 
 		// props
-		public ReactiveList<Platform> Platforms { get; } = new ReactiveList<Platform>();
+		public ReactiveList<PinballXSystem> Platforms { get; } = new ReactiveList<PinballXSystem>();
 
 		public PlatformManager(IMenuManager menuManager, IThreadManager threadManager, ILogger logger, IDependencyResolver resolver)
 		{
@@ -73,7 +73,7 @@ namespace VpdbAgent.Application
 			.Subscribe(UpdatePlatform);*/
 		}
 
-		public Platform FindPlatform(VpdbTableFile tableFile)
+		public PinballXSystem FindPlatform(VpdbTableFile tableFile)
 		{
 			if (tableFile?.Compatibility == null || tableFile.Compatibility.Count == 0) {
 				return null;
@@ -81,7 +81,7 @@ namespace VpdbAgent.Application
 			return FindPlatform(tableFile.Compatibility[0].Platform);
 		}
 
-		public Platform FindPlatform(VpdbTableFile.VpdbPlatform platform)
+		public PinballXSystem FindPlatform(VpdbTableFile.VpdbPlatform platform)
 		{
 			string platformName;
 			switch (platform) {
@@ -109,6 +109,7 @@ namespace VpdbAgent.Application
 		/// <param name="system"></param>
 		private void UpdatePlatform(PinballXSystem system)
 		{
+			/*
 			_logger.Info("Updating games for {0}", system);
 
 			// create new platform and find old
@@ -126,7 +127,7 @@ namespace VpdbAgent.Application
 					}
 					Platforms.Add(newPlatform);
 				}
-			});
+			});*/
 		}
 
 		/// <summary>
@@ -141,6 +142,7 @@ namespace VpdbAgent.Application
 		/// <param name="args"></param>
 		private void UpdatePlatforms(NotifyCollectionChangedEventArgs args)
 		{
+			/*
 			_logger.Info("Updating all games for all platforms");
 
 			// create platforms from games
@@ -157,7 +159,7 @@ namespace VpdbAgent.Application
 					Platforms.Clear();
 					Platforms.AddRange(platforms);
 				}
-			});
+			});*/
 		}
 
 	}

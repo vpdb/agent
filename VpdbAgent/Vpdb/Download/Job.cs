@@ -13,6 +13,7 @@ using ReactiveUI;
 using Splat;
 using VpdbAgent.Application;
 using VpdbAgent.Models;
+using VpdbAgent.PinballX.Models;
 using VpdbAgent.Vpdb.Models;
 using ILogger = NLog.ILogger;
 
@@ -253,29 +254,29 @@ namespace VpdbAgent.Vpdb.Download
 		/// Returns the absolute path of where the file should moved to after
 		/// downloading.
 		/// </summary>
-		/// <param name="platform">Platform of the table file belonging to the download</param>
+		/// <param name="system">System of the table file belonging to the download</param>
 		/// <returns>Absolute path to local download location</returns>
-		public string GetFileDestination(Platform platform = null)
+		public string GetFileDestination(PinballXSystem system = null)
 		{
-			if (platform == null) {
+			if (system == null) {
 				Logger.Error("Platform not provided when it should have ({0})", FileType);
 				return null;
 			}
 
 			switch (FileType) {
 				case FileType.TableFile:
-					return Path.Combine(platform.TablePath, File.Name);
+					return Path.Combine(system.TablePath, File.Name);
 
 				case FileType.TableScript:
-					var scriptsFolder = Path.Combine(Path.GetDirectoryName(platform.TablePath), "Scripts");
-					return Path.Combine(Directory.Exists(scriptsFolder) ? scriptsFolder : platform.TablePath, File.Name);
+					var scriptsFolder = Path.Combine(Path.GetDirectoryName(system.TablePath), "Scripts");
+					return Path.Combine(Directory.Exists(scriptsFolder) ? scriptsFolder : system.TablePath, File.Name);
 
 				case FileType.TableAuxiliary:
 					
-					return Path.Combine(platform.TablePath, File.Name);
+					return Path.Combine(system.TablePath, File.Name);
 
 				case FileType.TableMusic:
-					var musicFolder = Path.Combine(Path.GetDirectoryName(platform.TablePath), "Music");
+					var musicFolder = Path.Combine(Path.GetDirectoryName(system.TablePath), "Music");
 					if (!Directory.Exists(musicFolder)) {
 						Directory.CreateDirectory(musicFolder);
 					}
@@ -283,17 +284,17 @@ namespace VpdbAgent.Vpdb.Download
 
 				case FileType.TableImage:
 					// todo handle desktop media (goes to "Table Images Desktop" folder)
-					return Path.Combine(platform.MediaPath, MediaTableImages, Release.Game.DisplayName + Path.GetExtension(FilePath));
+					return Path.Combine(system.MediaPath, MediaTableImages, Release.Game.DisplayName + Path.GetExtension(FilePath));
 
 				case FileType.TableVideo:
 					// todo handle desktop media (goes to "Table Videos Desktop" folder)
-					return Path.Combine(platform.MediaPath, MediaTableVideos, Release.Game.DisplayName + Path.GetExtension(FilePath));
+					return Path.Combine(system.MediaPath, MediaTableVideos, Release.Game.DisplayName + Path.GetExtension(FilePath));
 
 				case FileType.BackglassImage:
-					return Path.Combine(platform.MediaPath, MediaBackglassImages, Release.Game.DisplayName + Path.GetExtension(FilePath));
+					return Path.Combine(system.MediaPath, MediaBackglassImages, Release.Game.DisplayName + Path.GetExtension(FilePath));
 
 				case FileType.WheelImage:
-					return Path.Combine(platform.MediaPath, MediaWheelImages, Release.Game.DisplayName + Path.GetExtension(FilePath));
+					return Path.Combine(system.MediaPath, MediaWheelImages, Release.Game.DisplayName + Path.GetExtension(FilePath));
 
 				case FileType.Rom: // todo
 				default:

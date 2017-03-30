@@ -4,9 +4,8 @@ using System.Windows.Input;
 using ReactiveUI;
 using Splat;
 using VpdbAgent.Application;
-using VpdbAgent.Data.Objects;
+using VpdbAgent.Data;
 using VpdbAgent.Vpdb.Models;
-using Game = VpdbAgent.Models.Game;
 
 namespace VpdbAgent.ViewModels.Games
 {

@@ -11,7 +11,7 @@ using NLog;
 using ReactiveUI;
 using SynchrotronNet;
 using VpdbAgent.Common.Filesystem;
-using VpdbAgent.Data.Objects;
+using VpdbAgent.Data;
 using VpdbAgent.PinballX;
 using VpdbAgent.PinballX.Models;
 using VpdbAgent.VisualPinball;
@@ -594,7 +594,7 @@ namespace VpdbAgent.Application
 		private void PatchGame(Game game, string baseFileName, string fileToPatchId)
 		{
 			// todo create log message when something goes wrong.
-
+			/*
 			var baseFileId = game.PreviousFileId;
 			_logger.Info("Patching file {0} with changes from file {1}", fileToPatchId, baseFileId);
 
@@ -664,7 +664,7 @@ namespace VpdbAgent.Application
 			}
 			game.PatchedTableScript = patchedScript;
 
-			_logger.Info("Successfully wrote back script to table file.");
+			_logger.Info("Successfully wrote back script to table file.");*/
 		}
 
 		/// <summary>

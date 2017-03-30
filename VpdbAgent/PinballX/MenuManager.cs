@@ -4,18 +4,15 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reactive;
-using System.Reactive.Disposables;
 using System.Xml.Serialization;
 using ReactiveUI;
 using VpdbAgent.PinballX.Models;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Xml;
 using VpdbAgent.Application;
 using VpdbAgent.Common.Filesystem;
-using VpdbAgent.Data.Objects;
 using VpdbAgent.Models;
 using VpdbAgent.Vpdb.Download;
 
@@ -327,7 +324,7 @@ namespace VpdbAgent.PinballX
 		public PinballXGame AddGame(PinballXGame game, string databasePath)
 		{
 			// read current xml
-			var xmlPath = Path.Combine(databasePath, _settingsManager.Settings.XmlFile[PlatformType.VP] + ".xml"); // todo make platform dynamic
+			var xmlPath = Path.Combine(databasePath, _settingsManager.Settings.XmlFile[Platform.VP] + ".xml"); // todo make platform dynamic
 
 			if (_settingsManager.Settings.ReformatXml || !_file.Exists(xmlPath)) {
 				var menu = _marshallManager.UnmarshallXml(xmlPath);
@@ -394,6 +391,7 @@ namespace VpdbAgent.PinballX
 
 		public IMenuManager UpdateGame(string oldFileName, Game jsonGame)
 		{
+			/*
 			var xmlPath = Path.Combine(jsonGame.Platform.DatabasePath, jsonGame.DatabaseFile);
 			var newFilename = Path.GetFileNameWithoutExtension(jsonGame.Filename);
 
@@ -420,7 +418,7 @@ namespace VpdbAgent.PinballX
 				_file.WriteAllText(xmlPath, xml);
 
 				_logger.Info("Replaced name \"{0}\" with \"{1}\" in {2}.", oldFileName, newFilename, xmlPath);
-			}
+			}*/
 			return this;
 		}
 
@@ -436,16 +434,16 @@ namespace VpdbAgent.PinballX
 			var data = _marshallManager.ParseIni(iniPath);
 			if (data != null) {
 				if (data["VisualPinball"] != null) {
-					systems.Add(new PinballXSystem(PlatformType.VP, data["VisualPinball"], _settingsManager, _marshallManager, _logger, _dir));
+					systems.Add(new PinballXSystem(Platform.VP, data["VisualPinball"], _settingsManager, _marshallManager, _watcher, _logger, _dir));
 				}
 				if (data["FuturePinball"] != null) {
-					systems.Add(new PinballXSystem(PlatformType.FP, data["FuturePinball"], _settingsManager, _marshallManager, _logger, _dir));
+					systems.Add(new PinballXSystem(Platform.FP, data["FuturePinball"], _settingsManager, _marshallManager, _watcher, _logger, _dir));
 				}
 				
 				for (var i = 0; i < 20; i++) {
 					var systemName = "System_" + i;
 					if (data[systemName] != null && data[systemName].Count > 0) {
-						systems.Add(new PinballXSystem(data[systemName], _settingsManager, _marshallManager, _logger, _dir));
+						systems.Add(new PinballXSystem(data[systemName], _settingsManager, _marshallManager, _watcher, _logger, _dir));
 					}
 				}
 			}
