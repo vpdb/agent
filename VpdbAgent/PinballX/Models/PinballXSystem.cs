@@ -1,5 +1,6 @@
 ﻿using IniParser.Model;
 using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -11,6 +12,7 @@ using NuGet;
 using ReactiveUI;
 using VpdbAgent.Application;
 using VpdbAgent.Common.Filesystem;
+using VpdbAgent.Data.Json;
 using VpdbAgent.Data.Objects;
 using ILogger = NLog.ILogger;
 
@@ -34,6 +36,7 @@ namespace VpdbAgent.PinballX.Models
 		// deps
 		private readonly ISettingsManager _settingsManager;
 		private readonly IMarshallManager _marshallManager;
+		private readonly IFileSystemWatcher _watcher;
 		private readonly ILogger _logger;
 		private readonly IDirectory _dir;
 
@@ -49,6 +52,7 @@ namespace VpdbAgent.PinballX.Models
 		/// <summary>
 		/// Read-only cache of parsed games.
 		/// </summary>
+		/// 
 		/// <remarks>
 		/// The main purpose of this is being able kick-off the list of games
 		/// and to update <see cref="PinballXGame.DatabaseFile"/> when the XML
@@ -60,6 +64,7 @@ namespace VpdbAgent.PinballX.Models
 		/// Produces a value every time any data in any database file changes,
 		/// or if database files are removed, added or renamed.
 		/// </summary>
+		/// 
 		/// <remarks>
 		/// Note that the returned the list of games is always exhaustive, i.e. games 
 		/// not in that list for the given database file are to be removed. For 
@@ -67,7 +72,18 @@ namespace VpdbAgent.PinballX.Models
 		/// the deleted database filename and an empty list.
 		/// </remarks>
 		public IObservable<Tuple<string, List<PinballXGame>>> GamesUpdated => _gamesUpdated;
-		
+
+		/// <summary>
+		/// Produces a list of Mappings every time the JSON file is updated,
+		/// added or removed.
+		/// </summary>
+		/// 
+		/// <remarks>
+		/// The list is exhaustive, i.e. mappings not in that list are to be 
+		/// removed.
+		/// </remarks>
+		public IObservable<List<Mapping>> MappingsUpdated => _mappingsUpdated;
+
 		// convenient props
 		public string DatabasePath { get; private set; }
 		public string MediaPath { get; private set; }
@@ -81,15 +97,18 @@ namespace VpdbAgent.PinballX.Models
 		// internal props
 		private System.IO.FileSystemWatcher _fsw;
 		private readonly Subject<Tuple<string, List<PinballXGame>>> _gamesUpdated = new Subject<Tuple<string, List<PinballXGame>>>();
-		private readonly CompositeDisposable _watchers = new CompositeDisposable();
+		private readonly Subject<List<Mapping>> _mappingsUpdated = new Subject<List<Mapping>>();
+		private readonly CompositeDisposable _databaseWatchers = new CompositeDisposable();
+		private IDisposable _mappingWatcher;
 
 		/// <summary>
 		/// Base constructor
 		/// </summary>
-		private PinballXSystem(ISettingsManager settingsManager, IMarshallManager marshallManager, ILogger logger, IDirectory dir)
+		private PinballXSystem(ISettingsManager settingsManager, IMarshallManager marshallManager, IFileSystemWatcher watcher, ILogger logger, IDirectory dir)
 		{
 			_settingsManager = settingsManager;
 			_marshallManager = marshallManager;
+			_watcher = watcher;
 			_logger = logger;
 			_dir = dir;
 		}
@@ -102,7 +121,7 @@ namespace VpdbAgent.PinballX.Models
 		/// <param name="marshallManager">Marshaller dependency</param>
 		/// <param name="logger">Logger dependency</param>
 		/// <param name="dir">Directory wrapper dependency</param>
-		public PinballXSystem(KeyDataCollection data, ISettingsManager settingsManager, IMarshallManager marshallManager, ILogger logger, IDirectory dir) : this(settingsManager, marshallManager, logger, dir)
+		public PinballXSystem(KeyDataCollection data, ISettingsManager settingsManager, IMarshallManager marshallManager, IFileSystemWatcher watcher, ILogger logger, IDirectory dir) : this(settingsManager, marshallManager, watcher, logger, dir)
 		{
 			var systemType = data["SystemType"];
 			if ("0".Equals(systemType)) {
@@ -126,7 +145,7 @@ namespace VpdbAgent.PinballX.Models
 		/// <param name="marshallManager">Marshaller dependency</param>
 		/// <param name="logger">Logger dependency</param>
 		/// <param name="dir">Directory wrapper dependency</param>
-		public PinballXSystem(PlatformType type, KeyDataCollection data, ISettingsManager settingsManager, IMarshallManager marshallManager, ILogger logger, IDirectory dir) : this(settingsManager, marshallManager, logger, dir)
+		public PinballXSystem(PlatformType type, KeyDataCollection data, ISettingsManager settingsManager, IMarshallManager marshallManager, IFileSystemWatcher watcher, ILogger logger, IDirectory dir) : this(settingsManager, marshallManager, watcher, logger, dir)
 		{
 			Type = type;
 			switch (type) {
@@ -155,18 +174,26 @@ namespace VpdbAgent.PinballX.Models
 				_logger.Warn("Invalid database path \"{0}\" for {1}, ignoring.", DatabasePath, this);
 				return;
 			}
+			// watch xml database files
 			this.WhenAnyValue(s => s.Enabled).Subscribe(enabled => {
 				if (enabled) {
 					// kick off and watch
 					GetDatabaseFiles().ForEach(UpdateGames);
-					EnableWatchers();
+					EnableDatabaseWatchers();
 
 				} else {
 					// clear games and destroy watchers
 					GetDatabaseFiles().ForEach(RemoveGames);
-					DisableWatchers();
+					DisableDatabaseWatchers();
 				}
 			});
+
+			// watch mappings
+			var mappingPath = Path.Combine(DatabasePath, "vpdb.json");
+			_watcher.FileWatcher(mappingPath)
+				.StartWith(mappingPath)                         // kick-off without waiting for first file change
+				//.SubscribeOn(_threadManager.WorkerScheduler)    // do work on background thread
+				.Subscribe(UpdateMappings);
 		}
 
 		/// <summary>
@@ -179,18 +206,18 @@ namespace VpdbAgent.PinballX.Models
 		/// in duplicate watchers. Thus, table files are watched at 
 		/// <see cref="FileSystemWatcher"/>.
 		/// </remarks>
-		private void EnableWatchers()
+		private void EnableDatabaseWatchers()
 		{
 			// setup watchers
 			_fsw = new System.IO.FileSystemWatcher(DatabasePath, "*.xml");
 			_logger.Info("Watching XML files at {0}...", DatabasePath);
-			_watchers.Add(_fsw);
+			_databaseWatchers.Add(_fsw);
 
 			var trottle = TimeSpan.FromMilliseconds(100); // file changes are triggered multiple times
 			var delay = TimeSpan.FromMilliseconds(500);  // avoid concurrent read/write access
 
 			// file changed
-			_watchers.Add(Observable
+			_databaseWatchers.Add(Observable
 					.FromEventPattern<FileSystemEventHandler, FileSystemEventArgs>(x => _fsw.Changed += x, x => _fsw.Changed -= x)
 					.Throttle(trottle, RxApp.TaskpoolScheduler)
 					.Where(x => x.EventArgs.FullPath != null)
@@ -198,21 +225,21 @@ namespace VpdbAgent.PinballX.Models
 					.Subscribe(x => UpdateGames(x.EventArgs.FullPath)));
 
 			// file created
-			_watchers.Add(Observable
+			_databaseWatchers.Add(Observable
 					.FromEventPattern<FileSystemEventHandler, FileSystemEventArgs>(x => _fsw.Created += x, x => _fsw.Created -= x)
 					.Throttle(trottle, RxApp.TaskpoolScheduler)
 					.Delay(delay)
 					.Subscribe(x => UpdateGames(x.EventArgs.FullPath)));
 
 			// file deleted
-			_watchers.Add(Observable
+			_databaseWatchers.Add(Observable
 					.FromEventPattern<FileSystemEventHandler, FileSystemEventArgs>(x => _fsw.Deleted += x, x => _fsw.Deleted -= x)
 					.Throttle(trottle, RxApp.TaskpoolScheduler)
 					.Delay(delay)
 					.Subscribe(x => RemoveGames(x.EventArgs.FullPath)));
 
 			// file renamed
-			_watchers.Add(Observable
+			_databaseWatchers.Add(Observable
 					.FromEventPattern<RenamedEventHandler, FileSystemEventArgs>(x => _fsw.Renamed += x, x => _fsw.Renamed -= x)
 					.Throttle(trottle, RxApp.TaskpoolScheduler)
 					.Delay(delay)
@@ -224,12 +251,12 @@ namespace VpdbAgent.PinballX.Models
 		/// <summary>
 		/// Destroys all file watchers.
 		/// </summary>
-		private void DisableWatchers()
+		private void DisableDatabaseWatchers()
 		{
-			if (!_watchers.IsEmpty()) {
+			if (!_databaseWatchers.IsEmpty()) {
 				_logger.Info("Stopped watching XML files at {0}...", DatabasePath);
 			}
-			_watchers.Clear();
+			_databaseWatchers.Clear();
 		}
 
 		/// <summary>
@@ -325,7 +352,13 @@ namespace VpdbAgent.PinballX.Models
 			_logger.Debug("Parsed {0} games from {1}.", games.Count, xmlPath);
 			return games;
 		}
-		
+
+		private void UpdateMappings(string dbPath)
+		{
+			// parse vpdb.json
+			// send result to _mappingsUpdated
+		}
+
 		/// <summary>
 		/// Copies data over from another system
 		/// </summary>
@@ -401,7 +434,7 @@ namespace VpdbAgent.PinballX.Models
 
 		public void Dispose()
 		{
-			_watchers.Dispose();
+			_databaseWatchers.Dispose();
 		}
 
 		public override string ToString()
