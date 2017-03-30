@@ -117,6 +117,7 @@ namespace VpdbAgent
 
 			deps.RegisterLazySingleton(() => new MarshallManager(
 				deps.GetService<NLog.ILogger>(),
+				deps.GetService<IFile>(),
 				deps.GetService<CrashManager>()
 			), typeof(IMarshallManager));
 

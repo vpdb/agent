@@ -263,7 +263,6 @@
     <Compile Include="AkavacheSqliteLinkerOverride.cs" />
     <Compile Include="Application\CrashManager.cs" />
     <Compile Include="Application\DatabaseManager.cs" />
-    <Compile Include="Application\MappingManager.cs" />
     <Compile Include="Application\MessageManager.cs" />
     <Compile Include="Application\PlatformManager.cs" />
     <Compile Include="Application\ThreadManager.cs" />

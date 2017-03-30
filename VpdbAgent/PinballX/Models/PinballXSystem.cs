@@ -79,6 +79,7 @@ namespace VpdbAgent.PinballX.Models
 		// convenient props
 		public string DatabasePath { get; private set; }
 		public string MediaPath { get; private set; }
+		public string MappingPath => Path.Combine(DatabasePath, "vpdb.json");
 
 		// watched props
 		private bool _enabled;
@@ -169,26 +170,27 @@ namespace VpdbAgent.PinballX.Models
 				return;
 			}
 
-			// watch xml database files
+			// watch xml database files and mappings
 			this.WhenAnyValue(s => s.Enabled).Subscribe(enabled => {
+
+				// kick off and watch
 				if (enabled) {
-					// kick off and watch
+					
+					// xml database
 					GetDatabaseFiles().ForEach(UpdateGames);
 					EnableDatabaseWatchers();
+
+					// mappings
+					_mappingFileWatcher = _watcher.FileWatcher(MappingPath).Subscribe(_mappingFileUpdated);
+					_mappingFileUpdated.OnNext(MappingPath);
 
 				} else {
 					// clear games and destroy watchers
 					GetDatabaseFiles().ForEach(RemoveGames);
 					DisableDatabaseWatchers();
+					_mappingFileWatcher?.Dispose();
 				}
 			});
-
-			// watch mappings
-			var mappingPath = Path.Combine(DatabasePath, "vpdb.json");
-			_mappingFileWatcher = _watcher.FileWatcher(mappingPath)
-				.StartWith(mappingPath)                          // kick-off without waiting for first file change
-				//.SubscribeOn(_threadManager.WorkerScheduler)   // do work on background thread
-				.Subscribe(_mappingFileUpdated);
 		}
 
 		/// <summary>

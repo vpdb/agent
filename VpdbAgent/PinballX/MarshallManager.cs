@@ -7,10 +7,13 @@ using IniParser.Model;
 using Newtonsoft.Json;
 using NLog;
 using VpdbAgent.Application;
+using VpdbAgent.Common.Filesystem;
 using VpdbAgent.Data;
 using VpdbAgent.Models;
 using VpdbAgent.PinballX.Models;
 using VpdbAgent.Vpdb.Network;
+using Directory = System.IO.Directory;
+using File = System.IO.File;
 
 namespace VpdbAgent.PinballX
 {
@@ -71,17 +74,19 @@ namespace VpdbAgent.PinballX
 	{
 		// dependencies
 		private readonly ILogger _logger;
+		private readonly IFile _file;
 		private readonly CrashManager _crashManager;
 
-		public MarshallManager(ILogger logger, CrashManager crashManager)
+		public MarshallManager(ILogger logger, IFile file, CrashManager crashManager)
 		{
 			_logger = logger;
+			_file = file;
 			_crashManager = crashManager;
 		}
 
 		public IniData ParseIni(string path)
 		{
-			if (File.Exists(path)) {
+			if (_file.Exists(path)) {
 				var parser = new FileIniDataParser();
 				return parser.ReadFile(path);
 			}
@@ -97,7 +102,7 @@ namespace VpdbAgent.PinballX
 
 		public SystemMapping UnmarshallMappings(string databaseFile)
 		{
-			if (!File.Exists(databaseFile)) {
+			if (!_file.Exists(databaseFile)) {
 				return new SystemMapping();
 			}
 
@@ -149,7 +154,7 @@ namespace VpdbAgent.PinballX
 		{
 			var menu = new PinballXMenu();
 
-			if (!File.Exists(filepath)) {
+			if (!_file.Exists(filepath)) {
 				return menu;
 			}
 			Stream reader = null;

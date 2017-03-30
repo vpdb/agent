@@ -176,6 +176,9 @@ namespace VpdbAgent.Application
 			// setup handler for xml database changes
 			_menuManager.GamesUpdated.Subscribe(d => MergeXmlGames(d.Item1, d.Item2, d.Item3));
 
+			// setup handler for Matching changes
+			_menuManager.MappingsUpdated.Subscribe(d => MergeMappings(d.Item1, d.Item2));
+
 			_databaseManager.Initialize();
 			_menuManager.Initialize();
 			_vpdbClient.Initialize();
@@ -350,6 +353,12 @@ namespace VpdbAgent.Application
 				// done!
 				_logger.Info("Added {0} games, removed {1} ({2}), updated {3} from file system.", gamesToAdd.Count, removed, cleared, updated);
 			}
+		}
+
+		private void MergeMappings(PinballXSystem system, List<Mapping> mappings)
+		{
+			// merge shit
+			_logger.Info("---- {1}: Mapping changed, new mappings: {0} ({2})", mappings.Count, system, system.Enabled);
 		}
 
 		/// <summary>

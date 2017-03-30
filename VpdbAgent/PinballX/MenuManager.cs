@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reactive;
+using System.Reactive.Disposables;
 using System.Xml.Serialization;
 using ReactiveUI;
 using VpdbAgent.PinballX.Models;
@@ -13,6 +14,7 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using VpdbAgent.Application;
 using VpdbAgent.Common.Filesystem;
+using VpdbAgent.Data;
 using VpdbAgent.Models;
 using VpdbAgent.Vpdb.Download;
 
@@ -37,6 +39,7 @@ namespace VpdbAgent.PinballX
 		/// Starts watching file system for configuration changes and triggers an
 		/// initial update.
 		/// </summary>
+		/// 
 		/// <returns>This instance</returns>
 		IMenuManager Initialize();
 
@@ -51,6 +54,7 @@ namespace VpdbAgent.PinballX
 		/// <summary>
 		/// Instantiates a new game from a given download job.
 		/// </summary>
+		/// 
 		/// <param name="job">Download job</param>
 		/// <returns></returns>
 		PinballXGame NewGame(Job job);
@@ -58,6 +62,7 @@ namespace VpdbAgent.PinballX
 		/// <summary>
 		/// Updates a game. If the game is not found, an exception is thrown.
 		/// </summary>
+		/// 
 		/// <remarks>
 		/// If the game originates from our own Vpdb.xml, data is marshalled as
 		/// as usual. However, if it comes from another (i.e.: the user's) xml,
@@ -71,13 +76,13 @@ namespace VpdbAgent.PinballX
 		/// <summary>
 		/// Systems parsed from <c>PinballX.ini</c>.
 		/// </summary>
-		/// TODO make private
 		ReactiveList<PinballXSystem> Systems { get; }
 
 		/// <summary>
 		/// Produces a value every time any data in any database file changes,
 		/// or if database files are removed, added or renamed.
 		/// </summary>
+		/// 
 		/// <remarks>
 		/// Note that the returned the list of games is always exhaustive, i.e. games 
 		/// not in that list for the given database file are to be removed. For 
@@ -85,6 +90,18 @@ namespace VpdbAgent.PinballX
 		/// the deleted database filename and an empty list.
 		/// </remarks>
 		IObservable<Tuple<PinballXSystem, string, List<PinballXGame>>> GamesUpdated { get; }
+
+		/// <summary>
+		/// Produces a value every time the mappings for a given system is updated,
+		/// created or deleted.
+		/// </summary>
+		/// 
+		/// <remarks>
+		/// The returned list of mappings is exhaustive, i.e. mappings not in that
+		/// list for the given systems are to be removed. Therefore, when a mapping
+		/// file is removed, this triggers with an empty list.
+		/// </remarks>
+		IObservable<Tuple<PinballXSystem, List<Mapping>>> MappingsUpdated { get; }
 
 		/// <summary>
 		/// A table file has been edited.
@@ -122,6 +139,14 @@ namespace VpdbAgent.PinballX
 		/// A table folder has been removed.
 		/// </summary>
 		IObservable<string> TableFolderRemoved { get; }
+
+		/// <summary>
+		/// Returns a list of all vpt/vpx files in a given folder.
+		/// </summary>
+		/// TODO support other systems than VP
+		/// 
+		/// <param name="path">Path to table folder</param>
+		/// <returns>List of absolute file paths to table files</returns>
 		List<string> GetTableFiles(string path);
 	}
 
@@ -134,6 +159,7 @@ namespace VpdbAgent.PinballX
 		public ReactiveList<PinballXSystem> Systems { get; } = new ReactiveList<PinballXSystem>();
 		public IObservable<Unit> Initialized => _initialized;
 		public IObservable<Tuple<PinballXSystem, string, List<PinballXGame>>> GamesUpdated => _gamesUpdated;
+		public IObservable<Tuple<PinballXSystem, List<Mapping>>> MappingsUpdated => _mappingsUpdated;
 
 		public IObservable<string> TableFileCreated => _watcher.TableFileCreated;
 		public IObservable<string> TableFileChanged => _watcher.TableFileChanged;
@@ -146,6 +172,7 @@ namespace VpdbAgent.PinballX
 		// privates
 		private readonly Subject<Unit> _initialized = new Subject<Unit>();
 		private readonly Subject<Tuple<PinballXSystem, string, List<PinballXGame>>> _gamesUpdated = new Subject<Tuple<PinballXSystem, string, List<PinballXGame>>>();
+		private readonly Subject<Tuple<PinballXSystem, List<Mapping>>> _mappingsUpdated = new Subject<Tuple<PinballXSystem, List<Mapping>>>();
 		private readonly Dictionary<PinballXSystem, IDisposable> _systemDisposables = new Dictionary<PinballXSystem, IDisposable>();
 
 		// dependencies
@@ -153,8 +180,8 @@ namespace VpdbAgent.PinballX
 		private readonly ISettingsManager _settingsManager;
 		private readonly IMarshallManager _marshallManager;
 		private readonly IThreadManager _threadManager;
-		private readonly IFile _file;
 		private readonly IDirectory _dir;
+		private readonly IFile _file;
 		private readonly ILogger _logger;
 
 		public MenuManager(IFileSystemWatcher fileSystemWatcher, ISettingsManager settingsManager,
@@ -276,12 +303,25 @@ namespace VpdbAgent.PinballX
 			if (_systemDisposables.ContainsKey(system)) {
 				return;
 			}
-			// kick off current games
-			system.Games.Keys.ToList().ForEach(databaseFile => {
-				_gamesUpdated.OnNext(new Tuple<PinballXSystem, string, List<PinballXGame>>(system, databaseFile, system.Games[databaseFile]));
-			});
-			// subscribe to future changes
-			_systemDisposables.Add(system, system.GamesUpdated.Subscribe(x => _gamesUpdated.OnNext(new Tuple<PinballXSystem, string, List<PinballXGame>>(system, x.Item1, x.Item2))));
+
+			// kick off 
+			if (system.Enabled) {
+				// current games
+				system.Games.Keys.ToList().ForEach(databaseFile => {
+					_gamesUpdated.OnNext(new Tuple<PinballXSystem, string, List<PinballXGame>>(system, databaseFile, system.Games[databaseFile]));
+				});
+
+				// current mappings
+				_mappingsUpdated.OnNext(new Tuple<PinballXSystem, List<Mapping>>(system, _marshallManager.UnmarshallMappings(system.MappingPath).Mappings.ToList()));
+			}
+
+			// relay future changes
+			var systemDisponsable = new CompositeDisposable {
+				system.GamesUpdated.Subscribe(x => _gamesUpdated.OnNext(new Tuple<PinballXSystem, string, List<PinballXGame>>(system, x.Item1, x.Item2))),
+				system.MappingFileUpdated.Subscribe(path => _mappingsUpdated.OnNext(new Tuple<PinballXSystem, List<Mapping>>(system, _marshallManager.UnmarshallMappings(path).Mappings.ToList())))
+			};
+
+			_systemDisposables.Add(system, systemDisponsable);
 		}
 
 		/// <summary>
@@ -300,12 +340,6 @@ namespace VpdbAgent.PinballX
 			_systemDisposables.Remove(system);
 		}
 
-		/// <summary>
-		/// Returns a list of all vpt/vpx files in a given folder.
-		/// </summary>
-		/// TODO support other systems than VP
-		/// <param name="path">Path to table folder</param>
-		/// <returns>List of absolute file paths to table files</returns>
 		public List<string> GetTableFiles(string path)
 		{
 			return _dir
