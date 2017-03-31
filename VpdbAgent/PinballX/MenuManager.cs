@@ -1,5 +1,4 @@
-﻿using NLog;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -12,11 +11,13 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text.RegularExpressions;
 using System.Xml;
+using Splat;
 using VpdbAgent.Application;
 using VpdbAgent.Common.Filesystem;
 using VpdbAgent.Data;
 using VpdbAgent.Models;
 using VpdbAgent.Vpdb.Download;
+using ILogger = NLog.ILogger;
 
 
 namespace VpdbAgent.PinballX
@@ -312,13 +313,13 @@ namespace VpdbAgent.PinballX
 				});
 
 				// current mappings
-				_mappingsUpdated.OnNext(new Tuple<PinballXSystem, List<Mapping>>(system, _marshallManager.UnmarshallMappings(system.MappingPath).Mappings.ToList()));
+				_mappingsUpdated.OnNext(new Tuple<PinballXSystem, List<Mapping>>(system, system.Mappings.ToList()));
 			}
 
 			// relay future changes
 			var systemDisponsable = new CompositeDisposable {
 				system.GamesUpdated.Subscribe(x => _gamesUpdated.OnNext(new Tuple<PinballXSystem, string, List<PinballXGame>>(system, x.Item1, x.Item2))),
-				system.MappingFileUpdated.Subscribe(path => _mappingsUpdated.OnNext(new Tuple<PinballXSystem, List<Mapping>>(system, _marshallManager.UnmarshallMappings(path).Mappings.ToList())))
+				system.MappingsUpdated.Subscribe(mappings => _mappingsUpdated.OnNext(new Tuple<PinballXSystem, List<Mapping>>(system, mappings)))
 			};
 
 			_systemDisposables.Add(system, systemDisponsable);
@@ -468,16 +469,16 @@ namespace VpdbAgent.PinballX
 			var data = _marshallManager.ParseIni(iniPath);
 			if (data != null) {
 				if (data["VisualPinball"] != null) {
-					systems.Add(new PinballXSystem(Platform.VP, data["VisualPinball"], _settingsManager, _marshallManager, _watcher, _logger, _dir));
+					systems.Add(new PinballXSystem(Platform.VP, data["VisualPinball"]));
 				}
 				if (data["FuturePinball"] != null) {
-					systems.Add(new PinballXSystem(Platform.FP, data["FuturePinball"], _settingsManager, _marshallManager, _watcher, _logger, _dir));
+					systems.Add(new PinballXSystem(Platform.FP, data["FuturePinball"]));
 				}
 				
 				for (var i = 0; i < 20; i++) {
 					var systemName = "System_" + i;
 					if (data[systemName] != null && data[systemName].Count > 0) {
-						systems.Add(new PinballXSystem(data[systemName], _settingsManager, _marshallManager, _watcher, _logger, _dir));
+						systems.Add(new PinballXSystem(data[systemName]));
 					}
 				}
 			}

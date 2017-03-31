@@ -9,7 +9,6 @@ using System.Reactive.Subjects;
 using System.Threading.Tasks;
 using NLog;
 using ReactiveUI;
-using SynchrotronNet;
 using VpdbAgent.Common.Filesystem;
 using VpdbAgent.Data;
 using VpdbAgent.PinballX;
@@ -355,10 +354,10 @@ namespace VpdbAgent.Application
 			}
 		}
 
-		private void MergeMappings(PinballXSystem system, List<Mapping> mappings)
+		private void MergeMappings(PinballXSystem system, IEnumerable<Mapping> mappings)
 		{
 			// merge shit
-			_logger.Info("---- {1}: Mapping changed, new mappings: {0} ({2})", mappings.Count, system, system.Enabled);
+			_logger.Info("---- {1}: Mapping changed, new mappings: {0} ({2})", mappings.Count(), system, system.Enabled);
 		}
 
 		/// <summary>

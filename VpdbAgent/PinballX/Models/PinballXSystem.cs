@@ -7,10 +7,11 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using JetBrains.Annotations;
-using NuGet;
 using ReactiveUI;
+using Splat;
 using VpdbAgent.Application;
 using VpdbAgent.Common.Filesystem;
+using VpdbAgent.Data;
 using ILogger = NLog.ILogger;
 
 namespace VpdbAgent.PinballX.Models
@@ -36,6 +37,7 @@ namespace VpdbAgent.PinballX.Models
 		private readonly IFileSystemWatcher _watcher;
 		private readonly ILogger _logger;
 		private readonly IDirectory _dir;
+		private readonly IFile _file;
 
 		// from pinballx.ini
 		public string Name { get; set; }
@@ -58,7 +60,13 @@ namespace VpdbAgent.PinballX.Models
 		public Dictionary<string, List<PinballXGame>> Games { get; } = new Dictionary<string, List<PinballXGame>>();
 
 		/// <summary>
-		/// Produces a value every time any data in any database file changes,
+		/// Mappings of this system. Adding, removing and updating stuff from here
+		/// will result in the mappings being written to disk.
+		/// </summary>
+		public List<Mapping> Mappings => _mapping.Mappings.ToList();
+
+		/// <summary>
+		/// Produces a value every time any data in any XML database file changes,
 		/// or if database files are removed, added or renamed.
 		/// </summary>
 		/// 
@@ -71,10 +79,23 @@ namespace VpdbAgent.PinballX.Models
 		public IObservable<Tuple<string, List<PinballXGame>>> GamesUpdated => _gamesUpdated;
 
 		/// <summary>
+		/// Produces a value every time any mapping data is added, removed, or modified.
+		/// </summary>
+		/// 
+		/// <remarks>
+		/// Basically if `vpdb.json` is added, modified or deleted, this is 
+		/// triggered.
+		/// 
+		/// Note that the returned list of mappings is exhaustive, i.e. mappings not
+		/// in that list are to be removed.
+		/// </remarks>
+		public IObservable<List<Mapping>> MappingsUpdated => _mappingsUpdated;
+
+		/// <summary>
 		/// Triggers every time the mapping file (`vpdb.json`) for this system is
 		/// updated, created or removed.
 		/// </summary>
-		public IObservable<string> MappingFileUpdated => _mappingFileUpdated;
+		//public IObservable<string> MappingFileUpdated => _mappingFileUpdated;
 
 		// convenient props
 		public string DatabasePath { get; private set; }
@@ -90,32 +111,29 @@ namespace VpdbAgent.PinballX.Models
 		// internal props
 		private System.IO.FileSystemWatcher _fsw;
 		private readonly Subject<Tuple<string, List<PinballXGame>>> _gamesUpdated = new Subject<Tuple<string, List<PinballXGame>>>();
-		private readonly Subject<string> _mappingFileUpdated = new Subject<string>();
+		private readonly Subject<List<Mapping>> _mappingsUpdated = new Subject<List<Mapping>>();
 		private readonly CompositeDisposable _databaseWatchers = new CompositeDisposable();
+		private readonly SystemMapping _mapping;
 		private IDisposable _mappingFileWatcher;
 
 		/// <summary>
 		/// Base constructor
 		/// </summary>
-		private PinballXSystem(ISettingsManager settingsManager, IMarshallManager marshallManager, IFileSystemWatcher watcher, ILogger logger, IDirectory dir)
+		private PinballXSystem(IDependencyResolver resolver)
 		{
-			_settingsManager = settingsManager;
-			_marshallManager = marshallManager;
-			_watcher = watcher;
-			_logger = logger;
-			_dir = dir;
+			_settingsManager = resolver.GetService<ISettingsManager>();
+			_marshallManager = resolver.GetService<IMarshallManager>();
+			_watcher = resolver.GetService<IFileSystemWatcher>();
+			_logger = resolver.GetService<ILogger>();
+			_file = resolver.GetService<IFile>();
+			_dir = resolver.GetService<IDirectory>();
 		}
 
 		/// <summary>
 		/// Constructs by custom system data ([System_0] - [System_9]).
 		/// </summary>
 		/// <param name="data">Data of .ini section</param>
-		/// <param name="settingsManager">Settings dependency</param>
-		/// <param name="marshallManager">Marshaller dependency</param>
-		/// <param name="watcher">File watcher dependency</param>
-		/// <param name="logger">Logger dependency</param>
-		/// <param name="dir">Directory wrapper dependency</param>
-		public PinballXSystem(KeyDataCollection data, ISettingsManager settingsManager, IMarshallManager marshallManager, IFileSystemWatcher watcher, ILogger logger, IDirectory dir) : this(settingsManager, marshallManager, watcher, logger, dir)
+		public PinballXSystem(KeyDataCollection data) : this(Locator.Current)
 		{
 			var systemType = data["SystemType"];
 			if ("0".Equals(systemType)) {
@@ -128,6 +146,7 @@ namespace VpdbAgent.PinballX.Models
 			Name = data["Name"];
 
 			SetByData(data);
+			_mapping = new SystemMapping(MappingPath, _marshallManager);
 		}
 
 		/// <summary>
@@ -135,12 +154,7 @@ namespace VpdbAgent.PinballX.Models
 		/// </summary>
 		/// <param name="type">System type</param>
 		/// <param name="data">Data of .ini section</param>
-		/// <param name="settingsManager">Settings dependency</param>
-		/// <param name="marshallManager">Marshaller dependency</param>
-		/// <param name="watcher">File watcher dependency</param>
-		/// <param name="logger">Logger dependency</param>
-		/// <param name="dir">Directory wrapper dependency</param>
-		public PinballXSystem(Platform type, KeyDataCollection data, ISettingsManager settingsManager, IMarshallManager marshallManager, IFileSystemWatcher watcher, ILogger logger, IDirectory dir) : this(settingsManager, marshallManager, watcher, logger, dir)
+		public PinballXSystem(Platform type, KeyDataCollection data) : this(Locator.Current)
 		{
 			Type = type;
 			switch (type) {
@@ -157,6 +171,7 @@ namespace VpdbAgent.PinballX.Models
 					throw new ArgumentOutOfRangeException(nameof(type), type, null);
 			}
 			SetByData(data);
+			_mapping = new SystemMapping(MappingPath, _marshallManager);
 		}
 
 		/// <summary>
@@ -181,8 +196,7 @@ namespace VpdbAgent.PinballX.Models
 					EnableDatabaseWatchers();
 
 					// mappings
-					_mappingFileWatcher = _watcher.FileWatcher(MappingPath).Subscribe(_mappingFileUpdated);
-					_mappingFileUpdated.OnNext(MappingPath);
+					_mappingFileWatcher = _watcher.FileWatcher(MappingPath).Subscribe(UpdateOrRemoveMappings);
 
 				} else {
 					// clear games and destroy watchers
@@ -250,7 +264,7 @@ namespace VpdbAgent.PinballX.Models
 		/// </summary>
 		private void DisableDatabaseWatchers()
 		{
-			if (!_databaseWatchers.IsEmpty()) {
+			if (_databaseWatchers.Count == 0) {
 				_logger.Info("Stopped watching XML files at {0}...", DatabasePath);
 			}
 			_databaseWatchers.Clear();
@@ -299,7 +313,32 @@ namespace VpdbAgent.PinballX.Models
 			var databaseFile = Path.GetFileName(databaseFilePath);
 			_gamesUpdated.OnNext(new Tuple<string, List<PinballXGame>>(databaseFile, new List<PinballXGame>()));
 		}
-		
+
+		/// <summary>
+		/// Gets executed every time the mapping file is created, changes, or 
+		/// is removed.
+		/// </summary>
+		private void UpdateOrRemoveMappings(string path)
+		{
+			if (_file.Exists(MappingPath)) {
+				var mapping = _mapping.Mappings as ReactiveList<Mapping>;
+				
+				// update self-saving mapping (should not trigger save because we don't subscribe to ShouldReset, which is triggered when using SuppressChangeNotifications).
+				if (mapping != null) using (mapping.SuppressChangeNotifications()) {
+					mapping.Clear();
+					mapping.AddRange(_marshallManager.UnmarshallMappings(path).Mappings);
+				}
+				_mappingsUpdated.OnNext(_mapping.Mappings.ToList());
+			} else {
+				_mappingsUpdated.OnNext(new List<Mapping>());
+			}
+		}
+
+		private void SaveMappings()
+		{
+			Console.WriteLine("--- Saving Mappings!");
+		}
+
 		/// <summary>
 		/// Changes the XML database file name of all games in a given XML database.
 		/// </summary>

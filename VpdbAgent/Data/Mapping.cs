@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Reactive;
 using System.Reactive.Linq;
 using System.Runtime.Serialization;
 using ReactiveUI;
@@ -39,25 +41,34 @@ namespace VpdbAgent.Data
 		/// <summary>
 		/// List of mappings
 		/// </summary>
-		[DataMember] public ReactiveList<Mapping> Mappings { set; get; } = new ReactiveList<Mapping> { ChangeTrackingEnabled = true };
+		[DataMember] public IEnumerable<Mapping> Mappings { set; get; }
 
-		private SystemMapping(IDependencyResolver resolver)
+		/// <summary>
+		/// Constructor when instantiating self-saving object
+		/// </summary>
+		/// <param name="path">Path to save</param>
+		/// <param name="marshallManager">Marshaller dependency</param>
+		public SystemMapping(string path, IMarshallManager marshallManager)
 		{
-			var marshallManager = resolver.GetService<IMarshallManager>();
-
-			Mappings.ItemChanged.Subscribe()
-			//Mappings.ItemsAdded
-			//Mappings.ItemsRemoved
-			//Mappings.ShouldReset
+			var mappings = new ReactiveList<Mapping> { ChangeTrackingEnabled = true };
+			Observable.Merge(
+				mappings.ItemChanged.Select(x => Unit.Default), 
+				mappings.ItemsAdded.Select(x => Unit.Default),
+				mappings.ItemsRemoved.Select(x => Unit.Default)
+			).Sample(TimeSpan.FromSeconds(1)).Subscribe(x => Save(path, marshallManager));
+			Mappings = mappings;
 		}
 
-		public SystemMapping() : this(Locator.Current)
+		/// <summary>
+		/// Default constructor when serializing
+		/// </summary>
+		public SystemMapping()
 		{
 		}
 
-		private void Save()
+		private void Save(string path, IMarshallManager marshallManager)
 		{
-			
+			Console.WriteLine("--- Saving Mappings to {0}!", path);
 		}
 
 		public override string ToString()
