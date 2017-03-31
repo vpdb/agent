@@ -1,9 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Runtime.Serialization;
 using ReactiveUI;
 using Splat;
 using VpdbAgent.Common.Filesystem;
+using VpdbAgent.PinballX;
 using VpdbAgent.PinballX.Models;
 
 namespace VpdbAgent.Data
@@ -37,16 +39,25 @@ namespace VpdbAgent.Data
 		/// <summary>
 		/// List of mappings
 		/// </summary>
-		[DataMember] public IEnumerable<Mapping> Mappings { set; get; }
+		[DataMember] public ReactiveList<Mapping> Mappings { set; get; } = new ReactiveList<Mapping> { ChangeTrackingEnabled = true };
 
-		public SystemMapping()
+		private SystemMapping(IDependencyResolver resolver)
 		{
-			Mappings = new List<Mapping>();
+			var marshallManager = resolver.GetService<IMarshallManager>();
+
+			Mappings.ItemChanged.Subscribe()
+			//Mappings.ItemsAdded
+			//Mappings.ItemsRemoved
+			//Mappings.ShouldReset
 		}
 
-		public SystemMapping(IEnumerable<Mapping> games)
+		public SystemMapping() : this(Locator.Current)
 		{
-			Mappings = games;
+		}
+
+		private void Save()
+		{
+			
 		}
 
 		public override string ToString()
@@ -92,6 +103,11 @@ namespace VpdbAgent.Data
 		[DataMember] public bool IsSynced { get { return _isSynced; } set { this.RaiseAndSetIfChanged(ref _isSynced, value); } }
 
 		/// <summary>
+		/// True if should be hidden in UI, false otherwise.
+		/// </summary>
+		[DataMember] public bool IsHidden { get { return _isHidden; } set { this.RaiseAndSetIfChanged(ref _isHidden, value); } }
+
+		/// <summary>
 		/// File ID of the linked file at VPDB.
 		/// </summary>
 		[DataMember] public string PreviousFileIds { get { return _previousFileId; } set { this.RaiseAndSetIfChanged(ref _previousFileId, value); } }
@@ -110,6 +126,7 @@ namespace VpdbAgent.Data
 		private string _releaseId;
 		private string _fileId;
 		private bool _isSynced;
+		private bool _isHidden;
 		private string _previousFileId;
 		private string _patchedTableScript;
 
