@@ -115,7 +115,7 @@
                        Grid.Column="1" Content="Update available" Margin="0,0,10,0" FontStyle="Italic" Foreground="{StaticResource PrimaryColorBrush}"/>
                 -->
             </Grid>
-
+            
             <!-- release results -->
             <Expander IsExpanded="{Binding ShowResults}" Style="{StaticResource AnimatedExpander}">
                 <Grid Margin="-105,0,-10,0" Background="{StaticResource DarkBackgroundBrush}">

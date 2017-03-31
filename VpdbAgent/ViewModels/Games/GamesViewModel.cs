@@ -125,7 +125,7 @@ namespace VpdbAgent.ViewModels.Games
 		/// <returns>True if visible, false otherwise</returns>
 		private bool IsGameVisible(AggregatedGame game)
 		{
-			return game.Enabled;
+			return game.Visible;
 		}
 
 		/// <summary>

@@ -367,8 +367,74 @@ namespace VpdbAgent.Application
 
 		private void MergeMappings(PinballXSystem system, IEnumerable<Mapping> mappings)
 		{
-			// merge shit
-			_logger.Info("---- {1}: Mapping changed, new mappings: {0} ({2})", mappings.Count(), system, system.Enabled);
+			lock (AggregatedGames) {
+
+				// if Global Games are empty, don't bother identifiying and add them all
+				if (AggregatedGames.IsEmpty) {
+					_threadManager.MainDispatcher.Invoke(() => {
+						using (AggregatedGames.SuppressChangeNotifications()) {
+							AggregatedGames.AddRange(mappings.Select(m => new AggregatedGame(m, _file)));
+						}
+					});
+					_logger.Info("Added {0} games from mappings.", mappings.Count());
+					return;
+				}
+
+				// otherwise, retrieve the system's games from Global Games.
+				var selectedGames = AggregatedGames.Where(g => 
+					g.HasSystem &&
+					ReferenceEquals(g.System, system)
+				).ToList();
+
+				var remainingGames = new HashSet<AggregatedGame>(selectedGames); 
+				var gamesToAdd = new List<AggregatedGame>();
+				var updated = 0;
+				var removed = 0;
+				var cleared = 0;
+
+				// update games
+				foreach (var mapping in mappings) {
+
+					// todo could also use an index
+					var game = AggregatedGames.FirstOrDefault(g => g.FileId == mapping.FileId);
+				
+					// no match, add
+					if (game == null) {
+						gamesToAdd.Add(new AggregatedGame(mapping, _file));
+
+					// match and not equal, so update.
+					} else if (!game.EqualsMapping(mapping)) {
+						_threadManager.MainDispatcher.Invoke(() => game.Update(mapping));
+						remainingGames.Remove(game);
+						updated++;
+
+					// match but equal, ignore.
+					} else {
+						remainingGames.Remove(game);
+					}
+				}
+
+				// add games
+				if (gamesToAdd.Count > 0) {
+					_threadManager.MainDispatcher.Invoke(() => AggregatedGames.AddRange(gamesToAdd));
+				}
+
+				// remove or clear games
+				_threadManager.MainDispatcher.Invoke(() => {
+					foreach (var game in remainingGames) {
+						if (!game.HasLocalFile && !game.HasXmlGame) {
+							AggregatedGames.Remove(game);
+							removed++;
+						} else {
+							cleared++;
+							game.ClearMapping();
+						}
+					}
+				});
+
+				// done!
+				_logger.Info("Added {0} games, removed {1} ({2}), updated {3} from mappings.", gamesToAdd.Count, removed, cleared, updated);
+			}
 		}
 
 		/// <summary>
@@ -443,14 +509,13 @@ namespace VpdbAgent.Application
 				throw new Exception($"Got game at {game.FilePath} but no systems that match path ({string.Join(", ", _menuManager.Systems.Select(s => s.TablePath))}).");
 			}
 
-			var mapping = game.Mapping ?? new Mapping();
+			var mapping = game.Mapping ?? new Mapping(system, game.FilePath);
 			mapping.IsHidden = true;
 
 			if (!game.HasMapping) {
 				system.Mappings.Add(mapping);
 			}
 		}
-
 
 
 		// --------------------------------------------------------------------------------------------------------------

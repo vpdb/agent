@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
@@ -12,73 +13,6 @@ using VpdbAgent.PinballX.Models;
 
 namespace VpdbAgent.Data
 {
-	/// <summary>
-	/// Maps data to VPDB. This is the root node.
-	/// </summary>
-	/// 
-	/// <remarks>
-	/// When linking local data to VPDB, we need a way of persisting that 
-	/// mapping in a transparent way. For that, we create a `vpdb.json` file
-	/// in every system folder. Such a file looks something like that:
-	/// <code>
-	/// {
-	///   "mappings": [
-	///     {
-	///       "filename": "Theatre of magic VPX NZ-TT 1.0.vpx",
-	///       "release_id": "e2wm7hdp9b",
-	///       "file_id": "skkj298nr8",
-	///       "is_synced": false
-	///     }
-	///   ]
-	/// }
-	/// </code>
-	/// 
-	/// This class is used to serialize the above data. Note that for every
-	/// system from PinballX, a separate instance of this class is created.
-	/// </remarks>
-	public class SystemMapping
-	{
-		/// <summary>
-		/// List of mappings
-		/// </summary>
-		[DataMember] public IReactiveList<Mapping> Mappings { set; get; }
-
-		public PinballXSystem System { set { Mappings.ToList().ForEach(m => m.System = value); } }
-
-		/// <summary>
-		/// Constructor when instantiating self-saving object
-		/// </summary>
-		/// <param name="path">Path to save</param>
-		/// <param name="marshallManager">Marshaller dependency</param>
-		public SystemMapping(string path, IMarshallManager marshallManager)
-		{
-			var mappings = new ReactiveList<Mapping> { ChangeTrackingEnabled = true };
-			Observable.Merge(
-				mappings.ItemChanged.Select(x => Unit.Default), 
-				mappings.ItemsAdded.Select(x => Unit.Default),
-				mappings.ItemsRemoved.Select(x => Unit.Default)
-			).Sample(TimeSpan.FromSeconds(1)).Subscribe(x => Save(path, marshallManager));
-			Mappings = mappings;
-		}
-
-		/// <summary>
-		/// Default constructor when serializing
-		/// </summary>
-		public SystemMapping()
-		{
-		}
-
-		private void Save(string path, IMarshallManager marshallManager)
-		{
-			Console.WriteLine("--- Saving Mappings to {0}!", path);
-		}
-
-		public override string ToString()
-		{
-			return $"[SystemMapping] {Mappings.Count()} mapping(s)";
-		}
-	}
-
 	/// <summary>
 	/// Maps a local file to VPDB.
 	/// </summary>
@@ -98,7 +32,7 @@ namespace VpdbAgent.Data
 		/// <summary>
 		/// The entire filename with extension but without path.
 		/// </summary>
-		[DataMember] public string Filename { get; set; }
+		[DataMember] public string FileName { get; set; }
 
 		/// <summary>
 		/// Release ID of the linked release at VPDB.
@@ -160,6 +94,121 @@ namespace VpdbAgent.Data
 		private Mapping(IDependencyResolver resolver)
 		{
 			_file = resolver.GetService<IFile>();
+		}
+
+		public Mapping(PinballXSystem system, string filePath)
+		{
+			System = system;
+			FileName = Path.GetFileName(filePath);
+			FileId = Path.Combine(Path.GetDirectoryName(filePath), Path.GetFileNameWithoutExtension(filePath));
+		}
+
+		public void Update(Mapping mapping)
+		{
+			FileName = mapping.FileName;
+			ReleaseId = mapping.ReleaseId;
+			FileId = mapping.FileId;
+			IsSynced = mapping.IsSynced;
+			IsHidden = mapping.IsHidden;
+			PreviousFileIds = mapping.PreviousFileIds;
+			PatchedTableScript = mapping.PatchedTableScript;
+		}
+
+		public override bool Equals(object obj)
+		{
+			if (ReferenceEquals(null, obj)) {
+				return false;
+			}
+			if (ReferenceEquals(this, obj)) {
+				return true;
+			}
+			var mapping = obj as Mapping;
+			if (mapping == null) {
+				return false;
+			}
+
+			return 
+				FileName == mapping.FileName &&
+				ReleaseId == mapping.ReleaseId &&
+				FileId == mapping.FileId &&
+				IsSynced == mapping.IsSynced &&
+				IsHidden == mapping.IsHidden &&
+				PreviousFileIds == mapping.PreviousFileIds &&
+				PatchedTableScript == mapping.PatchedTableScript;
+		}
+		
+		public override int GetHashCode()
+		{
+			// ReSharper disable once NonReadonlyMemberInGetHashCode
+			return FileId.GetHashCode();
+		}
+	}
+
+	/// <summary>
+	/// Maps data to VPDB. This is the root node.
+	/// </summary>
+	/// 
+	/// <remarks>
+	/// When linking local data to VPDB, we need a way of persisting that 
+	/// mapping in a transparent way. For that, we create a `vpdb.json` file
+	/// in every system folder. Such a file looks something like that:
+	/// <code>
+	/// {
+	///   "mappings": [
+	///     {
+	///       "filename": "Theatre of magic VPX NZ-TT 1.0.vpx",
+	///       "release_id": "e2wm7hdp9b",
+	///       "file_id": "skkj298nr8",
+	///       "is_synced": false
+	///     }
+	///   ]
+	/// }
+	/// </code>
+	/// 
+	/// This class is used to serialize the above data. Note that for every
+	/// system from PinballX, a separate instance of this class is created.
+	/// </remarks>
+	public class SystemMapping
+	{
+		/// <summary>
+		/// List of mappings
+		/// </summary>
+		[DataMember] public IReactiveList<Mapping> Mappings { set; get; }
+
+		public PinballXSystem System { set { Mappings.ToList().ForEach(m => m.System = value); } }
+
+		/// <summary>
+		/// Constructor when instantiating self-saving object
+		/// </summary>
+		/// <param name="path">Path to save</param>
+		/// <param name="marshallManager">Marshaller dependency</param>
+		public SystemMapping(string path, IMarshallManager marshallManager)
+		{
+			var mappings = new ReactiveList<Mapping> { ChangeTrackingEnabled = true };
+			Observable.Merge(
+				mappings.ItemChanged.Select(x => Unit.Default), 
+				mappings.ItemsAdded.Select(x => Unit.Default),
+				mappings.ItemsRemoved.Select(x => Unit.Default)
+			).Sample(TimeSpan.FromSeconds(1)).Subscribe(x => Save(path, marshallManager));
+			Mappings = mappings;
+		}
+
+		/// <summary>
+		/// Default constructor when serializing
+		/// </summary>
+		public SystemMapping()
+		{
+			Mappings = new ReactiveList<Mapping>();
+		}
+
+		private void Save(string path, IMarshallManager marshallManager)
+		{
+			marshallManager.MarshallMappings(this, path);
+		}
+
+		public override string ToString()
+		{
+			return $"[SystemMapping] {Mappings.Count()} mapping(s)";
 		}
 	}
 

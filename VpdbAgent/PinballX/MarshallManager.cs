@@ -107,7 +107,7 @@ namespace VpdbAgent.PinballX
 				return new SystemMapping();
 			}
 
-			_logger.Info("Reading platform data from {0}...", databaseFile);
+			_logger.Info("Reading mappings from {0}...", databaseFile);
 			try {
 				using (var sr = new StreamReader(databaseFile))
 				using (JsonReader reader = new JsonTextReader(sr)) {
@@ -115,7 +115,7 @@ namespace VpdbAgent.PinballX
 						var db = _serializer.Deserialize<SystemMapping>(reader);
 						db.System = system;
 						reader.Close();
-						return db ?? new SystemMapping();
+						return db;
 					} catch (Exception e) {
 						_logger.Error(e, "Error parsing vpdb.json, deleting and ignoring.");
 						_crashManager.Report(e, "json");
@@ -125,7 +125,7 @@ namespace VpdbAgent.PinballX
 					}
 				}
 			} catch (Exception e) {
-				_logger.Error(e, "Error reading vpdb.json, deleting and ignoring.");
+				_logger.Error(e, "Error reading vpdb.json, ignoring.");
 				_crashManager.Report(e, "json");
 				return new SystemMapping();
 			}

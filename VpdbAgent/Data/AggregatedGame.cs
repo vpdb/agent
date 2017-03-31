@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.Eventing.Reader;
 using System.IO;
 using System.Reactive.Linq;
 using JetBrains.Annotations;
@@ -54,7 +55,7 @@ namespace VpdbAgent.Data
 
 		public string FileName => _fileName.Value;
 
-		public bool Enabled => _enabled == null || _enabled.Value;
+		public bool Visible => _visible.Value;
 		public PinballXSystem System => XmlGame?.System ?? Mapping?.System;
 		
 		// status props
@@ -72,8 +73,8 @@ namespace VpdbAgent.Data
 		private Mapping _mapping;
 
 		// generated props
-		private readonly ObservableAsPropertyHelper<bool> _enabled;
 		private readonly ObservableAsPropertyHelper<string> _fileId;
+		private ObservableAsPropertyHelper<bool> _visible;
 		private ObservableAsPropertyHelper<string> _fileName;
 
 		/// <summary>
@@ -96,16 +97,33 @@ namespace VpdbAgent.Data
 						.ToProperty(this, game => game.FileName, out _fileName);
 				}
 			});
+
+			// visibility
+			this.WhenAnyValue(x => x.XmlGame, x => x.Mapping).Subscribe(x => {
+				if (x.Item1 != null && x.Item2 != null) {
+					this.WhenAnyValue(g => g.XmlGame.Enabled, g => g.Mapping.IsHidden)
+						.Select(y => (y.Item1 == null || "true".Equals(y.Item1, StringComparison.InvariantCultureIgnoreCase)) && !y.Item2)
+						.ToProperty(this, game => game.Visible, out _visible);
+
+				} else if (x.Item1 == null && x.Item2 != null) {
+					this.WhenAnyValue(g => g.Mapping.IsHidden)
+						.Select(isHidden => !isHidden)
+						.ToProperty(this, game => game.Visible, out _visible);
+
+				} else if (x.Item1 != null && x.Item2 == null) {
+					this.WhenAnyValue(g => g.XmlGame.Enabled)
+						.Select(enabled => enabled == null || "true".Equals(enabled, StringComparison.InvariantCultureIgnoreCase))
+						.ToProperty(this, game => game.Visible, out _visible);
+				} else {
+					Observable.Return(true).ToProperty(this, game => game.Visible, out _visible);
+				}
+			});
+
 		}
 
-		public AggregatedGame([NotNull] PinballXGame xmlGame, IFile file) : this(file)
+	public AggregatedGame([NotNull] PinballXGame xmlGame, IFile file) : this(file)
 		{
 			Update(xmlGame);
-
-			// Enabled
-			XmlGame.WhenAnyValue(g => g.Enabled)
-				.Select(e => "true".Equals(e, StringComparison.InvariantCultureIgnoreCase))
-				.ToProperty(this, game => game.Enabled, out _enabled);
 
 			// FileId
 			XmlGame.WhenAnyValue(g => g.System.TablePath, g => g.Filename)
@@ -124,6 +142,14 @@ namespace VpdbAgent.Data
 				.ToProperty(this, game => game.FileId, out _fileId);
 
 			Update(filePath);
+		}
+
+		public AggregatedGame([NotNull] Mapping mapping, IFile file) : this(file)
+		{
+			Update(mapping);
+
+			// FileId
+			Mapping.WhenAnyValue(m => m.FileId).ToProperty(this, game => game.FileId, out _fileId);
 		}
 
 		public AggregatedGame Update(PinballXGame xmlGame)
@@ -155,6 +181,21 @@ namespace VpdbAgent.Data
 			FileSize = 0;
 		}
 
+		public AggregatedGame Update(Mapping mapping)
+		{
+			if (Mapping == null) {
+				Mapping = mapping;
+			} else {
+				Mapping.Update(mapping);
+			}
+			return this;
+		}
+
+		public void ClearMapping()
+		{
+			Mapping = null;
+		}
+
 		public bool EqualsXmlGame(PinballXGame xmlGame)
 		{
 			return XmlGame != null && XmlGame.Equals(xmlGame);
@@ -163,6 +204,11 @@ namespace VpdbAgent.Data
 		public bool EqualsFileId(string filePath)
 		{
 			return Path.Combine(Path.GetDirectoryName(filePath), Path.GetFileNameWithoutExtension(filePath)) == FileId;
+		}
+
+		public bool EqualsMapping(Mapping mapping)
+		{
+			return Mapping != null && Mapping.Equals(mapping);
 		}
 	}
 }
