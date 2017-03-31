@@ -90,7 +90,7 @@
                         Grid.Column="1" Content="REMOVE FROM DB" HorizontalAlignment="Right" Margin="0,-3,10,-8"/>
 
                     <!-- hide button -->
-                    <Button
+                    <Button Command="{Binding HideGame}" 
                         Visibility="{Binding Path=ShowHideButton, Converter={StaticResource TrueToVisible}}" 
                         Style="{StaticResource ButtonLine}" 
                         Grid.Column="1" Content="HIDE" HorizontalAlignment="Right" Margin="0,-3,10,-8"/>

@@ -57,6 +57,17 @@ namespace VpdbAgent.Application
 		void Initialize();
 
 		/// <summary>
+		/// Marks a game as hidden.
+		/// </summary>
+		/// 
+		/// <remarks>
+		/// Since we usually don't know which system this file would belong to, we 
+		/// just take the first system which matches the table path.
+		/// </remarks>
+		/// <param name="game">Game to hide</param>
+		void HideGame(AggregatedGame game);
+
+		/// <summary>
 		/// Links a release from VPDB to a game.
 		/// </summary>
 		/// <param name="game">Local game to link to</param>
@@ -408,6 +419,35 @@ namespace VpdbAgent.Application
 						}
 					}
 				});
+			}
+		}
+
+		public void HideGame(AggregatedGame game)
+		{
+			_logger.Info("Hiding game {0}", game.FileId);
+
+			if (game.FilePath == null) {
+				_logger.Error("Cannot hide game without local file.");
+				return;
+			}
+			
+			PinballXSystem system;
+			if (!game.HasSystem) {
+				var tablePath = PathHelper.NormalizePath(Path.GetDirectoryName(game.FilePath));
+				system = _menuManager.Systems.FirstOrDefault(s => s.TablePath == tablePath);
+			} else {
+				system = game.System;
+			}
+
+			if (system == null) {
+				throw new Exception($"Got game at {game.FilePath} but no systems that match path ({string.Join(", ", _menuManager.Systems.Select(s => s.TablePath))}).");
+			}
+
+			var mapping = game.Mapping ?? new Mapping();
+			mapping.IsHidden = true;
+
+			if (!game.HasMapping) {
+				system.Mappings.Add(mapping);
 			}
 		}
 

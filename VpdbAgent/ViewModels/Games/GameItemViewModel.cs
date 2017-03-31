@@ -25,6 +25,7 @@ namespace VpdbAgent.ViewModels.Games
 
 		// commands
 		public ReactiveCommand<Unit, List<VpdbRelease>> IdentifyRelease { get; protected set; }
+		public ReactiveCommand<Unit, Unit> HideGame { get; protected set; }
 		public ReactiveCommand<Unit, Unit> CloseResults { get; }
 		public ReactiveCommand<Unit, Unit> SyncToggled { get; }
 
@@ -108,6 +109,9 @@ namespace VpdbAgent.ViewModels.Games
 
 			// close button
 			CloseResults = ReactiveCommand.Create(() => { ShowResults = false; });
+
+			// hide button
+			HideGame = ReactiveCommand.Create(() => _gameManager.HideGame(Game));
 
 			// spinner
 			IdentifyRelease.IsExecuting.ToProperty(this, vm => vm.IsExecuting, out _isExecuting);

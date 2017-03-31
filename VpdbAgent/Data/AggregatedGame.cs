@@ -50,9 +50,18 @@ namespace VpdbAgent.Data
 		/// </summary>
 		public PinballXGame XmlGame { get { return _xmlGame; } set { this.RaiseAndSetIfChanged(ref _xmlGame, value); } }
 
+		public Mapping Mapping { get { return _mapping; } set { this.RaiseAndSetIfChanged(ref _mapping, value); } }
+
 		public string FileName => _fileName.Value;
 
 		public bool Enabled => _enabled == null || _enabled.Value;
+		public PinballXSystem System => XmlGame?.System ?? Mapping?.System;
+		
+		// status props
+		public bool HasMapping => false;
+		public bool HasLocalFile => FilePath != null;
+		public bool HasXmlGame => XmlGame != null;
+		public bool HasSystem => System != null;
 
 		// deps
 		private readonly IFile _file;
@@ -60,16 +69,12 @@ namespace VpdbAgent.Data
 		// watched props
 		private string _filePath;
 		private PinballXGame _xmlGame;
+		private Mapping _mapping;
 
 		// generated props
 		private readonly ObservableAsPropertyHelper<bool> _enabled;
 		private readonly ObservableAsPropertyHelper<string> _fileId;
 		private ObservableAsPropertyHelper<string> _fileName;
-
-		// status props
-		public bool HasMapping => false;
-		public bool HasLocalFile => FilePath != null;
-		public bool HasXmlGame => XmlGame != null;
 
 		/// <summary>
 		/// Base constructor

@@ -41,7 +41,9 @@ namespace VpdbAgent.Data
 		/// <summary>
 		/// List of mappings
 		/// </summary>
-		[DataMember] public IEnumerable<Mapping> Mappings { set; get; }
+		[DataMember] public IReactiveList<Mapping> Mappings { set; get; }
+
+		public PinballXSystem System { set { Mappings.ToList().ForEach(m => m.System = value); } }
 
 		/// <summary>
 		/// Constructor when instantiating self-saving object

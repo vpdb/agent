@@ -63,7 +63,7 @@ namespace VpdbAgent.PinballX.Models
 		/// Mappings of this system. Adding, removing and updating stuff from here
 		/// will result in the mappings being written to disk.
 		/// </summary>
-		public List<Mapping> Mappings => _mapping.Mappings.ToList();
+		public IReactiveList<Mapping> Mappings => _mapping.Mappings;
 
 		/// <summary>
 		/// Produces a value every time any data in any XML database file changes,
@@ -321,22 +321,17 @@ namespace VpdbAgent.PinballX.Models
 		private void UpdateOrRemoveMappings(string path)
 		{
 			if (_file.Exists(MappingPath)) {
-				var mapping = _mapping.Mappings as ReactiveList<Mapping>;
 				
 				// update self-saving mapping (should not trigger save because we don't subscribe to ShouldReset, which is triggered when using SuppressChangeNotifications).
-				if (mapping != null) using (mapping.SuppressChangeNotifications()) {
-					mapping.Clear();
-					mapping.AddRange(_marshallManager.UnmarshallMappings(path).Mappings);
+				using (_mapping.Mappings.SuppressChangeNotifications()) {
+					_mapping.Mappings.Clear();
+					_mapping.Mappings.AddRange(_marshallManager.UnmarshallMappings(path, this).Mappings);
 				}
 				_mappingsUpdated.OnNext(_mapping.Mappings.ToList());
+
 			} else {
 				_mappingsUpdated.OnNext(new List<Mapping>());
 			}
-		}
-
-		private void SaveMappings()
-		{
-			Console.WriteLine("--- Saving Mappings!");
 		}
 
 		/// <summary>

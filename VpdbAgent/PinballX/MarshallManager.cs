@@ -45,8 +45,9 @@ namespace VpdbAgent.PinballX
 		/// unmarshalled data object.
 		/// </summary>
 		/// <param name="databaseFile">Absolute path of the data file to read</param>
+		/// <param name="system">The system of the mappings</param>
 		/// <returns>Deserialized object or empty data if no file exists or parsing error</returns>
-		SystemMapping UnmarshallMappings(string databaseFile);
+		SystemMapping UnmarshallMappings(string databaseFile, PinballXSystem system);
 
 		/// <summary>
 		/// Returns an unmarshalled object for a given .XML file
@@ -100,7 +101,7 @@ namespace VpdbAgent.PinballX
 			Formatting = Formatting.Indented
 		};
 
-		public SystemMapping UnmarshallMappings(string databaseFile)
+		public SystemMapping UnmarshallMappings(string databaseFile, PinballXSystem system)
 		{
 			if (!_file.Exists(databaseFile)) {
 				return new SystemMapping();
@@ -112,6 +113,7 @@ namespace VpdbAgent.PinballX
 				using (JsonReader reader = new JsonTextReader(sr)) {
 					try {
 						var db = _serializer.Deserialize<SystemMapping>(reader);
+						db.System = system;
 						reader.Close();
 						return db ?? new SystemMapping();
 					} catch (Exception e) {
