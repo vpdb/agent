@@ -365,6 +365,17 @@ namespace VpdbAgent.Application
 			}
 		}
 
+		/// <summary>
+		/// Merges a list of mappings of a given system into Global Games.
+		/// </summary>
+		/// 
+		/// <remarks>
+		/// The provided mappings are exhaustive, i.e. exiting games not in the
+		/// provided list for the given system are to be removed.
+		/// </remarks>
+		/// 
+		/// <param name="system">System of updated mappings</param>
+		/// <param name="mappings">Mappings</param>
 		private void MergeMappings(PinballXSystem system, IEnumerable<Mapping> mappings)
 		{
 			lock (AggregatedGames) {
@@ -488,6 +499,18 @@ namespace VpdbAgent.Application
 			}
 		}
 
+		/// <summary>
+		/// Marks a give game as hidden.
+		/// </summary>
+		/// 
+		/// <remarks>
+		/// It's currently only possible to hide games that don't have a
+		/// mapping or entry in the XML database. Thus, the given game is
+		/// usually not linked to any system. In this case, we simply look for
+		/// the first system with the same table path as the give local file.
+		/// </remarks>
+		/// 
+		/// <param name="game"></param>
 		public void HideGame(AggregatedGame game)
 		{
 			_logger.Info("Hiding game {0}", game.FileId);
@@ -513,6 +536,7 @@ namespace VpdbAgent.Application
 			mapping.IsHidden = true;
 
 			if (!game.HasMapping) {
+				game.Update(mapping);
 				system.Mappings.Add(mapping);
 			}
 		}

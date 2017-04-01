@@ -59,7 +59,7 @@ namespace VpdbAgent.Data
 		public PinballXSystem System => XmlGame?.System ?? Mapping?.System;
 		
 		// status props
-		public bool HasMapping => false;
+		public bool HasMapping => Mapping != null;
 		public bool HasLocalFile => FilePath != null;
 		public bool HasXmlGame => XmlGame != null;
 		public bool HasSystem => System != null;
@@ -121,7 +121,7 @@ namespace VpdbAgent.Data
 
 		}
 
-	public AggregatedGame([NotNull] PinballXGame xmlGame, IFile file) : this(file)
+		public AggregatedGame([NotNull] PinballXGame xmlGame, IFile file) : this(file)
 		{
 			Update(xmlGame);
 
