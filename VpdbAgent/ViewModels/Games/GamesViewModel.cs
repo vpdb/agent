@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
@@ -44,20 +45,21 @@ namespace VpdbAgent.ViewModels.Games
 			Systems = menuManager.Systems.CreateDerivedCollection(
 				platform => platform,
 				platform => platform.Enabled,
-				(x, y) => string.Compare(x.Name, y.Name, StringComparison.Ordinal)
+				(x, y) => string.Compare(x.Name, y.Name, StringComparison.OrdinalIgnoreCase)
 			);
 
 			// push all games into AllGames as view models and sorted
 			_allGames = gameManager.AggregatedGames.CreateDerivedCollection(
 				game => new GameItemViewModel(game, resolver) { IsVisible = true /*IsGameVisible(game)*/ },
-				gameViewModel => true,																 // filter
-				(x, y) => string.Compare(x.Game.FileName, y.Game.FileName, StringComparison.Ordinal) // order
+				gameViewModel => true																 // filter
 			);
 
 			// push filtered game view models into Games
 			Games = _allGames.CreateDerivedCollection(
 				gameViewModel => gameViewModel, 
-				gameViewModel => gameViewModel.IsVisible);
+				gameViewModel => gameViewModel.IsVisible,
+				(x, y) => string.Compare(Path.GetFileName(x.Game.FileId), Path.GetFileName(y.Game.FileId), StringComparison.OrdinalIgnoreCase)
+			);
 		}
 
 
