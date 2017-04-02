@@ -7,6 +7,7 @@ using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using NLog;
 using ReactiveUI;
 using VpdbAgent.Common.Filesystem;
@@ -74,7 +75,7 @@ namespace VpdbAgent.Application
 		/// <param name="release">Release from VPDB</param>
 		/// <param name="fileId">File ID at VPDB</param>
 		/// <returns>This instance</returns>
-		void LinkRelease(Game game, VpdbRelease release, string fileId);
+		void MapGame(AggregatedGame game, VpdbRelease release, string fileId);
 
 		/// <summary>
 		/// Explicitly enables syncing of a game.
@@ -248,7 +249,7 @@ namespace VpdbAgent.Application
 				foreach (var newGame in xmlGames) {
 
 					// todo could also use an index
-					var fileId = Path.Combine(newGame.System.TablePath, Path.GetFileName(newGame.Filename));
+					var fileId = Path.Combine(newGame.System.TablePath, Path.GetFileName(newGame.FileName));
 					var oldGame = AggregatedGames.FirstOrDefault(g => g.FileId == fileId);
 				
 					// no match, add
@@ -519,7 +520,20 @@ namespace VpdbAgent.Application
 				_logger.Error("Cannot hide game without local file.");
 				return;
 			}
-			
+
+			var system = GetSystem(game);
+			var mapping = game.Mapping ?? new Mapping(game);
+			mapping.IsHidden = true;
+
+			if (!game.HasMapping) {
+				game.Update(mapping);
+				system.Mappings.Add(mapping);
+			}
+		}
+
+		[NotNull]
+		private PinballXSystem GetSystem(AggregatedGame game)
+		{
 			PinballXSystem system;
 			if (!game.HasSystem) {
 				var tablePath = PathHelper.NormalizePath(Path.GetDirectoryName(game.FilePath));
@@ -531,14 +545,20 @@ namespace VpdbAgent.Application
 			if (system == null) {
 				throw new Exception($"Got game at {game.FilePath} but no systems that match path ({string.Join(", ", _menuManager.Systems.Select(s => s.TablePath))}).");
 			}
+			return system;
+		}
 
-			var mapping = game.Mapping ?? new Mapping(system, game.FilePath);
-			mapping.IsHidden = true;
+		public void MapGame(AggregatedGame game, VpdbRelease release, string fileId)
+		{
+			// update in case we didn't catch the last version.
+			_vpdbClient.Api.GetRelease(release.Id).Subscribe(updatedRelease => {
+				_logger.Info("Linking {0} to {1} ({2})", game, release, fileId);
+				//_databaseManager.AddOrUpdateRelease(release);
+				//game.ReleaseId = release.Id;
+				//game.FileId = fileId;
+				//_databaseManager.Save();
 
-			if (!game.HasMapping) {
-				game.Update(mapping);
-				system.Mappings.Add(mapping);
-			}
+			}, exception => _vpdbClient.HandleApiError(exception, "retrieving release details during linking"));
 		}
 
 
@@ -547,19 +567,6 @@ namespace VpdbAgent.Application
 		// still dragons below
 
 		public ReactiveList<Game> Games { get; } = new ReactiveList<Game>();
-
-		public void LinkRelease(Game game, VpdbRelease release, string fileId)
-		{
-			// update in case we didn't catch the last version.
-			_vpdbClient.Api.GetRelease(release.Id).Subscribe(updatedRelease => {
-				_logger.Info("Linking {0} to {1} ({2})", game, release, fileId);
-				_databaseManager.AddOrUpdateRelease(release);
-				game.ReleaseId = release.Id;
-				game.FileId = fileId;
-				_databaseManager.Save();
-
-			}, exception => _vpdbClient.HandleApiError(exception, "retrieving release details during linking"));
-		}
 
 		public IGameManager Sync(Game game)
 		{
@@ -649,7 +656,7 @@ namespace VpdbAgent.Application
 					var x = _gamesToLink[i];
 					var game = Games.FirstOrDefault(g => g.Id.Equals(x.Item1));
 					var release = _databaseManager.GetRelease(x.Item2);
-					LinkRelease(game, release, x.Item3);
+					//LinkRelease(game, release, x.Item3);
 					_gamesToLink.RemoveAt(i); 
 				}
 			}

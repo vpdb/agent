@@ -32,7 +32,22 @@ namespace VpdbAgent.Data
 		/// Absolute file path without file extension.
 		/// </summary>
 		/// <remarks>
-		/// Used to identify from any source.
+		/// Used to identify from any source. It is retrieved from:
+		/// 
+		///    - <see cref="PinballXGame.FileName"/> for <see cref="XmlGame"/>
+		///    - <see cref="Data.Mapping.FileId"/> for <see cref="Mapping"/>
+		///    - <see cref="FileName"/> for local files
+		/// 
+		/// Since the file ID is based on file names, we need to define what
+		/// happens if file names change.
+		/// 
+		/// - If the local file is renamed, the mapping is renamed as well,
+		///   while the <see cref="XmlGame"/> is cleared and re-matched.
+		/// - If <see cref="PinballXGame.FileName"/> changes, the new entry is 
+		///   re-matched and the old entry is removed.
+		/// - If <see cref="Data.Mapping.FileId"/> changes, the new entry is
+		///   also re-matched and old one discarded.
+		/// 
 		/// </remarks>
 		public string FileId => _fileId.Value;
 
@@ -92,7 +107,7 @@ namespace VpdbAgent.Data
 						.Select(Path.GetFileName)
 						.ToProperty(this, game => game.FileName, out _fileName);
 				} else {
-					this.WhenAnyValue(x => x.FilePath, x => x.XmlGame.Filename)
+					this.WhenAnyValue(x => x.FilePath, x => x.XmlGame.FileName)
 						.Select(x => x.Item1 != null ? Path.GetFileName(x.Item1) : x.Item2)
 						.ToProperty(this, game => game.FileName, out _fileName);
 				}
@@ -126,7 +141,7 @@ namespace VpdbAgent.Data
 			Update(xmlGame);
 
 			// FileId
-			XmlGame.WhenAnyValue(g => g.System.TablePath, g => g.Filename)
+			XmlGame.WhenAnyValue(g => g.System.TablePath, g => g.FileName)
 				.Select(x => Path.Combine(x.Item1, x.Item2))
 				.ToProperty(this, game => game.FileId, out _fileId);
 

@@ -38,7 +38,7 @@ namespace VpdbAgent.Models
 		/// not found, contains only filename without extensions.
 		/// </summary>
 		/// <remarks>
-		/// Maps to <see cref="PinballXGame.Filename"/>.
+		/// Maps to <see cref="PinballXGame.FileName"/>.
 		/// </remarks>
 		[DataMember] public string Filename { get; set; }
 
@@ -166,8 +166,8 @@ namespace VpdbAgent.Models
 			DatabaseFile = xmlGame.DatabaseFile;
 
 			var oldFilename = Filename;
-			var vptPath = Path.Combine(tablePath, xmlGame.Filename + ".vpt");
-			var vpxPath = Path.Combine(tablePath, xmlGame.Filename + ".vpx");
+			var vptPath = Path.Combine(tablePath, xmlGame.FileName + ".vpt");
+			var vpxPath = Path.Combine(tablePath, xmlGame.FileName + ".vpx");
 			if (_file.Exists(vptPath)) {
 				Filename = Path.GetFileName(vptPath);
 				FileSize = _file.FileSize(vptPath);
@@ -177,7 +177,7 @@ namespace VpdbAgent.Models
 				FileSize = _file.FileSize(vpxPath);
 				Exists = true;
 			} else {
-				Filename = xmlGame.Filename;
+				Filename = xmlGame.FileName;
 				Exists = false;
 			}
 

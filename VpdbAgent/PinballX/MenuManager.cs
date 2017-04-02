@@ -417,7 +417,7 @@ namespace VpdbAgent.PinballX
 		public PinballXGame NewGame(Job job)
 		{
 			return new PinballXGame() {
-				Filename = Path.GetFileNameWithoutExtension(job.FilePath),
+				FileName = Path.GetFileNameWithoutExtension(job.FilePath),
 				Description = job.Release.Game.DisplayName,
 				Manufacturer = job.Release.Game.Manufacturer,
 				Year = job.Release.Game.Year.ToString()

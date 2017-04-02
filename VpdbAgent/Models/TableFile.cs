@@ -28,7 +28,7 @@ namespace VpdbAgent.Models
 		/// not found, contains only filename without extensions.
 		/// </summary>
 		/// <remarks>
-		/// Maps to <see cref="PinballXGame.Filename"/>.
+		/// Maps to <see cref="PinballXGame.FileName"/>.
 		/// </remarks>
 		[NotNull] public string Filename { get; set; }
 

@@ -16,7 +16,7 @@ namespace VpdbAgent.PinballX.Models
 		/// apart from the latter including extension if file exists.
 		/// </summary>
 		[XmlAttribute("name")]
-		public string Filename { get { return _fileName; } set { this.RaiseAndSetIfChanged(ref _fileName, value); } }
+		public string FileName { get { return _fileName; } set { this.RaiseAndSetIfChanged(ref _fileName, value); } }
 
 		/// <summary>
 		/// The identifier used also for media. Maps to <see cref="Game.Id"/>.
@@ -73,7 +73,7 @@ namespace VpdbAgent.PinballX.Models
 
 		public void Update(PinballXGame newGame)
 		{
-			Filename = newGame.Filename;
+			FileName = newGame.FileName;
 			Description = newGame.Description;
 			Manufacturer = newGame.Manufacturer;
 			Year = newGame.Year;
@@ -101,7 +101,7 @@ namespace VpdbAgent.PinballX.Models
 
 			// really, we only care about those.
 			return 
-				Filename == game.Filename &&
+				FileName == game.FileName &&
 				Description == game.Description &&
 				Enabled == game.Enabled &&
 				AlternateExe == game.AlternateExe;

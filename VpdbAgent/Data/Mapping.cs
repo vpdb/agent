@@ -10,6 +10,7 @@ using Splat;
 using VpdbAgent.Common.Filesystem;
 using VpdbAgent.PinballX;
 using VpdbAgent.PinballX.Models;
+using VpdbAgent.Vpdb.Models;
 
 namespace VpdbAgent.Data
 {
@@ -32,17 +33,17 @@ namespace VpdbAgent.Data
 		/// <summary>
 		/// The entire filename with extension but without path.
 		/// </summary>
-		[DataMember] public string FileName { get; set; }
+		[DataMember] public string FileName { get; private set; }
 
 		/// <summary>
 		/// Release ID of the linked release at VPDB.
 		/// </summary>
-		[DataMember] public string ReleaseId { get { return _releaseId; } set { this.RaiseAndSetIfChanged(ref _releaseId, value); } }
+		[DataMember] public string ReleaseId { get { return _releaseId; } private set { this.RaiseAndSetIfChanged(ref _releaseId, value); } }
 
 		/// <summary>
 		/// File ID of the linked file at VPDB.
 		/// </summary>
-		[DataMember] public string FileId { get { return _fileId; } set { this.RaiseAndSetIfChanged(ref _fileId, value); } }
+		[DataMember] public string FileId { get { return _fileId; } private set { this.RaiseAndSetIfChanged(ref _fileId, value); } }
 
 		/// <summary>
 		/// True if should be updated automatically, false otherwise.
@@ -96,11 +97,27 @@ namespace VpdbAgent.Data
 			_file = resolver.GetService<IFile>();
 		}
 
-		public Mapping(PinballXSystem system, string filePath)
+		/// <summary>
+		/// Constructor with given game
+		/// </summary>
+		/// <param name="game">Game to which the mapping is linked to</param>
+		public Mapping(AggregatedGame game)
 		{
-			System = system;
-			FileName = Path.GetFileName(filePath);
-			FileId = Path.Combine(Path.GetDirectoryName(filePath), Path.GetFileNameWithoutExtension(filePath));
+			System = game.System;
+			FileName = Path.GetFileName(game.FilePath);
+			FileId = game.FileId;
+		}
+
+		/// <summary>
+		/// Constructor when linking game to VPDB
+		/// </summary>
+		/// <param name="game">Game to link to</param>
+		/// <param name="release">VPDB release</param>
+		/// <param name="fileId">File ID of VPDB release</param>
+		public Mapping(AggregatedGame game, VpdbRelease release, string fileId) : this(game)
+		{
+			ReleaseId = release.Id;
+			FileId = fileId;
 		}
 
 		public void Update(Mapping mapping)
