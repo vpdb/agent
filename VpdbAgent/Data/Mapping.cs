@@ -132,6 +132,14 @@ namespace VpdbAgent.Data
 			PatchedTableScript = mapping.PatchedTableScript;
 		}
 
+		public Mapping Map(VpdbRelease release, string fileId)
+		{
+			ReleaseId = release.Id;
+			FileId = fileId;
+
+			return this;
+		}
+
 		public void Rename(string filePath)
 		{
 			FileId = Path.Combine(Path.GetDirectoryName(filePath), Path.GetFileNameWithoutExtension(filePath));

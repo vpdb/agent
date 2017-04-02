@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Diagnostics.Eventing.Reader;
 using System.IO;
+using System.Linq;
 using System.Reactive.Linq;
 using JetBrains.Annotations;
 using ReactiveUI;
 using VpdbAgent.Application;
 using VpdbAgent.Common.Filesystem;
 using VpdbAgent.PinballX.Models;
+using VpdbAgent.Vpdb.Models;
 
 namespace VpdbAgent.Data
 {
@@ -73,6 +75,10 @@ namespace VpdbAgent.Data
 		/// </summary>
 		public Mapping Mapping { get { return _mapping; } private set { this.RaiseAndSetIfChanged(ref _mapping, value); } }
 
+		public VpdbRelease MappedRelease { get { return _mappedRelease; } private set { this.RaiseAndSetIfChanged(ref _mappedRelease, value); } }
+		public VpdbVersion MappedVersion { get { return _mappedVersion; } private set { this.RaiseAndSetIfChanged(ref _mappedVersion, value); } }
+		public VpdbFile MappedFile { get { return _mappedFile; } private set { this.RaiseAndSetIfChanged(ref _mappedFile, value); } }
+
 		// convenient props
 		public string FileName => _fileName.Value;
 		public bool Visible => _visible.Value;
@@ -83,6 +89,7 @@ namespace VpdbAgent.Data
 		public bool HasLocalFile => FilePath != null;
 		public bool HasXmlGame => XmlGame != null;
 		public bool HasSystem => System != null;
+		public bool HasRelease => MappedFile != null;
 
 		// deps
 		private readonly IFile _file;
@@ -92,6 +99,9 @@ namespace VpdbAgent.Data
 		private string _filePath;
 		private PinballXGame _xmlGame;
 		private Mapping _mapping;
+		private VpdbRelease _mappedRelease;
+		private VpdbVersion _mappedVersion;
+		private VpdbFile _mappedFile;
 
 		// generated props
 		private ObservableAsPropertyHelper<bool> _visible;
@@ -232,6 +242,13 @@ namespace VpdbAgent.Data
 		public bool EqualsMapping(Mapping mapping)
 		{
 			return Mapping != null && Mapping.Equals(mapping);
+		}
+
+		public void SetRelease(VpdbRelease release, string fileId)
+		{
+			MappedRelease = release;
+			MappedVersion = release.GetVersion(fileId);
+			MappedFile = release.GetFile(fileId);
 		}
 	}
 }

@@ -88,7 +88,7 @@ namespace VpdbAgent.ViewModels.Games
 				// if file name and file size are identical, directly match.
 				if (numMatches == 1 && match != null) {
 					_logger.Info("File name and size are equal to local release, linking.");
-					//_gameManager.LinkRelease(match.Game, match.Release, match.TableFile.Reference.Id);
+					_gameManager.MapGame(match.Game, match.Release, match.TableFile.Reference.Id);
 					//_messageManager.LogReleaseLinked(match.Game, match.Release, match.TableFile.Reference.Id);
 
 				} else {

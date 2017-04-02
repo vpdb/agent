@@ -38,6 +38,29 @@ namespace VpdbAgent.Vpdb.Models
 			public int Downloads { get; set; }
 		}
 
+		public VpdbFile GetFile(string fileId)
+		{
+			foreach (var v in Versions) {
+				foreach (var f in v.Files) {
+					if (f.Reference.Id == fileId) {
+						return f.Reference;
+					}
+				}
+			}
+			return null;
+		}
+		public VpdbVersion GetVersion(string fileId)
+		{
+			foreach (var v in Versions) {
+				foreach (var f in v.Files) {
+					if (f.Reference.Id == fileId) {
+						return v;
+					}
+				}
+			}
+			return null;
+		}
+
 		/// <summary>
 		/// Updates a release from the backend.
 		/// </summary>

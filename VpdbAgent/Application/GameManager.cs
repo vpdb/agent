@@ -19,6 +19,7 @@ using VpdbAgent.Vpdb;
 using VpdbAgent.Vpdb.Download;
 using VpdbAgent.Vpdb.Models;
 using Game = VpdbAgent.Models.Game;
+// ReSharper disable InconsistentlySynchronizedField
 
 namespace VpdbAgent.Application
 {
@@ -58,14 +59,17 @@ namespace VpdbAgent.Application
 		void Initialize();
 
 		/// <summary>
-		/// Marks a game as hidden.
+		/// Marks a give game as hidden.
 		/// </summary>
 		/// 
 		/// <remarks>
-		/// Since we usually don't know which system this file would belong to, we 
-		/// just take the first system which matches the table path.
+		/// It's currently only possible to hide games that don't have a
+		/// mapping or entry in the XML database. Thus, the given game is
+		/// usually not linked to any system. In this case, we simply look for
+		/// the first system with the same table path as the give local file.
 		/// </remarks>
-		/// <param name="game">Game to hide</param>
+		/// 
+		/// <param name="game"></param>
 		void HideGame(AggregatedGame game);
 
 		/// <summary>
@@ -543,18 +547,6 @@ namespace VpdbAgent.Application
 			}
 		}
 
-		/// <summary>
-		/// Marks a give game as hidden.
-		/// </summary>
-		/// 
-		/// <remarks>
-		/// It's currently only possible to hide games that don't have a
-		/// mapping or entry in the XML database. Thus, the given game is
-		/// usually not linked to any system. In this case, we simply look for
-		/// the first system with the same table path as the give local file.
-		/// </remarks>
-		/// 
-		/// <param name="game"></param>
 		public void HideGame(AggregatedGame game)
 		{
 			_logger.Info("Hiding game {0}", game.FileId);
@@ -564,18 +556,48 @@ namespace VpdbAgent.Application
 				return;
 			}
 
-			var system = GetSystem(game);
-			var mapping = game.Mapping ?? new Mapping(game);
+			var mapping = GetOrCreateMapping(game);
 			mapping.IsHidden = true;
+		}
+
+		public void MapGame(AggregatedGame game, VpdbRelease release, string fileId)
+		{
+			// update in case we didn't catch the last version.
+			_vpdbClient.Api.GetRelease(release.Id).Subscribe(updatedRelease => {
+				_logger.Info("Mapping {0} to {1} ({2})", game, release, fileId);
+
+				GetOrCreateMapping(game).Map(release, fileId);
+				game.SetRelease(updatedRelease, fileId);
+
+			}, exception => _vpdbClient.HandleApiError(exception, "retrieving release details during linking"));
+		}
+
+		/// <summary>
+		/// Returns current mapping or creates a new one for the given game.
+		/// </summary>
+		/// <param name="game">Game</param>
+		/// <returns>Current or new mapping</returns>
+		[NotNull]
+		private Mapping GetOrCreateMapping(AggregatedGame game)
+		{
+			var system = FindSystem(game);
+			var mapping = game.Mapping ?? new Mapping(game);
 
 			if (!game.HasMapping) {
 				game.Update(mapping);
 				system.Mappings.Add(mapping);
 			}
+			return mapping;
 		}
 
+		/// <summary>
+		/// Returns current system or finds the first system matching the game's
+		/// table path.
+		/// </summary>
+		/// <param name="game">Game to find the system for</param>
+		/// <returns>System</returns>
 		[NotNull]
-		private PinballXSystem GetSystem(AggregatedGame game)
+		private PinballXSystem FindSystem(AggregatedGame game)
 		{
 			PinballXSystem system;
 			if (!game.HasSystem) {
@@ -589,19 +611,6 @@ namespace VpdbAgent.Application
 				throw new Exception($"Got game at {game.FilePath} but no systems that match path ({string.Join(", ", _menuManager.Systems.Select(s => s.TablePath))}).");
 			}
 			return system;
-		}
-
-		public void MapGame(AggregatedGame game, VpdbRelease release, string fileId)
-		{
-			// update in case we didn't catch the last version.
-			_vpdbClient.Api.GetRelease(release.Id).Subscribe(updatedRelease => {
-				_logger.Info("Linking {0} to {1} ({2})", game, release, fileId);
-				//_databaseManager.AddOrUpdateRelease(release);
-				//game.ReleaseId = release.Id;
-				//game.FileId = fileId;
-				//_databaseManager.Save();
-
-			}, exception => _vpdbClient.HandleApiError(exception, "retrieving release details during linking"));
 		}
 
 
