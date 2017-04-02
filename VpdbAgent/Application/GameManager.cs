@@ -177,10 +177,7 @@ namespace VpdbAgent.Application
 			_menuManager.TableFileCreated.ObserveOn(_threadManager.WorkerScheduler).Subscribe(OnTableFileChanged);
 			_menuManager.TableFileChanged.ObserveOn(_threadManager.WorkerScheduler).Subscribe(OnTableFileChanged);
 			_menuManager.TableFileDeleted.ObserveOn(_threadManager.WorkerScheduler).Subscribe(OnTableFileDeleted);
-			_menuManager.TableFileRenamed.ObserveOn(_threadManager.WorkerScheduler).Subscribe(x => {
-				OnTableFileDeleted(x.Item1);
-				OnTableFileChanged(x.Item2);
-			});
+			_menuManager.TableFileRenamed.ObserveOn(_threadManager.WorkerScheduler).Subscribe(x => OnTableFileRenamed(x.Item1, x.Item2));
 			_menuManager.TableFolderAdded.ObserveOn(_threadManager.WorkerScheduler).Delay(delay).Subscribe(path => MergeLocalFiles(path, _menuManager.GetTableFiles(path)));
 			_menuManager.TableFolderRemoved.ObserveOn(_threadManager.WorkerScheduler).Delay(delay).Subscribe(path => MergeLocalFiles(path, new List<string>()));
 
@@ -478,7 +475,53 @@ namespace VpdbAgent.Application
 		}
 
 		/// <summary>
-		/// A table file has been deleted (or renamed from given path).
+		/// A table file has been renamed.
+		/// </summary>
+		/// <remarks>
+		/// If a mapping is found on the game to rename, the game is kept
+		/// and FileId of both local file and mapping is renamed.
+		/// Otherwise, the game is removed and re-added.
+		/// </remarks>
+		/// <param name="from">Source file name</param>
+		/// <param name="to">Destination file name</param>
+		private void OnTableFileRenamed(string from, string to)
+		{
+			lock (AggregatedGames) {
+				AggregatedGames.Where(game => game.EqualsFileId(from)).ToList().ForEach(oldGame => {
+
+					var newGame = AggregatedGames.FirstOrDefault(g => g.EqualsFileId(to));
+					var newXmlGame = newGame?.XmlGame;
+
+					// if there was a mapping, rename and drop XmlGame if set
+					if (oldGame.HasMapping) {
+						_logger.Info("Renaming {0} to {1} with mapping.", oldGame.FileId, to);
+
+						// given that we rename, if there is already a game with that name, remove. 
+						if (newGame != null) {
+							if (newGame.HasMapping) {
+								newGame.System.Mappings.Remove(newGame.Mapping);
+								_logger.Warn("Got already {0}, mapping will be erased.", newGame.FileId);
+							}
+							AggregatedGames.Remove(newGame);
+						}
+
+						// rename
+						if (oldGame.HasXmlGame) {
+							oldGame.ClearXmlGame();
+						}
+						oldGame.Rename(to, newXmlGame);
+
+					} else {
+						OnTableFileChanged(to);
+						OnTableFileDeleted(from);
+					}
+				});
+
+			}
+		}
+
+		/// <summary>
+		/// A table file has been deleted.
 		/// </summary>
 		/// <param name="path">Absolute path of the file</param>
 		private void OnTableFileDeleted(string path)

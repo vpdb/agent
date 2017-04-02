@@ -4,6 +4,7 @@ using System.IO;
 using System.Reactive.Linq;
 using JetBrains.Annotations;
 using ReactiveUI;
+using VpdbAgent.Application;
 using VpdbAgent.Common.Filesystem;
 using VpdbAgent.PinballX.Models;
 
@@ -42,34 +43,38 @@ namespace VpdbAgent.Data
 		/// happens if file names change.
 		/// 
 		/// - If the local file is renamed, the mapping is renamed as well,
-		///   while the <see cref="XmlGame"/> is cleared and re-matched.
+		///   while the <see cref="XmlGame"/> is cleared and re-matched (see
+		///   <see cref="GameManager.OnTableFileRenamed"/>).
 		/// - If <see cref="PinballXGame.FileName"/> changes, the new entry is 
 		///   re-matched and the old entry is removed.
 		/// - If <see cref="Data.Mapping.FileId"/> changes, the new entry is
 		///   also re-matched and old one discarded.
 		/// 
 		/// </remarks>
-		public string FileId => _fileId.Value;
+		public string FileId { get { return _fileId; } private set { this.RaiseAndSetIfChanged(ref _fileId, value); } }
 
 		/// <summary>
 		/// Absolute file path to physical file or null if file doesn't exist
 		/// </summary>
-		public string FilePath { get { return _filePath; } set { this.RaiseAndSetIfChanged(ref _filePath, value); } }
+		public string FilePath { get { return _filePath; } private set { this.RaiseAndSetIfChanged(ref _filePath, value); } }
 
 		/// <summary>
 		/// File size in bytes or 0 if file doesn't exist
 		/// </summary>
-		public long FileSize { get; set; }
+		public long FileSize { get; private set; }
 
 		/// <summary>
 		/// Linked game from PinballX's XML database
 		/// </summary>
-		public PinballXGame XmlGame { get { return _xmlGame; } set { this.RaiseAndSetIfChanged(ref _xmlGame, value); } }
+		public PinballXGame XmlGame { get { return _xmlGame; } private set { this.RaiseAndSetIfChanged(ref _xmlGame, value); } }
 
-		public Mapping Mapping { get { return _mapping; } set { this.RaiseAndSetIfChanged(ref _mapping, value); } }
+		/// <summary>
+		/// Linked release at VPDB
+		/// </summary>
+		public Mapping Mapping { get { return _mapping; } private set { this.RaiseAndSetIfChanged(ref _mapping, value); } }
 
+		// convenient props
 		public string FileName => _fileName.Value;
-
 		public bool Visible => _visible.Value;
 		public PinballXSystem System => XmlGame?.System ?? Mapping?.System;
 		
@@ -83,12 +88,12 @@ namespace VpdbAgent.Data
 		private readonly IFile _file;
 
 		// watched props
+		private string _fileId;
 		private string _filePath;
 		private PinballXGame _xmlGame;
 		private Mapping _mapping;
 
 		// generated props
-		private readonly ObservableAsPropertyHelper<string> _fileId;
 		private ObservableAsPropertyHelper<bool> _visible;
 		private ObservableAsPropertyHelper<string> _fileName;
 
@@ -139,11 +144,7 @@ namespace VpdbAgent.Data
 		public AggregatedGame([NotNull] PinballXGame xmlGame, IFile file) : this(file)
 		{
 			Update(xmlGame);
-
-			// FileId
-			XmlGame.WhenAnyValue(g => g.System.TablePath, g => g.FileName)
-				.Select(x => Path.Combine(x.Item1, x.Item2))
-				.ToProperty(this, game => game.FileId, out _fileId);
+			FileId = Path.Combine(xmlGame.System.TablePath, xmlGame.FileName);
 
 			// Unlink local file when table path changes.
 			XmlGame.WhenAnyValue(g => g.System.TablePath).Subscribe(newPath => ClearLocalFile());
@@ -151,20 +152,13 @@ namespace VpdbAgent.Data
 
 		public AggregatedGame([NotNull] string filePath, IFile file) : this(file)
 		{
-			// FileId
-			this.WhenAnyValue(g => g.FilePath)
-				.Select(filepath => Path.Combine(Path.GetDirectoryName(filePath), Path.GetFileNameWithoutExtension(filePath)))
-				.ToProperty(this, game => game.FileId, out _fileId);
-
 			Update(filePath);
 		}
 
 		public AggregatedGame([NotNull] Mapping mapping, IFile file) : this(file)
 		{
 			Update(mapping);
-
-			// FileId
-			Mapping.WhenAnyValue(m => m.FileId).ToProperty(this, game => game.FileId, out _fileId);
+			FileId = mapping.FileId;
 		}
 
 		public AggregatedGame Update(PinballXGame xmlGame)
@@ -177,6 +171,19 @@ namespace VpdbAgent.Data
 			return this;
 		}
 
+		public void Rename(string filePath, PinballXGame newXmlGame = null)
+		{
+			if (!HasMapping || !HasLocalFile) {
+				throw new InvalidOperationException("Can only rename games with mapping and local file.");
+			}
+			Update(filePath);
+			if (newXmlGame != null) {
+				XmlGame = newXmlGame;
+			}
+			Mapping.Rename(filePath);
+		}
+
+
 		public void ClearXmlGame()
 		{
 			XmlGame = null;
@@ -184,6 +191,7 @@ namespace VpdbAgent.Data
 
 		public AggregatedGame Update(string filePath)
 		{
+			FileId = Path.Combine(Path.GetDirectoryName(filePath), Path.GetFileNameWithoutExtension(filePath));
 			FilePath = filePath;
 			FileSize = _file.FileSize(filePath);
 

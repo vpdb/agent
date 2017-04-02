@@ -33,7 +33,7 @@ namespace VpdbAgent.Data
 		/// <summary>
 		/// The entire filename with extension but without path.
 		/// </summary>
-		[DataMember] public string FileName { get; private set; }
+		[DataMember] public string FileName { get { return _fileName; } private set { this.RaiseAndSetIfChanged(ref _fileName, value); } }
 
 		/// <summary>
 		/// Release ID of the linked release at VPDB.
@@ -71,6 +71,7 @@ namespace VpdbAgent.Data
 		public PinballXSystem System { get; set; }
 
 		// read/write fields
+		private string _fileName;
 		private string _releaseId;
 		private string _fileId;
 		private bool _isSynced;
@@ -129,6 +130,12 @@ namespace VpdbAgent.Data
 			IsHidden = mapping.IsHidden;
 			PreviousFileIds = mapping.PreviousFileIds;
 			PatchedTableScript = mapping.PatchedTableScript;
+		}
+
+		public void Rename(string filePath)
+		{
+			FileId = Path.Combine(Path.GetDirectoryName(filePath), Path.GetFileNameWithoutExtension(filePath));
+			FileName = Path.GetFileName(filePath);
 		}
 
 		public override bool Equals(object obj)
