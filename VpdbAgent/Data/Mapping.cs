@@ -31,6 +31,11 @@ namespace VpdbAgent.Data
 	public class Mapping : ReactiveObject
 	{
 		/// <summary>
+		/// Mapping ID. Equals <see cref="AggregatedGame.FileId"/>.
+		/// </summary>
+		[DataMember] public string Id { get { return _id; } private set { this.RaiseAndSetIfChanged(ref _id, value); } }
+
+		/// <summary>
 		/// The entire filename with extension but without path.
 		/// </summary>
 		[DataMember] public string FileName { get { return _fileName; } private set { this.RaiseAndSetIfChanged(ref _fileName, value); } }
@@ -67,10 +72,14 @@ namespace VpdbAgent.Data
 		/// </summary>
 		[DataMember] public string PatchedTableScript { get { return _patchedTableScript; } set { this.RaiseAndSetIfChanged(ref _patchedTableScript, value); } }
 
-		// non-serialized props
+		/// <summary>
+		/// System from which the mapping is parsed from. We can't make it read-only 
+		/// because instances are created by the serializator, but it's always set.
+		/// </summary>
 		public PinballXSystem System { get; set; }
 
 		// read/write fields
+		private string _id;
 		private string _fileName;
 		private string _releaseId;
 		private string _fileId;
@@ -106,7 +115,7 @@ namespace VpdbAgent.Data
 		{
 			System = game.System;
 			FileName = Path.GetFileName(game.FilePath);
-			FileId = game.FileId;
+			Id = game.FileId;
 		}
 
 		/// <summary>
@@ -118,9 +127,13 @@ namespace VpdbAgent.Data
 		public Mapping(AggregatedGame game, VpdbRelease release, string fileId) : this(game)
 		{
 			ReleaseId = release.Id;
-			FileId = fileId;
+			Id = fileId;
 		}
 
+		/// <summary>
+		/// Copies values from another mapping to this mapping.
+		/// </summary>
+		/// <param name="mapping">Source mapping</param>
 		public void Update(Mapping mapping)
 		{
 			FileName = mapping.FileName;
@@ -132,6 +145,12 @@ namespace VpdbAgent.Data
 			PatchedTableScript = mapping.PatchedTableScript;
 		}
 
+		/// <summary>
+		/// Maps this mapping to a VPDB release.
+		/// </summary>
+		/// <param name="release">Release to map to</param>
+		/// <param name="fileId">File ID of the release corresponding to the mapping</param>
+		/// <returns>This mapping</returns>
 		public Mapping Map(VpdbRelease release, string fileId)
 		{
 			ReleaseId = release.Id;
@@ -140,9 +159,17 @@ namespace VpdbAgent.Data
 			return this;
 		}
 
+		/// <summary>
+		/// Renames this mapping.
+		/// </summary>
+		/// 
+		/// <remarks>
+		/// Changes <see cref="Id"/> and <see cref="FileName"/>.
+		/// </remarks>
+		/// <param name="filePath"></param>
 		public void Rename(string filePath)
 		{
-			FileId = Path.Combine(Path.GetDirectoryName(filePath), Path.GetFileNameWithoutExtension(filePath));
+			Id = Path.Combine(Path.GetDirectoryName(filePath), Path.GetFileNameWithoutExtension(filePath));
 			FileName = Path.GetFileName(filePath);
 		}
 
@@ -172,7 +199,7 @@ namespace VpdbAgent.Data
 		public override int GetHashCode()
 		{
 			// ReSharper disable once NonReadonlyMemberInGetHashCode
-			return FileId.GetHashCode();
+			return Id.GetHashCode();
 		}
 	}
 

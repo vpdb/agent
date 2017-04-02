@@ -5,29 +5,33 @@ using System.Linq;
 using System.Reactive.Linq;
 using JetBrains.Annotations;
 using ReactiveUI;
+using Splat;
 using VpdbAgent.Application;
 using VpdbAgent.Common.Filesystem;
 using VpdbAgent.PinballX.Models;
+using VpdbAgent.Vpdb;
 using VpdbAgent.Vpdb.Models;
 
 namespace VpdbAgent.Data
 {
 	/// <summary>
 	/// A game, aggregated from the PinballX XML database, table file from the 
-	/// disk and mappings to VPDB. It's what's shown in the UI of the app.
+	/// disk and/or mappings to VPDB. It's what's shown in the UI of the app.
 	/// </summary>
 	/// 
 	/// <remarks>
 	/// This is how the merge works:
+	/// 
 	/// Whenever something updates, a list with updated objects is matched
 	/// against every <see cref="AggregatedGame"/> by using one of the Equal
 	/// overloads.
+	/// 
 	/// If there's a match, <see cref="AggregatedGame"/> is updated with one
 	/// of the Update overloads.
+	/// 
 	/// If there's no match, a new <see cref="AggregatedGame"/> is instantiated
 	/// using the respective constructor overload (which also calls the 
 	/// corresponding Update overload).
-	/// 
 	/// </remarks>
 	public class AggregatedGame : ReactiveObject
 	{
@@ -75,8 +79,19 @@ namespace VpdbAgent.Data
 		/// </summary>
 		public Mapping Mapping { get { return _mapping; } private set { this.RaiseAndSetIfChanged(ref _mapping, value); } }
 
+		/// <summary>
+		/// Mapped release data
+		/// </summary>
 		public VpdbRelease MappedRelease { get { return _mappedRelease; } private set { this.RaiseAndSetIfChanged(ref _mappedRelease, value); } }
+
+		/// <summary>
+		/// Mapped version data of the release
+		/// </summary>
 		public VpdbVersion MappedVersion { get { return _mappedVersion; } private set { this.RaiseAndSetIfChanged(ref _mappedVersion, value); } }
+
+		/// <summary>
+		/// Mapped file data of the release
+		/// </summary>
 		public VpdbFile MappedFile { get { return _mappedFile; } private set { this.RaiseAndSetIfChanged(ref _mappedFile, value); } }
 
 		// convenient props
@@ -85,14 +100,11 @@ namespace VpdbAgent.Data
 		public PinballXSystem System => XmlGame?.System ?? Mapping?.System;
 		
 		// status props
-		public bool HasMapping => Mapping != null;
-		public bool HasLocalFile => FilePath != null;
-		public bool HasXmlGame => XmlGame != null;
+		public bool HasMapping => _hasMapping.Value;
+		public bool HasLocalFile => _hasLocalFile.Value;
+		public bool HasXmlGame => _hasXmlGame.Value;
+		public bool HasRelease => _hasRelease.Value;
 		public bool HasSystem => System != null;
-		public bool HasRelease => MappedFile != null;
-
-		// deps
-		private readonly IFile _file;
 
 		// watched props
 		private string _fileId;
@@ -104,16 +116,31 @@ namespace VpdbAgent.Data
 		private VpdbFile _mappedFile;
 
 		// generated props
+		private readonly ObservableAsPropertyHelper<bool> _hasMapping;
+		private readonly ObservableAsPropertyHelper<bool> _hasLocalFile;
+		private readonly ObservableAsPropertyHelper<bool> _hasXmlGame;
+		private readonly ObservableAsPropertyHelper<bool> _hasRelease;
 		private ObservableAsPropertyHelper<bool> _visible;
 		private ObservableAsPropertyHelper<string> _fileName;
+
+		// deps
+		private readonly IFile _file;
+		private readonly IVpdbManager _vpdbManager;
 
 		/// <summary>
 		/// Base constructor
 		/// </summary>
-		/// <param name="file">IFile dependency</param>
-		private AggregatedGame(IFile file)
+		/// <param name="resolver">Dependency resolver</param>
+		private AggregatedGame(IDependencyResolver resolver)
 		{
-			_file = file;
+			_file = resolver.GetService<IFile>();
+			_vpdbManager = resolver.GetService<IVpdbManager>();
+
+			// status props
+			this.WhenAnyValue(x => x.Mapping).Select(x => x != null).ToProperty(this, g => g.HasMapping, out _hasMapping);
+			this.WhenAnyValue(x => x.FilePath).Select(x => x != null).ToProperty(this, g => g.HasLocalFile, out _hasLocalFile);
+			this.WhenAnyValue(x => x.XmlGame).Select(x => x != null).ToProperty(this, g => g.HasXmlGame, out _hasXmlGame);
+			this.WhenAnyValue(x => x.MappedFile).Select(x => x != null).ToProperty(this, g => g.HasRelease, out _hasRelease);
 
 			// FileName
 			this.WhenAnyValue(x => x.XmlGame).Subscribe(xmlGame => {
@@ -149,9 +176,30 @@ namespace VpdbAgent.Data
 				}
 			});
 
+			// auto-update vpdb data when mapping changes
+			this.WhenAnyValue(x => x.Mapping).Subscribe(mapping => {
+				if (mapping?.FileId == null) {
+					MappedFile = null;
+					MappedVersion = null;
+					MappedRelease = null;
+
+				} else {
+					mapping
+						.WhenAnyValue(m => m.FileId, m => m.ReleaseId)
+						.Where(x => x.Item1 != null && x.Item2 != null)
+						.SelectMany(x => _vpdbManager.GetRelease(mapping.ReleaseId))
+						.Subscribe(x => SetRelease(x, mapping.FileId));
+				}
+			});
+
 		}
 
-		public AggregatedGame([NotNull] PinballXGame xmlGame, IFile file) : this(file)
+		/// <summary>
+		/// Constructs based on XML game.
+		/// </summary>
+		/// <param name="xmlGame">Parsed game from PinballX XML database</param>
+		/// <param name="file">IFile dependency</param>
+		public AggregatedGame([NotNull] PinballXGame xmlGame) : this(Locator.Current)
 		{
 			Update(xmlGame);
 			FileId = Path.Combine(xmlGame.System.TablePath, xmlGame.FileName);
@@ -160,27 +208,39 @@ namespace VpdbAgent.Data
 			XmlGame.WhenAnyValue(g => g.System.TablePath).Subscribe(newPath => ClearLocalFile());
 		}
 
-		public AggregatedGame([NotNull] string filePath, IFile file) : this(file)
+		/// <summary>
+		/// Constructs based on local file.
+		/// </summary>
+		/// <param name="filePath">Absolute path to file</param>
+		/// <param name="file">IFile dependency</param>
+		public AggregatedGame([NotNull] string filePath) : this(Locator.Current)
 		{
 			Update(filePath);
 		}
 
-		public AggregatedGame([NotNull] Mapping mapping, IFile file) : this(file)
+		/// <summary>
+		/// Constructs based on Mapping.
+		/// </summary>
+		/// <param name="mapping">Parsed Mapping</param>
+		/// <param name="file">IFile dependency</param>
+		public AggregatedGame([NotNull] Mapping mapping) : this(Locator.Current)
 		{
 			Update(mapping);
-			FileId = mapping.FileId;
+			FileId = mapping.Id;
 		}
 
-		public AggregatedGame Update(PinballXGame xmlGame)
-		{
-			if (XmlGame == null) {
-				XmlGame = xmlGame;
-			} else {
-				XmlGame.Update(xmlGame);
-			}
-			return this;
-		}
-
+		/// <summary>
+		/// Renames the file ID of the game.
+		/// </summary>
+		/// 
+		/// <remarks>
+		/// This happens when a local file with a mapping has been renamed. In 
+		/// this case we want to keep the mapping linked to the game. The 
+		/// mapping is renamed as well.
+		/// </remarks>
+		/// 
+		/// <param name="filePath">Absolute path to new file name</param>
+		/// <param name="newXmlGame">If set, link to this XML game. This means that an entry with the new file name exists already and its mapping will be overwritten existing.</param>
 		public void Rename(string filePath, PinballXGame newXmlGame = null)
 		{
 			if (!HasMapping || !HasLocalFile) {
@@ -193,12 +253,34 @@ namespace VpdbAgent.Data
 			Mapping.Rename(filePath);
 		}
 
+		/// <summary>
+		/// Updates XML game.
+		/// </summary>
+		/// <param name="xmlGame">Parsed game from PinballX XML database</param>
+		/// <returns>This instance</returns>
+		public AggregatedGame Update(PinballXGame xmlGame)
+		{
+			if (XmlGame == null) {
+				XmlGame = xmlGame;
+			} else {
+				XmlGame.Update(xmlGame);
+			}
+			return this;
+		}
 
+		/// <summary>
+		/// Removes the relation to the PinballX XML database.
+		/// </summary>
 		public void ClearXmlGame()
 		{
 			XmlGame = null;
 		}
 
+		/// <summary>
+		/// Updates local file data.
+		/// </summary>
+		/// <param name="filePath">Absolute path to local file</param>
+		/// <returns>This instance</returns>
 		public AggregatedGame Update(string filePath)
 		{
 			FileId = Path.Combine(Path.GetDirectoryName(filePath), Path.GetFileNameWithoutExtension(filePath));
@@ -208,12 +290,20 @@ namespace VpdbAgent.Data
 			return this;
 		}
 
+		/// <summary>
+		/// Removes the relation to the local file.
+		/// </summary>
 		public void ClearLocalFile()
 		{
 			FilePath = null;
 			FileSize = 0;
 		}
 
+		/// <summary>
+		/// Updates or creates the Mapping.
+		/// </summary>
+		/// <param name="mapping">New mapping</param>
+		/// <returns>This instance</returns>
 		public AggregatedGame Update(Mapping mapping)
 		{
 			if (Mapping == null) {
@@ -224,27 +314,52 @@ namespace VpdbAgent.Data
 			return this;
 		}
 
+		/// <summary>
+		/// Removes the mapping.
+		/// </summary>
 		public void ClearMapping()
 		{
 			Mapping = null;
 		}
 
+		/// <summary>
+		/// Checks if the XML game is equal, i.e. the data is equal (to 
+		/// check if it should be updated).
+		/// </summary>
+		/// <param name="xmlGame">XML game to compare</param>
+		/// <returns>True if equal, false otherwise</returns>
 		public bool EqualsXmlGame(PinballXGame xmlGame)
 		{
 			return XmlGame != null && XmlGame.Equals(xmlGame);
 		}
 
+		/// <summary>
+		/// Checks if the local file is the equal.
+		/// </summary>
+		/// <param name="filePath">Absolute path to local file</param>
+		/// <returns>True if equal, false otherwise</returns>
 		public bool EqualsFileId(string filePath)
 		{
 			return Path.Combine(Path.GetDirectoryName(filePath), Path.GetFileNameWithoutExtension(filePath)) == FileId;
 		}
 
+		/// <summary>
+		/// Checks if the Mapping is equal, i.e. the data is equal (to check
+		/// if it should be updated).
+		/// </summary>
+		/// <param name="mapping">Mapping to compare</param>
+		/// <returns>True if equal, false otherwise</returns>
 		public bool EqualsMapping(Mapping mapping)
 		{
 			return Mapping != null && Mapping.Equals(mapping);
 		}
 
-		public void SetRelease(VpdbRelease release, string fileId)
+		/// <summary>
+		/// Sets VPDB release data when mapping data is available.
+		/// </summary>
+		/// <param name="release"></param>
+		/// <param name="fileId"></param>
+		private void SetRelease(VpdbRelease release, string fileId)
 		{
 			MappedRelease = release;
 			MappedVersion = release.GetVersion(fileId);

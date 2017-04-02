@@ -95,7 +95,7 @@ namespace VpdbAgent.ViewModels.Settings
 			AuthUser = _settingsManager.Settings.AuthUser;
 			AuthPass = _settingsManager.Settings.AuthPass;
 			Endpoint = _settingsManager.Settings.Endpoint;
-			PbxFolder = _settingsManager.Settings.PbxFolder;
+			PbxFolder = _settingsManager.Settings.PinballXFolder;
 			SyncStarred = _settingsManager.Settings.SyncStarred;
 			DownloadOnStartup = _settingsManager.Settings.DownloadOnStartup;
 			PatchTableScripts = _settingsManager.Settings.PatchTableScripts;
@@ -173,7 +173,7 @@ namespace VpdbAgent.ViewModels.Settings
 			settings.AuthUser = _authUser;
 			settings.AuthPass = _authPass;
 			settings.Endpoint = _endpoint;
-			settings.PbxFolder = _pbxFolder;
+			settings.PinballXFolder = _pbxFolder;
 			settings.SyncStarred = _syncStarred;
 			settings.DownloadOnStartup = _downloadOnStartup;
 			settings.PatchTableScripts = _patchTableScripts;

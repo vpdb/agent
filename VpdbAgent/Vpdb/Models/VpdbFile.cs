@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using LiteDB;
 
 namespace VpdbAgent.Vpdb.Models
 {
 	public class VpdbFile
 	{
-		public string Id { get; set; }
+		[BsonId] public string Id { get; set; }
 		public string Name { get { return _name ?? Path.GetFileName(Url); } set { _name = value; } }
 		public long Bytes { get; set; }
 		public DateTime CreatedAt { get; set; }
@@ -17,14 +18,18 @@ namespace VpdbAgent.Vpdb.Models
 		public VpdbCounter Counter { get; set; }
 		public bool IsActive { get; set; }
 		public bool IsProtected { get; set; }
-		public string Url {
+		public Uri Uri { get; private set; }
+
+		[BsonIgnore]
+		public string Url
+		{
 			get { return _url; }
-			set {
+			set
+			{
 				_url = value;
 				Uri = new Uri(value);
 			}
 		}
-		public Uri Uri { get; private set; }
 
 		private string _name;
 		private string _url;

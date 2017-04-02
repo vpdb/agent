@@ -12,14 +12,14 @@ namespace VpdbAgent.PinballX.Models
 		// ----------------------------------
 
 		/// <summary>
-		/// Filename without extension and path. Maps to <see cref="Game.Filename"/>,
+		/// Filename without extension and path.
 		/// apart from the latter including extension if file exists.
 		/// </summary>
 		[XmlAttribute("name")]
 		public string FileName { get { return _fileName; } set { this.RaiseAndSetIfChanged(ref _fileName, value); } }
 
 		/// <summary>
-		/// The identifier used also for media. Maps to <see cref="Game.Id"/>.
+		/// The identifier used for media.
 		/// </summary>
 		[XmlElement("description")]
 		public string Description { get { return _description; } set { this.RaiseAndSetIfChanged(ref _description, value); } }

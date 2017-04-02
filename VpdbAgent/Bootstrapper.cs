@@ -172,6 +172,13 @@ namespace VpdbAgent
 				deps.GetService<CrashManager>()
 			), typeof(IVpdbClient));
 
+			deps.RegisterLazySingleton(() => new VpdbManager(
+				deps.GetService<IVpdbClient>(),
+				deps.GetService<IMenuManager>(),
+				deps.GetService<IThreadManager>(),
+				deps.GetService<NLog.ILogger>()
+			), typeof(IVpdbManager));
+			
 			deps.RegisterLazySingleton(() => new RealtimeManager(
 				deps.GetService<IVpdbClient>(),
 				deps.GetService<NLog.ILogger>()
@@ -198,6 +205,7 @@ namespace VpdbAgent
 			deps.RegisterLazySingleton(() => new GameManager(
 				deps.GetService<IMenuManager>(),
 				deps.GetService<IVpdbClient>(),
+				deps.GetService<IVpdbManager>(),
 				deps.GetService<ISettingsManager>(),
 				deps.GetService<IDownloadManager>(),
 				deps.GetService<IDatabaseManager>(),

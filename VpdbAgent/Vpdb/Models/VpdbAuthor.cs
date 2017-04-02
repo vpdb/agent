@@ -1,11 +1,12 @@
 ﻿using System.Collections.Generic;
+using LiteDB;
 
 namespace VpdbAgent.Vpdb.Models
 {
 	public class VpdbAuthor
 	{
 		public List<string> Roles { get; set; }
-		public VpdbUser User { get; set; }
+		[BsonRef("users")] public VpdbUser User { get; set; }
 
 		public override string ToString()
 		{

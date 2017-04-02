@@ -265,7 +265,7 @@ namespace VpdbAgent.PinballX.Models
 		/// </summary>
 		private void DisableDatabaseWatchers()
 		{
-			if (_databaseWatchers.Count == 0) {
+			if (_databaseWatchers.Count > 0) {
 				_logger.Info("Stopped watching XML files at {0}...", DatabasePath);
 			}
 			_databaseWatchers.Clear();
@@ -418,8 +418,8 @@ namespace VpdbAgent.PinballX.Models
 			Executable = data["Executable"];
 			Parameters = data["Parameters"];
 
-			DatabasePath = PathHelper.NormalizePath(Path.Combine(_settingsManager.Settings.PbxFolder, "Databases", Name));
-			MediaPath = PathHelper.NormalizePath(Path.Combine(_settingsManager.Settings.PbxFolder, "Media", Name));
+			DatabasePath = PathHelper.NormalizePath(Path.Combine(_settingsManager.Settings.PinballXFolder, "Databases", Name));
+			MediaPath = PathHelper.NormalizePath(Path.Combine(_settingsManager.Settings.PinballXFolder, "Media", Name));
 		}
 
 		/// <summary>

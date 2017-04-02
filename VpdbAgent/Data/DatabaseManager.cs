@@ -182,7 +182,7 @@ namespace VpdbAgent.Data
 				.Id(f => f.Id, false);
 
 			// db & collections
-			_db = new LiteDatabase(Path.Combine(_settingsManager.Settings.PbxFolder, @"Databases\vpdb.db"));
+			_db = new LiteDatabase(Path.Combine(_settingsManager.Settings.PinballXFolder, @"Databases\vpdb.db"));
 			_jobs = _db.GetCollection<Job>(Jobs);
 			_messages = _db.GetCollection<Message>(Messages);
 			_releases = _db.GetCollection<VpdbRelease>(VpdbReleases);

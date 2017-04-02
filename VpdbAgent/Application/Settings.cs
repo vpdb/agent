@@ -37,7 +37,7 @@ namespace VpdbAgent.Application
 		/// <summary>
 		/// The local folder where the user installed PinballX
 		/// </summary>
-		public string PbxFolder { get { return _pbxFolder; } set { this.RaiseAndSetIfChanged(ref _pbxFolder, value); } }
+		public string PinballXFolder { get { return _pinballXFolder; } set { this.RaiseAndSetIfChanged(ref _pinballXFolder, value); } }
 
 		/// <summary>
 		/// If true, starring a release on vpdb.io will make it synced here.
@@ -120,7 +120,7 @@ namespace VpdbAgent.Application
 		private string _authUser;
 		private string _authPass;
 		private string _endpoint;
-		private string _pbxFolder;
+		private string _pinballXFolder;
 		private bool _syncStarred;
 		private bool _minimizeToTray;
 		private bool _startWithWindows;
@@ -146,7 +146,7 @@ namespace VpdbAgent.Application
 			AuthUser = await storage.GetOrCreateObject("AuthUser", () => "");
 			AuthPass = await storage.GetOrCreateObject("AuthPass", () => "");
 			Endpoint = await storage.GetOrCreateObject("Endpoint", () => "https://api.vpdb.io");
-			PbxFolder = await storage.GetOrCreateObject("PbxFolder", () => "");
+			PinballXFolder = await storage.GetOrCreateObject("PbxFolder", () => "");
 			SyncStarred = await storage.GetOrCreateObject("SyncStarred", () => true);
 			MinimizeToTray = await storage.GetOrCreateObject("MinimizeToTray", () => false);
 			StartWithWindows = await storage.GetOrCreateObject("StartWithWindows", () => false);
@@ -168,7 +168,7 @@ namespace VpdbAgent.Application
 			await storage.InsertObject("AuthUser", AuthUser);
 			await storage.InsertObject("AuthPass", AuthPass);
 			await storage.InsertObject("Endpoint", Endpoint);
-			await storage.InsertObject("PbxFolder", PbxFolder);
+			await storage.InsertObject("PbxFolder", PinballXFolder);
 			await storage.InsertObject("SyncStarred", SyncStarred);
 			await storage.InsertObject("MinimizeToTray", MinimizeToTray);
 			await storage.InsertObject("StartWithWindows", StartWithWindows);
@@ -194,7 +194,7 @@ namespace VpdbAgent.Application
 			to.AuthUser = from.AuthUser;
 			to.AuthPass = from.AuthPass;
 			to.Endpoint = from.Endpoint;
-			to.PbxFolder = from.PbxFolder;
+			to.PinballXFolder = from.PinballXFolder;
 			to.SyncStarred = from.SyncStarred;
 			to.MinimizeToTray = from.MinimizeToTray;
 			to.StartWithWindows = from.StartWithWindows;

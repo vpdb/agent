@@ -100,6 +100,7 @@ namespace VpdbAgent.Application
 		// deps
 		private readonly IMenuManager _menuManager;
 		private readonly IVpdbClient _vpdbClient;
+		private readonly IVpdbManager _vpdbManager;
 		private readonly ISettingsManager _settingsManager;
 		private readonly IDownloadManager _downloadManager;
 		private readonly IDatabaseManager _databaseManager;
@@ -120,7 +121,7 @@ namespace VpdbAgent.Application
 		private readonly Subject<Unit> _initialized = new Subject<Unit>();
 		private readonly List<Tuple<string, string, string>> _gamesToLink = new List<Tuple<string, string, string>>();
 
-		public GameManager(IMenuManager menuManager, IVpdbClient vpdbClient, ISettingsManager 
+		public GameManager(IMenuManager menuManager, IVpdbClient vpdbClient, IVpdbManager vpdbManager, ISettingsManager 
 			settingsManager, IDownloadManager downloadManager, IDatabaseManager databaseManager,
 			IVersionManager versionManager, IPlatformManager platformManager, IMessageManager messageManager,
 			IRealtimeManager realtimeManager, IVisualPinballManager visualPinballManager, IThreadManager threadManager, 
@@ -128,6 +129,7 @@ namespace VpdbAgent.Application
 		{
 			_menuManager = menuManager;
 			_vpdbClient = vpdbClient;
+			_vpdbManager = vpdbManager;
 			_settingsManager = settingsManager;
 			_downloadManager = downloadManager;
 			_databaseManager = databaseManager;
@@ -139,6 +141,7 @@ namespace VpdbAgent.Application
 			_threadManager = threadManager;
 			_file = file;
 			_logger = logger;
+		
 
 			// update releases from VPDB on the first run, but delay it a bit so it 
 			// doesn't do all that shit at the same time!
@@ -226,7 +229,7 @@ namespace VpdbAgent.Application
 				if (AggregatedGames.IsEmpty) {
 					_threadManager.MainDispatcher.Invoke(() => {
 						using (AggregatedGames.SuppressChangeNotifications()) {
-							AggregatedGames.AddRange(xmlGames.Select(g => new AggregatedGame(g, _file)));
+							AggregatedGames.AddRange(xmlGames.Select(g => new AggregatedGame(g)));
 						}
 					});
 					_logger.Info("Added {0} games from PinballX database.", xmlGames.Count());
@@ -255,7 +258,7 @@ namespace VpdbAgent.Application
 				
 					// no match, add
 					if (oldGame == null) {
-						gamesToAdd.Add(new AggregatedGame(newGame, _file));
+						gamesToAdd.Add(new AggregatedGame(newGame));
 
 					// match and not equal, so update.
 					} else if (!oldGame.EqualsXmlGame(newGame)) {
@@ -340,7 +343,7 @@ namespace VpdbAgent.Application
 							}
 						});
 					if (!found) {
-						gamesToAdd.Add(new AggregatedGame(newPath, _file));
+						gamesToAdd.Add(new AggregatedGame(newPath));
 					}
 				}
 
@@ -386,7 +389,7 @@ namespace VpdbAgent.Application
 				if (AggregatedGames.IsEmpty) {
 					_threadManager.MainDispatcher.Invoke(() => {
 						using (AggregatedGames.SuppressChangeNotifications()) {
-							AggregatedGames.AddRange(mappings.Select(m => new AggregatedGame(m, _file)));
+							AggregatedGames.AddRange(mappings.Select(m => new AggregatedGame(m)));
 						}
 					});
 					_logger.Info("Added {0} games from mappings.", mappings.Count());
@@ -409,11 +412,11 @@ namespace VpdbAgent.Application
 				foreach (var mapping in mappings) {
 
 					// todo could also use an index
-					var game = AggregatedGames.FirstOrDefault(g => g.FileId == mapping.FileId);
+					var game = AggregatedGames.FirstOrDefault(g => g.FileId == mapping.Id);
 				
 					// no match, add
 					if (game == null) {
-						gamesToAdd.Add(new AggregatedGame(mapping, _file));
+						gamesToAdd.Add(new AggregatedGame(mapping));
 
 					// match and not equal, so update.
 					} else if (!game.EqualsMapping(mapping)) {
@@ -472,7 +475,7 @@ namespace VpdbAgent.Application
 						}
 					});
 				if (!found) {
-					_threadManager.MainDispatcher.Invoke(() => AggregatedGames.Add(new AggregatedGame(path, _file)));
+					_threadManager.MainDispatcher.Invoke(() => AggregatedGames.Add(new AggregatedGame(path)));
 					_logger.Info("Added {0} from file system.", path);
 				}
 			}
@@ -563,11 +566,10 @@ namespace VpdbAgent.Application
 		public void MapGame(AggregatedGame game, VpdbRelease release, string fileId)
 		{
 			// update in case we didn't catch the last version.
-			_vpdbClient.Api.GetRelease(release.Id).Subscribe(updatedRelease => {
+			_vpdbManager.GetRelease(release.Id).Subscribe(updatedRelease => {
 				_logger.Info("Mapping {0} to {1} ({2})", game, release, fileId);
 
 				GetOrCreateMapping(game).Map(release, fileId);
-				game.SetRelease(updatedRelease, fileId);
 
 			}, exception => _vpdbClient.HandleApiError(exception, "retrieving release details during linking"));
 		}

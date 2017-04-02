@@ -2,29 +2,32 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
+using LiteDB;
 using ReactiveUI;
 
 namespace VpdbAgent.Vpdb.Models
 {
 	public class VpdbRelease : ReactiveObject
 	{
+		// API props
+		[DataMember] [BsonId] public string Id { get; set; }
+		[DataMember] public string Name { get { return _name; } set { this.RaiseAndSetIfChanged(ref _name, value); } }
+		[DataMember] public DateTime CreatedAt { get; set; }
+		[DataMember] public List<VpdbAuthor> Authors { get; set; }
+		[DataMember] public ReleaseCounter Counter { get; set; }
+		[DataMember] [BsonRef("games")] public VpdbGame Game { get; set; }
+		[DataMember] public VpdbThumb Thumb { get { return _thumb; } set { this.RaiseAndSetIfChanged(ref _thumb, value); } }
+		[DataMember] public ReactiveList<VpdbVersion> Versions { get { return _versions; } set { this.RaiseAndSetIfChanged(ref _versions, value); } }
+		[DataMember] public bool Starred { get { return _starred; } set { this.RaiseAndSetIfChanged(ref _starred, value); } }
+
+		// watched props
 		private bool _starred;
 		private string _name;
 		private ReactiveList<VpdbVersion> _versions;
 		private VpdbThumb _thumb;
 
-		[DataMember] public string Id { get; set; }
-		[DataMember] public string Name { get { return _name; } set { this.RaiseAndSetIfChanged(ref _name, value); } }
-		[DataMember] public DateTime CreatedAt { get; set; }
-		[DataMember] public List<VpdbAuthor> Authors { get; set; }
-		[DataMember] public ReleaseCounter Counter { get; set; }
-		[DataMember] public VpdbGame Game { get; set; }
-
-		[DataMember] public VpdbThumb Thumb { get { return _thumb; } set { this.RaiseAndSetIfChanged(ref _thumb, value); } }
-		[DataMember] public ReactiveList<VpdbVersion> Versions { get { return _versions; } set { this.RaiseAndSetIfChanged(ref _versions, value); } }
-		[DataMember] public bool Starred { get { return _starred; } set { this.RaiseAndSetIfChanged(ref _starred, value); } }
-
 		// convenience methods
+		[BsonIgnore]
 		public string AuthorNames { get {
 			return Authors.Count > 1 
 					? string.Join(", ", Authors.Take(Authors.Count - 1).Select(a => a.User.Name)) + " & " + Authors.Last().User.Name
@@ -40,25 +43,12 @@ namespace VpdbAgent.Vpdb.Models
 
 		public VpdbFile GetFile(string fileId)
 		{
-			foreach (var v in Versions) {
-				foreach (var f in v.Files) {
-					if (f.Reference.Id == fileId) {
-						return f.Reference;
-					}
-				}
-			}
-			return null;
+			return (from v in Versions from f in v.Files where f.Reference.Id == fileId select f.Reference).FirstOrDefault();
 		}
+
 		public VpdbVersion GetVersion(string fileId)
 		{
-			foreach (var v in Versions) {
-				foreach (var f in v.Files) {
-					if (f.Reference.Id == fileId) {
-						return v;
-					}
-				}
-			}
-			return null;
+			return (from v in Versions from f in v.Files where f.Reference.Id == fileId select v).FirstOrDefault();
 		}
 
 		/// <summary>

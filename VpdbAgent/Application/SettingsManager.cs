@@ -141,10 +141,10 @@ namespace VpdbAgent.Application
 			var errors = new Dictionary<string, string>();
 
 			// pinballx folder
-			if (string.IsNullOrEmpty(settings.PbxFolder)) {
+			if (string.IsNullOrEmpty(settings.PinballXFolder)) {
 				errors.Add("PbxFolder", "The folder where PinballX is installed must be set.");
-			} else if (!Directory.Exists(settings.PbxFolder) || !Directory.Exists(settings.PbxFolder + @"\Config")) {
-				errors.Add("PbxFolder", "The folder \"" + settings.PbxFolder + "\" is not a valid PinballX folder.");
+			} else if (!Directory.Exists(settings.PinballXFolder) || !Directory.Exists(settings.PinballXFolder + @"\Config")) {
+				errors.Add("PbxFolder", "The folder \"" + settings.PinballXFolder + "\" is not a valid PinballX folder.");
 			}
 
 			// network params

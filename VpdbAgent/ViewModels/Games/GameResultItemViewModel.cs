@@ -31,7 +31,7 @@ namespace VpdbAgent.ViewModels.Games
 			TableFile = tableFile;
 
 			SelectResult = ReactiveCommand.Create(() => {
-				//GameManager.LinkRelease(Game, release, tableFile.Reference.Id);
+				GameManager.MapGame(game, release, tableFile.Reference.Id);
 				//MessageManager.LogReleaseLinked(game, release, tableFile.Reference.Id);
 
 				closeCommand.Execute(null);

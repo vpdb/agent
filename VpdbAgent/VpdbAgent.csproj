@@ -261,6 +261,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="AkavacheSqliteLinkerOverride.cs" />
+    <Compile Include="Vpdb\VpdbManager.cs" />
     <Compile Include="Application\CrashManager.cs" />
     <Compile Include="Application\DatabaseManager.cs" />
     <Compile Include="Application\MessageManager.cs" />
