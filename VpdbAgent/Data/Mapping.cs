@@ -33,7 +33,7 @@ namespace VpdbAgent.Data
 		/// <summary>
 		/// Mapping ID. Equals <see cref="AggregatedGame.FileId"/>.
 		/// </summary>
-		[DataMember] public string Id { get { return _id; } private set { this.RaiseAndSetIfChanged(ref _id, value); } }
+		[DataMember] public string Id => Path.Combine(System.TablePath, Path.GetFileNameWithoutExtension(FileName));
 
 		/// <summary>
 		/// The entire filename with extension but without path.
@@ -79,7 +79,6 @@ namespace VpdbAgent.Data
 		public PinballXSystem System { get; set; }
 
 		// read/write fields
-		private string _id;
 		private string _fileName;
 		private string _releaseId;
 		private string _fileId;
@@ -115,7 +114,6 @@ namespace VpdbAgent.Data
 		{
 			System = game.System;
 			FileName = Path.GetFileName(game.FilePath);
-			Id = game.FileId;
 		}
 
 		/// <summary>
@@ -127,7 +125,7 @@ namespace VpdbAgent.Data
 		public Mapping(AggregatedGame game, VpdbRelease release, string fileId) : this(game)
 		{
 			ReleaseId = release.Id;
-			Id = fileId;
+			FileId = fileId;
 		}
 
 		/// <summary>
@@ -169,7 +167,6 @@ namespace VpdbAgent.Data
 		/// <param name="filePath"></param>
 		public void Rename(string filePath)
 		{
-			Id = Path.Combine(Path.GetDirectoryName(filePath), Path.GetFileNameWithoutExtension(filePath));
 			FileName = Path.GetFileName(filePath);
 		}
 
