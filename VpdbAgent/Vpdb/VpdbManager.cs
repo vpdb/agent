@@ -54,18 +54,26 @@ namespace VpdbAgent.Vpdb
 
 		public IObservable<VpdbRelease> GetRelease(string releaseId)
 		{
-			var releases = _db.GetCollection<VpdbRelease>(TableReleases);
-			var release = releases
-				.Include("Game")
-				.Include("Game.Backglass")
-				.Include("Game.Logo")
-				.Include("Versions.Files.Reference")
-				.Include("Versions.Files.PlayfieldImage")
-				.Include("Versions.Files.PlayfieldVideo")
-				.Include("Authors.User")
-				.FindById(releaseId);
-
+			var release = _releases.Include(x => x.Game).FindById(releaseId);
 			if (release != null) {
+				if (release.Game.Backglass != null) {
+					release.Game.Backglass = _files.FindById(release.Game.Backglass.Id);
+				}
+				if (release.Game.Logo != null) {
+					release.Game.Logo = _files.FindById(release.Game.Logo.Id);
+				}
+				release.Versions.ToList().ForEach(version => {
+					version.Files.ToList().ForEach(file => {
+						file.Reference = _files.FindById(file.Reference.Id);
+						file.PlayfieldImage = _files.FindById(file.PlayfieldImage.Id);
+						if (file.PlayfieldVideo != null) {
+							file.PlayfieldVideo = _files.FindById(file.PlayfieldVideo.Id);
+						}
+					});
+				});
+				release.Authors.ToList().ForEach(author => {
+					author.User = _users.FindById(author.User.Id);
+				});
 				return Observable.Return(release);
 			}
 

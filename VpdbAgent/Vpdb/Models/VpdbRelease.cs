@@ -41,9 +41,9 @@ namespace VpdbAgent.Vpdb.Models
 			public int Downloads { get; set; }
 		}
 
-		public VpdbFile GetFile(string fileId)
+		public VpdbTableFile GetFile(string fileId)
 		{
-			return (from v in Versions from f in v.Files where f.Reference.Id == fileId select f.Reference).FirstOrDefault();
+			return Versions.SelectMany(version => version.Files).FirstOrDefault(file => file.Reference.Id == fileId);
 		}
 
 		public VpdbVersion GetVersion(string fileId)

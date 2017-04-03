@@ -119,9 +119,10 @@ namespace VpdbAgent.ViewModels.Games
 			// identify button visibility
 			this.WhenAny(
 				vm => vm.Game.HasLocalFile,
+				vm => vm.Game.MappedFile,
 				vm => vm.ShowResults, 
 				vm => vm.IsExecuting,
-				(hasLocalFile, showResults, isExecuting) => hasLocalFile.Value && !showResults.Value && !isExecuting.Value
+				(hasLocalFile, mappedFile, showResults, isExecuting) => hasLocalFile.Value && mappedFile.Value == null && !showResults.Value && !isExecuting.Value
 			).ToProperty(this, vm => vm.ShowIdentifyButton, out _showIdentifyButton);
 
 			// hide button visibility

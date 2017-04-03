@@ -33,7 +33,7 @@ namespace VpdbAgent.Data
 		/// <summary>
 		/// Mapping ID. Equals <see cref="AggregatedGame.FileId"/>.
 		/// </summary>
-		[DataMember] public string Id => Path.Combine(System.TablePath, Path.GetFileNameWithoutExtension(FileName));
+		public string Id => Path.Combine(System.TablePath, Path.GetFileNameWithoutExtension(FileName));
 
 		/// <summary>
 		/// The entire filename with extension but without path.

@@ -57,7 +57,7 @@ namespace VpdbAgent.ViewModels.Games
 			// push filtered game view models into Games
 			Games = _allGames.CreateDerivedCollection(
 				gameViewModel => gameViewModel, 
-				gameViewModel => gameViewModel.IsVisible && gameViewModel.Game.Visible,
+				gameViewModel => gameViewModel.IsVisible && gameViewModel.Game.IsVisible,
 				(x, y) => string.Compare(Path.GetFileName(x.Game.FileId), Path.GetFileName(y.Game.FileId), StringComparison.OrdinalIgnoreCase)
 			);
 		}
@@ -127,7 +127,7 @@ namespace VpdbAgent.ViewModels.Games
 		/// <returns>True if visible, false otherwise</returns>
 		private bool IsGameVisible(AggregatedGame game)
 		{
-			return game.Visible;
+			return game.IsVisible;
 		}
 
 		/// <summary>

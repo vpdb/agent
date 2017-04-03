@@ -92,18 +92,18 @@ namespace VpdbAgent.Data
 		/// <summary>
 		/// Mapped file data of the release
 		/// </summary>
-		public VpdbFile MappedFile { get { return _mappedFile; } private set { this.RaiseAndSetIfChanged(ref _mappedFile, value); } }
+		public VpdbTableFile MappedFile { get { return _mappedFile; } private set { this.RaiseAndSetIfChanged(ref _mappedFile, value); } }
 
 		// convenient props
+		public string Description => XmlGame != null ? XmlGame.Description : (MappedRelease != null ? $"{MappedRelease.Game.Title} ({MappedRelease.Game.Manufacturer} {MappedRelease.Game.Year})" : null);
 		public string FileName => _fileName.Value;
-		public bool Visible => _visible.Value;
+		public bool IsVisible => _isVisible.Value;
 		public PinballXSystem System => XmlGame?.System ?? Mapping?.System;
 		
 		// status props
 		public bool HasMapping => _hasMapping.Value;
 		public bool HasLocalFile => _hasLocalFile.Value;
 		public bool HasXmlGame => _hasXmlGame.Value;
-		public bool HasRelease => _hasRelease.Value;
 		public bool HasSystem => System != null;
 
 		// watched props
@@ -113,14 +113,13 @@ namespace VpdbAgent.Data
 		private Mapping _mapping;
 		private VpdbRelease _mappedRelease;
 		private VpdbVersion _mappedVersion;
-		private VpdbFile _mappedFile;
+		private VpdbTableFile _mappedFile;
 
 		// generated props
 		private readonly ObservableAsPropertyHelper<bool> _hasMapping;
 		private readonly ObservableAsPropertyHelper<bool> _hasLocalFile;
 		private readonly ObservableAsPropertyHelper<bool> _hasXmlGame;
-		private readonly ObservableAsPropertyHelper<bool> _hasRelease;
-		private ObservableAsPropertyHelper<bool> _visible;
+		private ObservableAsPropertyHelper<bool> _isVisible;
 		private ObservableAsPropertyHelper<string> _fileName;
 
 		// deps
@@ -140,7 +139,6 @@ namespace VpdbAgent.Data
 			this.WhenAnyValue(x => x.Mapping).Select(x => x != null).ToProperty(this, g => g.HasMapping, out _hasMapping);
 			this.WhenAnyValue(x => x.FilePath).Select(x => x != null).ToProperty(this, g => g.HasLocalFile, out _hasLocalFile);
 			this.WhenAnyValue(x => x.XmlGame).Select(x => x != null).ToProperty(this, g => g.HasXmlGame, out _hasXmlGame);
-			this.WhenAnyValue(x => x.MappedFile).Select(x => x != null).ToProperty(this, g => g.HasRelease, out _hasRelease);
 
 			// FileName
 			this.WhenAnyValue(x => x.XmlGame).Subscribe(xmlGame => {
@@ -160,25 +158,25 @@ namespace VpdbAgent.Data
 				if (x.Item1 != null && x.Item2 != null) {
 					this.WhenAnyValue(g => g.XmlGame.Enabled, g => g.Mapping.IsHidden)
 						.Select(y => (y.Item1 == null || "true".Equals(y.Item1, StringComparison.InvariantCultureIgnoreCase)) && !y.Item2)
-						.ToProperty(this, game => game.Visible, out _visible);
+						.ToProperty(this, game => game.IsVisible, out _isVisible);
 
 				} else if (x.Item1 == null && x.Item2 != null) {
 					this.WhenAnyValue(g => g.Mapping.IsHidden)
 						.Select(isHidden => !isHidden)
-						.ToProperty(this, game => game.Visible, out _visible);
+						.ToProperty(this, game => game.IsVisible, out _isVisible);
 
 				} else if (x.Item1 != null && x.Item2 == null) {
 					this.WhenAnyValue(g => g.XmlGame.Enabled)
 						.Select(enabled => enabled == null || "true".Equals(enabled, StringComparison.InvariantCultureIgnoreCase))
-						.ToProperty(this, game => game.Visible, out _visible);
+						.ToProperty(this, game => game.IsVisible, out _isVisible);
 				} else {
-					Observable.Return(true).ToProperty(this, game => game.Visible, out _visible);
+					Observable.Return(true).ToProperty(this, game => game.IsVisible, out _isVisible);
 				}
 			});
 
 			// auto-update vpdb data when mapping changes
 			this.WhenAnyValue(x => x.Mapping).Subscribe(mapping => {
-				if (mapping?.FileId == null) {
+				if (mapping == null) {
 					MappedFile = null;
 					MappedVersion = null;
 					MappedRelease = null;

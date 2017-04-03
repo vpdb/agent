@@ -18,7 +18,7 @@ namespace VpdbAgent.Vpdb.Models
 		[BsonRef("files")] public VpdbFile Backglass { get; set; }
 		[BsonRef("files")] public VpdbFile Logo { get; set; }
 
-		[JsonIgnore]
+		[JsonIgnore] [BsonIgnore]
 		public string DisplayName => Manufacturer != null ? $"{Title} ({Manufacturer} {Year})" : Title;
 	}
 }
