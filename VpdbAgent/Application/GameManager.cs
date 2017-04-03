@@ -178,6 +178,12 @@ namespace VpdbAgent.Application
 				throw new InvalidOperationException("Must initialize settings before game manager.");
 			}
 
+			_vpdbManager.Initialize();
+			_menuManager.Initialize();
+			_vpdbClient.Initialize();
+			_versionManager.Initialize();
+			_initialized.OnNext(Unit.Default);
+
 			var delay = TimeSpan.FromMilliseconds(500);   // let props update first
 
 			// setup handlers for table file changes TODO implement properly (specially rename)
@@ -193,12 +199,6 @@ namespace VpdbAgent.Application
 
 			// setup handler for Matching changes
 			_menuManager.MappingsUpdated.Subscribe(d => MergeMappings(d.Item1, d.Item2));
-
-			_databaseManager.Initialize();
-			_menuManager.Initialize();
-			_vpdbClient.Initialize();
-			_versionManager.Initialize();
-			_initialized.OnNext(Unit.Default);
 
 			// validate settings and retrieve profile
 			Task.Run(async () => await _settingsManager.Validate(_settingsManager.Settings, _messageManager));
@@ -523,7 +523,6 @@ namespace VpdbAgent.Application
 						OnTableFileDeleted(from);
 					}
 				});
-
 			}
 		}
 

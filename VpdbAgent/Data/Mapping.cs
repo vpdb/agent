@@ -196,7 +196,7 @@ namespace VpdbAgent.Data
 		public override int GetHashCode()
 		{
 			// ReSharper disable once NonReadonlyMemberInGetHashCode
-			return Id.GetHashCode();
+			return FileName.GetHashCode();
 		}
 	}
 

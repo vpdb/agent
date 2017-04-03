@@ -96,6 +96,7 @@ namespace VpdbAgent.Data
 
 		// convenient props
 		public string Description => XmlGame != null ? XmlGame.Description : (MappedRelease != null ? $"{MappedRelease.Game.Title} ({MappedRelease.Game.Manufacturer} {MappedRelease.Game.Year})" : null);
+		public string FileDisplayName => FileName ?? Mapping?.FileName;
 		public string FileName => _fileName.Value;
 		public bool IsVisible => _isVisible.Value;
 		public PinballXSystem System => XmlGame?.System ?? Mapping?.System;

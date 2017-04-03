@@ -44,13 +44,17 @@ namespace VpdbAgent.ViewModels.Games
 		public bool IsExecuting => _isExecuting.Value;
 		public bool ShowIdentifyButton => _showIdentifyButton.Value;
 		public bool ShowHideButton => _showHideButton.Value;
+		public bool ShowAddToDbButton => _showAddToDbButton.Value;
 		public bool ShowRemoveFromDbButton => _showRemoveFromDbButton.Value;
+		public bool ShowDownloadMissingButton => _showDownloadMissingButton.Value;
 		public bool ShowResults { get { return _showResults; } set { this.RaiseAndSetIfChanged(ref _showResults, value); } }
 		public bool HasResults { get { return _hasResults; } set { this.RaiseAndSetIfChanged(ref _hasResults, value); } }
 
 		private readonly ObservableAsPropertyHelper<bool> _showIdentifyButton;
 		private readonly ObservableAsPropertyHelper<bool> _showHideButton;
+		private readonly ObservableAsPropertyHelper<bool> _showAddToDbButton;
 		private readonly ObservableAsPropertyHelper<bool> _showRemoveFromDbButton;
+		private readonly ObservableAsPropertyHelper<bool> _showDownloadMissingButton;
 		private readonly ObservableAsPropertyHelper<bool> _isExecuting;
 		private bool _showResults;
 		private bool _hasResults;
@@ -135,6 +139,16 @@ namespace VpdbAgent.ViewModels.Games
 				(hasLocalFile, hasMapping, hasXmlGame, showResults, isExecuting) => hasLocalFile.Value && !hasMapping.Value && !hasXmlGame.Value && !showResults.Value && !isExecuting.Value
 			).ToProperty(this, vm => vm.ShowHideButton, out _showHideButton);
 
+			// add to db button visibility
+			this.WhenAny(
+				vm => vm.Game.HasLocalFile,
+				vm => vm.Game.HasXmlGame,
+				vm => vm.Game.MappedFile,
+				vm => vm.ShowResults,
+				vm => vm.IsExecuting,
+				(hasLocalFile, hasXmlGame, mappedFile, showResults, isExecuting) => hasLocalFile.Value && !hasXmlGame.Value && mappedFile.Value != null && !showResults.Value && !isExecuting.Value
+			).ToProperty(this, vm => vm.ShowAddToDbButton, out _showAddToDbButton);
+
 			// remove from db button visibility
 			this.WhenAny(
 				vm => vm.Game.HasLocalFile,
@@ -143,6 +157,16 @@ namespace VpdbAgent.ViewModels.Games
 				vm => vm.IsExecuting,
 				(hasLocalFile, hasXmlGame, showResults, isExecuting) => !hasLocalFile.Value && hasXmlGame.Value && !showResults.Value && !isExecuting.Value
 			).ToProperty(this, vm => vm.ShowRemoveFromDbButton, out _showRemoveFromDbButton);
+
+			// download button visibility
+			this.WhenAny(
+				vm => vm.Game.HasLocalFile,
+				vm => vm.Game.MappedFile,
+				vm => vm.ShowResults,
+				vm => vm.IsExecuting,
+				(hasLocalFile, mappedFile, showResults, isExecuting) => !hasLocalFile.Value && mappedFile.Value != null && !showResults.Value && !isExecuting.Value
+			).ToProperty(this, vm => vm.ShowDownloadMissingButton, out _showDownloadMissingButton);
+
 		}
 
 		public override string ToString()

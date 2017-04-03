@@ -359,7 +359,7 @@ namespace VpdbAgent.PinballX
 		public PinballXGame AddGame(PinballXGame game, string databasePath)
 		{
 			// read current xml
-			var xmlPath = Path.Combine(databasePath, _settingsManager.Settings.XmlFile[Platform.VP] + ".xml"); // todo make platform dynamic
+			var xmlPath = Path.Combine(databasePath, _settingsManager.Settings.XmlFile[game.System.Type] + ".xml");
 
 			if (_settingsManager.Settings.ReformatXml || !_file.Exists(xmlPath)) {
 				var menu = _marshallManager.UnmarshallXml(xmlPath);

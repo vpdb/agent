@@ -83,28 +83,40 @@
 
                 <!-- filename -->
                 <Label Grid.Column="0">
-                    <TextBlock Text="{Binding Game.FileName}" Background="{Binding Path=Game.HasLocalFile, Converter={StaticResource FalseToRed}}" TextTrimming="CharacterEllipsis"/>
+                    <TextBlock Text="{Binding Game.FileDisplayName}" Background="{Binding Path=Game.HasLocalFile, Converter={StaticResource FalseToRed}}" TextTrimming="CharacterEllipsis"/>
                 </Label>
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal">
+
+                    <!-- download button -->
+                    <Button
+                        Visibility="{Binding Path=ShowDownloadMissingButton, Converter={StaticResource TrueToVisible}}" 
+                        Style="{StaticResource ButtonLine}" 
+                        Content="DOWNLOAD" HorizontalAlignment="Right" Margin="0,-3,10,-8"/>
+
+                    <!-- add to db button -->
+                    <Button
+                        Visibility="{Binding Path=ShowAddToDbButton, Converter={StaticResource TrueToVisible}}" 
+                        Style="{StaticResource ButtonLine}" 
+                        Content="ADD TO DB" HorizontalAlignment="Right" Margin="0,-3,10,-8"/>
 
                     <!-- remove from db button -->
                     <Button
                         Visibility="{Binding Path=ShowRemoveFromDbButton, Converter={StaticResource TrueToVisible}}" 
                         Style="{StaticResource ButtonLine}" 
-                        Grid.Column="1" Content="REMOVE FROM DB" HorizontalAlignment="Right" Margin="0,-3,10,-8"/>
+                        Content="REMOVE FROM DB" HorizontalAlignment="Right" Margin="0,-3,10,-8"/>
 
                     <!-- hide button -->
                     <Button Command="{Binding HideGame}" 
                         Visibility="{Binding Path=ShowHideButton, Converter={StaticResource TrueToVisible}}" 
                         Style="{StaticResource ButtonLine}" 
-                        Grid.Column="1" Content="HIDE" HorizontalAlignment="Right" Margin="0,-3,10,-8"/>
+                        Content="HIDE" HorizontalAlignment="Right" Margin="0,-3,10,-8"/>
                     
                     <!-- identify button -->
                     <Button Command="{Binding IdentifyRelease}" 
                         Visibility="{Binding Path=ShowIdentifyButton, Converter={StaticResource TrueToVisible}}" 
                         Style="{StaticResource ButtonLine}" 
-                        Grid.Column="1" Content="IDENTIFY" HorizontalAlignment="Right" Margin="0,-3,10,-8"/>
+                        Content="IDENTIFY" HorizontalAlignment="Right" Margin="0,-3,10,-8"/>
 
                 </StackPanel>
 
