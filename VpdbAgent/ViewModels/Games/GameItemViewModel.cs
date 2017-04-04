@@ -108,6 +108,7 @@ namespace VpdbAgent.ViewModels.Games
 			}, exception => _vpdbClient.HandleApiError(exception, "identifying a game by file size"));
 
 			//var canSync = this.WhenAnyValue(x => x.Game.IsSynced, x => x.Game.HasRelease, (isSynced, hasRelease) => isSynced && hasRelease);
+			//var canSync = this.WhenAnyValue(x => x.Game.Mapping.IsSynced, x => x.Game.MappedRelease, (isSynced, rls) => isSynced && rls != null);
 			//SyncToggled = ReactiveCommand.Create(() => { _gameManager.Sync(Game); }, canSync);
 
 			// handle errors

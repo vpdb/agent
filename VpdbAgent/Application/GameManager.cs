@@ -101,7 +101,7 @@ namespace VpdbAgent.Application
 		/// </remarks>
 		/// <param name="game">Game to synchronize</param>
 		/// <returns>This instance</returns>
-		IGameManager Sync(Game game);
+		IGameManager Sync(AggregatedGame game);
 
 	}
 
@@ -606,6 +606,12 @@ namespace VpdbAgent.Application
 			}, exception => _vpdbClient.HandleApiError(exception, "retrieving release details during linking"));
 		}
 
+		public IGameManager Sync(AggregatedGame game)
+		{
+			_downloadManager.DownloadRelease(game.MappedRelease.Id, game.MappedFile.Reference.Id);
+			return this;
+		}
+
 		/// <summary>
 		/// Returns current mapping or creates a new one for the given game.
 		/// </summary>
@@ -653,12 +659,6 @@ namespace VpdbAgent.Application
 		// still dragons below
 
 		public ReactiveList<Game> Games { get; } = new ReactiveList<Game>();
-
-		public IGameManager Sync(Game game)
-		{
-			_downloadManager.DownloadRelease(game.ReleaseId, game.FileId);
-			return this;
-		}
 
 		/// <summary>
 		/// Sets up what happens when realtime messages from Pusher arrive.
