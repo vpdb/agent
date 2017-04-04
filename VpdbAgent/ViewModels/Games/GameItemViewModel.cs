@@ -7,6 +7,7 @@ using ReactiveUI;
 using Splat;
 using VpdbAgent.Application;
 using VpdbAgent.Data;
+using VpdbAgent.PinballX;
 using VpdbAgent.Vpdb;
 using VpdbAgent.Vpdb.Models;
 using ILogger = NLog.ILogger;
@@ -21,11 +22,13 @@ namespace VpdbAgent.ViewModels.Games
 		private readonly ILogger _logger;
 		private readonly IVpdbClient _vpdbClient;
 		private readonly IGameManager _gameManager;
+		private readonly IMenuManager _menuManager;
 		private readonly IMessageManager _messageManager;
 
 		// commands
 		public ReactiveCommand<Unit, List<VpdbRelease>> IdentifyRelease { get; protected set; }
 		public ReactiveCommand<Unit, Unit> AddGame { get; protected set; }
+		public ReactiveCommand<Unit, Unit> RemoveGame { get; protected set; }
 		public ReactiveCommand<Unit, Unit> HideGame { get; protected set; }
 		public ReactiveCommand<Unit, Unit> CloseResults { get; }
 		public ReactiveCommand<Unit, Unit> SyncToggled { get; }
@@ -67,6 +70,7 @@ namespace VpdbAgent.ViewModels.Games
 			_logger = resolver.GetService<ILogger>();
 			_vpdbClient = resolver.GetService<IVpdbClient>();
 			_gameManager = resolver.GetService<IGameManager>();
+			_menuManager = resolver.GetService<IMenuManager>();
 			_messageManager = resolver.GetService<IMessageManager>();
 			var threadManager = resolver.GetService<IThreadManager>();
 
@@ -114,6 +118,9 @@ namespace VpdbAgent.ViewModels.Games
 
 			// add to db button
 			AddGame = ReactiveCommand.Create(() => _gameManager.AddGame(Game));
+
+			// remove from db button
+			RemoveGame = ReactiveCommand.Create(() => _menuManager.RemoveGame(Game.XmlGame));
 
 			// close button
 			CloseResults = ReactiveCommand.Create(() => { ShowResults = false; });

@@ -11,7 +11,6 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text.RegularExpressions;
 using System.Xml;
-using Splat;
 using VpdbAgent.Application;
 using VpdbAgent.Common.Filesystem;
 using VpdbAgent.Data;
@@ -50,6 +49,12 @@ namespace VpdbAgent.PinballX
 		/// <param name="game">Game to add</param>
 		/// <returns></returns>
 		PinballXGame AddGame(PinballXGame game);
+
+		/// <summary>
+		/// Removes a game from the PinballX database.
+		/// </summary>
+		/// <param name="game">Game to remove</param>
+		void RemoveGame(PinballXGame game);
 
 		/// <summary>
 		/// Instantiates a new game from a given download job.
@@ -220,6 +225,116 @@ namespace VpdbAgent.PinballX
 			return this;
 		}
 
+		public List<string> GetTableFiles(string path)
+		{
+			return _dir
+				.GetFiles(path)
+				.Where(filePath => ".vpt".Equals(Path.GetExtension(filePath), StringComparison.InvariantCultureIgnoreCase) || ".vpx".Equals(Path.GetExtension(filePath), StringComparison.InvariantCultureIgnoreCase)) 
+				.ToList();
+		}
+
+		public PinballXGame AddGame(PinballXGame game)
+		{
+			// read current xml
+			var xmlPath = Path.Combine(game.System.DatabasePath, _settingsManager.Settings.XmlFile[game.System.Type] + ".xml");
+			_logger.Info("Adding \"{0}\" to PinballX database at {1}", game.Description, xmlPath);
+
+			if (_settingsManager.Settings.ReformatXml || !_file.Exists(xmlPath)) {
+				var menu = _marshallManager.UnmarshallXml(xmlPath);
+
+				// add game
+				menu.Games.Add(game);
+
+				// save xml
+				_marshallManager.MarshallXml(menu, xmlPath);
+
+			} else {
+
+				var xml = _file.ReadAllText(xmlPath);
+				var ns = new XmlSerializerNamespaces();
+				ns.Add("", "");
+
+				using (var writer = new StringWriter())
+				{
+					// find out how the xml is indented
+					var match = Regex.Match(xml, "[\n\r]([ \t]+)<", RegexOptions.Multiline | RegexOptions.IgnoreCase);
+					var indentChars = match.Success ? match.Groups[1].ToString() : "    ";
+						
+					// find the position where to insert game
+					if (xml.IndexOf("</menu", StringComparison.OrdinalIgnoreCase) < 0) {
+						xml = "<menu>\n\n</menu>";
+					}
+
+					// serialize game as xml
+					using (var xw = XmlWriter.Create(writer, new XmlWriterSettings { IndentChars = indentChars, Indent = true })) {
+
+						var serializer = new XmlSerializer(typeof(PinballXGame));
+						serializer.Serialize(xw, game, ns);
+						var xmlGame = string.Join("\n", writer
+							.ToString()
+							.Split('\n')
+							.Select(line => line.StartsWith("<?xml") ? "" : line)
+							.Select(line => indentChars + line)
+							.ToList()) + "\n";
+
+						var pos = xml.LastIndexOf("</menu", StringComparison.OrdinalIgnoreCase);
+
+						// insert game
+						xml = xml.Substring(0, pos) + xmlGame + xml.Substring(pos);
+
+						// write back to disk
+						_file.WriteAllText(xmlPath, xml);
+
+						_logger.Info("Appended game \"{0}\" to {1}", game.Description, xmlPath);
+					}
+				}
+			}
+			return game;
+		}
+
+		public void RemoveGame(PinballXGame game)
+		{
+			// read current xml
+			var xmlPath = Path.Combine(game.System.DatabasePath, _settingsManager.Settings.XmlFile[game.System.Type] + ".xml");
+			_logger.Info("Removing \"{0}\" from PinballX database at {1}", game.Description, xmlPath);
+
+			if (_settingsManager.Settings.ReformatXml) {
+				var menu = _marshallManager.UnmarshallXml(xmlPath);
+
+				var gameToRemove = menu.Games.FirstOrDefault(g => g.Description == game.Description && g.FileName == game.FileName);
+				if (gameToRemove == null) {
+					_logger.Warn("Could not find game in existing XML, aborting.");
+					return;
+				}
+
+				// remove game
+				menu.Games.Remove(gameToRemove);
+
+				// save xml
+				_marshallManager.MarshallXml(menu, xmlPath);
+
+			} else {
+
+				// match with regex
+				var xml = _file.ReadAllText(xmlPath);
+				var gameBlock = new Regex("<game\\s[^>]*name=\"" + Regex.Escape(game.FileName) + "\".*?<\\/game> *[\\n\\r]?", RegexOptions.IgnoreCase | RegexOptions.Singleline);
+				_logger.Info("Trying to match {0}", gameBlock);
+				var match = gameBlock.Match(xml);
+				var offset = 0;
+				while (match.Success)  {
+					if (match.Groups[0].Value.Contains("<description>" + game.Description + "</description>")) {
+						_logger.Info("Got match: {0}", match.Groups[0]);
+						xml = xml.Substring(0, match.Index - offset) + xml.Substring(match.Index + match.Length - offset);
+						offset += match.Length;
+					}
+					match = match.NextMatch();
+				}
+
+				// write back to disk
+				_file.WriteAllText(xmlPath, xml);
+			}
+		}
+
 		/// <summary>
 		/// Updates all systems.
 		/// 
@@ -320,10 +435,9 @@ namespace VpdbAgent.PinballX
 				system.GamesUpdated.Subscribe(x => _gamesUpdated.OnNext(new Tuple<PinballXSystem, string, List<PinballXGame>>(system, x.Item1, x.Item2))),
 				system.MappingsUpdated.Subscribe(mappings => _mappingsUpdated.OnNext(new Tuple<PinballXSystem, List<Mapping>>(system, mappings)))
 			};
-
 			_systemDisposables.Add(system, systemDisponsable);
 		}
-
+		
 		/// <summary>
 		/// Unsubscribes from a system and announce to <see cref="GamesUpdated"/>.
 		/// </summary>
@@ -340,76 +454,35 @@ namespace VpdbAgent.PinballX
 			_systemDisposables.Remove(system);
 		}
 
-		public List<string> GetTableFiles(string path)
+		/// <summary>
+		/// Parses PinballX.ini and reads all systems from it.
+		/// </summary>
+		/// <returns>Parsed systems</returns>
+		private List<PinballXSystem> ParseSystems(string iniPath)
 		{
-			return _dir
-				.GetFiles(path)
-				.Where(filePath => ".vpt".Equals(Path.GetExtension(filePath), StringComparison.InvariantCultureIgnoreCase) || ".vpx".Equals(Path.GetExtension(filePath), StringComparison.InvariantCultureIgnoreCase)) 
-				.ToList();
-		}
+			var systems = new List<PinballXSystem>();
+			// only notify after this block
 
-		public PinballXGame AddGame(PinballXGame game)
-		{
-
-
-			// read current xml
-			var xmlPath = Path.Combine(game.System.DatabasePath, _settingsManager.Settings.XmlFile[game.System.Type] + ".xml");
-			_logger.Info("Adding {0} to PinballX database at {1}...", game.Description, xmlPath);
-
-			if (_settingsManager.Settings.ReformatXml || !_file.Exists(xmlPath)) {
-				var menu = _marshallManager.UnmarshallXml(xmlPath);
-
-				// add game
-				menu.Games.Add(game);
-
-				// save xml
-				_marshallManager.MarshallXml(menu, xmlPath);
-
-			} else {
-
-				var xml = _file.ReadAllText(xmlPath);
-				var ns = new XmlSerializerNamespaces();
-				ns.Add("", "");
-
-				using (var writer = new StringWriter())
-				{
-					// find out how the xml is indented
-					var match = Regex.Match(xml, "[\n\r]([ \t]+)<", RegexOptions.Multiline | RegexOptions.IgnoreCase);
-					var indentChars = match.Success ? match.Groups[1].ToString() : "    ";
-						
-					// find the position where to insert game
-					if (xml.IndexOf("</menu", StringComparison.OrdinalIgnoreCase) < 0) {
-						xml = "<menu>\n\n</menu>";
-					}
-
-					// serialize game as xml
-					using (var xw = XmlWriter.Create(writer, new XmlWriterSettings { IndentChars = indentChars, Indent = true })) {
-
-						var serializer = new XmlSerializer(typeof(PinballXGame));
-						serializer.Serialize(xw, game, ns);
-						var xmlGame = string.Join("\n", writer
-							.ToString()
-							.Split('\n')
-							.Select(line => line.StartsWith("<?xml") ? "" : line)
-							.Select(line => indentChars + line)
-							.ToList()) + "\n";
-
-						var pos = xml.LastIndexOf("</menu", StringComparison.OrdinalIgnoreCase);
-
-						// insert game
-						xml = xml.Substring(0, pos) + xmlGame + xml.Substring(pos);
-
-						// write back to disk
-						_file.WriteAllText(xmlPath, xml);
-
-						_logger.Info("Appended game \"{0}\" to {1}", game.Description, xmlPath);
+			var data = _marshallManager.ParseIni(iniPath);
+			if (data != null) {
+				if (data["VisualPinball"] != null) {
+					systems.Add(new PinballXSystem(Platform.VP, data["VisualPinball"]));
+				}
+				if (data["FuturePinball"] != null) {
+					systems.Add(new PinballXSystem(Platform.FP, data["FuturePinball"]));
+				}
+				
+				for (var i = 0; i < 20; i++) {
+					var systemName = "System_" + i;
+					if (data[systemName] != null && data[systemName].Count > 0) {
+						systems.Add(new PinballXSystem(data[systemName]));
 					}
 				}
 			}
-			return game;
+			_logger.Info("Parsed {0} systems from {1}.", systems.Count, iniPath);
+
+			return systems;
 		}
-
-
 
 
 
@@ -458,36 +531,6 @@ namespace VpdbAgent.PinballX
 				_logger.Info("Replaced name \"{0}\" with \"{1}\" in {2}.", oldFileName, newFilename, xmlPath);
 			}*/
 			return this;
-		}
-
-		/// <summary>
-		/// Parses PinballX.ini and reads all systems from it.
-		/// </summary>
-		/// <returns>Parsed systems</returns>
-		private List<PinballXSystem> ParseSystems(string iniPath)
-		{
-			var systems = new List<PinballXSystem>();
-			// only notify after this block
-
-			var data = _marshallManager.ParseIni(iniPath);
-			if (data != null) {
-				if (data["VisualPinball"] != null) {
-					systems.Add(new PinballXSystem(Platform.VP, data["VisualPinball"]));
-				}
-				if (data["FuturePinball"] != null) {
-					systems.Add(new PinballXSystem(Platform.FP, data["FuturePinball"]));
-				}
-				
-				for (var i = 0; i < 20; i++) {
-					var systemName = "System_" + i;
-					if (data[systemName] != null && data[systemName].Count > 0) {
-						systems.Add(new PinballXSystem(data[systemName]));
-					}
-				}
-			}
-			_logger.Info("Parsed {0} systems from {1}.", systems.Count, iniPath);
-
-			return systems;
 		}
 	}
 }
