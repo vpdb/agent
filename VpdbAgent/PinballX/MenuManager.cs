@@ -48,9 +48,8 @@ namespace VpdbAgent.PinballX
 		/// Adds a new game to the PinballX database.
 		/// </summary>
 		/// <param name="game">Game to add</param>
-		/// <param name="databasePath">Full path to the database folder</param>
 		/// <returns></returns>
-		PinballXGame AddGame(PinballXGame game, string databasePath);
+		PinballXGame AddGame(PinballXGame game);
 
 		/// <summary>
 		/// Instantiates a new game from a given download job.
@@ -349,17 +348,13 @@ namespace VpdbAgent.PinballX
 				.ToList();
 		}
 
-
-
-
-		// --------------------------------------------------------------------------------------------------------------
-		// --------------------------------------------------------------------------------------------------------------
-		// still dragons below
-
-		public PinballXGame AddGame(PinballXGame game, string databasePath)
+		public PinballXGame AddGame(PinballXGame game)
 		{
+
+
 			// read current xml
-			var xmlPath = Path.Combine(databasePath, _settingsManager.Settings.XmlFile[game.System.Type] + ".xml");
+			var xmlPath = Path.Combine(game.System.DatabasePath, _settingsManager.Settings.XmlFile[game.System.Type] + ".xml");
+			_logger.Info("Adding {0} to PinballX database at {1}...", game.Description, xmlPath);
 
 			if (_settingsManager.Settings.ReformatXml || !_file.Exists(xmlPath)) {
 				var menu = _marshallManager.UnmarshallXml(xmlPath);
@@ -413,6 +408,14 @@ namespace VpdbAgent.PinballX
 			}
 			return game;
 		}
+
+
+
+
+
+		// --------------------------------------------------------------------------------------------------------------
+		// --------------------------------------------------------------------------------------------------------------
+		// still dragons below
 
 		public PinballXGame NewGame(Job job)
 		{

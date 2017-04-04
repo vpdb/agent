@@ -95,7 +95,7 @@
                         Content="DOWNLOAD" HorizontalAlignment="Right" Margin="0,-3,10,-8"/>
 
                     <!-- add to db button -->
-                    <Button
+                    <Button Command="{Binding AddGame}"
                         Visibility="{Binding Path=ShowAddToDbButton, Converter={StaticResource TrueToVisible}}" 
                         Style="{StaticResource ButtonLine}" 
                         Content="ADD TO DB" HorizontalAlignment="Right" Margin="0,-3,10,-8"/>

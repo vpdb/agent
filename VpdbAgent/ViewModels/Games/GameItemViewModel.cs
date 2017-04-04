@@ -25,6 +25,7 @@ namespace VpdbAgent.ViewModels.Games
 
 		// commands
 		public ReactiveCommand<Unit, List<VpdbRelease>> IdentifyRelease { get; protected set; }
+		public ReactiveCommand<Unit, Unit> AddGame { get; protected set; }
 		public ReactiveCommand<Unit, Unit> HideGame { get; protected set; }
 		public ReactiveCommand<Unit, Unit> CloseResults { get; }
 		public ReactiveCommand<Unit, Unit> SyncToggled { get; }
@@ -110,6 +111,9 @@ namespace VpdbAgent.ViewModels.Games
 
 			// result switch
 			IdentifyRelease.Select(r => r.Count > 0).Subscribe(hasResults => { HasResults = hasResults; });
+
+			// add to db button
+			AddGame = ReactiveCommand.Create(() => _gameManager.AddGame(Game));
 
 			// close button
 			CloseResults = ReactiveCommand.Create(() => { ShowResults = false; });

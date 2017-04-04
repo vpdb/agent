@@ -7,6 +7,7 @@ using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading.Tasks;
+using System.Windows.Forms.VisualStyles;
 using JetBrains.Annotations;
 using NLog;
 using ReactiveUI;
@@ -82,6 +83,17 @@ namespace VpdbAgent.Application
 		void MapGame(AggregatedGame game, VpdbRelease release, string fileId);
 
 		/// <summary>
+		/// Adds a game to the PinballX XML database.
+		/// </summary>
+		/// 
+		/// <remarks>
+		/// The game must have a valid Mapping.
+		/// </remarks>
+		/// 
+		/// <param name="game">Game to add</param>
+		void AddGame(AggregatedGame game);
+
+		/// <summary>
 		/// Explicitly enables syncing of a game.
 		/// </summary>
 		/// <remarks>
@@ -90,6 +102,7 @@ namespace VpdbAgent.Application
 		/// <param name="game">Game to synchronize</param>
 		/// <returns>This instance</returns>
 		IGameManager Sync(Game game);
+
 	}
 
 	/// <summary>
@@ -549,6 +562,26 @@ namespace VpdbAgent.Application
 			}
 		}
 
+		
+		public void AddGame(AggregatedGame game)
+		{
+			if (game.HasXmlGame) {
+				throw new InvalidOperationException("Game already in XML database.");
+			}
+			if (game.MappedRelease == null || game.MappedFile == null) {
+				throw new InvalidOperationException("Cannot add game without release mapping.");
+			}
+			var xmlGame = new PinballXGame {
+				FileName = Path.GetFileNameWithoutExtension(game.FileDisplayName),
+				Description = $"{game.MappedRelease.Game.Title} ({game.MappedRelease.Game.Manufacturer} {game.MappedRelease.Game.Year})",
+				Manufacturer = game.MappedRelease.Game.Manufacturer,
+				Year = game.MappedRelease.Game.Year.ToString(),
+				System = game.System
+			};
+
+			_menuManager.AddGame(xmlGame);
+		}
+
 		public void HideGame(AggregatedGame game)
 		{
 			_logger.Info("Hiding game {0}", game.FileId);
@@ -887,7 +920,7 @@ namespace VpdbAgent.Application
 			_gamesToLink.Add(new Tuple<string, string, string>(newGame.Description, job.Release.Id, job.File.Id));
 
 			// save new game to Vpdb.xml (and trigger rescan)
-			_menuManager.AddGame(newGame, platform.DatabasePath);
+			//_menuManager.AddGame(newGame, platform.DatabasePath);
 		}
 
 		/// <summary>
