@@ -83,7 +83,7 @@ namespace VpdbAgent.PinballX
 		/// Removes a game from the PinballX database.
 		/// </summary>
 		/// <param name="game">Game to remove</param>
-		IMenuManager RemoveGame(PinballXGame game);
+		void RemoveGame(PinballXGame game);
 
 		/// <summary>
 		/// Produces a value every time any data in any database file changes,
@@ -293,7 +293,7 @@ namespace VpdbAgent.PinballX
 			return game;
 		}
 
-		public IMenuManager RemoveGame(PinballXGame game)
+		public void RemoveGame(PinballXGame game)
 		{
 			// read current xml
 			var xmlPath = Path.Combine(game.System.DatabasePath, _settingsManager.Settings.XmlFile[game.System.Type] + ".xml");
@@ -305,7 +305,7 @@ namespace VpdbAgent.PinballX
 				var gameToRemove = menu.Games.FirstOrDefault(g => g.Description == game.Description && g.FileName == game.FileName);
 				if (gameToRemove == null) {
 					_logger.Warn("Could not find game in existing XML, aborting.");
-					return this;
+					return;
 				}
 
 				// remove game
@@ -334,7 +334,6 @@ namespace VpdbAgent.PinballX
 				// write back to disk
 				_file.WriteAllText(xmlPath, xml);
 			}
-			return this;
 		}
 
 		public IMenuManager RenameGame(string oldFileName, AggregatedGame game)

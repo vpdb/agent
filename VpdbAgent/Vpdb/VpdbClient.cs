@@ -79,8 +79,8 @@ namespace VpdbAgent.Vpdb
 		/// <summary>
 		/// Logs a message and sends it to the crash logger if necessary
 		/// </summary>
-		/// <param name="e"></param>
-		/// <param name="origin"></param>
+		/// <param name="e">Exception</param>
+		/// <param name="origin">Message, which will prefixed with "Error ", so put someting line "retrieving data"</param>
 		void HandleApiError(Exception e, string origin);
 	}
 

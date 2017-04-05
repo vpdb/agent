@@ -193,7 +193,7 @@ namespace VpdbAgent
 			deps.RegisterLazySingleton(() => new DownloadManager(
 				deps.GetService<IPlatformManager>(),
 				deps.GetService<IJobManager>(),
-				deps.GetService<IVpdbClient>(),
+				deps.GetService<IVpdbManager>(),
 				deps.GetService<ISettingsManager>(),
 				deps.GetService<IMessageManager>(),
 				deps.GetService<IDatabaseManager>(),

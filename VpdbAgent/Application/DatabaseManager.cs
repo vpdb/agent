@@ -82,6 +82,9 @@ namespace VpdbAgent.Application
 		/// <returns>File or null if not found</returns>
 		[CanBeNull] VpdbFile GetFile(string fileId);
 
+		[CanBeNull] VpdbGame GetGame(string gameId);
+		void SaveGame(VpdbGame game);
+
 		/// <summary>
 		/// Updates the database with updated release data for a given release
 		/// or adds it if not available.
@@ -303,6 +306,25 @@ namespace VpdbAgent.Application
 		public VpdbFile GetFile(string fileId)
 		{
 			return _files.FindById(fileId);
+		}
+
+		public VpdbGame GetGame(string gameId)
+		{
+			return _games
+				.Include(g => g.Backglass)
+				.Include(g => g.Logo)
+				.FindById(gameId);
+		}
+
+		public void SaveGame(VpdbGame game)
+		{
+			_games.Upsert(game);
+			if (game.Backglass != null) {
+				_files.Upsert(game.Backglass);
+			}
+			if (game.Logo != null) {
+				_files.Upsert(game.Logo);
+			}
 		}
 
 		public void AddOrUpdateRelease(VpdbRelease release)

@@ -6,6 +6,7 @@ using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using JetBrains.Annotations;
 using NLog;
 using ReactiveUI;
 using VpdbAgent.Application;
@@ -27,11 +28,13 @@ namespace VpdbAgent.Vpdb.Download
 		/// Downloads or upgrades a release, including table image, ROMs and other 
 		/// media, based on the user's settings.
 		/// </summary>
+		/// 
 		/// <remarks>
 		/// File selection is based on the user's preferences. This is typically
 		/// called when the user stars a release, where we have no more data
 		/// than the release ID. 
 		/// </remarks>
+		/// 
 		/// <param name="releaseId">ID of the release</param>
 		/// <param name="currentFileId">ID of current/previous file of the release or null if new release</param>
 		/// <returns>This instance</returns>
@@ -50,16 +53,18 @@ namespace VpdbAgent.Vpdb.Download
 		/// For existing releases, provide the file of the existing release. This 
 		/// makes it possible to match the "Same" rule.
 		/// </summary>
+		/// 
 		/// <remarks>
 		/// Note that when <see cref="currentFileId"/> is provided, the matched
 		/// file must be of a more recent version. Otherwise, the weight
 		/// resulting in the flavor overweights the recentness of the version,
 		/// i.e. a better matching flavor of an older version is preferred.
 		/// </remarks>
+		/// 
 		/// <param name="release">Release containing all versions</param>
 		/// <param name="currentFileId">Current file</param>
 		/// <returns>The most recent file that matches user's flavor prefs, or null if not found</returns>
-		VpdbTableFile FindLatestFile(VpdbRelease release, string currentFileId = null);
+		[CanBeNull] VpdbTableFile FindLatestFile(VpdbRelease release, string currentFileId = null);
 	}
 
 	public class DownloadManager : IDownloadManager
@@ -67,7 +72,7 @@ namespace VpdbAgent.Vpdb.Download
 		// dependencies
 		private readonly IPlatformManager _platformManager;
 		private readonly IJobManager _jobManager;
-		private readonly IVpdbClient _vpdbClient;
+		private readonly IVpdbManager _vpdbManager;
 		private readonly ISettingsManager _settingsManager;
 		private readonly IMessageManager _messageManager;
 		private readonly IDatabaseManager _databaseManager;
@@ -80,15 +85,15 @@ namespace VpdbAgent.Vpdb.Download
 		// members
 		private readonly Subject<Job> _whenReleaseDownloaded = new Subject<Job>();
 		private readonly List<IFlavorMatcher> _flavorMatchers = new List<IFlavorMatcher>();
-		private readonly Dictionary<string, bool> _currentlyDownloading = new Dictionary<string, bool>();
+		private readonly HashSet<string> _currentlyDownloading = new HashSet<string>();
 
-		public DownloadManager(IPlatformManager platformManager, IJobManager jobManager, IVpdbClient vpdbClient, 
+		public DownloadManager(IPlatformManager platformManager, IJobManager jobManager, IVpdbManager vpdbManager, 
 			ISettingsManager settingsManager, IMessageManager messageManager, IDatabaseManager databaseManager,
 			ILogger logger, CrashManager crashManager)
 		{
 			_platformManager = platformManager;
 			_jobManager = jobManager;
-			_vpdbClient = vpdbClient;
+			_vpdbManager = vpdbManager;
 			_settingsManager = settingsManager;
 			_messageManager = messageManager;
 			_databaseManager = databaseManager;
@@ -116,17 +121,14 @@ namespace VpdbAgent.Vpdb.Download
 		public IDownloadManager DownloadRelease(string releaseId, string currentFileId = null)
 		{
 			// ignore if already launched
-			if (_currentlyDownloading.ContainsKey(releaseId)) {
+			if (_currentlyDownloading.Contains(releaseId)) {
 				return this;
 			}
-			_currentlyDownloading.Add(releaseId, true);
+			_currentlyDownloading.Add(releaseId);
 
 			// retrieve release details
 			_logger.Info("Retrieving details for release {0} before downloading..", releaseId);
-			_vpdbClient.Api.GetFullRelease(releaseId).ObserveOn(Scheduler.Default).Subscribe(release => {
-
-				// add release data to db
-				_databaseManager.AddOrUpdateRelease(release);
+			_vpdbManager.GetRelease(releaseId).ObserveOn(Scheduler.Default).Subscribe(release => {
 
 				// match file based on settings
 				var file = FindLatestFile(release, currentFileId);
@@ -141,7 +143,7 @@ namespace VpdbAgent.Vpdb.Download
 				// download
 				DownloadRelease(release, file);
 
-			}, exception => _vpdbClient.HandleApiError(exception, "retrieving release details during download"));
+			}, exception => _vpdbManager.HandleApiError(exception, "retrieving release details during download"));
 
 			return this;
 		}
@@ -191,7 +193,7 @@ namespace VpdbAgent.Vpdb.Download
 		private void DownloadRelease(VpdbRelease release, VpdbTableFile tableFile)
 		{
 			// also fetch game data for media & co
-			_vpdbClient.Api.GetGame(release.Game.Id).Subscribe(game =>  {
+			_vpdbManager.GetGame(release.Game.Id, true).Subscribe(game => {
 
 				var version = _databaseManager.GetVersion(release.Id, tableFile.Reference.Id);
 				_logger.Info($"Downloading {game.DisplayName} - {release.Name} v{version?.Name} ({tableFile.Reference.Id})");
@@ -228,7 +230,7 @@ namespace VpdbAgent.Vpdb.Download
 
 				_currentlyDownloading.Remove(release.Id);
 
-			}, exception => _vpdbClient.HandleApiError(exception, "retrieving game details during download"));
+			}, exception => _vpdbManager.HandleApiError(exception, "retrieving game details during download"));
 		}
 
 		/// <summary>
