@@ -191,7 +191,7 @@ namespace VpdbAgent.Application
 				throw new InvalidOperationException("Must initialize settings before game manager.");
 			}
 
-			_vpdbManager.Initialize();
+			_databaseManager.Initialize();
 			_menuManager.Initialize();
 			_vpdbClient.Initialize();
 			_versionManager.Initialize();

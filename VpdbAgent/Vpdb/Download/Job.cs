@@ -56,6 +56,7 @@ namespace VpdbAgent.Vpdb.Download
 		public VpdbVersion Version => _version.Value;
 		public VpdbTableFile TableFile => _tableFile.Value;
 		public VpdbFile File => _file.Value;
+
 		private ObservableAsPropertyHelper<VpdbRelease> _release;
 		private ObservableAsPropertyHelper<VpdbVersion> _version;
 		private ObservableAsPropertyHelper<VpdbTableFile> _tableFile;

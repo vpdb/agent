@@ -174,8 +174,7 @@ namespace VpdbAgent
 
 			deps.RegisterLazySingleton(() => new VpdbManager(
 				deps.GetService<IVpdbClient>(),
-				deps.GetService<ISettingsManager>(),
-				deps.GetService<IThreadManager>(),
+				deps.GetService<IDatabaseManager>(),
 				deps.GetService<NLog.ILogger>()
 			), typeof(IVpdbManager));
 			

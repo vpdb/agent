@@ -7,6 +7,7 @@ using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using JetBrains.Annotations;
+using LiteDB;
 using Newtonsoft.Json;
 using NLog;
 using ReactiveUI;
@@ -15,6 +16,7 @@ using VpdbAgent.Vpdb.Download;
 using VpdbAgent.Vpdb.Models;
 using VpdbAgent.Vpdb.Network;
 using File = System.IO.File;
+using JsonSerializer = Newtonsoft.Json.JsonSerializer;
 
 namespace VpdbAgent.Application
 {
@@ -26,7 +28,7 @@ namespace VpdbAgent.Application
 	/// protocol-buffers.
 	/// </summary>
 	/// <see cref="GlobalDatabase"/>
-	public interface IDatabaseManager
+	public interface IDatabaseManager : IDisposable
 	{
 		IObservable<bool> Initialized { get; }
 
@@ -37,17 +39,17 @@ namespace VpdbAgent.Application
 		IDatabaseManager Initialize();
 
 		/// <summary>
-		/// Saves data back to disk
-		/// </summary>
-		/// <returns></returns>
-		IDatabaseManager Save();
-
-		/// <summary>
 		/// Returns the entire release object for a given release ID.
 		/// </summary>
 		/// <param name="releaseId">Release ID</param>
 		/// <returns>Release or null if release not in database</returns>
-		VpdbRelease GetRelease(string releaseId);
+		[CanBeNull] VpdbRelease GetRelease(string releaseId);
+
+		/// <summary>
+		/// Updates or creates a given release.
+		/// </summary>
+		/// <param name="release">Release to save</param>
+		void SaveRelease(VpdbRelease release);
 
 		/// <summary>
 		/// Returns the version object for a given file of a given release.
@@ -129,6 +131,8 @@ namespace VpdbAgent.Application
 		/// Removes all messages from the database.
 		/// </summary>
 		void ClearLog();
+
+		[Obsolete] void Save();
 	}
 
 	[ExcludeFromCodeCoverage]
@@ -139,13 +143,29 @@ namespace VpdbAgent.Application
 		private readonly CrashManager _crashManager;
 		private readonly ILogger _logger;
 
+		// DB stuff
+		private LiteDatabase _db;
+		private readonly BsonMapper _mapper = new BsonMapper();
+
+		// table names
+		const string TableGames = "games";
+		const string TableReleases = "releases";
+		const string TableFiles = "files";
+		const string TableUsers = "users";
+
+		// collections
+		private LiteCollection<VpdbGame> _games;
+		private LiteCollection<VpdbRelease> _releases;
+		private LiteCollection<VpdbFile> _files;
+		private LiteCollection<VpdbUser> _users;
+
 		// props
 		public IObservable<bool> Initialized => _initialized;
-		private GlobalDatabase Database { get; } = new GlobalDatabase();
-
 		private string _dbPath;
 		private readonly BehaviorSubject<bool> _initialized = new BehaviorSubject<bool>(false);
-		private readonly Subject<Unit> _save = new Subject<Unit>();
+
+		[Obsolete] private GlobalDatabase Database { get; } = new GlobalDatabase();
+		[Obsolete] private readonly Subject<Unit> _save = new Subject<Unit>();
 
 		public DatabaseManager(ISettingsManager settingsManager, CrashManager crashManager, ILogger logger)
 		{
@@ -162,22 +182,69 @@ namespace VpdbAgent.Application
 
 		public IDatabaseManager Initialize()
 		{
-			_dbPath = Path.Combine(_settingsManager.Settings.PinballXFolder, @"Databases\vpdb.json");
-			Database.Update(UnmarshallDatabase());
-			_logger.Info("Global database with {0} release(s) loaded.", Database.Releases.Count);
-			_initialized.OnNext(true);
-			return this;
-		}
+			_dbPath = Path.Combine(_settingsManager.Settings.PinballXFolder, @"Databases\vpdb-agent.db");
+			_db = new LiteDatabase(_dbPath, _mapper);
 
-		public IDatabaseManager Save()
-		{
-			_save.OnNext(Unit.Default);
+			_games = _db.GetCollection<VpdbGame>(TableGames);
+			_releases = _db.GetCollection<VpdbRelease>(TableReleases);
+			_files = _db.GetCollection<VpdbFile>(TableFiles);
+			_users = _db.GetCollection<VpdbUser>(TableUsers);
+
+			_logger.Info("LiteDB initialized at {0}.", _dbPath);
+			_initialized.OnNext(true);
 			return this;
 		}
 
 		public VpdbRelease GetRelease(string releaseId)
 		{
-			return releaseId == null || !Database.Releases.ContainsKey(releaseId) ? null : Database.Releases[releaseId];
+			var release = _releases.Include(x => x.Game).FindById(releaseId);
+			if (release == null) {
+				return null;
+			}
+
+			if (release.Game.Backglass != null) {
+				release.Game.Backglass = _files.FindById(release.Game.Backglass.Id);
+			}
+			if (release.Game.Logo != null) {
+				release.Game.Logo = _files.FindById(release.Game.Logo.Id);
+			}
+			release.Versions.ToList().ForEach(version => {
+				version.Files.ToList().ForEach(file => {
+					file.Reference = _files.FindById(file.Reference.Id);
+					file.PlayfieldImage = _files.FindById(file.PlayfieldImage.Id);
+					if (file.PlayfieldVideo != null) {
+						file.PlayfieldVideo = _files.FindById(file.PlayfieldVideo.Id);
+					}
+				});
+			});
+			release.Authors.ToList().ForEach(author => {
+				author.User = _users.FindById(author.User.Id);
+			});
+			return release;
+		}
+
+		public void SaveRelease(VpdbRelease release)
+		{
+			_games.Upsert(release.Game);
+			if (release.Game.Backglass != null) {
+				_files.Upsert(release.Game.Backglass);
+			}
+			if (release.Game.Logo != null) {
+				_files.Upsert(release.Game.Logo);
+			}
+			release.Versions.ToList().ForEach(version => {
+				version.Files.ToList().ForEach(file => {
+					_files.Upsert(file.Reference);
+					_files.Upsert(file.PlayfieldImage);
+					if (file.PlayfieldVideo != null) {
+						_files.Upsert(file.PlayfieldVideo);
+					}
+				});
+			});
+			release.Authors.ToList().ForEach(author => {
+				_users.Upsert(author.User);
+			});
+			_releases.Upsert(release);
 		}
 
 		public VpdbVersion GetVersion(string releaseId, string fileId)
@@ -271,6 +338,10 @@ namespace VpdbAgent.Application
 			});
 		}
 
+		public void Save()
+		{
+		}
+
 		/// <summary>
 		/// Reads the internal global .json file of a given platform and 
 		/// returns the unmarshalled database object.
@@ -336,5 +407,10 @@ namespace VpdbAgent.Application
 			ContractResolver = new SnakeCasePropertyNamesContractResolver(),
 			Formatting = Formatting.Indented
 		};
+
+		public void Dispose()
+		{
+			_db.Dispose();
+		}
 	}
 }

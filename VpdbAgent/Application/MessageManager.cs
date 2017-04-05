@@ -123,7 +123,7 @@ namespace VpdbAgent.Application
 				.Where(msg => !msg.WasRead)
 				.ToList()
 				.ForEach(msg => msg.WasRead = true);
-			_databaseManager.Save();
+			//_databaseManager.Save();
 		}
 
 		public void ClearAll()
