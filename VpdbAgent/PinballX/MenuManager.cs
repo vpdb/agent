@@ -35,6 +35,11 @@ namespace VpdbAgent.PinballX
 	public interface IMenuManager
 	{
 		/// <summary>
+		/// Systems parsed from <c>PinballX.ini</c>.
+		/// </summary>
+		ReactiveList<PinballXSystem> Systems { get; }
+
+		/// <summary>
 		/// Starts watching file system for configuration changes and triggers an
 		/// initial update.
 		/// </summary>
@@ -48,12 +53,6 @@ namespace VpdbAgent.PinballX
 		/// <param name="game">Game to add</param>
 		/// <returns></returns>
 		PinballXGame AddGame(PinballXGame game);
-
-		/// <summary>
-		/// Removes a game from the PinballX database.
-		/// </summary>
-		/// <param name="game">Game to remove</param>
-		void RemoveGame(PinballXGame game);
 
 		/// <summary>
 		/// Instantiates a new game from a given download job.
@@ -79,9 +78,10 @@ namespace VpdbAgent.PinballX
 		IMenuManager RenameGame(string oldFileName, AggregatedGame game);
 
 		/// <summary>
-		/// Systems parsed from <c>PinballX.ini</c>.
+		/// Removes a game from the PinballX database.
 		/// </summary>
-		ReactiveList<PinballXSystem> Systems { get; }
+		/// <param name="game">Game to remove</param>
+		IMenuManager RemoveGame(PinballXGame game);
 
 		/// <summary>
 		/// Produces a value every time any data in any database file changes,
@@ -292,7 +292,7 @@ namespace VpdbAgent.PinballX
 			return game;
 		}
 
-		public void RemoveGame(PinballXGame game)
+		public IMenuManager RemoveGame(PinballXGame game)
 		{
 			// read current xml
 			var xmlPath = Path.Combine(game.System.DatabasePath, _settingsManager.Settings.XmlFile[game.System.Type] + ".xml");
@@ -304,7 +304,7 @@ namespace VpdbAgent.PinballX
 				var gameToRemove = menu.Games.FirstOrDefault(g => g.Description == game.Description && g.FileName == game.FileName);
 				if (gameToRemove == null) {
 					_logger.Warn("Could not find game in existing XML, aborting.");
-					return;
+					return this;
 				}
 
 				// remove game
@@ -333,6 +333,7 @@ namespace VpdbAgent.PinballX
 				// write back to disk
 				_file.WriteAllText(xmlPath, xml);
 			}
+			return this;
 		}
 
 		public IMenuManager RenameGame(string oldFileName, AggregatedGame game)
