@@ -14,7 +14,6 @@ using System.Xml;
 using VpdbAgent.Application;
 using VpdbAgent.Common.Filesystem;
 using VpdbAgent.Data;
-using VpdbAgent.Models;
 using VpdbAgent.Vpdb.Download;
 using ILogger = NLog.ILogger;
 
@@ -65,7 +64,8 @@ namespace VpdbAgent.PinballX
 		PinballXGame NewGame(Job job);
 
 		/// <summary>
-		/// Updates a game. If the game is not found, an exception is thrown.
+		/// Renames the game (i.e. <see cref="AggregatedGame.FileName"/> / Name). 
+		/// If the game is not found, an exception is thrown.
 		/// </summary>
 		/// 
 		/// <remarks>
@@ -76,7 +76,7 @@ namespace VpdbAgent.PinballX
 		/// <param name="oldFileName">File ID ("name") of the game to update</param>
 		/// <param name="game">Game to update</param>
 		/// <returns>This instance</returns>
-		IMenuManager UpdateGame(string oldFileName, Game game);
+		IMenuManager RenameGame(string oldFileName, AggregatedGame game);
 
 		/// <summary>
 		/// Systems parsed from <c>PinballX.ini</c>.
@@ -335,6 +335,48 @@ namespace VpdbAgent.PinballX
 			}
 		}
 
+		public IMenuManager RenameGame(string oldFileName, AggregatedGame game)
+		{
+			var xmlPath = Path.Combine(game.System.DatabasePath, game.XmlGame.DatabaseFile);
+			var newFilename = Path.GetFileNameWithoutExtension(game.FileName);
+
+			if (_settingsManager.Settings.ReformatXml) {
+
+				// read xml
+				var menu = _marshallManager.UnmarshallXml(xmlPath);
+
+				// get game
+				var xmlGame = menu.Games.FirstOrDefault(g => g.FileName == oldFileName);
+				if (xmlGame == null) {
+					throw new InvalidOperationException($"Cannot find game with name {oldFileName} in {xmlPath}.");
+				}
+
+				// update game
+				xmlGame.FileName = newFilename;
+
+				// save xml
+				_marshallManager.MarshallXml(menu, xmlPath);
+
+			} else {
+				var xml = _file.ReadAllText(xmlPath);
+				xml = xml.Replace($"name=\"{oldFileName}\"", $"name=\"{newFilename}\"");
+				_file.WriteAllText(xmlPath, xml);
+
+				_logger.Info("Replaced name \"{0}\" with \"{1}\" in {2}.", oldFileName, newFilename, xmlPath);
+			}
+			return this;
+		}
+
+		public PinballXGame NewGame(Job job)
+		{
+			return new PinballXGame() {
+				FileName = Path.GetFileNameWithoutExtension(job.FilePath),
+				Description = job.Release.Game.DisplayName,
+				Manufacturer = job.Release.Game.Manufacturer,
+				Year = job.Release.Game.Year.ToString()
+			};
+		}
+
 		/// <summary>
 		/// Updates all systems.
 		/// 
@@ -482,55 +524,6 @@ namespace VpdbAgent.PinballX
 			_logger.Info("Parsed {0} systems from {1}.", systems.Count, iniPath);
 
 			return systems;
-		}
-
-
-
-		// --------------------------------------------------------------------------------------------------------------
-		// --------------------------------------------------------------------------------------------------------------
-		// still dragons below
-
-		public PinballXGame NewGame(Job job)
-		{
-			return new PinballXGame() {
-				FileName = Path.GetFileNameWithoutExtension(job.FilePath),
-				Description = job.Release.Game.DisplayName,
-				Manufacturer = job.Release.Game.Manufacturer,
-				Year = job.Release.Game.Year.ToString()
-			};
-		}
-
-		public IMenuManager UpdateGame(string oldFileName, Game jsonGame)
-		{
-			/*
-			var xmlPath = Path.Combine(jsonGame.Platform.DatabasePath, jsonGame.DatabaseFile);
-			var newFilename = Path.GetFileNameWithoutExtension(jsonGame.Filename);
-
-			if (_settingsManager.Settings.ReformatXml) {
-
-				// read xml
-				var menu = _marshallManager.UnmarshallXml(xmlPath);
-
-				// get game
-				var game = menu.Games.FirstOrDefault(g => g.Filename == oldFileName);
-				if (game == null) {
-					throw new InvalidOperationException($"Cannot find game with ID {jsonGame.Id} in {xmlPath}.");
-				}
-
-				// update game
-				game.Filename = newFilename;
-
-				// save xml
-				_marshallManager.MarshallXml(menu, xmlPath);
-
-			} else {
-				var xml = _file.ReadAllText(xmlPath);
-				xml = xml.Replace($"name=\"{oldFileName}\"", $"name=\"{newFilename}\"");
-				_file.WriteAllText(xmlPath, xml);
-
-				_logger.Info("Replaced name \"{0}\" with \"{1}\" in {2}.", oldFileName, newFilename, xmlPath);
-			}*/
-			return this;
 		}
 	}
 }

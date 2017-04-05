@@ -223,7 +223,7 @@ namespace VpdbAgent.Vpdb.Download
 
 				// queue for download
 				var job = new Job(release, tableFile, FileType.TableFile, vpdbPlatform);
-				_logger.Info("Created new job for {0} - {1} v{2} ({3}): {4}", job.Release.Game.DisplayName, job.Release.Name, job.Version.Name, job.File.Id, job.TableFile.ToString());
+				_logger.Info("Created new job for {0} - {1} v{2} ({3}): {4}", job.Release.Game.DisplayName, job.Release.Name, job.Version.Name, job.File.Id, tableFile.ToString());
 				_jobManager.AddJob(job);
 
 				_currentlyDownloading.Remove(release.Id);

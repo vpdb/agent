@@ -568,7 +568,7 @@ namespace VpdbAgent.Application
 			if (game.HasXmlGame) {
 				throw new InvalidOperationException("Game already in XML database.");
 			}
-			if (game.MappedRelease == null || game.MappedFile == null) {
+			if (game.MappedRelease == null || game.MappedTableFile == null) {
 				throw new InvalidOperationException("Cannot add game without release mapping.");
 			}
 			var xmlGame = new PinballXGame {
@@ -608,7 +608,7 @@ namespace VpdbAgent.Application
 
 		public IGameManager Sync(AggregatedGame game)
 		{
-			_downloadManager.DownloadRelease(game.MappedRelease.Id, game.MappedFile.Reference.Id);
+			_downloadManager.DownloadRelease(game.MappedRelease.Id, game.MappedTableFile.Reference.Id);
 			return this;
 		}
 
@@ -789,28 +789,28 @@ namespace VpdbAgent.Application
 		private void OnReleaseDownloaded(Job job)
 		{
 			// find release locally
-			var game = Games.FirstOrDefault(g => g.ReleaseId == job.ReleaseId);
-
-			// add release
-			_databaseManager.Save();
+			var game = AggregatedGames.FirstOrDefault(g => g.MappedRelease?.Id == job.Release.Id);
 
 			// add or update depending if found or not
 			if (game == null) {
 				AddGame(job);
 
 			} else {
-				var previousFilename = game.Filename;
-				var from = _databaseManager.GetVersion(job.ReleaseId, game.FileId);
-				var to = _databaseManager.GetVersion(job.ReleaseId, job.FileId);
-				_logger.Info("Updating file ID from {0} ({1}) to {2} ({3})...", game.FileId, from, job.FileId, to);
+				var previousFilename = game.FileName;
+				var from = _databaseManager.GetVersion(job.Release.Id, game.MappedTableFile.Reference.Id);
+				var to = _databaseManager.GetVersion(job.Release.Id, job.File.Id);
+				_logger.Info("Updating file ID from {0} ({1}) to {2} ({3})...", game.FileId, from, job.File.Id, to);
 				using (game.SuppressChangeNotifications()) {
-					game.PreviousFileId = game.FileId;
-					game.FileId = job.FileId;
+					
+					// update local file and mapping 
+					game.Remap(job.File, job.FilePath);
+					
+					// update XML database
+					_menuManager.RenameGame(game.XmlGame.FileName, game);
 				}
-				UpdateGame(game, job);
 
 				if (_settingsManager.Settings.PatchTableScripts) {
-					PatchGame(game, previousFilename, job.FileId);
+//					PatchGame(game, previousFilename, job.FileId);
 				}
 			}
 		}
@@ -905,7 +905,7 @@ namespace VpdbAgent.Application
 		{
 			_logger.Info("Adding {0} to PinballX database...", job.Release);
 
-			var tableFile = _databaseManager.GetTableFile(job.ReleaseId, job.FileId);
+			var tableFile = _databaseManager.GetTableFile(job.Release.Id, job.File.Id);
 			var platform = _platformManager.FindPlatform(tableFile);
 			if (platform == null) {
 				_logger.Warn("Cannot find platform for release {0} ({1}), aborting.", job.Release.Id, string.Join(",", tableFile.Compatibility));
@@ -920,28 +920,7 @@ namespace VpdbAgent.Application
 			_gamesToLink.Add(new Tuple<string, string, string>(newGame.Description, job.Release.Id, job.File.Id));
 
 			// save new game to Vpdb.xml (and trigger rescan)
-			//_menuManager.AddGame(newGame, platform.DatabasePath);
-		}
-
-		/// <summary>
-		/// Updates an existing game in the PinballX database
-		/// </summary>
-		/// <remarks>
-		/// Usually happends when a game is updated to a new version.
-		/// </remarks>
-		/// <param name="game">Game to be updated</param>
-		/// <param name="job">Job of downloaded game</param>
-		private void UpdateGame(Game game, Job job)
-		{
-			_logger.Info("Updating {0} in PinballX database...", job.Release);
-
-			var oldFileName = Path.GetFileNameWithoutExtension(game.Filename);
-				
-			// update and save json
-			game.Filename = Path.GetFileName(job.FilePath);
-
-			// update and save xml
-			_menuManager.UpdateGame(oldFileName, game);
+			_menuManager.AddGame(newGame);
 		}
 
 		/// <summary>

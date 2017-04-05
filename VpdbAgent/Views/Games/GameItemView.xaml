@@ -30,8 +30,8 @@
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
-        <c:CachedImage ImageUrl="{Binding Game.MappedFile.Thumb.Url}" Width="70" Height="70"
-                       Visibility="{Binding Path=Game.MappedFile, Converter={StaticResource NullToCollapsed}}"
+        <c:CachedImage ImageUrl="{Binding Game.MappedTableFile.Thumb.Url}" Width="70" Height="70"
+                       Visibility="{Binding Path=Game.MappedTableFile, Converter={StaticResource NullToCollapsed}}"
                        Grid.Column="0" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="0,10,0,0" />
 
         <StackPanel Grid.Column="1" Orientation="Vertical">
@@ -53,7 +53,7 @@
                 </Label>
 
                 <!-- controls -->
-                <StackPanel Visibility="{Binding Path=Game.MappedFile, Converter={StaticResource NullToCollapsed}}" Grid.Column="2" Orientation="Horizontal" Margin="0,5,0,0">
+                <StackPanel Visibility="{Binding Path=Game.MappedTableFile, Converter={StaticResource NullToCollapsed}}" Grid.Column="2" Orientation="Horizontal" Margin="0,5,0,0">
                     <c:IconControl Foreground="{Binding Path=Game.MappedRelease.Starred, Converter={StaticResource TrueToPrimary}}" 
                                    Data="{StaticResource IconStar}" Height="18" Width="18" Margin="10,-2,12,0"/>
                     <ToggleButton Command="{Binding SyncToggled}" IsChecked="{Binding Game.Mapping.IsSynced}" 
@@ -64,7 +64,7 @@
             </Grid>
 
             <!-- second row -->
-            <TextBlock Visibility="{Binding Path=Game.MappedFile, Converter={StaticResource NullToCollapsed}}"
+            <TextBlock Visibility="{Binding Path=Game.MappedTableFile, Converter={StaticResource NullToCollapsed}}"
                        Style="{StaticResource Label}" Margin="5,0,0,-5">
                 <TextBlock.Inlines>
                     <Run Text="{Binding Path=Game.MappedRelease.Name, UpdateSourceTrigger=PropertyChanged}"/>
@@ -89,7 +89,7 @@
                 <StackPanel Grid.Column="1" Orientation="Horizontal">
 
                     <!-- download button -->
-                    <Button
+                    <Button Command="{Binding DownloadMissing}"
                         Visibility="{Binding Path=ShowDownloadMissingButton, Converter={StaticResource TrueToVisible}}" 
                         Style="{StaticResource ButtonLine}" 
                         Content="DOWNLOAD" HorizontalAlignment="Right" Margin="0,-3,10,-8"/>

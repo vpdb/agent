@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using LiteDB;
 using Newtonsoft.Json;
 using ReactiveUI;
+using VpdbAgent.Application;
 
 namespace VpdbAgent.Vpdb.Models
 {
@@ -15,8 +16,8 @@ namespace VpdbAgent.Vpdb.Models
 		public string Title { get; set; }
 		public string Manufacturer { get; set; }
 		public int Year { get; set; }
-		[BsonRef("files")] public VpdbFile Backglass { get; set; }
-		[BsonRef("files")] public VpdbFile Logo { get; set; }
+		[BsonRef(DatabaseManager.TableFiles)] public VpdbFile Backglass { get; set; }
+		[BsonRef(DatabaseManager.TableFiles)] public VpdbFile Logo { get; set; }
 
 		[JsonIgnore] [BsonIgnore]
 		public string DisplayName => Manufacturer != null ? $"{Title} ({Manufacturer} {Year})" : Title;

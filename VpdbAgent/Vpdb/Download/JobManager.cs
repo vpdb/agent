@@ -18,6 +18,11 @@ namespace VpdbAgent.Vpdb.Download
 	/// </summary>
 	public interface IJobManager
 	{
+		/// <summary>
+		/// A list of all current, future and past jobs (i.e. independent of their 
+		/// status)
+		/// </summary>
+		ReactiveList<Job> CurrentJobs { get; }
 
 		/// <summary>
 		/// Adds a new job to be processed.
@@ -51,12 +56,6 @@ namespace VpdbAgent.Vpdb.Download
 		/// successfully.
 		/// </summary>
 		IObservable<Job> WhenDownloaded { get; }
-
-		/// <summary>
-		/// A list of all current, future and past jobs (i.e. independent of their 
-		/// status)
-		/// </summary>
-		ReactiveList<Job> CurrentJobs { get; }
 	}
 
 	/// <summary>
@@ -65,7 +64,7 @@ namespace VpdbAgent.Vpdb.Download
 	public class JobManager : IJobManager
 	{
 		// increase this on demand...
-		public static readonly int MaximalSimultaneousDownloads = 2;
+		public const int MaximalSimultaneousDownloads = 2;
 
 		// dependencies
 		private readonly IDatabaseManager _databaseManager;
@@ -94,7 +93,7 @@ namespace VpdbAgent.Vpdb.Download
 		/// </summary>
 		public JobManager(IDatabaseManager databaseManager, IMessageManager messageManager, ILogger logger, CrashManager crashManager)
 		{
-			CurrentJobs = databaseManager.GetJobs();
+			CurrentJobs = new ReactiveList<Job>(databaseManager.GetJobs());
 
 			_databaseManager = databaseManager;
 			_messageManager = messageManager;
@@ -107,13 +106,12 @@ namespace VpdbAgent.Vpdb.Download
 				.Select(job => Observable.DeferAsync(async token => Observable.Return(await ProcessDownload(job, token))))
 				.Merge(MaximalSimultaneousDownloads)
 				.Subscribe(job => {
-					_databaseManager.Save();
+					_databaseManager.SaveJob(job);
 
 					if (job.Status != Job.JobStatus.Aborted) {
 						_whenDownloaded.OnNext(job);
 					}
 				}, error => {
-					_databaseManager.Save();
 					// todo treat error in ui
 					_logger.Error(error, "Error: {0}", error.Message);
 				});
@@ -126,6 +124,11 @@ namespace VpdbAgent.Vpdb.Download
 
 		public IJobManager AddJob(Job job)
 		{
+			// persist to db and memory
+			_databaseManager.AddJob(job);
+			CurrentJobs.Add(job);
+
+			// queue it up so it gets downloaded
 			AddToCurrentJobs(job);
 			_jobs.OnNext(job);
 			return this;
@@ -133,21 +136,22 @@ namespace VpdbAgent.Vpdb.Download
 
 		public IJobManager RetryJob(Job job)
 		{
-			System.Windows.Application.Current.Dispatcher.Invoke(delegate {
+			System.Windows.Application.Current.Dispatcher.Invoke(() => {
 				job.Initialize();
 				job.WhenStatusChanges.Subscribe(status => _whenStatusChanged.OnNext(status));
-				_databaseManager.Save();
 				_jobs.OnNext(job);
+				_databaseManager.SaveJob(job);
 			});
 			return this;
 		}
 	
 		public IJobManager DeleteJob(Job job)
 		{
+			_databaseManager.RemoveJob(job);
+
 			// update jobs back on main thread
-			System.Windows.Application.Current.Dispatcher.Invoke(delegate {
-				_databaseManager.RemoveJob(job);
-				_databaseManager.Save();
+			System.Windows.Application.Current.Dispatcher.Invoke(() => {
+				CurrentJobs.Remove(job);
 			});
 			return this;
 		}
@@ -183,6 +187,7 @@ namespace VpdbAgent.Vpdb.Download
 				await job.Client.DownloadFileTaskAsync(job.File.Uri, dest);
 				job.OnSuccess();
 				_logger.Info("Finished downloading of {0}", job.File.Uri);
+
 			} catch (WebException e) {
 				if (e.Status == WebExceptionStatus.RequestCanceled) {
 					job.OnCancelled();
@@ -192,6 +197,7 @@ namespace VpdbAgent.Vpdb.Download
 					_crashManager.Report(e, "network");
 					_messageManager.LogError(e, "Error downloading file");
 				}
+
 			} catch (Exception e) {
 				job.OnFailure(e);
 				_logger.Error(e, "Error downloading file: {0}", e.Message);
@@ -209,12 +215,7 @@ namespace VpdbAgent.Vpdb.Download
 		private void AddToCurrentJobs(Job job)
 		{
 			// update jobs back on main thread
-			System.Windows.Application.Current.Dispatcher.Invoke(delegate {
-				job.WhenStatusChanges.Subscribe(status => _whenStatusChanged.OnNext(status));
-				_databaseManager.AddJob(job);
-				_databaseManager.Save();
-			});
+			System.Windows.Application.Current.Dispatcher.Invoke(() => job.WhenStatusChanges.Subscribe(_whenStatusChanged.OnNext));
 		}
-
 	}
 }

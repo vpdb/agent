@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
@@ -52,6 +54,12 @@ namespace VpdbAgent.Application
 		void SaveRelease(VpdbRelease release);
 
 		/// <summary>
+		/// Updates or creates a given file.
+		/// </summary>
+		/// <param name="file">File to save</param>
+		void SaveFile(VpdbFile file);
+
+		/// <summary>
 		/// Returns the version object for a given file of a given release.
 		/// </summary>
 		/// <param name="fileId">File ID</param>
@@ -65,14 +73,14 @@ namespace VpdbAgent.Application
 		/// <param name="fileId">File ID</param>
 		/// <param name="releaseId">Release ID</param>
 		/// <returns></returns>
-		VpdbTableFile GetTableFile(string releaseId, string fileId);
+		[CanBeNull] VpdbTableFile GetTableFile(string releaseId, string fileId);
 
 		/// <summary>
-		/// Returns the file object for a given file ID that is not part of a release.
+		/// Returns the file object for a given file ID.
 		/// </summary>
 		/// <param name="fileId">File ID</param>
-		/// <returns></returns>
-		VpdbFile GetFile(string fileId);
+		/// <returns>File or null if not found</returns>
+		[CanBeNull] VpdbFile GetFile(string fileId);
 
 		/// <summary>
 		/// Updates the database with updated release data for a given release
@@ -107,7 +115,13 @@ namespace VpdbAgent.Application
 		/// Returns all jobs in the database.
 		/// </summary>
 		/// <returns>Download jobs</returns>
-		ReactiveList<Job> GetJobs();
+		IEnumerable<Job> GetJobs();
+
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="job"></param>
+		void SaveJob(Job job);
 
 		/// <summary>
 		/// Removes a given download job from the database.
@@ -148,16 +162,18 @@ namespace VpdbAgent.Application
 		private readonly BsonMapper _mapper = new BsonMapper();
 
 		// table names
-		const string TableGames = "games";
-		const string TableReleases = "releases";
-		const string TableFiles = "files";
-		const string TableUsers = "users";
+		public const string TableGames = "games";
+		public const string TableReleases = "releases";
+		public const string TableFiles = "files";
+		public const string TableUsers = "users";
+		public const string TableJobs = "jobs";
 
 		// collections
 		private LiteCollection<VpdbGame> _games;
 		private LiteCollection<VpdbRelease> _releases;
 		private LiteCollection<VpdbFile> _files;
 		private LiteCollection<VpdbUser> _users;
+		private LiteCollection<Job> _jobs;
 
 		// props
 		public IObservable<bool> Initialized => _initialized;
@@ -189,6 +205,7 @@ namespace VpdbAgent.Application
 			_releases = _db.GetCollection<VpdbRelease>(TableReleases);
 			_files = _db.GetCollection<VpdbFile>(TableFiles);
 			_users = _db.GetCollection<VpdbUser>(TableUsers);
+			_jobs = _db.GetCollection<Job>(TableJobs);
 
 			_logger.Info("LiteDB initialized at {0}.", _dbPath);
 			_initialized.OnNext(true);
@@ -223,6 +240,11 @@ namespace VpdbAgent.Application
 			return release;
 		}
 
+		public void SaveFile(VpdbFile file)
+		{
+			_files.Upsert(file);
+		}
+
 		public void SaveRelease(VpdbRelease release)
 		{
 			_games.Upsert(release.Game);
@@ -249,35 +271,38 @@ namespace VpdbAgent.Application
 
 		public VpdbVersion GetVersion(string releaseId, string fileId)
 		{
-			if (releaseId == null || !Database.Releases.ContainsKey(releaseId)) {
+			if (releaseId == null) {
+				return null;
+			}
+			var release = _releases.FindById(releaseId);
+			if (release == null) {
 				_logger.Warn("Release with ID \"{0}\" not found when retrieving version.", releaseId);
 				return null;
 			}
 
 			// todo add map to make it fast
-			return Database.Releases[releaseId].Versions
-				.FirstOrDefault(v => v.Files.Contains(v.Files.FirstOrDefault(f => f.Reference.Id == fileId)));
+			return release.Versions.FirstOrDefault(v => v.Files.Contains(v.Files.FirstOrDefault(f => f.Reference.Id == fileId)));
 		}
 
 		public VpdbTableFile GetTableFile(string releaseId, string fileId)
 		{
-			if (releaseId == null || !Database.Releases.ContainsKey(releaseId)) {
+			if (releaseId == null) {
+				return null;
+			}
+			var release = _releases.FindById(releaseId);
+			if (release == null) {
 				_logger.Warn("Release with ID \"{0}\" not found when retrieving table file.", releaseId);
 				return null;
 			}
 			// todo add map to make it fast
-			return Database.Releases[releaseId].Versions
+			return release.Versions
 					.SelectMany(v => v.Files)
 					.FirstOrDefault(f => f.Reference.Id == fileId);
 		}
 
 		public VpdbFile GetFile(string fileId)
 		{
-			if (fileId == null || !Database.Files.ContainsKey(fileId)) {
-				_logger.Warn("File with ID \"{0}\" not found.", fileId);
-				return null;
-			}
-			return Database.Files[fileId];
+			return _files.FindById(fileId);
 		}
 
 		public void AddOrUpdateRelease(VpdbRelease release)
@@ -304,17 +329,35 @@ namespace VpdbAgent.Application
 
 		public void AddJob(Job job)
 		{
-			Database.DownloadJobs.Add(job);
+			if (GetRelease(job.Release.Id) == null) {
+				SaveRelease(job.Release);
+			}
+			if (GetFile(job.File.Id) == null) {
+				SaveFile(job.File);
+			}
+			SaveRelease(job.Release);
+			_jobs.Insert(job);
 		}
 
-		public ReactiveList<Job> GetJobs()
+		public IEnumerable<Job> GetJobs()
 		{
-			return Database.DownloadJobs;
+			return _jobs
+				.Include(j => j.File)
+				.FindAll()
+				.Select(job => {
+					job.Release = GetRelease(job.Release.Id);
+					return job;
+				});
+		}
+
+		public void SaveJob(Job job)
+		{
+			_jobs.Update(job);
 		}
 
 		public void RemoveJob(Job job)
 		{
-			Database.DownloadJobs.Remove(job);
+			_jobs.Delete(job.Id);
 		}
 
 		public IReactiveList<Message> GetMessages()

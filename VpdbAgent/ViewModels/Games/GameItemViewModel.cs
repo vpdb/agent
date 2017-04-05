@@ -30,6 +30,7 @@ namespace VpdbAgent.ViewModels.Games
 		public ReactiveCommand<Unit, Unit> AddGame { get; protected set; }
 		public ReactiveCommand<Unit, Unit> RemoveGame { get; protected set; }
 		public ReactiveCommand<Unit, Unit> HideGame { get; protected set; }
+		public ReactiveCommand<Unit, Unit> DownloadMissing { get; }
 		public ReactiveCommand<Unit, Unit> CloseResults { get; }
 		public ReactiveCommand<Unit, Unit> SyncToggled { get; }
 
@@ -129,13 +130,16 @@ namespace VpdbAgent.ViewModels.Games
 			// hide button
 			HideGame = ReactiveCommand.Create(() => _gameManager.HideGame(Game));
 
+			// hide button
+			//DownloadMissing = ReactiveCommand.Create(() => _gameManager.);
+
 			// spinner
 			IdentifyRelease.IsExecuting.ToProperty(this, vm => vm.IsExecuting, out _isExecuting);
 
 			// identify button visibility
 			this.WhenAny(
 				vm => vm.Game.HasLocalFile,
-				vm => vm.Game.MappedFile,
+				vm => vm.Game.MappedTableFile,
 				vm => vm.ShowResults, 
 				vm => vm.IsExecuting,
 				(hasLocalFile, mappedFile, showResults, isExecuting) => hasLocalFile.Value && mappedFile.Value == null && !showResults.Value && !isExecuting.Value
@@ -155,7 +159,7 @@ namespace VpdbAgent.ViewModels.Games
 			this.WhenAny(
 				vm => vm.Game.HasLocalFile,
 				vm => vm.Game.HasXmlGame,
-				vm => vm.Game.MappedFile,
+				vm => vm.Game.MappedTableFile,
 				vm => vm.ShowResults,
 				vm => vm.IsExecuting,
 				(hasLocalFile, hasXmlGame, mappedFile, showResults, isExecuting) => hasLocalFile.Value && !hasXmlGame.Value && mappedFile.Value != null && !showResults.Value && !isExecuting.Value
@@ -173,7 +177,7 @@ namespace VpdbAgent.ViewModels.Games
 			// download button visibility
 			this.WhenAny(
 				vm => vm.Game.HasLocalFile,
-				vm => vm.Game.MappedFile,
+				vm => vm.Game.MappedTableFile,
 				vm => vm.ShowResults,
 				vm => vm.IsExecuting,
 				(hasLocalFile, mappedFile, showResults, isExecuting) => !hasLocalFile.Value && mappedFile.Value != null && !showResults.Value && !isExecuting.Value

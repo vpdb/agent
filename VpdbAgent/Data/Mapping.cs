@@ -27,6 +27,9 @@ namespace VpdbAgent.Data
 	/// VPDB. It's possible that a game is listed in VPDB Agent that has neither
 	/// a local file nor a PinballX database entry if that game was previously 
 	/// mapped to a local file which has been removed since.
+	/// 
+	/// Mappings are self-saving, i.e. updating a mapping or adding/removing
+	/// mappings will persist them automatically to the disk.
 	/// </remarks>
 	public class Mapping : ReactiveObject
 	{
@@ -63,7 +66,7 @@ namespace VpdbAgent.Data
 		/// <summary>
 		/// File ID of the linked file at VPDB.
 		/// </summary>
-		[DataMember] public string PreviousFileIds { get { return _previousFileId; } set { this.RaiseAndSetIfChanged(ref _previousFileId, value); } }
+		[DataMember] public string PreviousFileId { get { return _previousFileId; } set { this.RaiseAndSetIfChanged(ref _previousFileId, value); } }
 
 		/// <summary>
 		/// The table script as it was saved back after patching. If null, the script
@@ -139,7 +142,7 @@ namespace VpdbAgent.Data
 			FileId = mapping.FileId;
 			IsSynced = mapping.IsSynced;
 			IsHidden = mapping.IsHidden;
-			PreviousFileIds = mapping.PreviousFileIds;
+			PreviousFileId = mapping.PreviousFileId;
 			PatchedTableScript = mapping.PatchedTableScript;
 		}
 
@@ -189,7 +192,7 @@ namespace VpdbAgent.Data
 				FileId == mapping.FileId &&
 				IsSynced == mapping.IsSynced &&
 				IsHidden == mapping.IsHidden &&
-				PreviousFileIds == mapping.PreviousFileIds &&
+				PreviousFileId == mapping.PreviousFileId &&
 				PatchedTableScript == mapping.PatchedTableScript;
 		}
 		

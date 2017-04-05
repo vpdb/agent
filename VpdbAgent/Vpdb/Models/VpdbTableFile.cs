@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using LiteDB;
 using ReactiveUI;
+using VpdbAgent.Application;
 
 namespace VpdbAgent.Vpdb.Models
 {
@@ -16,11 +17,10 @@ namespace VpdbAgent.Vpdb.Models
 
 		[DataMember] public DateTime ReleasedAt { get; set; }
 		[DataMember] public VpdbFlavor Flavor { get; set; }
-		[DataMember] [BsonRef("files")] public VpdbFile PlayfieldImage { get; set; }
-		[DataMember] [BsonRef("files")] public VpdbFile PlayfieldVideo { get; set; }
-		//[DataMember] public Dictionary<string, VpdbFile> Media { get; set; }
+		[DataMember] [BsonRef(DatabaseManager.TableFiles)] public VpdbFile PlayfieldImage { get; set; }
+		[DataMember] [BsonRef(DatabaseManager.TableFiles)] public VpdbFile PlayfieldVideo { get; set; }
+		[DataMember] [BsonRef(DatabaseManager.TableFiles)] [JsonProperty(PropertyName = "file")] public VpdbFile Reference { get; set; }
 		[DataMember] public List<VpdbCompatibility> Compatibility;
-		[DataMember] [BsonRef("files")] [JsonProperty(PropertyName = "file")] public VpdbFile Reference { get; set; }
 		[DataMember] public VpdbImage Thumb { get { return _thumb; } set { this.RaiseAndSetIfChanged(ref _thumb, value); } }
 
 		public override string ToString()

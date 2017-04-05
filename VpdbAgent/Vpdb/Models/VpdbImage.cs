@@ -7,9 +7,9 @@ namespace VpdbAgent.Vpdb.Models
 	{
 		private string _url;
 
-		[DataMember] public string Url { get { return _url; } set { this.RaiseAndSetIfChanged(ref _url, value); } }
-		[DataMember] public bool IsProtected { get; set; }
-		[DataMember] public int Width { get; set; }
-		[DataMember] public int Height { get; set; }
+		public string Url { get { return _url; } set { this.RaiseAndSetIfChanged(ref _url, value); } }
+		public bool IsProtected { get; set; }
+		public int Width { get; set; }
+		public int Height { get; set; }
 	}
 }

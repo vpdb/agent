@@ -43,7 +43,7 @@ namespace VpdbAgent.Data
 		/// 
 		///    - <see cref="PinballXGame.FileName"/> for <see cref="XmlGame"/>
 		///    - <see cref="Data.Mapping.FileId"/> for <see cref="Mapping"/>
-		///    - <see cref="FileName"/> for local files
+		///    - <see cref="FilePath"/> for local files
 		/// 
 		/// Since the file ID is based on file names, we need to define what
 		/// happens if file names change.
@@ -92,7 +92,7 @@ namespace VpdbAgent.Data
 		/// <summary>
 		/// Mapped file data of the release
 		/// </summary>
-		public VpdbTableFile MappedFile { get { return _mappedFile; } private set { this.RaiseAndSetIfChanged(ref _mappedFile, value); } }
+		public VpdbTableFile MappedTableFile { get { return _mappedTableFile; } private set { this.RaiseAndSetIfChanged(ref _mappedTableFile, value); } }
 
 		// convenient props
 		public string Description => XmlGame != null ? XmlGame.Description : (MappedRelease != null ? $"{MappedRelease.Game.Title} ({MappedRelease.Game.Manufacturer} {MappedRelease.Game.Year})" : null);
@@ -114,7 +114,7 @@ namespace VpdbAgent.Data
 		private Mapping _mapping;
 		private VpdbRelease _mappedRelease;
 		private VpdbVersion _mappedVersion;
-		private VpdbTableFile _mappedFile;
+		private VpdbTableFile _mappedTableFile;
 
 		// generated props
 		private readonly ObservableAsPropertyHelper<bool> _hasMapping;
@@ -178,7 +178,7 @@ namespace VpdbAgent.Data
 			// auto-update vpdb data when mapping changes
 			this.WhenAnyValue(x => x.Mapping).Subscribe(mapping => {
 				if (mapping == null) {
-					MappedFile = null;
+					MappedTableFile = null;
 					MappedVersion = null;
 					MappedRelease = null;
 
@@ -250,6 +250,14 @@ namespace VpdbAgent.Data
 				XmlGame = newXmlGame;
 			}
 			Mapping.Rename(filePath);
+		}
+
+		public void Remap(VpdbFile file, string filePath) {
+			Update(filePath);
+			var previousFileId = Mapping.FileId;
+			Mapping = new Mapping(this, MappedRelease, file.Id) {
+				PreviousFileId = previousFileId
+			};
 		}
 
 		/// <summary>
@@ -362,7 +370,7 @@ namespace VpdbAgent.Data
 		{
 			MappedRelease = release;
 			MappedVersion = release.GetVersion(fileId);
-			MappedFile = release.GetFile(fileId);
+			MappedTableFile = release.GetFile(fileId);
 		}
 	}
 }

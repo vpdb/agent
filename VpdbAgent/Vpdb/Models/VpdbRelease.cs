@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.Serialization;
 using LiteDB;
 using ReactiveUI;
+using VpdbAgent.Application;
 
 namespace VpdbAgent.Vpdb.Models
 {
@@ -15,7 +16,7 @@ namespace VpdbAgent.Vpdb.Models
 		[DataMember] public DateTime CreatedAt { get; set; }
 		[DataMember] public List<VpdbAuthor> Authors { get; set; }
 		[DataMember] public ReleaseCounter Counter { get; set; }
-		[DataMember] [BsonRef("games")] public VpdbGame Game { get; set; }
+		[DataMember] [BsonRef(DatabaseManager.TableGames)] public VpdbGame Game { get; set; }
 		[DataMember] public VpdbThumb Thumb { get { return _thumb; } set { this.RaiseAndSetIfChanged(ref _thumb, value); } }
 		[DataMember] public ReactiveList<VpdbVersion> Versions { get { return _versions; } set { this.RaiseAndSetIfChanged(ref _versions, value); } }
 		[DataMember] public bool Starred { get { return _starred; } set { this.RaiseAndSetIfChanged(ref _starred, value); } }
