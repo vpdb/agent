@@ -32,6 +32,8 @@ namespace VpdbAgent.PinballX
 	/// read/write maintenance of the user's configuration. See <see cref="GameManager"/> for
 	/// data structures that are actually used in the application.
 	/// </remarks>
+	/// 
+	/// TODO rename to PinballXManager
 	public interface IMenuManager
 	{
 		/// <summary>
@@ -111,7 +113,6 @@ namespace VpdbAgent.PinballX
 		/// <summary>
 		/// A table file has been edited.
 		/// </summary>
-		/// 
 		IObservable<string> TableFileCreated { get; }
 
 		/// <summary>
