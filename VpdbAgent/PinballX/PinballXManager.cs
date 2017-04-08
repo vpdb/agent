@@ -35,7 +35,7 @@ namespace VpdbAgent.PinballX
 	/// </remarks>
 	/// 
 	/// TODO rename to PinballXManager
-	public interface IMenuManager
+	public interface IPinballXManager
 	{
 		/// <summary>
 		/// Systems parsed from <c>PinballX.ini</c>.
@@ -48,7 +48,7 @@ namespace VpdbAgent.PinballX
 		/// </summary>
 		/// 
 		/// <returns>This instance</returns>
-		IMenuManager Initialize();
+		IPinballXManager Initialize();
 
 		/// <summary>
 		/// Adds a new game to the PinballX database.
@@ -78,7 +78,7 @@ namespace VpdbAgent.PinballX
 		/// <param name="oldFileName">File ID ("name") of the game to update</param>
 		/// <param name="game">Game to update</param>
 		/// <returns>This instance</returns>
-		IMenuManager RenameGame(string oldFileName, AggregatedGame game);
+		IPinballXManager RenameGame(string oldFileName, AggregatedGame game);
 
 		/// <summary>
 		/// Removes a game from the PinballX database.
@@ -172,9 +172,9 @@ namespace VpdbAgent.PinballX
 	}
 
 	/// <summary>
-	/// Application logic for <see cref="IMenuManager"/>.
+	/// Application logic for <see cref="IPinballXManager"/>.
 	/// </summary>
-	public class MenuManager : IMenuManager
+	public class PinballXManager : IPinballXManager
 	{
 		// publics
 		public ReactiveList<PinballXSystem> Systems { get; } = new ReactiveList<PinballXSystem>();
@@ -205,7 +205,7 @@ namespace VpdbAgent.PinballX
 		private readonly IFile _file;
 		private readonly ILogger _logger;
 
-		public MenuManager(IFileSystemWatcher fileSystemWatcher, ISettingsManager settingsManager,
+		public PinballXManager(IFileSystemWatcher fileSystemWatcher, ISettingsManager settingsManager,
 			IMarshallManager marshallManager, IThreadManager threadManager,
 			IFile file, IDirectory dir, ILogger logger)
 		{
@@ -218,7 +218,7 @@ namespace VpdbAgent.PinballX
 			_logger = logger;
 		}
 	
-		public IMenuManager Initialize()
+		public IPinballXManager Initialize()
 		{
 			// todo if we want to support changing pbx folder in the app without restarting, make this dynamic.
 			var iniPath = _settingsManager.Settings.PinballXFolder + @"\Config\PinballX.ini";
@@ -351,7 +351,7 @@ namespace VpdbAgent.PinballX
 			}
 		}
 
-		public IMenuManager RenameGame(string oldFileName, AggregatedGame game)
+		public IPinballXManager RenameGame(string oldFileName, AggregatedGame game)
 		{
 			var xmlPath = Path.Combine(game.System.DatabasePath, game.XmlGame.DatabaseFile);
 			var newFilename = Path.GetFileNameWithoutExtension(game.FileName);

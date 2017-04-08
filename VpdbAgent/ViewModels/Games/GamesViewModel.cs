@@ -33,7 +33,7 @@ namespace VpdbAgent.ViewModels.Games
 
 		public GamesViewModel(IDependencyResolver resolver)
 		{
-			var menuManager = resolver.GetService<IMenuManager>();
+			var menuManager = resolver.GetService<IPinballXManager>();
 			var gameManager = resolver.GetService<IGameManager>();
 
 			// setup init listener

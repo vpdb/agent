@@ -116,7 +116,7 @@ namespace VpdbAgent.Application
 	public class GameManager : IGameManager
 	{
 		// deps
-		private readonly IMenuManager _menuManager;
+		private readonly IPinballXManager _pinballXManager;
 		private readonly IVpdbClient _vpdbClient;
 		private readonly IVpdbManager _vpdbManager;
 		private readonly ISettingsManager _settingsManager;
@@ -139,12 +139,12 @@ namespace VpdbAgent.Application
 		private readonly Subject<Unit> _initialized = new Subject<Unit>();
 		private readonly List<Tuple<string, string, string>> _gamesToLink = new List<Tuple<string, string, string>>();
 
-		public GameManager(IMenuManager menuManager, IVpdbClient vpdbClient, IVpdbManager vpdbManager, ISettingsManager 
+		public GameManager(IPinballXManager pinballXManager, IVpdbClient vpdbClient, IVpdbManager vpdbManager, ISettingsManager 
 			settingsManager, IDownloadManager downloadManager, IDatabaseManager databaseManager, IVersionManager versionManager,
 			IMessageManager messageManager, IRealtimeManager realtimeManager, IVisualPinballManager visualPinballManager, 
 			IThreadManager threadManager, IJobManager jobManager, IFile file, ILogger logger)
 		{
-			_menuManager = menuManager;
+			_pinballXManager = pinballXManager;
 			_vpdbClient = vpdbClient;
 			_vpdbManager = vpdbManager;
 			_settingsManager = settingsManager;
@@ -196,7 +196,7 @@ namespace VpdbAgent.Application
 			}
 
 			_databaseManager.Initialize();
-			_menuManager.Initialize();
+			_pinballXManager.Initialize();
 			_vpdbClient.Initialize();
 			_versionManager.Initialize();
 			_jobManager.Initialize();
@@ -205,18 +205,18 @@ namespace VpdbAgent.Application
 			var delay = TimeSpan.FromMilliseconds(500);   // let props update first
 
 			// setup handlers for table file changes TODO implement properly (specially rename)
-			_menuManager.TableFileCreated.ObserveOn(_threadManager.WorkerScheduler).Subscribe(OnTableFileChanged);
-			_menuManager.TableFileChanged.ObserveOn(_threadManager.WorkerScheduler).Subscribe(OnTableFileChanged);
-			_menuManager.TableFileDeleted.ObserveOn(_threadManager.WorkerScheduler).Subscribe(OnTableFileDeleted);
-			_menuManager.TableFileRenamed.ObserveOn(_threadManager.WorkerScheduler).Subscribe(x => OnTableFileRenamed(x.Item1, x.Item2));
-			_menuManager.TableFolderAdded.ObserveOn(_threadManager.WorkerScheduler).Delay(delay).Subscribe(path => MergeLocalFiles(path, _menuManager.GetTableFiles(path)));
-			_menuManager.TableFolderRemoved.ObserveOn(_threadManager.WorkerScheduler).Delay(delay).Subscribe(path => MergeLocalFiles(path, new List<string>()));
+			_pinballXManager.TableFileCreated.ObserveOn(_threadManager.WorkerScheduler).Subscribe(OnTableFileChanged);
+			_pinballXManager.TableFileChanged.ObserveOn(_threadManager.WorkerScheduler).Subscribe(OnTableFileChanged);
+			_pinballXManager.TableFileDeleted.ObserveOn(_threadManager.WorkerScheduler).Subscribe(OnTableFileDeleted);
+			_pinballXManager.TableFileRenamed.ObserveOn(_threadManager.WorkerScheduler).Subscribe(x => OnTableFileRenamed(x.Item1, x.Item2));
+			_pinballXManager.TableFolderAdded.ObserveOn(_threadManager.WorkerScheduler).Delay(delay).Subscribe(path => MergeLocalFiles(path, _pinballXManager.GetTableFiles(path)));
+			_pinballXManager.TableFolderRemoved.ObserveOn(_threadManager.WorkerScheduler).Delay(delay).Subscribe(path => MergeLocalFiles(path, new List<string>()));
 
 			// setup handler for xml database changes
-			_menuManager.GamesUpdated.Subscribe(d => MergeXmlGames(d.Item1, d.Item2, d.Item3));
+			_pinballXManager.GamesUpdated.Subscribe(d => MergeXmlGames(d.Item1, d.Item2, d.Item3));
 
 			// setup handler for Matching changes
-			_menuManager.MappingsUpdated.Subscribe(d => MergeMappings(d.Item1, d.Item2));
+			_pinballXManager.MappingsUpdated.Subscribe(d => MergeMappings(d.Item1, d.Item2));
 
 			// validate settings and retrieve profile
 			Task.Run(async () => await _settingsManager.Validate(_settingsManager.Settings, _messageManager));
@@ -322,8 +322,8 @@ namespace VpdbAgent.Application
 		/// within the given path are to be removed. Provide an empty list to 
 		/// remove all of them.
 		/// 
-		/// This is triggered on <see cref="MenuManager.TableFolderAdded"/> and
-		/// <see cref="MenuManager.TableFolderRemoved"/>. The received list is 
+		/// This is triggered on <see cref="PinballXManager.TableFolderAdded"/> and
+		/// <see cref="PinballXManager.TableFolderRemoved"/>. The received list is 
 		/// then merged into <see cref="AggregatedGames"/>, while only data that
 		/// has changed is updated.
 		/// </remarks>
@@ -583,7 +583,7 @@ namespace VpdbAgent.Application
 				System = game.System
 			};
 
-			_menuManager.AddGame(xmlGame);
+			_pinballXManager.AddGame(xmlGame);
 		}
 
 		public void DownloadGame(AggregatedGame game)
@@ -651,13 +651,13 @@ namespace VpdbAgent.Application
 			PinballXSystem system;
 			if (!game.HasSystem) {
 				var tablePath = PathHelper.NormalizePath(Path.GetDirectoryName(game.FilePath));
-				system = _menuManager.Systems.FirstOrDefault(s => s.TablePath == tablePath);
+				system = _pinballXManager.Systems.FirstOrDefault(s => s.TablePath == tablePath);
 			} else {
 				system = game.System;
 			}
 
 			if (system == null) {
-				throw new Exception($"Got game at {game.FilePath} but no systems that match path ({string.Join(", ", _menuManager.Systems.Select(s => s.TablePath))}).");
+				throw new Exception($"Got game at {game.FilePath} but no systems that match path ({string.Join(", ", _pinballXManager.Systems.Select(s => s.TablePath))}).");
 			}
 			return system;
 		}
@@ -810,7 +810,7 @@ namespace VpdbAgent.Application
 					game.Remap(job.File, job.FilePath);
 					
 					// update XML database
-					_menuManager.RenameGame(game.XmlGame.FileName, game);
+					_pinballXManager.RenameGame(game.XmlGame.FileName, game);
 				}
 
 				if (_settingsManager.Settings.PatchTableScripts) {
@@ -910,12 +910,12 @@ namespace VpdbAgent.Application
 			_logger.Info("Adding {0} to PinballX database...", job.Release);
 
 			var tableFile = _databaseManager.GetTableFile(job.Release.Id, job.File.Id);
-			var platform = _menuManager.FindPlatform(tableFile);
+			var platform = _pinballXManager.FindSystem(tableFile);
 			if (platform == null) {
 				_logger.Warn("Cannot find platform for release {0} ({1}), aborting.", job.Release.Id, string.Join(",", tableFile.Compatibility));
 				return;
 			}
-			var newGame = _menuManager.NewGame(job);
+			var newGame = _pinballXManager.NewGame(job);
 
 			// adding the game (updating the xml) forces a new rescan. but it's
 			// async so in order to avoid race conditions, we put this into a 
@@ -924,7 +924,7 @@ namespace VpdbAgent.Application
 			_gamesToLink.Add(new Tuple<string, string, string>(newGame.Description, job.Release.Id, job.File.Id));
 
 			// save new game to Vpdb.xml (and trigger rescan)
-			_menuManager.AddGame(newGame);
+			_pinballXManager.AddGame(newGame);
 		}
 
 		/// <summary>

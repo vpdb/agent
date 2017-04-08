@@ -146,7 +146,7 @@ namespace VpdbAgent
 				deps.GetService<CrashManager>()
 			), typeof(IMessageManager));
 
-			deps.RegisterLazySingleton(() => new MenuManager(
+			deps.RegisterLazySingleton(() => new PinballXManager(
 				deps.GetService<IFileSystemWatcher>(),
 				deps.GetService<ISettingsManager>(),
 				deps.GetService<IMarshallManager>(),
@@ -154,7 +154,7 @@ namespace VpdbAgent
 				deps.GetService<IFile>(),
 				deps.GetService<IDirectory>(),
 				deps.GetService<NLog.ILogger>()
-			), typeof(IMenuManager));
+			), typeof(IPinballXManager));
 
 			deps.RegisterLazySingleton(() => new VpdbClient(
 				deps.GetService<ISettingsManager>(),
@@ -184,7 +184,7 @@ namespace VpdbAgent
 			), typeof(IJobManager));
 
 			deps.RegisterLazySingleton(() => new DownloadManager(
-				deps.GetService<IMenuManager>(),
+				deps.GetService<IPinballXManager>(),
 				deps.GetService<IJobManager>(),
 				deps.GetService<IVpdbManager>(),
 				deps.GetService<ISettingsManager>(),
@@ -195,7 +195,7 @@ namespace VpdbAgent
 			), typeof(IDownloadManager));
 
 			deps.RegisterLazySingleton(() => new GameManager(
-				deps.GetService<IMenuManager>(),
+				deps.GetService<IPinballXManager>(),
 				deps.GetService<IVpdbClient>(),
 				deps.GetService<IVpdbManager>(),
 				deps.GetService<ISettingsManager>(),

@@ -70,7 +70,7 @@ namespace VpdbAgent.Vpdb.Download
 	public class DownloadManager : IDownloadManager
 	{
 		// dependencies
-		private readonly IMenuManager _menuManager;
+		private readonly IPinballXManager _pinballXManager;
 		private readonly IJobManager _jobManager;
 		private readonly IVpdbManager _vpdbManager;
 		private readonly ISettingsManager _settingsManager;
@@ -87,11 +87,11 @@ namespace VpdbAgent.Vpdb.Download
 		private readonly List<IFlavorMatcher> _flavorMatchers = new List<IFlavorMatcher>();
 		private readonly HashSet<string> _currentlyDownloading = new HashSet<string>();
 
-		public DownloadManager(IMenuManager menuManager, IJobManager jobManager, IVpdbManager vpdbManager, 
+		public DownloadManager(IPinballXManager pinballXManager, IJobManager jobManager, IVpdbManager vpdbManager, 
 			ISettingsManager settingsManager, IMessageManager messageManager, IDatabaseManager databaseManager, 
 			ILogger logger, CrashManager crashManager)
 		{
-			_menuManager = menuManager;
+			_pinballXManager = pinballXManager;
 			_jobManager = jobManager;
 			_vpdbManager = vpdbManager;
 			_settingsManager = settingsManager;
@@ -199,7 +199,7 @@ namespace VpdbAgent.Vpdb.Download
 				_logger.Info($"Downloading {game.DisplayName} - {release.Name} v{version?.Name} ({tableFile.Reference.Id})");
 
 				var gameName = release.Game.DisplayName;
-				var pbxPlatform = _menuManager.FindPlatform(tableFile);
+				var pbxPlatform = _pinballXManager.FindSystem(tableFile);
 				var vpdbPlatform = tableFile.Compatibility[0].Platform;
 
 				// check if backglass image needs to be downloaded
@@ -251,7 +251,7 @@ namespace VpdbAgent.Vpdb.Download
 		private void OnDownloadCompleted(Job job)
 		{
 			// move file to the right place
-			MoveDownloadedFile(job, _menuManager.FindPlatform(job.Platform));
+			MoveDownloadedFile(job, _pinballXManager.FindSystem(job.Platform));
 
 			// do other stuff depending on file type
 			if (job.FileType == FileType.TableFile) {

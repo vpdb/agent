@@ -25,7 +25,7 @@ namespace VpdbAgent.PinballX.Models
 	/// updated when PinballX.ini changes.
 	/// 
 	/// When it's initialized, its XML database files are parsed and watched, 
-	/// meaning as soon as it's part of <see cref="MenuManager.Systems"/>, 
+	/// meaning as soon as it's part of <see cref="PinballXManager.Systems"/>, 
 	/// current games can be retrieved through <see cref="Games"/> and future
 	/// changes through <see cref="GamesUpdated"/>.
 	/// </remarks>

@@ -22,7 +22,7 @@ namespace VpdbAgent.ViewModels.Games
 		private readonly ILogger _logger;
 		private readonly IVpdbClient _vpdbClient;
 		private readonly IGameManager _gameManager;
-		private readonly IMenuManager _menuManager;
+		private readonly IPinballXManager _pinballXManager;
 		private readonly IMessageManager _messageManager;
 
 		// commands
@@ -71,7 +71,7 @@ namespace VpdbAgent.ViewModels.Games
 			_logger = resolver.GetService<ILogger>();
 			_vpdbClient = resolver.GetService<IVpdbClient>();
 			_gameManager = resolver.GetService<IGameManager>();
-			_menuManager = resolver.GetService<IMenuManager>();
+			_pinballXManager = resolver.GetService<IPinballXManager>();
 			_messageManager = resolver.GetService<IMessageManager>();
 			var threadManager = resolver.GetService<IThreadManager>();
 
@@ -122,7 +122,7 @@ namespace VpdbAgent.ViewModels.Games
 			AddGame = ReactiveCommand.Create(() => _gameManager.AddGame(Game));
 
 			// remove from db button
-			RemoveGame = ReactiveCommand.Create(() => _menuManager.RemoveGame(Game.XmlGame));
+			RemoveGame = ReactiveCommand.Create(() => _pinballXManager.RemoveGame(Game.XmlGame));
 
 			// close button
 			CloseResults = ReactiveCommand.Create(() => { ShowResults = false; });
