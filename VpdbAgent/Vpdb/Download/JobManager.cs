@@ -18,6 +18,13 @@ namespace VpdbAgent.Vpdb.Download
 	/// </summary>
 	public interface IJobManager
 	{
+
+		/// <summary>
+		/// Initializes the job manager.
+		/// </summary>
+		/// <returns>This instance</returns>
+		IJobManager Initialize();
+
 		/// <summary>
 		/// A list of all current, future and past jobs (i.e. independent of their 
 		/// status)
@@ -73,7 +80,7 @@ namespace VpdbAgent.Vpdb.Download
 		private readonly CrashManager _crashManager;
 
 		// props
-		public ReactiveList<Job> CurrentJobs { get; }
+		public ReactiveList<Job> CurrentJobs { get; private set; }
 		public IObservable<Job.JobStatus> WhenStatusChanged => _whenStatusChanged;
 		public IObservable<Job> WhenDownloaded => _whenDownloaded;
 
@@ -93,8 +100,6 @@ namespace VpdbAgent.Vpdb.Download
 		/// </summary>
 		public JobManager(IDatabaseManager databaseManager, IMessageManager messageManager, ILogger logger, CrashManager crashManager)
 		{
-			CurrentJobs = new ReactiveList<Job>(databaseManager.GetJobs());
-
 			_databaseManager = databaseManager;
 			_messageManager = messageManager;
 			_logger = logger;
@@ -120,6 +125,12 @@ namespace VpdbAgent.Vpdb.Download
 				_logger.Info("Creating non-existing download folder at {0}.", _downloadPath);
 				Directory.CreateDirectory(_downloadPath);
 			}
+		}
+
+		public IJobManager Initialize()
+		{
+			CurrentJobs = new ReactiveList<Job>(_databaseManager.GetJobs());
+			return this;	
 		}
 
 		public IJobManager AddJob(Job job)

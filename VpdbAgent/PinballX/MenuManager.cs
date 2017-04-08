@@ -15,6 +15,7 @@ using VpdbAgent.Application;
 using VpdbAgent.Common.Filesystem;
 using VpdbAgent.Data;
 using VpdbAgent.Vpdb.Download;
+using VpdbAgent.Vpdb.Models;
 using ILogger = NLog.ILogger;
 
 
@@ -154,6 +155,20 @@ namespace VpdbAgent.PinballX
 		/// <param name="path">Path to table folder</param>
 		/// <returns>List of absolute file paths to table files</returns>
 		List<string> GetTableFiles(string path);
+
+		/// <summary>
+		/// Retrieves a platform for a given table file's VPDB-platform attribute
+		/// </summary>
+		/// <param name="tableFile">Table file</param>
+		/// <returns>Platform or null if not found</returns>
+		PinballXSystem FindSystem(VpdbTableFile tableFile);
+
+		/// <summary>
+		/// Retrieves a PinballX system for a given VPDB-platform
+		/// </summary>
+		/// <param name="platform">Platform definition at VPDB</param>
+		/// <returns>Local platform object</returns>
+		PinballXSystem FindSystem(VpdbTableFile.VpdbPlatform platform);
 	}
 
 	/// <summary>
@@ -376,6 +391,30 @@ namespace VpdbAgent.PinballX
 				Manufacturer = job.Release.Game.Manufacturer,
 				Year = job.Release.Game.Year.ToString()
 			};
+		}
+
+		public PinballXSystem FindSystem(VpdbTableFile tableFile)
+		{
+			if (tableFile?.Compatibility == null || tableFile.Compatibility.Count == 0) {
+				return null;
+			}
+			return FindSystem(tableFile.Compatibility[0].Platform);
+		}
+
+		public PinballXSystem FindSystem(VpdbTableFile.VpdbPlatform platform)
+		{
+			string platformName;
+			switch (platform) {
+				case VpdbTableFile.VpdbPlatform.VP:
+					platformName = "Visual Pinball";
+					break;
+				case VpdbTableFile.VpdbPlatform.FP:
+					platformName = "Future Pinball";
+					break;
+				default:
+					throw new ArgumentOutOfRangeException();
+			}
+			return Systems.FirstOrDefault(p => platformName.Equals(p.Name));
 		}
 
 		/// <summary>

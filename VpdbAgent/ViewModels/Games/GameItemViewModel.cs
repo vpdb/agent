@@ -130,8 +130,8 @@ namespace VpdbAgent.ViewModels.Games
 			// hide button
 			HideGame = ReactiveCommand.Create(() => _gameManager.HideGame(Game));
 
-			// hide button
-			//DownloadMissing = ReactiveCommand.Create(() => _gameManager.);
+			// download button
+			DownloadMissing = ReactiveCommand.Create(() => _gameManager.DownloadGame(Game));
 
 			// spinner
 			IdentifyRelease.IsExecuting.ToProperty(this, vm => vm.IsExecuting, out _isExecuting);

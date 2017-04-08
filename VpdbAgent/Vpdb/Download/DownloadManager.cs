@@ -10,7 +10,7 @@ using JetBrains.Annotations;
 using NLog;
 using ReactiveUI;
 using VpdbAgent.Application;
-using VpdbAgent.Models;
+using VpdbAgent.PinballX;
 using VpdbAgent.PinballX.Models;
 using VpdbAgent.Vpdb.Models;
 
@@ -70,7 +70,7 @@ namespace VpdbAgent.Vpdb.Download
 	public class DownloadManager : IDownloadManager
 	{
 		// dependencies
-		private readonly IPlatformManager _platformManager;
+		private readonly IMenuManager _menuManager;
 		private readonly IJobManager _jobManager;
 		private readonly IVpdbManager _vpdbManager;
 		private readonly ISettingsManager _settingsManager;
@@ -87,11 +87,11 @@ namespace VpdbAgent.Vpdb.Download
 		private readonly List<IFlavorMatcher> _flavorMatchers = new List<IFlavorMatcher>();
 		private readonly HashSet<string> _currentlyDownloading = new HashSet<string>();
 
-		public DownloadManager(IPlatformManager platformManager, IJobManager jobManager, IVpdbManager vpdbManager, 
-			ISettingsManager settingsManager, IMessageManager messageManager, IDatabaseManager databaseManager,
+		public DownloadManager(IMenuManager menuManager, IJobManager jobManager, IVpdbManager vpdbManager, 
+			ISettingsManager settingsManager, IMessageManager messageManager, IDatabaseManager databaseManager, 
 			ILogger logger, CrashManager crashManager)
 		{
-			_platformManager = platformManager;
+			_menuManager = menuManager;
 			_jobManager = jobManager;
 			_vpdbManager = vpdbManager;
 			_settingsManager = settingsManager;
@@ -199,7 +199,7 @@ namespace VpdbAgent.Vpdb.Download
 				_logger.Info($"Downloading {game.DisplayName} - {release.Name} v{version?.Name} ({tableFile.Reference.Id})");
 
 				var gameName = release.Game.DisplayName;
-				var pbxPlatform = _platformManager.FindPlatform(tableFile);
+				var pbxPlatform = _menuManager.FindPlatform(tableFile);
 				var vpdbPlatform = tableFile.Compatibility[0].Platform;
 
 				// check if backglass image needs to be downloaded
@@ -251,7 +251,7 @@ namespace VpdbAgent.Vpdb.Download
 		private void OnDownloadCompleted(Job job)
 		{
 			// move file to the right place
-			MoveDownloadedFile(job, _platformManager.FindPlatform(job.Platform));
+			MoveDownloadedFile(job, _menuManager.FindPlatform(job.Platform));
 
 			// do other stuff depending on file type
 			if (job.FileType == FileType.TableFile) {

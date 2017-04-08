@@ -94,6 +94,12 @@ namespace VpdbAgent.Application
 		void AddGame(AggregatedGame game);
 
 		/// <summary>
+		/// Starts download for a game from VPDB.
+		/// </summary>
+		/// <param name="game">Game to download</param>
+		void DownloadGame(AggregatedGame game);
+
+		/// <summary>
 		/// Explicitly enables syncing of a game.
 		/// </summary>
 		/// <remarks>
@@ -102,7 +108,6 @@ namespace VpdbAgent.Application
 		/// <param name="game">Game to synchronize</param>
 		/// <returns>This instance</returns>
 		IGameManager Sync(AggregatedGame game);
-
 	}
 
 	/// <summary>
@@ -118,9 +123,9 @@ namespace VpdbAgent.Application
 		private readonly IDownloadManager _downloadManager;
 		private readonly IDatabaseManager _databaseManager;
 		private readonly IVersionManager _versionManager;
-		private readonly IPlatformManager _platformManager;
 		private readonly IMessageManager _messageManager;
 		private readonly IRealtimeManager _realtimeManager;
+		private readonly IJobManager _jobManager;
 		private readonly IVisualPinballManager _visualPinballManager;
 		private readonly IThreadManager _threadManager;
 		private readonly IFile _file;
@@ -135,10 +140,9 @@ namespace VpdbAgent.Application
 		private readonly List<Tuple<string, string, string>> _gamesToLink = new List<Tuple<string, string, string>>();
 
 		public GameManager(IMenuManager menuManager, IVpdbClient vpdbClient, IVpdbManager vpdbManager, ISettingsManager 
-			settingsManager, IDownloadManager downloadManager, IDatabaseManager databaseManager,
-			IVersionManager versionManager, IPlatformManager platformManager, IMessageManager messageManager,
-			IRealtimeManager realtimeManager, IVisualPinballManager visualPinballManager, IThreadManager threadManager, 
-			IFile file, ILogger logger)
+			settingsManager, IDownloadManager downloadManager, IDatabaseManager databaseManager, IVersionManager versionManager,
+			IMessageManager messageManager, IRealtimeManager realtimeManager, IVisualPinballManager visualPinballManager, 
+			IThreadManager threadManager, IJobManager jobManager, IFile file, ILogger logger)
 		{
 			_menuManager = menuManager;
 			_vpdbClient = vpdbClient;
@@ -147,14 +151,14 @@ namespace VpdbAgent.Application
 			_downloadManager = downloadManager;
 			_databaseManager = databaseManager;
 			_versionManager = versionManager;
-			_platformManager = platformManager;
 			_messageManager = messageManager;
 			_realtimeManager = realtimeManager;
 			_visualPinballManager = visualPinballManager;
 			_threadManager = threadManager;
 			_file = file;
 			_logger = logger;
-		
+			_jobManager = jobManager;
+
 
 			// update releases from VPDB on the first run, but delay it a bit so it 
 			// doesn't do all that shit at the same time!
@@ -195,6 +199,7 @@ namespace VpdbAgent.Application
 			_menuManager.Initialize();
 			_vpdbClient.Initialize();
 			_versionManager.Initialize();
+			_jobManager.Initialize();
 			_initialized.OnNext(Unit.Default);
 
 			var delay = TimeSpan.FromMilliseconds(500);   // let props update first
@@ -562,7 +567,6 @@ namespace VpdbAgent.Application
 			}
 		}
 
-		
 		public void AddGame(AggregatedGame game)
 		{
 			if (game.HasXmlGame) {
@@ -580,6 +584,11 @@ namespace VpdbAgent.Application
 			};
 
 			_menuManager.AddGame(xmlGame);
+		}
+
+		public void DownloadGame(AggregatedGame game)
+		{
+			_downloadManager.DownloadRelease(game.MappedRelease.Id, game.MappedTableFile.Reference.Id);
 		}
 
 		public void HideGame(AggregatedGame game)
@@ -901,7 +910,7 @@ namespace VpdbAgent.Application
 			_logger.Info("Adding {0} to PinballX database...", job.Release);
 
 			var tableFile = _databaseManager.GetTableFile(job.Release.Id, job.File.Id);
-			var platform = _platformManager.FindPlatform(tableFile);
+			var platform = _menuManager.FindPlatform(tableFile);
 			if (platform == null) {
 				_logger.Warn("Cannot find platform for release {0} ({1}), aborting.", job.Release.Id, string.Join(",", tableFile.Compatibility));
 				return;

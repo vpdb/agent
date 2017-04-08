@@ -156,13 +156,6 @@ namespace VpdbAgent
 				deps.GetService<NLog.ILogger>()
 			), typeof(IMenuManager));
 
-			deps.RegisterLazySingleton(() => new PlatformManager(
-				deps.GetService<IMenuManager>(),
-				deps.GetService<IThreadManager>(),
-				deps.GetService<NLog.ILogger>(),
-				deps
-			), typeof(IPlatformManager));
-
 			deps.RegisterLazySingleton(() => new VpdbClient(
 				deps.GetService<ISettingsManager>(),
 				deps.GetService<IVersionManager>(),
@@ -191,7 +184,7 @@ namespace VpdbAgent
 			), typeof(IJobManager));
 
 			deps.RegisterLazySingleton(() => new DownloadManager(
-				deps.GetService<IPlatformManager>(),
+				deps.GetService<IMenuManager>(),
 				deps.GetService<IJobManager>(),
 				deps.GetService<IVpdbManager>(),
 				deps.GetService<ISettingsManager>(),
@@ -209,11 +202,11 @@ namespace VpdbAgent
 				deps.GetService<IDownloadManager>(),
 				deps.GetService<IDatabaseManager>(),
 				deps.GetService<IVersionManager>(),
-				deps.GetService<IPlatformManager>(),
 				deps.GetService<IMessageManager>(),
 				deps.GetService<IRealtimeManager>(),
 				deps.GetService<IVisualPinballManager>(),
 				deps.GetService<IThreadManager>(),
+				deps.GetService<IJobManager>(),
 				deps.GetService<IFile>(),
 				deps.GetService<NLog.ILogger>()
 			), typeof(IGameManager));

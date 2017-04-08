@@ -17,7 +17,6 @@ namespace VpdbAgent.ViewModels.Games
 	public class GamesViewModel : ReactiveObject
 	{
 		// dependencies
-		private readonly IPlatformManager _platformManager;
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		// data
@@ -34,7 +33,6 @@ namespace VpdbAgent.ViewModels.Games
 
 		public GamesViewModel(IDependencyResolver resolver)
 		{
-			_platformManager = resolver.GetService<IPlatformManager>();
 			var menuManager = resolver.GetService<IMenuManager>();
 			var gameManager = resolver.GetService<IGameManager>();
 
@@ -141,8 +139,7 @@ namespace VpdbAgent.ViewModels.Games
 				_systemFilter.Clear();
 				_systemFilter.AddRange(Systems.Select(p => p.Name));
 			}
-			Logger.Info("We've got {0} platforms, {2} visible, {1} in total.", Systems.Count, _platformManager.Platforms.Count, _systemFilter.Count);
-
+			Logger.Info("We've got {0} systems.", Systems.Count);
 		}
 	}
 }
