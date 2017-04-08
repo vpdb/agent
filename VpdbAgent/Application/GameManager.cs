@@ -692,7 +692,7 @@ namespace VpdbAgent.Application
 				var game = Games.FirstOrDefault(g => g.ReleaseId == msg.ReleaseId);
 				if (game != null) {
 					_vpdbClient.Api.GetFullRelease(msg.ReleaseId)
-						.Subscribe(_databaseManager.AddOrUpdateRelease,
+						.Subscribe(_databaseManager.SaveRelease,
 							exception => _vpdbClient.HandleApiError(exception, "while retrieving updated release"));
 				} else {
 					_logger.Warn("Got update from non-existent release {0}.", msg.ReleaseId);
@@ -765,14 +765,9 @@ namespace VpdbAgent.Application
 				_vpdbClient.Api.GetReleasesByIds(string.Join(",", releaseIds))
 					.SubscribeOn(Scheduler.Default)
 					.Subscribe(releases => {
-						
 						// update release data
-						foreach (var release in releases) {
-							_databaseManager.AddOrUpdateRelease(release);
-						}
+						releases.ForEach(_databaseManager.SaveRelease);
 
-						// save
-						_databaseManager.Save();
 					}, exception => _vpdbClient.HandleApiError(exception, "retrieving all known releases by ID"));
 			} else {
 				_logger.Info("Skipping release update, no linked releases found.");

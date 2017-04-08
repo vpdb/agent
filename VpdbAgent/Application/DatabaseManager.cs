@@ -82,31 +82,18 @@ namespace VpdbAgent.Application
 		/// <returns>File or null if not found</returns>
 		[CanBeNull] VpdbFile GetFile(string fileId);
 
+		/// <summary>
+		/// Returns the game for a given game ID.
+		/// </summary>
+		/// <param name="gameId">Game ID</param>
+		/// <returns>Game or null if not found</returns>
 		[CanBeNull] VpdbGame GetGame(string gameId);
+
+		/// <summary>
+		/// Updates or creates a given game.
+		/// </summary>
+		/// <param name="game">Game to save</param>
 		void SaveGame(VpdbGame game);
-
-		/// <summary>
-		/// Updates the database with updated release data for a given release
-		/// or adds it if not available.
-		/// </summary>
-		/// <remarks>
-		/// Note that the database is NOT saved, so use <see cref="Save"/> if needed.
-		/// </remarks>
-		/// <param name="release">Release to update or add</param>
-		/// <returns>Local game if provided or found, null otherwise</returns>
-		void AddOrUpdateRelease(VpdbRelease release);
-
-		/// <summary>
-		/// Adds a new file object to the database or replaces if it exists
-		/// already.
-		/// </summary>
-		/// <remarks>
-		/// The file cache is mainly we have access to all file data of files
-		/// that are not part of a release. However, for convenience reasons,
-		/// we also add release file part of a download job.
-		/// </remarks>
-		/// <param name="file">File object</param>
-		void AddOrReplaceFile(VpdbFile file);
 
 		/// <summary>
 		/// Adds a new download job to the database.
@@ -120,10 +107,6 @@ namespace VpdbAgent.Application
 		/// <returns>Download jobs</returns>
 		IEnumerable<Job> GetJobs();
 
-		/// <summary>
-		/// 
-		/// </summary>
-		/// <param name="job"></param>
 		void SaveJob(Job job);
 
 		/// <summary>
@@ -324,28 +307,6 @@ namespace VpdbAgent.Application
 			}
 			if (game.Logo != null) {
 				_files.Upsert(game.Logo);
-			}
-		}
-
-		public void AddOrUpdateRelease(VpdbRelease release)
-		{
-			if (!Database.Releases.ContainsKey(release.Id)) {
-				_logger.Info("Adding new release data for release {0} ({1})", release.Id, release.Name);
-				Database.Releases.Add(release.Id, release);
-
-			} else {
-				_logger.Info("Updating release data of release {0} ({1})", release.Id, release.Name);
-				Database.Releases[release.Id].Update(release);
-			}
-		}
-
-		public void AddOrReplaceFile(VpdbFile file)
-		{
-			if (!Database.Files.ContainsKey(file.Id)) {
-				Database.Files.Add(file.Id, file);
-
-			} else {
-				Database.Files[file.Id] = file;
 			}
 		}
 
