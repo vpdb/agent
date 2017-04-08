@@ -1,26 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.Serialization;
 using LiteDB;
 
 namespace VpdbAgent.Vpdb.Models
 {
 	public class VpdbFile
 	{
-		[BsonId] public string Id { get; set; }
-		public string Name { get { return _name ?? Path.GetFileName(Url); } set { _name = value; } }
-		public long Bytes { get; set; }
-		public DateTime CreatedAt { get; set; }
-		public string MimeType { get; set; }
-		public string FileType { get; set; }
-		public Dictionary<string, dynamic> Metadata { get; set; }
-		public Dictionary<string, VpdbVariation> Variations { get; set; }
-		public VpdbCounter Counter { get; set; }
-		public bool IsActive { get; set; }
-		public bool IsProtected { get; set; }
+		[DataMember] [BsonId] public string Id { get; set; }
+		[DataMember] public string Name { get { return _name ?? Path.GetFileName(Url); } set { _name = value; } }
+		[DataMember] public long Bytes { get; set; }
+		[DataMember] public DateTime CreatedAt { get; set; }
+		[DataMember] public string MimeType { get; set; }
+		[DataMember] public string FileType { get; set; }
+		[DataMember] public Dictionary<string, dynamic> Metadata { get; set; }
+		[DataMember] public Dictionary<string, VpdbVariation> Variations { get; set; }
+		[DataMember] public VpdbCounter Counter { get; set; }
+		[DataMember] public bool IsActive { get; set; }
+		[DataMember] public bool IsProtected { get; set; }
 		public Uri Uri { get; private set; }
 
-		[BsonIgnore]
+		[DataMember] [BsonIgnore]
 		public string Url
 		{
 			get { return _url; }

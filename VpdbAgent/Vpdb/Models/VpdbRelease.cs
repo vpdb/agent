@@ -15,10 +15,11 @@ namespace VpdbAgent.Vpdb.Models
 		[DataMember] public string Name { get { return _name; } set { this.RaiseAndSetIfChanged(ref _name, value); } }
 		[DataMember] public DateTime CreatedAt { get; set; }
 		[DataMember] public List<VpdbAuthor> Authors { get; set; }
-		[DataMember] public ReleaseCounter Counter { get; set; }
 		[DataMember] [BsonRef(DatabaseManager.TableGames)] public VpdbGame Game { get; set; }
 		[DataMember] public VpdbThumb Thumb { get { return _thumb; } set { this.RaiseAndSetIfChanged(ref _thumb, value); } }
 		[DataMember] public ReactiveList<VpdbVersion> Versions { get { return _versions; } set { this.RaiseAndSetIfChanged(ref _versions, value); } }
+		[DataMember] public VpdbRating Rating { get; set; }
+		[DataMember] public ReleaseCounter Counter { get; set; }
 		[DataMember] public bool Starred { get { return _starred; } set { this.RaiseAndSetIfChanged(ref _starred, value); } }
 
 		// watched props
@@ -29,17 +30,14 @@ namespace VpdbAgent.Vpdb.Models
 
 		// convenience methods
 		[BsonIgnore]
-		public string AuthorNames { get {
-			return Authors.Count > 1 
-					? string.Join(", ", Authors.Take(Authors.Count - 1).Select(a => a.User.Name)) + " & " + Authors.Last().User.Name
-					: Authors.First().User.Name;
-		} }
-
-		public class ReleaseCounter
+		public string AuthorNames
 		{
-			public int Comments { get; set; }
-			public int Stars { get; set; }
-			public int Downloads { get; set; }
+			get
+			{
+				return Authors.Count > 1
+						? string.Join(", ", Authors.Take(Authors.Count - 1).Select(a => a.User.Name)) + " & " + Authors.Last().User.Name
+						: Authors.First().User.Name;
+			}
 		}
 
 		public VpdbTableFile GetFile(string fileId)
@@ -79,6 +77,20 @@ namespace VpdbAgent.Vpdb.Models
 					Versions.Add(version);
 				}
 			}
+		}
+
+		public class VpdbRating
+		{
+			[DataMember] public float Score { get; set; }
+			[DataMember] public int Votes { get; set; }
+			[DataMember] public int Average { get; set; }
+		}
+
+		public class ReleaseCounter
+		{
+			[DataMember] public int Comments { get; set; }
+			[DataMember] public int Stars { get; set; }
+			[DataMember] public int Downloads { get; set; }
 		}
 
 		public override string ToString()

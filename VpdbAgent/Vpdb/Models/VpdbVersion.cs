@@ -7,8 +7,7 @@ namespace VpdbAgent.Vpdb.Models
 {
 	public class VpdbVersion : ReactiveObject
 	{
-		[JsonProperty(PropertyName = "version")]
-		[DataMember] public string Name { get; set; }
+		[JsonProperty(PropertyName = "version")] [DataMember] public string Name { get; set; }
 		[DataMember] public string Changes { get; set; }
 		[DataMember] public DateTime ReleasedAt { get; set; }
 		[DataMember] public ReactiveList<VpdbTableFile> Files { get; set; }

@@ -1,12 +1,13 @@
-﻿using Newtonsoft.Json;
+﻿using System.Runtime.Serialization;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
 namespace VpdbAgent.Vpdb.Models
 {
 	public class VpdbFlavor
 	{
-		[JsonConverter(typeof(StringEnumConverter))] public VpdbLighting Lighting { get; set; }
-		[JsonConverter(typeof(StringEnumConverter))] public VpdbOrientation Orientation { get; set; }
+		[DataMember] [JsonConverter(typeof(StringEnumConverter))] public VpdbLighting Lighting { get; set; }
+		[DataMember] [JsonConverter(typeof(StringEnumConverter))] public VpdbOrientation Orientation { get; set; }
 
 		public override string ToString()
 		{

@@ -196,6 +196,7 @@ namespace VpdbAgent.Application
 			_users = _db.GetCollection<VpdbUser>(TableUsers);
 			_jobs = _db.GetCollection<Job>(TableJobs);
 
+			_mapper.UseLowerCaseDelimiter('_');
 			_mapper.Entity<VpdbRelease>().Ignore(x => x.Changing).Ignore(x => x.Changed).Ignore(x => x.ThrownExceptions);
 			_mapper.Entity<VpdbVersion>().Ignore(x => x.Changing).Ignore(x => x.Changed).Ignore(x => x.ThrownExceptions);
 			_mapper.Entity<VpdbTableFile>().Ignore(x => x.Changing).Ignore(x => x.Changed).Ignore(x => x.ThrownExceptions);

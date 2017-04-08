@@ -8,10 +8,12 @@ using CommandLine;
 using Hardcodet.Wpf.TaskbarNotification;
 using Mindscape.Raygun4Net;
 using NLog;
+using Splat;
 using Squirrel;
 using SynchrotronNet;
 using VpdbAgent.Application;
 using VpdbAgent.ViewModels;
+using ILogger = NLog.ILogger;
 
 namespace VpdbAgent
 {
@@ -50,6 +52,7 @@ namespace VpdbAgent
 
 		protected override void OnExit(ExitEventArgs e)
 		{
+			Locator.Current.GetService<IDatabaseManager>().Dispose();
 			_notifyIcon.Dispose();
 			base.OnExit(e);
 		}

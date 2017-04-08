@@ -1,19 +1,13 @@
 ﻿using System;
 using System.IO;
 using System.Net;
-using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Runtime.Serialization;
 using System.Threading;
 using LiteDB;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using NLog;
 using ReactiveUI;
 using Splat;
 using VpdbAgent.Application;
-using VpdbAgent.Models;
 using VpdbAgent.PinballX.Models;
 using VpdbAgent.Vpdb.Models;
 using ILogger = NLog.ILogger;
@@ -38,8 +32,8 @@ namespace VpdbAgent.Vpdb.Download
 	{
 		// persisted properties
 		[BsonId] public int Id { get; set; }
-		[BsonRef(DatabaseManager.TableReleases)] public VpdbRelease Release { get; set; }
-		[BsonRef(DatabaseManager.TableFiles)] public VpdbFile File { get; set; }
+		[BsonRef(DatabaseManager.TableReleases)] public VpdbRelease Release { get { return _release; } set { this.RaiseAndSetIfChanged(ref _release, value); } }
+		[BsonRef(DatabaseManager.TableFiles)] public VpdbFile File { get { return _file; } set { this.RaiseAndSetIfChanged(ref _file, value); } }
 		public string FilePath { get; set; }
 		public DateTime QueuedAt { get; set; } = DateTime.Now;
 		public DateTime StartedAt { get; set; }
@@ -66,22 +60,37 @@ namespace VpdbAgent.Vpdb.Download
 		[BsonIgnore] public IObservable<JobStatus> WhenStatusChanges => _whenStatusChanges;
 		[BsonIgnore] public IObservable<DownloadProgressChangedEventArgs> WhenDownloadProgresses => _whenDownloadProgresses;
 
+		// watched props
+		private VpdbRelease _release;
+		private VpdbFile _file;
+
 		// fields
 		private readonly Subject<JobStatus> _whenStatusChanges = new Subject<JobStatus>();
 		private readonly Subject<DownloadProgressChangedEventArgs> _whenDownloadProgresses = new Subject<DownloadProgressChangedEventArgs>();
 		private CancellationToken _cancellationToken;
 
 		// dependencies
-		private static readonly IVpdbClient VpdbClient = Locator.CurrentMutable.GetService<IVpdbClient>();
-		private static readonly ILogger Logger = Locator.CurrentMutable.GetService<ILogger>();
+		private readonly IVpdbClient _vpdbClient;
+		private readonly ILogger _logger;
 
-		public Job() {
+		private Job(IDependencyResolver resolver)
+		{
+			_vpdbClient = resolver.GetService<IVpdbClient>();
+			_logger = resolver.GetService<ILogger>();
+		}
+
+		public Job() : this(Locator.Current) {
+
+			// set Version
+			this.WhenAnyValue(x => x.Release, x => x.File)
+				.Where(x => x.Item1 != null && x.Item2 != null)
+				.Subscribe(x => Version = x.Item1.GetVersion(x.Item2.Id));
 		}
 
 		/// <summary>
 		/// Constructor called when de-serializing
 		/// </summary>
-		private Job(VpdbRelease release, VpdbFile file)
+		private Job(VpdbRelease release, VpdbFile file) : this()
 		{
 			Release = release;
 			File = file;
@@ -90,7 +99,7 @@ namespace VpdbAgent.Vpdb.Download
 				Status = status;
 			});
 
-			Client = VpdbClient.GetWebClient();
+			Client = _vpdbClient.GetWebClient();
 		}
 
 		/// <summary>
@@ -106,7 +115,7 @@ namespace VpdbAgent.Vpdb.Download
 			FileType = filetype;
 			Thumb = tableFile.Thumb;
 			Platform = platform;
-			Logger.Info("Creating new release download job for {0} {1}.", filetype, File.Uri.AbsoluteUri);
+			_logger.Info("Creating new release download job for {0} {1}.", filetype, File.Uri.AbsoluteUri);
 		}
 
 		/// <summary>
@@ -123,7 +132,7 @@ namespace VpdbAgent.Vpdb.Download
 			FileType = filetype;
 			Platform = platform;
 			Thumb = release.Thumb?.Image;
-			Logger.Info("Creating new download job for {0} {1}.", filetype, File.Uri.AbsoluteUri);
+			_logger.Info("Creating new download job for {0} {1}.", filetype, File.Uri.AbsoluteUri);
 		}
 
 		/// <summary>
@@ -168,7 +177,7 @@ namespace VpdbAgent.Vpdb.Download
 				Client.CancelAsync();
 
 			} else {
-				Logger.Warn("Transfer cannot be cancelled.");
+				_logger.Warn("Transfer cannot be cancelled.");
 			}
 		}
 
@@ -229,7 +238,7 @@ namespace VpdbAgent.Vpdb.Download
 		public string GetFileDestination(PinballXSystem system = null)
 		{
 			if (system == null) {
-				Logger.Error("Platform not provided when it should have ({0})", FileType);
+				_logger.Error("Platform not provided when it should have ({0})", FileType);
 				return null;
 			}
 
