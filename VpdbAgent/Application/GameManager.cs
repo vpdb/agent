@@ -588,7 +588,7 @@ namespace VpdbAgent.Application
 
 		public void DownloadGame(AggregatedGame game)
 		{
-			_downloadManager.DownloadRelease(game.MappedRelease.Id, game.MappedTableFile.Reference.Id);
+			_downloadManager.DownloadRelease(game.MappedRelease, game.MappedTableFile);
 		}
 
 		public void HideGame(AggregatedGame game)

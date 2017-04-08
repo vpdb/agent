@@ -151,6 +151,7 @@ namespace VpdbAgent.Application
 		public const string TableGames = "games";
 		public const string TableReleases = "releases";
 		public const string TableFiles = "files";
+		public const string TableBuilds = "builds";
 		public const string TableUsers = "users";
 		public const string TableJobs = "jobs";
 
@@ -159,6 +160,7 @@ namespace VpdbAgent.Application
 		private LiteCollection<VpdbRelease> _releases;
 		private LiteCollection<VpdbFile> _files;
 		private LiteCollection<VpdbUser> _users;
+		private LiteCollection<VpdbTableFile.VpdbCompatibility> _builds;
 		private LiteCollection<Job> _jobs;
 
 		// props
@@ -190,8 +192,15 @@ namespace VpdbAgent.Application
 			_games = _db.GetCollection<VpdbGame>(TableGames);
 			_releases = _db.GetCollection<VpdbRelease>(TableReleases);
 			_files = _db.GetCollection<VpdbFile>(TableFiles);
+			_builds = _db.GetCollection<VpdbTableFile.VpdbCompatibility>(TableBuilds); 
 			_users = _db.GetCollection<VpdbUser>(TableUsers);
 			_jobs = _db.GetCollection<Job>(TableJobs);
+
+			_mapper.Entity<VpdbRelease>().Ignore(x => x.Changing).Ignore(x => x.Changed).Ignore(x => x.ThrownExceptions);
+			_mapper.Entity<VpdbVersion>().Ignore(x => x.Changing).Ignore(x => x.Changed).Ignore(x => x.ThrownExceptions);
+			_mapper.Entity<VpdbTableFile>().Ignore(x => x.Changing).Ignore(x => x.Changed).Ignore(x => x.ThrownExceptions);
+			_mapper.Entity<VpdbThumb>().Ignore(x => x.Changing).Ignore(x => x.Changed).Ignore(x => x.ThrownExceptions);
+			_mapper.Entity<VpdbImage>().Ignore(x => x.Changing).Ignore(x => x.Changed).Ignore(x => x.ThrownExceptions);
 
 			_logger.Info("LiteDB initialized at {0}.", _dbPath);
 			_initialized.OnNext(true);
@@ -218,6 +227,7 @@ namespace VpdbAgent.Application
 					if (file.PlayfieldVideo != null) {
 						file.PlayfieldVideo = _files.FindById(file.PlayfieldVideo.Id);
 					}
+					file.Compatibility = new ReactiveList<VpdbTableFile.VpdbCompatibility>(file.Compatibility.Select(build => _builds.FindById(build.Id)));
 				});
 			});
 			release.Authors.ToList().ForEach(author => {
@@ -247,6 +257,7 @@ namespace VpdbAgent.Application
 					if (file.PlayfieldVideo != null) {
 						_files.Upsert(file.PlayfieldVideo);
 					}
+					file.Compatibility.ToList().ForEach(build => _builds.Upsert(build));
 				});
 			});
 			release.Authors.ToList().ForEach(author => {

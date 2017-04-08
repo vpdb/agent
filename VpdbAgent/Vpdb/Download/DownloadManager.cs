@@ -41,6 +41,13 @@ namespace VpdbAgent.Vpdb.Download
 		IDownloadManager DownloadRelease(string releaseId, string currentFileId = null);
 
 		/// <summary>
+		/// Downloads a release including media and ROMs.
+		/// </summary>
+		/// <param name="release">Release to download</param>
+		/// <param name="tableFile">File of the release to download</param>
+		IDownloadManager DownloadRelease(VpdbRelease release, VpdbTableFile tableFile);
+
+		/// <summary>
 		/// An observable that produces a value when a release finished 
 		/// downloading successfully.
 		/// </summary>
@@ -148,6 +155,50 @@ namespace VpdbAgent.Vpdb.Download
 			return this;
 		}
 
+		public IDownloadManager DownloadRelease(VpdbRelease release, VpdbTableFile tableFile)
+		{
+			// also fetch game data for media & co
+			_vpdbManager.GetGame(release.Game.Id, true).Subscribe(game => {
+
+				var version = _databaseManager.GetVersion(release.Id, tableFile.Reference.Id);
+				_logger.Info($"Downloading {game.DisplayName} - {release.Name} v{version?.Name} ({tableFile.Reference.Id})");
+
+				var gameName = release.Game.DisplayName;
+				var system = _pinballXManager.FindSystem(tableFile);
+				var platform = tableFile.Compatibility[0].Platform;
+
+				// check if backglass image needs to be downloaded
+				var backglassImagePath = Path.Combine(system.MediaPath, Job.MediaBackglassImages);
+				if (!FileBaseExists(backglassImagePath, gameName)) {
+					_jobManager.AddJob(new Job(release, game.Backglass, FileType.BackglassImage, platform));
+				}
+
+				// check if wheel image needs to be downloaded
+				var wheelImagePath = Path.Combine(system.MediaPath, Job.MediaWheelImages);
+				if (!FileBaseExists(wheelImagePath, gameName)) {
+					_jobManager.AddJob(new Job(release, game.Logo, FileType.WheelImage, platform));
+				}
+
+				// queue table shot
+				var tableImage = Path.Combine(system.MediaPath, Job.MediaTableImages);
+				if (!FileBaseExists(tableImage, gameName)) {
+					_jobManager.AddJob(new Job(release, tableFile.PlayfieldImage, FileType.TableImage, platform));
+				}
+
+				// todo check for ROM to be downloaded, path at HKEY_CURRENT_USER\SOFTWARE\Freeware\Visual PinMame\globals
+				// todo also queue all remaining non-table files of the release.
+
+				// queue for download
+				var job = new Job(release, tableFile, FileType.TableFile, platform);
+				_logger.Info("Created new job for {0} - {1} v{2} ({3}): {4}", job.Release.Game.DisplayName, job.Release.Name, job.Version.Name, job.File.Id, tableFile.ToString());
+				_jobManager.AddJob(job);
+
+				_currentlyDownloading.Remove(release.Id);
+
+			}, exception => _vpdbManager.HandleApiError(exception, "retrieving game details during download"));
+			return this;
+		}
+
 		public VpdbTableFile FindLatestFile(VpdbRelease release, string currentFileId = null)
 		{
 			if (release == null) {
@@ -183,54 +234,6 @@ namespace VpdbAgent.Vpdb.Download
 			}
 			
 			return file;
-		}
-
-		/// <summary>
-		/// Downloads a release including media and ROMs.
-		/// </summary>
-		/// <param name="release">Release to download</param>
-		/// <param name="tableFile">File of the release to download</param>
-		private void DownloadRelease(VpdbRelease release, VpdbTableFile tableFile)
-		{
-			// also fetch game data for media & co
-			_vpdbManager.GetGame(release.Game.Id, true).Subscribe(game => {
-
-				var version = _databaseManager.GetVersion(release.Id, tableFile.Reference.Id);
-				_logger.Info($"Downloading {game.DisplayName} - {release.Name} v{version?.Name} ({tableFile.Reference.Id})");
-
-				var gameName = release.Game.DisplayName;
-				var pbxPlatform = _pinballXManager.FindSystem(tableFile);
-				var vpdbPlatform = tableFile.Compatibility[0].Platform;
-
-				// check if backglass image needs to be downloaded
-				var backglassImagePath = Path.Combine(pbxPlatform.MediaPath, Job.MediaBackglassImages);
-				if (!FileBaseExists(backglassImagePath, gameName)) {
-					_jobManager.AddJob(new Job(release, game.Backglass, FileType.BackglassImage, vpdbPlatform));
-				}
-
-				// check if wheel image needs to be downloaded
-				var wheelImagePath = Path.Combine(pbxPlatform.MediaPath, Job.MediaWheelImages);
-				if (!FileBaseExists(wheelImagePath, gameName)) {
-					_jobManager.AddJob(new Job(release, game.Logo, FileType.WheelImage, vpdbPlatform));
-				}
-
-				// queue table shot
-				var tableImage = Path.Combine(pbxPlatform.MediaPath, Job.MediaTableImages);
-				if (!FileBaseExists(tableImage, gameName)) {
-					_jobManager.AddJob(new Job(release, tableFile.PlayfieldImage, FileType.TableImage, vpdbPlatform));
-				}
-
-				// todo check for ROM to be downloaded, path at HKEY_CURRENT_USER\SOFTWARE\Freeware\Visual PinMame\globals
-				// todo also queue all remaining non-table files of the release.
-
-				// queue for download
-				var job = new Job(release, tableFile, FileType.TableFile, vpdbPlatform);
-				_logger.Info("Created new job for {0} - {1} v{2} ({3}): {4}", job.Release.Game.DisplayName, job.Release.Name, job.Version.Name, job.File.Id, tableFile.ToString());
-				_jobManager.AddJob(job);
-
-				_currentlyDownloading.Remove(release.Id);
-
-			}, exception => _vpdbManager.HandleApiError(exception, "retrieving game details during download"));
 		}
 
 		/// <summary>

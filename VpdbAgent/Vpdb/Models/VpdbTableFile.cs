@@ -1,10 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
 using LiteDB;
 using ReactiveUI;
 using VpdbAgent.Application;
@@ -20,7 +17,7 @@ namespace VpdbAgent.Vpdb.Models
 		[DataMember] [BsonRef(DatabaseManager.TableFiles)] public VpdbFile PlayfieldImage { get; set; }
 		[DataMember] [BsonRef(DatabaseManager.TableFiles)] public VpdbFile PlayfieldVideo { get; set; }
 		[DataMember] [BsonRef(DatabaseManager.TableFiles)] [JsonProperty(PropertyName = "file")] public VpdbFile Reference { get; set; }
-		[DataMember] public List<VpdbCompatibility> Compatibility;
+		[DataMember] [BsonRef(DatabaseManager.TableBuilds)] public ReactiveList<VpdbCompatibility> Compatibility;
 		[DataMember] public VpdbImage Thumb { get { return _thumb; } set { this.RaiseAndSetIfChanged(ref _thumb, value); } }
 
 		public override string ToString()
@@ -30,7 +27,7 @@ namespace VpdbAgent.Vpdb.Models
 
 		public class VpdbCompatibility
 		{
-			public string Id { get; set; }
+			[BsonId] public string Id { get; set; }
 			public string Label { get; set; }
 			public VpdbPlatform Platform { get; set; }
 			public string MajorVersion { get; set; }

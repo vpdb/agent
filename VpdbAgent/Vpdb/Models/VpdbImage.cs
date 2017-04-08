@@ -1,5 +1,4 @@
-﻿using System.Runtime.Serialization;
-using ReactiveUI;
+﻿using ReactiveUI;
 
 namespace VpdbAgent.Vpdb.Models
 {
