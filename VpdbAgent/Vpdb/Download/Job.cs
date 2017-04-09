@@ -46,7 +46,7 @@ namespace VpdbAgent.Vpdb.Download
 		public VpdbImage Thumb { get; private set; }
 
 		// object lookups
-		[BsonIgnore] public VpdbVersion Version { get; private set; }
+		[BsonIgnore] public VpdbVersion Version => _version.Value;
 
 		// unserialized props
 		[BsonIgnore] public readonly WebClient Client;
@@ -63,6 +63,7 @@ namespace VpdbAgent.Vpdb.Download
 		// watched props
 		private VpdbRelease _release;
 		private VpdbFile _file;
+		private readonly ObservableAsPropertyHelper<VpdbVersion> _version;
 
 		// fields
 		private readonly Subject<JobStatus> _whenStatusChanges = new Subject<JobStatus>();
@@ -83,8 +84,9 @@ namespace VpdbAgent.Vpdb.Download
 
 			// set Version
 			this.WhenAnyValue(x => x.Release, x => x.File)
-				.Where(x => x.Item1 != null && x.Item2 != null)
-				.Subscribe(x => Version = x.Item1.GetVersion(x.Item2.Id));
+				.Where(x => x.Item1 != null && x.Item2 != null && x.Item1.Versions != null)
+				.Select(x =>  x.Item1.GetVersion(x.Item2.Id))
+				.ToProperty(this, j => j.Version, out _version);
 		}
 
 		/// <summary>

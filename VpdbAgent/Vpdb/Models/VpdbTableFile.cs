@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
 using LiteDB;
@@ -17,7 +18,7 @@ namespace VpdbAgent.Vpdb.Models
 		[DataMember] [BsonRef(DatabaseManager.TableFiles)] public VpdbFile PlayfieldImage { get; set; }
 		[DataMember] [BsonRef(DatabaseManager.TableFiles)] public VpdbFile PlayfieldVideo { get; set; }
 		[DataMember] [BsonRef(DatabaseManager.TableFiles)] [JsonProperty(PropertyName = "file")] public VpdbFile Reference { get; set; }
-		[DataMember] [BsonRef(DatabaseManager.TableBuilds)] public ReactiveList<VpdbCompatibility> Compatibility { get; set; }
+		[DataMember] [BsonRef(DatabaseManager.TableBuilds)] public List<VpdbCompatibility> Compatibility { get; set; }
 		[DataMember] public VpdbImage Thumb { get { return _thumb; } set { this.RaiseAndSetIfChanged(ref _thumb, value); } }
 		[DataMember] public TableFileCounter Counter { get; set; }
 

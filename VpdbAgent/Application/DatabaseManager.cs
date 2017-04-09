@@ -202,6 +202,7 @@ namespace VpdbAgent.Application
 			_mapper.Entity<VpdbTableFile>().Ignore(x => x.Changing).Ignore(x => x.Changed).Ignore(x => x.ThrownExceptions);
 			_mapper.Entity<VpdbThumb>().Ignore(x => x.Changing).Ignore(x => x.Changed).Ignore(x => x.ThrownExceptions);
 			_mapper.Entity<VpdbImage>().Ignore(x => x.Changing).Ignore(x => x.Changed).Ignore(x => x.ThrownExceptions);
+			_mapper.Entity<Job>().Ignore(x => x.Changing).Ignore(x => x.Changed).Ignore(x => x.ThrownExceptions);
 
 			_logger.Info("LiteDB initialized at {0}.", _dbPath);
 			_initialized.OnNext(true);
@@ -228,7 +229,7 @@ namespace VpdbAgent.Application
 					if (file.PlayfieldVideo != null) {
 						file.PlayfieldVideo = _files.FindById(file.PlayfieldVideo.Id);
 					}
-					file.Compatibility = new ReactiveList<VpdbTableFile.VpdbCompatibility>(file.Compatibility.Select(build => _builds.FindById(build.Id)));
+					file.Compatibility = file.Compatibility.Select(build => _builds.FindById(build.Id)).ToList();
 				});
 			});
 			release.Authors.ToList().ForEach(author => {
@@ -336,13 +337,12 @@ namespace VpdbAgent.Application
 
 		public IEnumerable<Job> GetJobs()
 		{
-			return _jobs
+			var jobs = _jobs
 				.Include(j => j.File)
 				.FindAll()
-				.Select(job => {
-					job.Release = GetRelease(job.Release.Id);
-					return job;
-				});
+				.ToList();
+			jobs.ForEach(job => job.Release = GetRelease(job.Release.Id));
+			return jobs;
 		}
 
 		public void SaveJob(Job job)

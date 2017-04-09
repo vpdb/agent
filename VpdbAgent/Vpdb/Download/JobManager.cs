@@ -80,7 +80,7 @@ namespace VpdbAgent.Vpdb.Download
 		private readonly CrashManager _crashManager;
 
 		// props
-		public ReactiveList<Job> CurrentJobs { get; private set; }
+		public ReactiveList<Job> CurrentJobs { get; } = new ReactiveList<Job>();
 		public IObservable<Job.JobStatus> WhenStatusChanged => _whenStatusChanged;
 		public IObservable<Job> WhenDownloaded => _whenDownloaded;
 
@@ -129,7 +129,10 @@ namespace VpdbAgent.Vpdb.Download
 
 		public IJobManager Initialize()
 		{
-			CurrentJobs = new ReactiveList<Job>(_databaseManager.GetJobs());
+			var jobs = _databaseManager.GetJobs();
+			using (CurrentJobs.SuppressChangeNotifications()) {
+				CurrentJobs.AddRange(jobs);
+			}
 			return this;	
 		}
 

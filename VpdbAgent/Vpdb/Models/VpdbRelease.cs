@@ -47,7 +47,10 @@ namespace VpdbAgent.Vpdb.Models
 
 		public VpdbVersion GetVersion(string fileId)
 		{
-			return (from v in Versions from f in v.Files where f.Reference.Id == fileId select v).FirstOrDefault();
+			if (Versions == null) {
+				throw new InvalidOperationException("Versions must be populated when retrieving version.");
+			}
+			return (from version in Versions from file in version.Files where file.Reference.Id == fileId select version).FirstOrDefault();
 		}
 
 		/// <summary>
