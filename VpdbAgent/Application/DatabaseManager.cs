@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using JetBrains.Annotations;
 using LiteDB;
@@ -105,7 +102,7 @@ namespace VpdbAgent.Application
 		/// Returns all jobs in the database.
 		/// </summary>
 		/// <returns>Download jobs</returns>
-		IEnumerable<Job> GetJobs();
+		List<Job> GetJobs();
 
 		void SaveJob(Job job);
 
@@ -176,12 +173,6 @@ namespace VpdbAgent.Application
 			_settingsManager = settingsManager;
 			_crashManager = crashManager;
 			_logger = logger;
-
-			// throttle saving
-			/*_save
-				.ObserveOn(Scheduler.Default)
-				.Sample(TimeSpan.FromMilliseconds(500))
-				.Subscribe(_ => { MarshallDatabase(); });*/
 		}
 
 		public IDatabaseManager Initialize()
@@ -335,7 +326,7 @@ namespace VpdbAgent.Application
 			_jobs.Insert(job);
 		}
 
-		public IEnumerable<Job> GetJobs()
+		public List<Job> GetJobs()
 		{
 			var jobs = _jobs
 				.Include(j => j.File)

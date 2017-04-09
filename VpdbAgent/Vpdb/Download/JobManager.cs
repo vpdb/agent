@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
@@ -133,6 +134,12 @@ namespace VpdbAgent.Vpdb.Download
 			using (CurrentJobs.SuppressChangeNotifications()) {
 				CurrentJobs.AddRange(jobs);
 			}
+
+			// add queued to queue
+			jobs.Where(j => j.Status == Job.JobStatus.Queued).ToList().ForEach(job => {
+				job.WhenStatusChanges.Subscribe(status => _whenStatusChanged.OnNext(status));
+				_jobs.OnNext(job);
+			});
 			return this;	
 		}
 

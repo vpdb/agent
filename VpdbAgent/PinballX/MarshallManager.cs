@@ -9,7 +9,6 @@ using NLog;
 using VpdbAgent.Application;
 using VpdbAgent.Common.Filesystem;
 using VpdbAgent.Data;
-using VpdbAgent.Models;
 using VpdbAgent.PinballX.Models;
 using VpdbAgent.Vpdb.Network;
 using Directory = System.IO.Directory;
@@ -164,6 +163,9 @@ namespace VpdbAgent.PinballX
 				var serializer = new XmlSerializer(typeof(PinballXMenu));
 				reader = new FileStream(filepath, FileMode.Open);
 				menu = serializer.Deserialize(reader) as PinballXMenu;
+
+			} catch (FileNotFoundException) {
+				// ignore: http://stackoverflow.com/questions/1127431/xmlserializer-giving-filenotfoundexception-at-constructor
 
 			} catch (Exception e) {
 				_logger.Error(e, "Error parsing {0}: {1}", filepath, e.Message);

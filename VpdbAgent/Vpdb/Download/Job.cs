@@ -71,13 +71,12 @@ namespace VpdbAgent.Vpdb.Download
 		private CancellationToken _cancellationToken;
 
 		// dependencies
-		private readonly IVpdbClient _vpdbClient;
 		private readonly ILogger _logger;
 
 		private Job(IDependencyResolver resolver)
 		{
-			_vpdbClient = resolver.GetService<IVpdbClient>();
 			_logger = resolver.GetService<ILogger>();
+			Client = resolver.GetService<IVpdbClient>().GetWebClient();
 		}
 
 		public Job() : this(Locator.Current) {
@@ -100,8 +99,6 @@ namespace VpdbAgent.Vpdb.Download
 			_whenStatusChanges.Subscribe(status => {
 				Status = status;
 			});
-
-			Client = _vpdbClient.GetWebClient();
 		}
 
 		/// <summary>
