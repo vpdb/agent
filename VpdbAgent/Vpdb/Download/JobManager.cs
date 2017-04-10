@@ -57,7 +57,7 @@ namespace VpdbAgent.Vpdb.Download
 		/// An observable that produces values as when any job in the queue
 		/// (active or not) changes status.
 		/// </summary>
-		IObservable<Job.JobStatus> WhenStatusChanged { get; }
+		IObservable<Job> WhenStatusChanged { get; }
 
 		/// <summary>
 		/// An observable that produces a value when a job finished downloading
@@ -82,12 +82,12 @@ namespace VpdbAgent.Vpdb.Download
 
 		// props
 		public ReactiveList<Job> CurrentJobs { get; } = new ReactiveList<Job>();
-		public IObservable<Job.JobStatus> WhenStatusChanged => _whenStatusChanged;
+		public IObservable<Job> WhenStatusChanged => _whenStatusChanged;
 		public IObservable<Job> WhenDownloaded => _whenDownloaded;
 
 		// members
 		private readonly Subject<Job> _jobs = new Subject<Job>();
-		private readonly Subject<Job.JobStatus> _whenStatusChanged = new Subject<Job.JobStatus>();
+		private readonly Subject<Job> _whenStatusChanged = new Subject<Job>();
 		private readonly Subject<Job> _whenDownloaded = new Subject<Job>();
 		private readonly IDisposable _queue;
 		private readonly string _downloadPath = Path.Combine(
@@ -122,6 +122,9 @@ namespace VpdbAgent.Vpdb.Download
 					_logger.Error(error, "Error: {0}", error.Message);
 				});
 
+			// save job when status changes
+			_whenStatusChanged.Sample(TimeSpan.FromMilliseconds(200)).Subscribe(_databaseManager.SaveJob);
+
 			if (!Directory.Exists(_downloadPath)) {
 				_logger.Info("Creating non-existing download folder at {0}.", _downloadPath);
 				Directory.CreateDirectory(_downloadPath);
@@ -137,7 +140,7 @@ namespace VpdbAgent.Vpdb.Download
 
 			// add queued to queue
 			jobs.Where(j => j.Status == Job.JobStatus.Queued).ToList().ForEach(job => {
-				job.WhenStatusChanges.Subscribe(status => _whenStatusChanged.OnNext(status));
+				job.WhenStatusChanges.Subscribe(status => _whenStatusChanged.OnNext(job));
 				_jobs.OnNext(job);
 			});
 			return this;	
@@ -159,7 +162,7 @@ namespace VpdbAgent.Vpdb.Download
 		{
 			System.Windows.Application.Current.Dispatcher.Invoke(() => {
 				job.Initialize();
-				job.WhenStatusChanges.Subscribe(status => _whenStatusChanged.OnNext(status));
+				job.WhenStatusChanges.Subscribe(status => _whenStatusChanged.OnNext(job));
 				_jobs.OnNext(job);
 				_databaseManager.SaveJob(job);
 			});
@@ -236,7 +239,7 @@ namespace VpdbAgent.Vpdb.Download
 		private void AddToCurrentJobs(Job job)
 		{
 			// update jobs back on main thread
-			System.Windows.Application.Current.Dispatcher.Invoke(() => job.WhenStatusChanges.Subscribe(_whenStatusChanged.OnNext));
+			System.Windows.Application.Current.Dispatcher.Invoke(() => job.WhenStatusChanges.Subscribe(status => _whenStatusChanged.OnNext(job)));
 		}
 	}
 }

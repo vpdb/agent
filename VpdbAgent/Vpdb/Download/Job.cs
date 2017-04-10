@@ -40,7 +40,7 @@ namespace VpdbAgent.Vpdb.Download
 		public DateTime FinishedAt { get; set; }
 		public long TransferredBytes { get; set; }
 		public string ErrorMessage { get; set; }
-		public JobStatus Status { get; set; } = JobStatus.Queued;
+		public JobStatus Status { get { return _status; } set { this.RaiseAndSetIfChanged(ref _status, value); } }
 		public FileType FileType { get; set; }
 		public VpdbTableFile.VpdbPlatform Platform { get; set; }
 		public VpdbImage Thumb { get; private set; }
@@ -63,6 +63,7 @@ namespace VpdbAgent.Vpdb.Download
 		// watched props
 		private VpdbRelease _release;
 		private VpdbFile _file;
+		private JobStatus _status;
 		private readonly ObservableAsPropertyHelper<VpdbVersion> _version;
 
 		// fields
@@ -86,6 +87,11 @@ namespace VpdbAgent.Vpdb.Download
 				.Where(x => x.Item1 != null && x.Item2 != null && x.Item1.Versions != null)
 				.Select(x =>  x.Item1.GetVersion(x.Item2.Id))
 				.ToProperty(this, j => j.Version, out _version);
+
+			// update status
+			_whenStatusChanges.Subscribe(status => {
+				Status = status;
+			});
 		}
 
 		/// <summary>
@@ -95,10 +101,6 @@ namespace VpdbAgent.Vpdb.Download
 		{
 			Release = release;
 			File = file;
-
-			_whenStatusChanges.Subscribe(status => {
-				Status = status;
-			});
 		}
 
 		/// <summary>
@@ -150,7 +152,7 @@ namespace VpdbAgent.Vpdb.Download
 			Client.DownloadProgressChanged += OnProgressChanged;
 
 			// on main thread
-			System.Windows.Application.Current.Dispatcher.Invoke(delegate {
+			System.Windows.Application.Current.Dispatcher.Invoke(() => {
 				_whenStatusChanges.OnNext(JobStatus.Transferring);
 			});
 
@@ -194,7 +196,7 @@ namespace VpdbAgent.Vpdb.Download
 		public void OnSuccess()
 		{
 			// on main thread
-			System.Windows.Application.Current.Dispatcher.Invoke(delegate {
+			System.Windows.Application.Current.Dispatcher.Invoke(() => {
 				OnFinished();
 				_whenStatusChanges.OnNext(JobStatus.Completed);
 			});
@@ -206,7 +208,7 @@ namespace VpdbAgent.Vpdb.Download
 		/// </summary>
 		public void OnCancelled()
 		{
-			System.Windows.Application.Current.Dispatcher.Invoke(delegate {
+			System.Windows.Application.Current.Dispatcher.Invoke(() => {
 				OnFinished();
 				_whenStatusChanges.OnNext(JobStatus.Aborted);
 			});

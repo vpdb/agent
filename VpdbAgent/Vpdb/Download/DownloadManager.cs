@@ -161,27 +161,31 @@ namespace VpdbAgent.Vpdb.Download
 			_vpdbManager.GetGame(release.Game.Id, true).Subscribe(game => {
 
 				var version = _databaseManager.GetVersion(release.Id, tableFile.Reference.Id);
-				_logger.Info($"Downloading {game.DisplayName} - {release.Name} v{version?.Name} ({tableFile.Reference.Id})");
+				_logger.Info($"Checking what to download for {game.DisplayName} - {release.Name} v{version?.Name} ({tableFile.Reference.Id})");
 
 				var gameName = release.Game.DisplayName;
 				var system = _pinballXManager.FindSystem(tableFile);
 				var platform = tableFile.Compatibility[0].Platform;
+				var fileTypes = new List<FileType>();
 
 				// check if backglass image needs to be downloaded
 				var backglassImagePath = Path.Combine(system.MediaPath, Job.MediaBackglassImages);
 				if (!FileBaseExists(backglassImagePath, gameName)) {
+					fileTypes.Add(FileType.BackglassImage);
 					_jobManager.AddJob(new Job(release, game.Backglass, FileType.BackglassImage, platform));
 				}
 
 				// check if wheel image needs to be downloaded
 				var wheelImagePath = Path.Combine(system.MediaPath, Job.MediaWheelImages);
 				if (!FileBaseExists(wheelImagePath, gameName)) {
+					fileTypes.Add(FileType.WheelImage);
 					_jobManager.AddJob(new Job(release, game.Logo, FileType.WheelImage, platform));
 				}
 
 				// queue table shot
 				var tableImage = Path.Combine(system.MediaPath, Job.MediaTableImages);
 				if (!FileBaseExists(tableImage, gameName)) {
+					fileTypes.Add(FileType.TableImage);
 					_jobManager.AddJob(new Job(release, tableFile.PlayfieldImage, FileType.TableImage, platform));
 				}
 
@@ -190,6 +194,8 @@ namespace VpdbAgent.Vpdb.Download
 
 				// queue for download
 				var job = new Job(release, tableFile, FileType.TableFile, platform);
+				fileTypes.Add(FileType.TableImage);
+				_logger.Info("Found {0} file type(s) to download: {1}", fileTypes.Count, string.Join(", ", fileTypes));
 				_logger.Info("Created new job for {0} - {1} v{2} ({3}): {4}", job.Release.Game.DisplayName, job.Release.Name, job.Version.Name, job.File.Id, tableFile.ToString());
 				_jobManager.AddJob(job);
 

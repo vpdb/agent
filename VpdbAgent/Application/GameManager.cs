@@ -803,6 +803,7 @@ namespace VpdbAgent.Application
 				var previousFilename = game.FileName;
 				var from = _databaseManager.GetVersion(job.Release.Id, game.MappedTableFile.Reference.Id);
 				var to = _databaseManager.GetVersion(job.Release.Id, job.File.Id);
+				// TODO FIXME: Updating file ID from F:\Pinball\Visual Pinball\Tables\Theatre of magic VPX NZ-TT 1.0 (v1.0) to p2buu2dp9h (v1.0)... 
 				_logger.Info("Updating file ID from {0} ({1}) to {2} ({3})...", game.FileId, from, job.File.Id, to);
 				using (game.SuppressChangeNotifications()) {
 					
