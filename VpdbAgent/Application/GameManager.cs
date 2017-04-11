@@ -487,14 +487,14 @@ namespace VpdbAgent.Application
 						found = true;
 						_threadManager.MainDispatcher.Invoke(() => oldGame.Update(path));
 						if (oldGame.XmlGame == null) {
-							_logger.Info("Updated {0} from file system.", path);
+							_logger.Info("Updated \"{0}\" from file system.", path);
 						} else {
-							_logger.Info("Updated {0} from file system ({1}).", path, oldGame.XmlGame.Description);
+							_logger.Info("Updated \"{0}\" from file system ({1}).", path, oldGame.XmlGame.Description);
 						}
 					});
 				if (!found) {
 					_threadManager.MainDispatcher.Invoke(() => AggregatedGames.Add(new AggregatedGame(path)));
-					_logger.Info("Added {0} from file system.", path);
+					_logger.Info("Added \"{0}\" from file system.", path);
 				}
 			}
 		}
@@ -557,10 +557,10 @@ namespace VpdbAgent.Application
 					foreach (var game in matchedGames) {
 						if (!game.HasXmlGame && !game.HasMapping) {
 							AggregatedGames.Remove(game);
-							_logger.Info("Removed {0} from file system.", path);
+							_logger.Info("Removed \"{0}\" from file system.", path);
 						} else {
 							game.ClearLocalFile();
-							_logger.Info("Cleared {0} from file system.", path);
+							_logger.Info("Cleared \"{0}\" from file system.", path);
 						}
 					}
 				});

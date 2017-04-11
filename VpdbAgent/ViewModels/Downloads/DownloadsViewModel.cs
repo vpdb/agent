@@ -27,7 +27,7 @@ namespace VpdbAgent.ViewModels.Downloads
 		{
 			Jobs = jobManager.CurrentJobs.CreateDerivedCollection(
 				job => new DownloadItemViewModel(job),
-				x => true, 
+				_ => true, 
 				(x, y) => x.Job.CompareTo(y.Job),
 				jobManager.WhenStatusChanged
 			);

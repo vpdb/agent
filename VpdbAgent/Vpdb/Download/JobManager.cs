@@ -148,12 +148,14 @@ namespace VpdbAgent.Vpdb.Download
 
 		public IJobManager AddJob(Job job)
 		{
+			// watch for status changes
+			WatchJob(job);
+
 			// persist to db and memory
 			_databaseManager.AddJob(job);
 			CurrentJobs.Add(job);
 
 			// queue it up so it gets downloaded
-			AddToCurrentJobs(job);
 			_jobs.OnNext(job);
 			return this;
 		}
@@ -198,7 +200,7 @@ namespace VpdbAgent.Vpdb.Download
 		{
 			var dest = Path.Combine(_downloadPath, job.File.Name);
 
-			_logger.Info("Starting downloading of {0} to {1}", job.File.Uri, dest);
+			_logger.Info("Starting download of {0} to \"{1}\"", job.File.Uri, dest);
 
 			// setup cancelation
 			token.Register(job.Client.CancelAsync);
@@ -210,7 +212,7 @@ namespace VpdbAgent.Vpdb.Download
 			try {
 				await job.Client.DownloadFileTaskAsync(job.File.Uri, dest);
 				job.OnSuccess();
-				_logger.Info("Finished downloading of {0}", job.File.Uri);
+				_logger.Info("Finished download of {0}", job.File.Uri);
 
 			} catch (WebException e) {
 				if (e.Status == WebExceptionStatus.RequestCanceled) {
@@ -232,11 +234,10 @@ namespace VpdbAgent.Vpdb.Download
 		}
 
 		/// <summary>
-		/// Persists a new job and forwards its changing status to the
-		/// global one.
+		/// Forwards a job's changing status to the global one.
 		/// </summary>
-		/// <param name="job">Job to add</param>
-		private void AddToCurrentJobs(Job job)
+		/// <param name="job">Job to watch</param>
+		private void WatchJob(Job job)
 		{
 			// update jobs back on main thread
 			System.Windows.Application.Current.Dispatcher.Invoke(() => job.WhenStatusChanges.Subscribe(status => _whenStatusChanged.OnNext(job)));

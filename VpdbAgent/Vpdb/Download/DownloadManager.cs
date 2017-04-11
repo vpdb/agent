@@ -129,6 +129,7 @@ namespace VpdbAgent.Vpdb.Download
 		{
 			// ignore if already launched
 			if (_currentlyDownloading.Contains(releaseId)) {
+				_logger.Warn("Skipping already queued release {0}.", releaseId);
 				return this;
 			}
 			_currentlyDownloading.Add(releaseId);
@@ -194,7 +195,7 @@ namespace VpdbAgent.Vpdb.Download
 
 				// queue for download
 				var job = new Job(release, tableFile, FileType.TableFile, platform);
-				fileTypes.Add(FileType.TableImage);
+				fileTypes.Add(FileType.TableFile);
 				_logger.Info("Found {0} file type(s) to download: {1}", fileTypes.Count, string.Join(", ", fileTypes));
 				_logger.Info("Created new job for {0} - {1} v{2} ({3}): {4}", job.Release.Game.DisplayName, job.Release.Name, job.Version.Name, job.File.Id, tableFile.ToString());
 				_jobManager.AddJob(job);
@@ -281,18 +282,18 @@ namespace VpdbAgent.Vpdb.Download
 				try {
 					var dest = job.GetFileDestination(system);
 					if (dest != null && !File.Exists(dest)) {
-						_logger.Info("Moving downloaded file from {0} to {1}...", job.FilePath, dest);
+						_logger.Info("Moving downloaded file from \"{0}\" to \"{1}\"...", job.FilePath, dest);
 						File.Move(job.FilePath, dest);
 					} else {
 						// todo see how to handle, probably name it differently.
-						_logger.Warn("File {0} already exists at destination!", dest);
+						_logger.Warn("File \"{0}\" already exists at destination!", dest);
 					}
 				} catch (Exception e) {
 					_logger.Error(e, "Error moving downloaded file.");
 					_crashManager.Report(e, "fs");
 				}
 			} else {
-				_logger.Error("Downloaded file {0} does not exist.", job.FilePath);
+				_logger.Error("Downloaded file \"{0}\" does not exist.", job.FilePath);
 			}
 		}
 
