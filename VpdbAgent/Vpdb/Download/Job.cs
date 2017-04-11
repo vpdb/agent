@@ -4,6 +4,7 @@ using System.Net;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading;
+using JetBrains.Annotations;
 using LiteDB;
 using ReactiveUI;
 using Splat;
@@ -30,20 +31,76 @@ namespace VpdbAgent.Vpdb.Download
 	/// </summary>
 	public class Job : ReactiveObject, IComparable<Job>
 	{
-		// persisted properties
+		
+		/// <summary>
+		/// Database ID (auto incremented).
+		/// </summary>
 		[BsonId] public int Id { get; set; }
-		[BsonRef(DatabaseManager.TableReleases)] public VpdbRelease Release { get { return _release; } set { this.RaiseAndSetIfChanged(ref _release, value); } }
+
+		/// <summary>
+		/// Reference to VPDB file to download.
+		/// </summary>
+		/// 
+		/// <remarks>
+		/// Note that this can be any file, even a ROM (that isn't part of a release).
+		/// </remarks>
 		[BsonRef(DatabaseManager.TableFiles)] public VpdbFile File { get { return _file; } set { this.RaiseAndSetIfChanged(ref _file, value); } }
-		public string FilePath { get; set; }
-		public DateTime QueuedAt { get; set; } = DateTime.Now;
-		public DateTime StartedAt { get; set; }
-		public DateTime FinishedAt { get; set; }
-		public long TransferredBytes { get; set; }
-		public string ErrorMessage { get; set; }
+
+		/// <summary>
+		/// Reference to release to which the file to download is related to.
+		/// </summary>
+		[BsonRef(DatabaseManager.TableReleases)] public VpdbRelease Release { get { return _release; } set { this.RaiseAndSetIfChanged(ref _release, value); } }
+
+		/// <summary>
+		/// Status of the job, see class description for more info.
+		/// </summary>
 		public JobStatus Status { get { return _status; } set { this.RaiseAndSetIfChanged(ref _status, value); } }
+
+		/// <summary>
+		/// Where the file is downloaded to (temp folder)
+		/// </summary>
+		public string FilePath { get; set; }
+
+		/// <summary>
+		/// File type, e.g. backglass image, table file, ROM, etc..
+		/// </summary>
 		public FileType FileType { get; set; }
-		public VpdbTableFile.VpdbPlatform Platform { get; set; }
+
+		/// <summary>
+		/// Displaying purpose, points to the release square thumb.
+		/// </summary>
 		public VpdbImage Thumb { get; private set; }
+
+		/// <summary>
+		/// Time of job creation
+		/// </summary>
+		public DateTime QueuedAt { get; set; } = DateTime.Now;
+
+		/// <summary>
+		/// Time when download started
+		/// </summary>
+		public DateTime StartedAt { get; set; }
+
+		/// <summary>
+		/// Time when download finished
+		/// </summary>
+		public DateTime FinishedAt { get; set; }
+
+		/// <summary>
+		/// Transferred bytes, updates during download
+		/// </summary>
+		public long TransferredBytes { get; set; }
+
+		/// <summary>
+		/// Message what went wrong on error
+		/// </summary>
+		public string ErrorMessage { get; set; }
+
+		/// <summary>
+		/// Platform at VPDB. Will be converted to a <see cref="PinballXSystem"/>
+		/// so we know where to move a new game.
+		/// </summary>
+		public VpdbTableFile.VpdbPlatform Platform { get; set; }
 
 		// object lookups
 		[BsonIgnore] public VpdbVersion Version => _version.Value;
@@ -236,13 +293,8 @@ namespace VpdbAgent.Vpdb.Download
 		/// </summary>
 		/// <param name="system">System of the table file belonging to the download</param>
 		/// <returns>Absolute path to local download location</returns>
-		public string GetFileDestination(PinballXSystem system = null)
+		public string GetFileDestination([NotNull] PinballXSystem system)
 		{
-			if (system == null) {
-				_logger.Error("Platform not provided when it should have ({0})", FileType);
-				return null;
-			}
-
 			switch (FileType) {
 				case FileType.TableFile:
 					return Path.Combine(system.TablePath, File.Name);

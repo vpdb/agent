@@ -800,18 +800,21 @@ namespace VpdbAgent.Application
 				AddGame(job);
 
 			} else {
-				var previousFilename = game.FileName;
-				var from = _databaseManager.GetVersion(job.Release.Id, game.MappedTableFile.Reference.Id);
-				var to = _databaseManager.GetVersion(job.Release.Id, job.File.Id);
-				// TODO FIXME: Updating file ID from F:\Pinball\Visual Pinball\Tables\Theatre of magic VPX NZ-TT 1.0 (v1.0) to p2buu2dp9h (v1.0)... 
-				_logger.Info("Updating file ID from {0} ({1}) to {2} ({3})...", game.FileId, from, job.File.Id, to);
-				using (game.SuppressChangeNotifications()) {
+
+				// if downloaded file id is different than current one, update mapping, local file and update PinballX database.
+				if (game.MappedTableFile.Reference.Id != job.File.Id) {
+
+					var from = _databaseManager.GetVersion(job.Release.Id, game.MappedTableFile.Reference.Id);
+					var to = _databaseManager.GetVersion(job.Release.Id, job.File.Id);
+					_logger.Info("Renaming mapping from \"{0}\" ({1}) to \"{2}\" ({3})...", game.FileName, from, Path.GetFileName(job.FilePath), to);
+					using (game.SuppressChangeNotifications()) {
 					
-					// update local file and mapping 
-					game.Remap(job.File, job.FilePath);
+						// update local file and mapping 
+						game.Remap(job.File, job.FilePath);
 					
-					// update XML database
-					_pinballXManager.RenameGame(game.XmlGame.FileName, game);
+						// update XML database
+						_pinballXManager.RenameGame(game.XmlGame.FileName, game);
+					}
 				}
 
 				if (_settingsManager.Settings.PatchTableScripts) {

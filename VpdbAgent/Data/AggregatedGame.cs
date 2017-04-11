@@ -252,8 +252,18 @@ namespace VpdbAgent.Data
 			Mapping.Rename(filePath);
 		}
 
+		/// <summary>
+		/// Replaces current mapping with a new one to the given VPDB file and also updates
+		/// local file data with new path.
+		/// </summary>
+		/// <param name="file">File to remap to</param>
+		/// <param name="filePath">New local file path</param>
 		public void Remap(VpdbFile file, string filePath) {
+
+			// update local file
 			Update(filePath);
+
+			// update mapping
 			var previousFileId = Mapping.FileId;
 			Mapping = new Mapping(this, MappedRelease, file.Id) {
 				PreviousFileId = previousFileId
