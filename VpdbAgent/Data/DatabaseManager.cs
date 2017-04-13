@@ -102,12 +102,6 @@ namespace VpdbAgent.Data
 		ReactiveList<Job> GetJobs();
 
 		/// <summary>
-		/// Returns the given job or null
-		/// </summary>
-		/// <returns>Download jobs</returns>
-		[CanBeNull] Job GetJob(int jobId);
-
-		/// <summary>
 		/// Removes a given download job from the database.
 		/// </summary>
 		/// <param name="job">Job to remove</param>
@@ -276,11 +270,6 @@ namespace VpdbAgent.Data
 		public ReactiveList<Job> GetJobs()
 		{
 			return new ReactiveList<Job>(_jobs.FindAll());
-		}
-
-		public Job GetJob(int jobId)
-		{
-			return _jobs.FindById(jobId);
 		}
 
 		public void RemoveJob(Job job)

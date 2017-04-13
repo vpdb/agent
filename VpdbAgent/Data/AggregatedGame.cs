@@ -133,7 +133,7 @@ namespace VpdbAgent.Data
 		private readonly IFile _file;
 		private readonly ILogger _logger;
 		private readonly IVpdbManager _vpdbManager;
-		private readonly IDatabaseManager _databaseManager;
+		private readonly IJobManager _jobManager;
 
 		/// <summary>
 		/// Base constructor
@@ -144,7 +144,7 @@ namespace VpdbAgent.Data
 			_file = resolver.GetService<IFile>();
 			_logger = resolver.GetService<ILogger>();
 			_vpdbManager = resolver.GetService<IVpdbManager>();
-			_databaseManager = resolver.GetService<IDatabaseManager>();
+			_jobManager = resolver.GetService<IJobManager>();
 
 			// status props
 			this.WhenAnyValue(x => x.Mapping).Select(x => x != null).ToProperty(this, g => g.HasMapping, out _hasMapping);
@@ -201,9 +201,8 @@ namespace VpdbAgent.Data
 					
 					mapping.WhenAnyValue(m => m.JobId)
 						.Where(jobId => jobId != null)
-						.Select(jobId => _databaseManager.GetJob(jobId ?? 0))
+						.Select(jobId => _jobManager.CurrentJobs.FirstOrDefault(job => job.Id == jobId))
 						.ToProperty(this, game => game.MappedJob, out _mappedJob);
-
 				}
 			});
 
@@ -390,7 +389,7 @@ namespace VpdbAgent.Data
 		/// <summary>
 		/// Links a download job to a game.
 		/// </summary>
-		/// <param name="job">Job to link to this game</param>
+		/// <param name="job">Job to link to this gamed</param>
 		public void SetJob(Job job)
 		{
 			if (Mapping != null) {
