@@ -54,6 +54,7 @@ namespace VpdbAgent.ViewModels.Games
 		public bool ShowDownloadMissingButton => _showDownloadMissingButton.Value;
 		public bool ShowResults { get { return _showResults; } set { this.RaiseAndSetIfChanged(ref _showResults, value); } }
 		public bool HasResults { get { return _hasResults; } set { this.RaiseAndSetIfChanged(ref _hasResults, value); } }
+		public bool ShowButtons => _showButtons.Value;
 
 		private readonly ObservableAsPropertyHelper<bool> _showIdentifyButton;
 		private readonly ObservableAsPropertyHelper<bool> _showHideButton;
@@ -61,6 +62,7 @@ namespace VpdbAgent.ViewModels.Games
 		private readonly ObservableAsPropertyHelper<bool> _showRemoveFromDbButton;
 		private readonly ObservableAsPropertyHelper<bool> _showDownloadMissingButton;
 		private readonly ObservableAsPropertyHelper<bool> _isExecuting;
+		private readonly ObservableAsPropertyHelper<bool> _showButtons;
 		private bool _showResults;
 		private bool _hasResults;
 
@@ -136,13 +138,19 @@ namespace VpdbAgent.ViewModels.Games
 			// spinner
 			IdentifyRelease.IsExecuting.ToProperty(this, vm => vm.IsExecuting, out _isExecuting);
 
+			// global buttons hide
+			this.WhenAnyValue(
+				vm => vm.ShowResults, 
+				vm => vm.IsExecuting, 
+				(showResults, isExecuting) => !showResults && !isExecuting
+			).ToProperty(this, vm => vm.ShowButtons, out _showButtons);
+
 			// identify button visibility
 			this.WhenAny(
 				vm => vm.Game.HasLocalFile,
 				vm => vm.Game.MappedTableFile,
-				vm => vm.ShowResults, 
-				vm => vm.IsExecuting,
-				(hasLocalFile, mappedFile, showResults, isExecuting) => hasLocalFile.Value && mappedFile.Value == null && !showResults.Value && !isExecuting.Value
+				vm => vm.ShowButtons, 
+				(hasLocalFile, mappedFile, showButtons) => hasLocalFile.Value && mappedFile.Value == null && showButtons.Value
 			).ToProperty(this, vm => vm.ShowIdentifyButton, out _showIdentifyButton);
 
 			// hide button visibility
@@ -150,9 +158,8 @@ namespace VpdbAgent.ViewModels.Games
 				vm => vm.Game.HasLocalFile,
 				vm => vm.Game.HasMapping,
 				vm => vm.Game.HasXmlGame,
-				vm => vm.ShowResults,
-				vm => vm.IsExecuting,
-				(hasLocalFile, hasMapping, hasXmlGame, showResults, isExecuting) => hasLocalFile.Value && !hasMapping.Value && !hasXmlGame.Value && !showResults.Value && !isExecuting.Value
+				vm => vm.ShowButtons,
+				(hasLocalFile, hasMapping, hasXmlGame, showButtons) => hasLocalFile.Value && !hasMapping.Value && !hasXmlGame.Value && showButtons.Value
 			).ToProperty(this, vm => vm.ShowHideButton, out _showHideButton);
 
 			// add to db button visibility
@@ -160,27 +167,24 @@ namespace VpdbAgent.ViewModels.Games
 				vm => vm.Game.HasLocalFile,
 				vm => vm.Game.HasXmlGame,
 				vm => vm.Game.MappedTableFile,
-				vm => vm.ShowResults,
-				vm => vm.IsExecuting,
-				(hasLocalFile, hasXmlGame, mappedFile, showResults, isExecuting) => hasLocalFile.Value && !hasXmlGame.Value && mappedFile.Value != null && !showResults.Value && !isExecuting.Value
+				vm => vm.ShowButtons,
+				(hasLocalFile, hasXmlGame, mappedFile, showButtons) => hasLocalFile.Value && !hasXmlGame.Value && mappedFile.Value != null && showButtons.Value
 			).ToProperty(this, vm => vm.ShowAddToDbButton, out _showAddToDbButton);
 
 			// remove from db button visibility
 			this.WhenAny(
 				vm => vm.Game.HasLocalFile,
 				vm => vm.Game.HasXmlGame,
-				vm => vm.ShowResults,
-				vm => vm.IsExecuting,
-				(hasLocalFile, hasXmlGame, showResults, isExecuting) => !hasLocalFile.Value && hasXmlGame.Value && !showResults.Value && !isExecuting.Value
+				vm => vm.ShowButtons,
+				(hasLocalFile, hasXmlGame, showButtons) => !hasLocalFile.Value && hasXmlGame.Value && showButtons.Value
 			).ToProperty(this, vm => vm.ShowRemoveFromDbButton, out _showRemoveFromDbButton);
 
 			// download button visibility
 			this.WhenAny(
 				vm => vm.Game.HasLocalFile,
 				vm => vm.Game.MappedTableFile,
-				vm => vm.ShowResults,
-				vm => vm.IsExecuting,
-				(hasLocalFile, mappedFile, showResults, isExecuting) => !hasLocalFile.Value && mappedFile.Value != null && !showResults.Value && !isExecuting.Value
+				vm => vm.ShowButtons,
+				(hasLocalFile, mappedFile, showButtons) => !hasLocalFile.Value && mappedFile.Value != null && showButtons.Value
 			).ToProperty(this, vm => vm.ShowDownloadMissingButton, out _showDownloadMissingButton);
 
 		}
