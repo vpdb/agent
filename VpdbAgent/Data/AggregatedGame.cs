@@ -1,17 +1,16 @@
 ﻿using System;
-using System.Diagnostics.Eventing.Reader;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
 using JetBrains.Annotations;
 using ReactiveUI;
 using Splat;
-using VpdbAgent.Application;
 using VpdbAgent.Common.Filesystem;
 using VpdbAgent.PinballX.Models;
 using VpdbAgent.Vpdb;
 using VpdbAgent.Vpdb.Download;
 using VpdbAgent.Vpdb.Models;
+using ILogger = NLog.ILogger;
 
 namespace VpdbAgent.Data
 {
@@ -132,6 +131,7 @@ namespace VpdbAgent.Data
 
 		// deps
 		private readonly IFile _file;
+		private readonly ILogger _logger;
 		private readonly IVpdbManager _vpdbManager;
 		private readonly IDatabaseManager _databaseManager;
 
@@ -142,6 +142,7 @@ namespace VpdbAgent.Data
 		private AggregatedGame(IDependencyResolver resolver)
 		{
 			_file = resolver.GetService<IFile>();
+			_logger = resolver.GetService<ILogger>();
 			_vpdbManager = resolver.GetService<IVpdbManager>();
 			_databaseManager = resolver.GetService<IDatabaseManager>();
 
@@ -190,7 +191,6 @@ namespace VpdbAgent.Data
 					MappedTableFile = null;
 					MappedVersion = null;
 					MappedRelease = null;
-					MappedJob = null;
 
 				} else {
 					mapping
@@ -385,6 +385,19 @@ namespace VpdbAgent.Data
 		public bool EqualsMapping(Mapping mapping)
 		{
 			return Mapping != null && Mapping.Equals(mapping);
+		}
+
+		/// <summary>
+		/// Links a download job to a game.
+		/// </summary>
+		/// <param name="job">Job to link to this game</param>
+		public void SetJob(Job job)
+		{
+			if (Mapping != null) {
+				Mapping.JobId = job.Id;
+			} else {
+				_logger.Warn("Cannot assign job to game without mapping. ");
+			}
 		}
 
 		/// <summary>

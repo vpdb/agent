@@ -56,7 +56,7 @@ namespace VpdbAgent.Data
 		/// <summary>
 		/// Job ID. We also link jobs to games so we can display download status.
 		/// </summary>
-		[DataMember] public int? JobId { get { return _jobId; } private set { this.RaiseAndSetIfChanged(ref _jobId, value); } }
+		[DataMember] public int? JobId { get { return _jobId; } set { this.RaiseAndSetIfChanged(ref _jobId, value); } }
 
 		/// <summary>
 		/// True if should be updated automatically, false otherwise.
