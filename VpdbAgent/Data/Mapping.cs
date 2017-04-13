@@ -54,6 +54,11 @@ namespace VpdbAgent.Data
 		[DataMember] public string FileId { get { return _fileId; } private set { this.RaiseAndSetIfChanged(ref _fileId, value); } }
 
 		/// <summary>
+		/// Job ID. We also link jobs to games so we can display download status.
+		/// </summary>
+		[DataMember] public int? JobId { get { return _jobId; } private set { this.RaiseAndSetIfChanged(ref _jobId, value); } }
+
+		/// <summary>
 		/// True if should be updated automatically, false otherwise.
 		/// </summary>
 		[DataMember] public bool IsSynced { get { return _isSynced; } set { this.RaiseAndSetIfChanged(ref _isSynced, value); } }
@@ -85,6 +90,7 @@ namespace VpdbAgent.Data
 		private string _fileName;
 		private string _releaseId;
 		private string _fileId;
+		private int? _jobId = null;
 		private bool _isSynced;
 		private bool _isHidden;
 		private string _previousFileId;
@@ -140,6 +146,7 @@ namespace VpdbAgent.Data
 			FileName = mapping.FileName;
 			ReleaseId = mapping.ReleaseId;
 			FileId = mapping.FileId;
+			JobId = mapping.JobId;
 			IsSynced = mapping.IsSynced;
 			IsHidden = mapping.IsHidden;
 			PreviousFileId = mapping.PreviousFileId;
@@ -190,6 +197,7 @@ namespace VpdbAgent.Data
 				FileName == mapping.FileName &&
 				ReleaseId == mapping.ReleaseId &&
 				FileId == mapping.FileId &&
+				JobId == mapping.JobId &&
 				IsSynced == mapping.IsSynced &&
 				IsHidden == mapping.IsHidden &&
 				PreviousFileId == mapping.PreviousFileId &&

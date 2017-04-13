@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Subjects;
+using JetBrains.Annotations;
 using LiteDB;
 using NLog;
 using ReactiveUI;
@@ -99,6 +100,12 @@ namespace VpdbAgent.Data
 		/// </summary>
 		/// <returns>Download jobs</returns>
 		ReactiveList<Job> GetJobs();
+
+		/// <summary>
+		/// Returns the given job or null
+		/// </summary>
+		/// <returns>Download jobs</returns>
+		[CanBeNull] Job GetJob(int jobId);
 
 		/// <summary>
 		/// Removes a given download job from the database.
@@ -269,6 +276,11 @@ namespace VpdbAgent.Data
 		public ReactiveList<Job> GetJobs()
 		{
 			return new ReactiveList<Job>(_jobs.FindAll());
+		}
+
+		public Job GetJob(int jobId)
+		{
+			return _jobs.FindById(jobId);
 		}
 
 		public void RemoveJob(Job job)

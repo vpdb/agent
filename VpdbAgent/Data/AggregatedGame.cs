@@ -10,6 +10,7 @@ using VpdbAgent.Application;
 using VpdbAgent.Common.Filesystem;
 using VpdbAgent.PinballX.Models;
 using VpdbAgent.Vpdb;
+using VpdbAgent.Vpdb.Download;
 using VpdbAgent.Vpdb.Models;
 
 namespace VpdbAgent.Data
@@ -94,6 +95,11 @@ namespace VpdbAgent.Data
 		/// </summary>
 		public VpdbTableFile MappedTableFile { get { return _mappedTableFile; } private set { this.RaiseAndSetIfChanged(ref _mappedTableFile, value); } }
 
+		/// <summary>
+		/// Mapped file data of the release
+		/// </summary>
+		public Job MappedJob => _mappedJob.Value;
+
 		// convenient props
 		public string Description => XmlGame != null ? XmlGame.Description : (MappedRelease != null ? $"{MappedRelease.Game.Title} ({MappedRelease.Game.Manufacturer} {MappedRelease.Game.Year})" : null);
 		public string FileDisplayName => FileName ?? Mapping?.FileName;
@@ -122,10 +128,12 @@ namespace VpdbAgent.Data
 		private readonly ObservableAsPropertyHelper<bool> _hasXmlGame;
 		private ObservableAsPropertyHelper<bool> _isVisible;
 		private ObservableAsPropertyHelper<string> _fileName;
+		private ObservableAsPropertyHelper<Job> _mappedJob;
 
 		// deps
 		private readonly IFile _file;
 		private readonly IVpdbManager _vpdbManager;
+		private readonly IDatabaseManager _databaseManager;
 
 		/// <summary>
 		/// Base constructor
@@ -135,6 +143,7 @@ namespace VpdbAgent.Data
 		{
 			_file = resolver.GetService<IFile>();
 			_vpdbManager = resolver.GetService<IVpdbManager>();
+			_databaseManager = resolver.GetService<IDatabaseManager>();
 
 			// status props
 			this.WhenAnyValue(x => x.Mapping).Select(x => x != null).ToProperty(this, g => g.HasMapping, out _hasMapping);
@@ -181,6 +190,7 @@ namespace VpdbAgent.Data
 					MappedTableFile = null;
 					MappedVersion = null;
 					MappedRelease = null;
+					MappedJob = null;
 
 				} else {
 					mapping
@@ -188,6 +198,12 @@ namespace VpdbAgent.Data
 						.Where(x => x.Item1 != null && x.Item2 != null)
 						.SelectMany(x => _vpdbManager.GetRelease(mapping.ReleaseId))
 						.Subscribe(x => SetRelease(x, mapping.FileId));
+					
+					mapping.WhenAnyValue(m => m.JobId)
+						.Where(jobId => jobId != null)
+						.Select(jobId => _databaseManager.GetJob(jobId ?? 0))
+						.ToProperty(this, game => game.MappedJob, out _mappedJob);
+
 				}
 			});
 
