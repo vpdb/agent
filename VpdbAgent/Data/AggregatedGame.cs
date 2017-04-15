@@ -111,7 +111,7 @@ namespace VpdbAgent.Data
 		public bool HasLocalFile => _hasLocalFile.Value;
 		public bool HasXmlGame => _hasXmlGame.Value;
 		public bool HasSystem => System != null;
-//		public bool IsDownloading => _isDownloading.Value;
+		public bool IsDownloading => _isDownloading.Value;
 
 		// watched props
 		private string _fileId;
@@ -127,7 +127,7 @@ namespace VpdbAgent.Data
 		private readonly ObservableAsPropertyHelper<bool> _hasLocalFile;
 		private readonly ObservableAsPropertyHelper<bool> _hasXmlGame;
 		private ObservableAsPropertyHelper<bool> _isVisible;
-//		private ObservableAsPropertyHelper<bool> _isDownloading;
+		private ObservableAsPropertyHelper<bool> _isDownloading;
 		private ObservableAsPropertyHelper<string> _fileName;
 		private ObservableAsPropertyHelper<Job> _mappedJob;
 
@@ -206,14 +206,14 @@ namespace VpdbAgent.Data
 					
 					// job
 					mapping.WhenAnyValue(m => m.JobId)
-						.Where(jobId => jobId != null)
+						.Where(jobId => jobId != null && jobId != 0)
 						.Select(jobId => _jobManager.CurrentJobs.FirstOrDefault(job => job.Id == jobId))
 						.ToProperty(this, game => game.MappedJob, out _mappedJob);
 				}
 			});
 
 			// download status
-/*			this.WhenAnyValue(x => x.MappedJob).Subscribe(job => {
+			this.WhenAnyValue(x => x.MappedJob).Subscribe(job => {
 				if (job != null) {
 					job.WhenAnyValue(j => j.Status)
 						.Select(status => status == Job.JobStatus.Transferring)
@@ -221,7 +221,7 @@ namespace VpdbAgent.Data
 				} else {
 					Observable.Return(false).ToProperty(this, game => game.IsDownloading, out _isDownloading);
 				}
-			});*/
+			});
 
 		}
 
@@ -407,7 +407,7 @@ namespace VpdbAgent.Data
 		public void SetJob(Job job)
 		{
 			if (Mapping != null) {
-				Mapping.JobId = job.Id;
+				Mapping.Link(job);
 			} else {
 				_logger.Warn("Cannot assign job to game without mapping. ");
 			}

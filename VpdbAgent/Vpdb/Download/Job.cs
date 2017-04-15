@@ -158,7 +158,6 @@ namespace VpdbAgent.Vpdb.Download
 
 			// update progress percentage
 			this.WhenAnyValue(x => x.TransferredBytes)
-				.Do(Console.WriteLine)
 				.Select(bytes => TransferSize == 0 ? 0d : (double)bytes / TransferSize * 100)
 				.ToProperty(this, j => j.TransferPercent, out _transferPercent);
 

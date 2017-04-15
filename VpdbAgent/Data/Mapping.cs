@@ -7,6 +7,7 @@ using System.Runtime.Serialization;
 using ReactiveUI;
 using VpdbAgent.PinballX;
 using VpdbAgent.PinballX.Models;
+using VpdbAgent.Vpdb.Download;
 using VpdbAgent.Vpdb.Models;
 
 namespace VpdbAgent.Data
@@ -163,6 +164,24 @@ namespace VpdbAgent.Data
 		public void Rename(string filePath)
 		{
 			FileName = Path.GetFileName(filePath);
+		}
+
+		/// <summary>
+		/// Links a job to this mapping.
+		/// </summary>
+		/// 
+		/// <remarks>
+		/// Note that it will be unlinked when download finishes or fails.
+		/// </remarks>
+		/// <param name="job">Job to link</param>
+		public void Link(Job job)
+		{
+			JobId = job.Id;
+			job.WhenAnyValue(j => j.Status).Subscribe(status => {
+				if (status == Job.JobStatus.Aborted || status == Job.JobStatus.Completed || status == Job.JobStatus.Failed) {
+					JobId = null;
+				}
+			});
 		}
 
 		public override bool Equals(object obj)

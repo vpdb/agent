@@ -89,7 +89,7 @@
                 <!-- download progress -->
                 <ProgressBar Value="{Binding Path=DownloadPercent, Mode=OneWay}" Style="{StaticResource BlehProgressBar}" 
                              Visibility="{Binding Path=Game.IsDownloading, Converter={StaticResource TrueToVisible}}"
-                             Grid.Column="1" Margin="0,5,15,0" IsIndeterminate="False"/>
+                             Grid.Column="1" Width="150" Margin="0,5,15,0" IsIndeterminate="False"/>
                 
                 <!-- buttons -->
                 <StackPanel Grid.Column="1" Orientation="Horizontal">

@@ -54,7 +54,7 @@ namespace VpdbAgent.ViewModels.Games
 		public bool ShowDownloadMissingButton => _showDownloadMissingButton.Value;
 		public bool ShowResults { get { return _showResults; } set { this.RaiseAndSetIfChanged(ref _showResults, value); } }
 		public bool HasResults { get { return _hasResults; } set { this.RaiseAndSetIfChanged(ref _hasResults, value); } }
-//		public bool IsDownloading => _isDownloading.Value;
+		public bool IsDownloading => _isDownloading.Value;
 		public bool ShowButtons => _showButtons.Value;
 		public double DownloadPercent { get { return _downloadPercent; } set { this.RaiseAndSetIfChanged(ref _downloadPercent, value); } }
 
@@ -64,7 +64,7 @@ namespace VpdbAgent.ViewModels.Games
 		private readonly ObservableAsPropertyHelper<bool> _showRemoveFromDbButton;
 		private readonly ObservableAsPropertyHelper<bool> _showDownloadMissingButton;
 		private readonly ObservableAsPropertyHelper<bool> _isExecuting;
-//		private readonly ObservableAsPropertyHelper<bool> _isDownloading;
+		private readonly ObservableAsPropertyHelper<bool> _isDownloading;
 		private readonly ObservableAsPropertyHelper<bool> _showButtons;
 		private bool _showResults;
 		private bool _hasResults;
@@ -81,7 +81,7 @@ namespace VpdbAgent.ViewModels.Games
 			_messageManager = resolver.GetService<IMessageManager>();
 			var threadManager = resolver.GetService<IThreadManager>();
 
-			//game.WhenAnyValue(g => g.IsDownloading).ToProperty(this, vm => vm.IsDownloading, out _isDownloading);
+			game.WhenAnyValue(g => g.IsDownloading).ToProperty(this, vm => vm.IsDownloading, out _isDownloading);
 
 			// release identify
 			IdentifyRelease = ReactiveCommand.CreateFromObservable(() => _vpdbClient.Api.GetReleasesBySize(Game.FileSize, MatchThreshold).SubscribeOn(threadManager.WorkerScheduler));
@@ -148,8 +148,8 @@ namespace VpdbAgent.ViewModels.Games
 			this.WhenAnyValue(
 				vm => vm.ShowResults, 
 				vm => vm.IsExecuting, 
-//				vm => vm.IsDownloading, 
-				(showResults, isExecuting/*, isDownloading*/) => !showResults && !isExecuting/* && !isDownloading*/
+				vm => vm.IsDownloading, 
+				(showResults, isExecuting, isDownloading) => !showResults && !isExecuting && !isDownloading
 			).ToProperty(this, vm => vm.ShowButtons, out _showButtons);
 
 			// identify button visibility
@@ -195,7 +195,6 @@ namespace VpdbAgent.ViewModels.Games
 			).ToProperty(this, vm => vm.ShowDownloadMissingButton, out _showDownloadMissingButton);
 
 			// download progress
-			/*
 			this.WhenAnyValue(vm => vm.IsDownloading).Subscribe(isDownloading => {
 				if (isDownloading) {
 					Game.MappedJob.WhenAnyValue(j => j.TransferPercent)
@@ -208,7 +207,7 @@ namespace VpdbAgent.ViewModels.Games
 							});
 						});
 				}
-			});*/
+			});
 
 		}
 
