@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Reactive;
 using System.Reactive.Linq;
@@ -9,7 +8,6 @@ using System.Windows.Media;
 using Humanizer;
 using ReactiveUI;
 using Splat;
-using VpdbAgent.Vpdb;
 using VpdbAgent.Vpdb.Download;
 using ReactiveCommand = ReactiveUI.ReactiveCommand;
 
@@ -28,14 +26,13 @@ namespace VpdbAgent.ViewModels.Downloads
 		public int StatusPanelIconSize { get { return _statusPanelIconSize; } set { this.RaiseAndSetIfChanged(ref _statusPanelIconSize, value); } }
 		public double DownloadPercent { get { return _downloadPercent; } set { this.RaiseAndSetIfChanged(ref _downloadPercent, value); } }
 
-
 		// commands
 		public ReactiveCommand<Unit, Unit> CancelJob { get; }
 		public ReactiveCommand<Unit, Unit> DeleteJob { get; }
 		public ReactiveCommand<Unit, Unit> RetryJob { get; }
 
 		// label props
-		public string DownloadSizeFormatted { get { return _downloadSizeFormatted; } set { this.RaiseAndSetIfChanged(ref _downloadSizeFormatted, value); } }
+		public string DownloadSizeFormatted => _downloadSizeFormatted.Value;
 		public string DownloadPercentFormatted { get { return _downloadPercentFormatted; } set { this.RaiseAndSetIfChanged(ref _downloadPercentFormatted, value); } }
 		public string DownloadSpeedFormatted { get { return _downloadSpeedFormatted; } set { this.RaiseAndSetIfChanged(ref _downloadSpeedFormatted, value); } }
 		public ObservableCollection<Inline> TitleLabel { get { return _titleLabel; } set { this.RaiseAndSetIfChanged(ref _titleLabel, value); } }
@@ -51,12 +48,12 @@ namespace VpdbAgent.ViewModels.Downloads
 		private string _statusPanelIcon;
 		private int _statusPanelIconSize;
 		private double _downloadPercent;
-		private string _downloadSizeFormatted;
 		private string _downloadPercentFormatted;
 		private string _downloadSpeedFormatted;
 		private ObservableCollection<Inline> _titleLabel;
 		private ObservableCollection<Inline> _subtitleLabel;
 		private ObservableCollection<Inline> _statusPanelLabel;
+		private readonly ObservableAsPropertyHelper<string> _downloadSizeFormatted;
 
 		// deps
 		private static readonly IJobManager JobManager = Locator.CurrentMutable.GetService<IJobManager>();
@@ -80,17 +77,16 @@ namespace VpdbAgent.ViewModels.Downloads
 		public DownloadItemViewModel(Job job)
 		{
 			Job = job;
-			Job.WhenStatusChanges.Subscribe(status => { OnStatusUpdated(); });
-			OnStatusUpdated();
+			Job.WhenAnyValue(j => j.Status).StartWith(job.Status).Subscribe(OnStatusUpdated);
 
 			// update progress every 300ms
-			Job.WhenDownloadProgresses
+			Job.WhenAnyValue(j => j.TransferPercent)
 				.Sample(TimeSpan.FromMilliseconds(300))
 				.Where(x => !job.IsFinished)
 				.Subscribe(progress => {
 					// on main thread
-					System.Windows.Application.Current.Dispatcher.Invoke(delegate {
-						DownloadPercent = (double)progress.BytesReceived / Job.File.Bytes * 100;
+					System.Windows.Application.Current.Dispatcher.Invoke(() => {
+						DownloadPercent = progress;
 						DownloadPercentFormatted = $"{Math.Round(DownloadPercent)}%";
 					});
 				});
@@ -98,34 +94,27 @@ namespace VpdbAgent.ViewModels.Downloads
 			// update download speed every 1.5 seconds
 			var lastUpdatedProgress = DateTime.Now;
 			long bytesReceived = 0;
-			Job.WhenDownloadProgresses
+			Job.WhenAnyValue(j => j.TransferPercent)
 				.Sample(TimeSpan.FromMilliseconds(1500))
 				.Where(x => !job.IsFinished)
 				.Subscribe(progress => {
 					// on main thread
-					System.Windows.Application.Current.Dispatcher.Invoke(delegate {
+					System.Windows.Application.Current.Dispatcher.Invoke(() => {
 						var timespan = DateTime.Now - lastUpdatedProgress;
-						var bytespan = progress.BytesReceived - bytesReceived;
+						var bytespan = Job.TransferredBytes - bytesReceived;
 
 						if (timespan.TotalMilliseconds > 0) {
 							var downloadSpeed = 1000 * bytespan / timespan.TotalMilliseconds;
 							DownloadSpeedFormatted = $"{downloadSpeed.Bytes().ToString("#.0")}/s";
 						}
 
-						bytesReceived = progress.BytesReceived;
+						bytesReceived = Job.TransferredBytes;
 						lastUpdatedProgress = DateTime.Now;
 					});
 				});
 
 			// update initial size only once
-			Job.WhenDownloadProgresses
-				.Take(1)
-				.Subscribe(progress => {
-					// on main thread
-					System.Windows.Application.Current.Dispatcher.Invoke(delegate {
-						DownloadSizeFormatted = (progress.TotalBytesToReceive > 0 ? progress.TotalBytesToReceive : Job.File.Bytes).Bytes().ToString("#.0");
-					});
-				});
+			Job.WhenAnyValue(j => j.TransferSize).Select(size => size.Bytes().ToString("#.0")).ToProperty(this, vm => vm.DownloadSizeFormatted, out _downloadSizeFormatted);
 
 			// abort job on command
 			CancelJob = ReactiveCommand.Create(() => { Job.Cancel(); });
@@ -140,9 +129,9 @@ namespace VpdbAgent.ViewModels.Downloads
 			SetupFileIcon();
 		}
 
-		private void OnStatusUpdated()
+		private void OnStatusUpdated(Job.JobStatus status)
 		{
-			switch (Job.Status) {
+			switch (status) {
 				case Job.JobStatus.Aborted:
 					StatusPanelForeground = RedBrush;
 					StatusPanelIcon = CloseIcon;
@@ -161,7 +150,7 @@ namespace VpdbAgent.ViewModels.Downloads
 						new Run(Job.TransferredBytes.Bytes().ToString("#.0") + " ") {FontWeight = FontWeights.Bold},
 						new Run(Job.FinishedAt.Humanize(false)),
 						new Run(" at "),
-						new Run(Job.DownloadBytesPerSecond.Bytes().ToString("#.0") + "/s") {FontWeight = FontWeights.Bold}
+						new Run(Job.TransferBytesPerSecond.Bytes().ToString("#.0") + "/s") {FontWeight = FontWeights.Bold}
 					};
 					Retryable = false;
 					OnFinished();
@@ -205,7 +194,6 @@ namespace VpdbAgent.ViewModels.Downloads
 			DownloadPercent = 0;
 			DownloadPercentFormatted = null;
 			DownloadSpeedFormatted = null;
-			DownloadSizeFormatted = null;
 			Job.RaisePropertyChanged();
 		}
 

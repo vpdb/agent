@@ -588,7 +588,7 @@ namespace VpdbAgent.Application
 
 		public void DownloadGame(AggregatedGame game)
 		{
-			_downloadManager.DownloadRelease(game.MappedRelease, game.MappedTableFile);
+			_downloadManager.DownloadRelease(game);
 		}
 
 		public void HideGame(AggregatedGame game)
@@ -617,7 +617,7 @@ namespace VpdbAgent.Application
 
 		public IGameManager Sync(AggregatedGame game)
 		{
-			_downloadManager.DownloadRelease(game.MappedRelease.Id, game.MappedTableFile.Reference.Id);
+			_downloadManager.DownloadRelease(game);
 			return this;
 		}
 
@@ -684,7 +684,7 @@ namespace VpdbAgent.Application
 					var game = OnStarRelease(msg.Id, true);
 					if (game == null) {
 						if (_settingsManager.Settings.SyncStarred) {
-							_downloadManager.DownloadRelease(msg.Id);
+//							_downloadManager.DownloadRelease(msg.Id);
 						} else {
 							_logger.Info("Sync starred not enabled, ignoring starred release.");
 						}

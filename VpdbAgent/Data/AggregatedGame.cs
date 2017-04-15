@@ -111,6 +111,7 @@ namespace VpdbAgent.Data
 		public bool HasLocalFile => _hasLocalFile.Value;
 		public bool HasXmlGame => _hasXmlGame.Value;
 		public bool HasSystem => System != null;
+//		public bool IsDownloading => _isDownloading.Value;
 
 		// watched props
 		private string _fileId;
@@ -126,6 +127,7 @@ namespace VpdbAgent.Data
 		private readonly ObservableAsPropertyHelper<bool> _hasLocalFile;
 		private readonly ObservableAsPropertyHelper<bool> _hasXmlGame;
 		private ObservableAsPropertyHelper<bool> _isVisible;
+//		private ObservableAsPropertyHelper<bool> _isDownloading;
 		private ObservableAsPropertyHelper<string> _fileName;
 		private ObservableAsPropertyHelper<Job> _mappedJob;
 
@@ -151,7 +153,7 @@ namespace VpdbAgent.Data
 			this.WhenAnyValue(x => x.FilePath).Select(x => x != null).ToProperty(this, g => g.HasLocalFile, out _hasLocalFile);
 			this.WhenAnyValue(x => x.XmlGame).Select(x => x != null).ToProperty(this, g => g.HasXmlGame, out _hasXmlGame);
 
-			// FileName
+			// filename (from pinballx database if set, otherwise from local file)
 			this.WhenAnyValue(x => x.XmlGame).Subscribe(xmlGame => {
 				if (xmlGame == null) {
 					this.WhenAnyValue(g => g.FilePath)
@@ -164,7 +166,7 @@ namespace VpdbAgent.Data
 				}
 			});
 
-			// visibility
+			// visibility (invisible if disabled in pinballx or hidden in mapping)
 			this.WhenAnyValue(x => x.XmlGame, x => x.Mapping).Subscribe(x => {
 				if (x.Item1 != null && x.Item2 != null) {
 					this.WhenAnyValue(g => g.XmlGame.Enabled, g => g.Mapping.IsHidden)
@@ -185,20 +187,24 @@ namespace VpdbAgent.Data
 				}
 			});
 
-			// auto-update vpdb data when mapping changes
+			// populate mappings
 			this.WhenAnyValue(x => x.Mapping).Subscribe(mapping => {
 				if (mapping == null) {
 					MappedTableFile = null;
 					MappedVersion = null;
 					MappedRelease = null;
+					Observable.Return((Job)null).ToProperty(this, game => game.MappedJob, out _mappedJob);
 
 				} else {
+
+					// vpdb mappings
 					mapping
 						.WhenAnyValue(m => m.FileId, m => m.ReleaseId)
 						.Where(x => x.Item1 != null && x.Item2 != null)
 						.SelectMany(x => _vpdbManager.GetRelease(mapping.ReleaseId))
 						.Subscribe(x => SetRelease(x, mapping.FileId));
 					
+					// job
 					mapping.WhenAnyValue(m => m.JobId)
 						.Where(jobId => jobId != null)
 						.Select(jobId => _jobManager.CurrentJobs.FirstOrDefault(job => job.Id == jobId))
@@ -206,13 +212,23 @@ namespace VpdbAgent.Data
 				}
 			});
 
+			// download status
+/*			this.WhenAnyValue(x => x.MappedJob).Subscribe(job => {
+				if (job != null) {
+					job.WhenAnyValue(j => j.Status)
+						.Select(status => status == Job.JobStatus.Transferring)
+						.ToProperty(this, game => game.IsDownloading, out _isDownloading);
+				} else {
+					Observable.Return(false).ToProperty(this, game => game.IsDownloading, out _isDownloading);
+				}
+			});*/
+
 		}
 
 		/// <summary>
 		/// Constructs based on XML game.
 		/// </summary>
 		/// <param name="xmlGame">Parsed game from PinballX XML database</param>
-		/// <param name="file">IFile dependency</param>
 		public AggregatedGame([NotNull] PinballXGame xmlGame) : this(Locator.Current)
 		{
 			Update(xmlGame);
@@ -226,7 +242,6 @@ namespace VpdbAgent.Data
 		/// Constructs based on local file.
 		/// </summary>
 		/// <param name="filePath">Absolute path to file</param>
-		/// <param name="file">IFile dependency</param>
 		public AggregatedGame([NotNull] string filePath) : this(Locator.Current)
 		{
 			Update(filePath);
@@ -236,7 +251,6 @@ namespace VpdbAgent.Data
 		/// Constructs based on Mapping.
 		/// </summary>
 		/// <param name="mapping">Parsed Mapping</param>
-		/// <param name="file">IFile dependency</param>
 		public AggregatedGame([NotNull] Mapping mapping) : this(Locator.Current)
 		{
 			Update(mapping);

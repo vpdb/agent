@@ -21,7 +21,7 @@ namespace VpdbAgent.Application
 		IScheduler CurrentThread { get; }
 
 		/// <summary>
-		/// The "main" dispatcher, <see cref="Dispatcher"/>
+		/// The "main" dispatcher, aka UI thread, <see cref="Dispatcher"/>
 		/// </summary>
 		Dispatcher MainDispatcher { get; }
 	}

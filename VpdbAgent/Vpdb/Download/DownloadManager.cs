@@ -10,9 +10,11 @@ using JetBrains.Annotations;
 using NLog;
 using ReactiveUI;
 using VpdbAgent.Application;
+using VpdbAgent.Data;
 using VpdbAgent.PinballX;
 using VpdbAgent.PinballX.Models;
 using VpdbAgent.Vpdb.Models;
+using IDatabaseManager = VpdbAgent.Application.IDatabaseManager;
 
 namespace VpdbAgent.Vpdb.Download
 {
@@ -38,14 +40,14 @@ namespace VpdbAgent.Vpdb.Download
 		/// <param name="releaseId">ID of the release</param>
 		/// <param name="currentFileId">ID of current/previous file of the release or null if new release</param>
 		/// <returns>This instance</returns>
-		IDownloadManager DownloadRelease(string releaseId, string currentFileId = null);
+		//IDownloadManager UpdateRelease(AggregatedGame game);
 
 		/// <summary>
 		/// Downloads a release including media and ROMs.
 		/// </summary>
 		/// <param name="release">Release to download</param>
 		/// <param name="tableFile">File of the release to download</param>
-		IDownloadManager DownloadRelease(VpdbRelease release, VpdbTableFile tableFile);
+		IDownloadManager DownloadRelease(AggregatedGame game);
 
 		/// <summary>
 		/// An observable that produces a value when a release finished 
@@ -125,6 +127,7 @@ namespace VpdbAgent.Vpdb.Download
 			});
 		}
 
+		/*
 		public IDownloadManager DownloadRelease(string releaseId, string currentFileId = null)
 		{
 			// ignore if already launched
@@ -154,15 +157,18 @@ namespace VpdbAgent.Vpdb.Download
 			}, exception => _vpdbManager.HandleApiError(exception, "retrieving release details during download"));
 
 			return this;
-		}
+		}*/
 
-		public IDownloadManager DownloadRelease(VpdbRelease release, VpdbTableFile tableFile)
+		public IDownloadManager DownloadRelease(AggregatedGame game)
 		{
+			var release = game.MappedRelease;
+			var tableFile = game.MappedTableFile;
+
 			// also fetch game data for media & co
-			_vpdbManager.GetGame(release.Game.Id, true).Subscribe(game => {
+			_vpdbManager.GetGame(release.Game.Id, true).Subscribe(g => {
 
 				var version = _databaseManager.GetVersion(release.Id, tableFile.Reference.Id);
-				_logger.Info($"Checking what to download for {game.DisplayName} - {release.Name} v{version?.Name} ({tableFile.Reference.Id})");
+				_logger.Info($"Checking what to download for {g.DisplayName} - {release.Name} v{version?.Name} ({tableFile.Reference.Id})");
 
 				var gameName = release.Game.DisplayName;
 				var system = _pinballXManager.FindSystem(tableFile);
@@ -173,14 +179,14 @@ namespace VpdbAgent.Vpdb.Download
 				var backglassImagePath = Path.Combine(system.MediaPath, Job.MediaBackglassImages);
 				if (!FileBaseExists(backglassImagePath, gameName)) {
 					fileTypes.Add(FileType.BackglassImage);
-					_jobManager.AddJob(new Job(release, game.Backglass, FileType.BackglassImage, platform));
+					_jobManager.AddJob(new Job(release, g.Backglass, FileType.BackglassImage, platform));
 				}
 
 				// check if wheel image needs to be downloaded
 				var wheelImagePath = Path.Combine(system.MediaPath, Job.MediaWheelImages);
 				if (!FileBaseExists(wheelImagePath, gameName)) {
 					fileTypes.Add(FileType.WheelImage);
-					_jobManager.AddJob(new Job(release, game.Logo, FileType.WheelImage, platform));
+					_jobManager.AddJob(new Job(release, g.Logo, FileType.WheelImage, platform));
 				}
 
 				// queue table shot
@@ -198,6 +204,7 @@ namespace VpdbAgent.Vpdb.Download
 				fileTypes.Add(FileType.TableFile);
 				_logger.Info("Found {0} file type(s) to download: {1}", fileTypes.Count, string.Join(", ", fileTypes));
 				_logger.Info("Created new job for {0} - {1} v{2} ({3}): {4}", job.Release.Game.DisplayName, job.Release.Name, job.Version.Name, job.File.Id, tableFile.ToString());
+				game.SetJob(job);
 				_jobManager.AddJob(job);
 
 				_currentlyDownloading.Remove(release.Id);

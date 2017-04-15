@@ -152,7 +152,7 @@ namespace VpdbAgent.Models
 			this.WhenAnyValue(game => game.UpdatedRelease)
 				.Where(update => update != null && IsSynced)
 				.Subscribe(update => {
-					downloadManager.DownloadRelease(ReleaseId, FileId);
+//					downloadManager.DownloadRelease(ReleaseId, FileId);
 				});
 		}
 

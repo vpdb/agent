@@ -85,11 +85,21 @@ namespace VpdbAgent.Vpdb.Download
 		/// Time when download finished
 		/// </summary>
 		public DateTime FinishedAt { get; set; }
+		
+		/// <summary>
+		/// Size of the transfer in bytes.
+		/// </summary>
+		/// 
+		/// <remarks>
+		/// Can (should!) be different from <see cref="VpdbFile.Bytes"/>, because
+		/// we usually use gzip compression when downloading.
+		/// </remarks>
+		public long TransferSize { get { return _transferSize; } set { this.RaiseAndSetIfChanged(ref _transferSize, value); } }
 
 		/// <summary>
 		/// Transferred bytes, updates during download
 		/// </summary>
-		public long TransferredBytes { get; set; }
+		public long TransferredBytes { get { return _transferredBytes; } set { this.RaiseAndSetIfChanged(ref _transferredBytes, value); } }
 
 		/// <summary>
 		/// Message what went wrong on error
@@ -110,45 +120,57 @@ namespace VpdbAgent.Vpdb.Download
 
 		// convenience props
 		[BsonIgnore] public bool IsFinished => Status != JobStatus.Transferring && Status != JobStatus.Queued;
-		[BsonIgnore] public TimeSpan DownloadTime => FinishedAt - StartedAt;
-		[BsonIgnore] public double DownloadBytesPerSecond => 1000d * TransferredBytes / DownloadTime.TotalMilliseconds;
-
-		// streams
-		[BsonIgnore] public IObservable<JobStatus> WhenStatusChanges => _whenStatusChanges;
-		[BsonIgnore] public IObservable<DownloadProgressChangedEventArgs> WhenDownloadProgresses => _whenDownloadProgresses;
+		[BsonIgnore] public TimeSpan TransferTime => FinishedAt - StartedAt;
+		[BsonIgnore] public double TransferBytesPerSecond => 1000d * _transferredBytes / TransferTime.TotalMilliseconds;
+		[BsonIgnore] public double TransferPercent => _transferPercent.Value;
 
 		// watched props
 		private VpdbRelease _release;
 		private VpdbFile _file;
 		private JobStatus _status;
+		private long _transferSize;
+		private long _transferredBytes;
 		private readonly ObservableAsPropertyHelper<VpdbVersion> _version;
+		private readonly ObservableAsPropertyHelper<double> _transferPercent;
 
 		// fields
-		private readonly Subject<JobStatus> _whenStatusChanges = new Subject<JobStatus>();
-		private readonly Subject<DownloadProgressChangedEventArgs> _whenDownloadProgresses = new Subject<DownloadProgressChangedEventArgs>();
 		private CancellationToken _cancellationToken;
+		private readonly Subject<DownloadProgressChangedEventArgs> _onProgressChanged = new Subject<DownloadProgressChangedEventArgs>();
 
 		// dependencies
 		private readonly ILogger _logger;
+		private readonly IThreadManager _threadManager;
 
 		private Job(IDependencyResolver resolver)
 		{
 			_logger = resolver.GetService<ILogger>();
+			_threadManager = resolver.GetService<IThreadManager>();
 			Client = resolver.GetService<IVpdbClient>().GetWebClient();
 		}
 
 		public Job() : this(Locator.Current) {
 
-			// set Version
+			// set version
 			this.WhenAnyValue(x => x.Release, x => x.File)
 				.Where(x => x.Item1 != null && x.Item2 != null && x.Item1.Versions != null)
 				.Select(x =>  x.Item1.GetVersion(x.Item2.Id))
 				.ToProperty(this, j => j.Version, out _version);
 
-			// update status
-			_whenStatusChanges.Subscribe(status => {
-				Status = status;
-			});
+			// update progress percentage
+			this.WhenAnyValue(x => x.TransferredBytes)
+				.Do(Console.WriteLine)
+				.Select(bytes => TransferSize == 0 ? 0d : (double)bytes / TransferSize * 100)
+				.ToProperty(this, j => j.TransferPercent, out _transferPercent);
+
+			// throttle progress updates
+			_onProgressChanged
+				.Sample(TimeSpan.FromMilliseconds(300))
+				.Subscribe(p => {
+					if (TransferSize == 0) {
+						TransferSize = p.TotalBytesToReceive > 0 ? p.TotalBytesToReceive : File.Bytes;
+					}
+					TransferredBytes = p.BytesReceived;
+				});
 		}
 
 		/// <summary>
@@ -207,14 +229,9 @@ namespace VpdbAgent.Vpdb.Download
 
 			StartedAt = DateTime.Now;
 			Client.DownloadProgressChanged += OnProgressChanged;
-
-			// on main thread
-			System.Windows.Application.Current.Dispatcher.Invoke(() => {
-				_whenStatusChanges.OnNext(JobStatus.Transferring);
+			_threadManager.MainDispatcher.Invoke(() => {
+				Status = JobStatus.Transferring;
 			});
-
-			// update transfer size
-			WhenDownloadProgresses.Subscribe(progress => { TransferredBytes = progress.BytesReceived; });
 		}
 
 		/// <summary>
@@ -252,10 +269,9 @@ namespace VpdbAgent.Vpdb.Download
 		/// </summary>
 		public void OnSuccess()
 		{
-			// on main thread
-			System.Windows.Application.Current.Dispatcher.Invoke(() => {
+			_threadManager.MainDispatcher.Invoke(() => {
 				OnFinished();
-				_whenStatusChanges.OnNext(JobStatus.Completed);
+				Status = JobStatus.Completed;
 			});
 			Client.DownloadProgressChanged -= OnProgressChanged;
 		}
@@ -265,9 +281,9 @@ namespace VpdbAgent.Vpdb.Download
 		/// </summary>
 		public void OnCancelled()
 		{
-			System.Windows.Application.Current.Dispatcher.Invoke(() => {
+			_threadManager.MainDispatcher.Invoke(() => {
 				OnFinished();
-				_whenStatusChanges.OnNext(JobStatus.Aborted);
+				Status = JobStatus.Aborted;
 			});
 			Client.DownloadProgressChanged -= OnProgressChanged;
 		}
@@ -276,13 +292,11 @@ namespace VpdbAgent.Vpdb.Download
 		/// Transfer has failed
 		/// </summary>
 		/// <param name="e"></param>
-		public void OnFailure(Exception e)
-		{
-			System.Windows.Application.Current.Dispatcher.Invoke(delegate
-			{
+		public void OnFailure(Exception e) {
+			_threadManager.MainDispatcher.Invoke(() => {
 				ErrorMessage = e.Message;
 				OnFinished();
-				_whenStatusChanges.OnNext(JobStatus.Failed);
+				Status = JobStatus.Failed;
 			});
 			Client.DownloadProgressChanged -= OnProgressChanged;
 		}
@@ -337,9 +351,14 @@ namespace VpdbAgent.Vpdb.Download
 		/// <summary>
 		/// Transfer progress has changed
 		/// </summary>
+		/// 
+		/// <remarks>
+		/// Just forwards it to our internal observable, which throttles and updates 
+		/// members.
+		/// </remarks>
 		private void OnProgressChanged(object sender, DownloadProgressChangedEventArgs p)
 		{
-			_whenDownloadProgresses.OnNext(p);
+			_onProgressChanged.OnNext(p);
 		}
 
 		/// <summary>

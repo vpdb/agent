@@ -179,6 +179,7 @@ namespace VpdbAgent
 			deps.RegisterLazySingleton(() => new JobManager(
 				deps.GetService<IDatabaseManager>(),
 				deps.GetService<IMessageManager>(),
+				deps.GetService<IThreadManager>(),
 				deps.GetService<NLog.ILogger>(),
 				deps.GetService<CrashManager>()
 			), typeof(IJobManager));

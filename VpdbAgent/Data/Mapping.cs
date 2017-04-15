@@ -1,13 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Runtime.Serialization;
 using ReactiveUI;
-using Splat;
-using VpdbAgent.Common.Filesystem;
 using VpdbAgent.PinballX;
 using VpdbAgent.PinballX.Models;
 using VpdbAgent.Vpdb.Models;
@@ -90,29 +87,17 @@ namespace VpdbAgent.Data
 		private string _fileName;
 		private string _releaseId;
 		private string _fileId;
-		private int? _jobId = null;
+		private int? _jobId;
 		private bool _isSynced;
 		private bool _isHidden;
 		private string _previousFileId;
 		private string _patchedTableScript;
 
-		// dependencies
-		private readonly IFile _file;
-
 		/// <summary>
 		/// Constructor when unmarshalling from file
 		/// </summary>
-		public Mapping() : this(Locator.Current)
+		public Mapping()
 		{
-		}
-
-		/// <summary>
-		/// Base constructor
-		/// </summary>
-		/// <param name="resolver">Resolver</param>
-		private Mapping(IDependencyResolver resolver)
-		{
-			_file = resolver.GetService<IFile>();
 		}
 
 		/// <summary>

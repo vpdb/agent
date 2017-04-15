@@ -77,6 +77,7 @@ namespace VpdbAgent.Vpdb.Download
 		// dependencies
 		private readonly IDatabaseManager _databaseManager;
 		private readonly IMessageManager _messageManager;
+		private readonly IThreadManager _threadManager;
 		private readonly ILogger _logger;
 		private readonly CrashManager _crashManager;
 
@@ -99,10 +100,11 @@ namespace VpdbAgent.Vpdb.Download
 		/// <summary>
 		/// Constructor sets up queue and creates download folder if non-existing.
 		/// </summary>
-		public JobManager(IDatabaseManager databaseManager, IMessageManager messageManager, ILogger logger, CrashManager crashManager)
+		public JobManager(IDatabaseManager databaseManager, IMessageManager messageManager, IThreadManager threadManager, ILogger logger, CrashManager crashManager)
 		{
 			_databaseManager = databaseManager;
 			_messageManager = messageManager;
+			_threadManager = threadManager;
 			_logger = logger;
 			_crashManager = crashManager;
 
@@ -140,7 +142,7 @@ namespace VpdbAgent.Vpdb.Download
 
 			// add queued to queue
 			jobs.Where(j => j.Status == Job.JobStatus.Queued).ToList().ForEach(job => {
-				job.WhenStatusChanges.Subscribe(status => _whenStatusChanged.OnNext(job));
+				job.WhenAnyValue(j => j.Status).Subscribe(status => _whenStatusChanged.OnNext(job));
 				_jobs.OnNext(job);
 			});
 			return this;	
@@ -162,9 +164,9 @@ namespace VpdbAgent.Vpdb.Download
 
 		public IJobManager RetryJob(Job job)
 		{
-			System.Windows.Application.Current.Dispatcher.Invoke(() => {
+			_threadManager.MainDispatcher.Invoke(() => {
 				job.Initialize();
-				job.WhenStatusChanges.Subscribe(status => _whenStatusChanged.OnNext(job));
+				job.WhenAnyValue(j => j.Status).Subscribe(status => _whenStatusChanged.OnNext(job));
 				_jobs.OnNext(job);
 				_databaseManager.SaveJob(job);
 			});
@@ -176,7 +178,7 @@ namespace VpdbAgent.Vpdb.Download
 			_databaseManager.RemoveJob(job);
 
 			// update jobs back on main thread
-			System.Windows.Application.Current.Dispatcher.Invoke(() => {
+			_threadManager.MainDispatcher.Invoke(() => {
 				CurrentJobs.Remove(job);
 			});
 			return this;
@@ -240,7 +242,7 @@ namespace VpdbAgent.Vpdb.Download
 		private void WatchJob(Job job)
 		{
 			// update jobs back on main thread
-			System.Windows.Application.Current.Dispatcher.Invoke(() => job.WhenStatusChanges.Subscribe(status => _whenStatusChanged.OnNext(job)));
+			_threadManager.MainDispatcher.Invoke(() => job.WhenAnyValue(j => j.Status).Subscribe(status => _whenStatusChanged.OnNext(job)));
 		}
 	}
 }
