@@ -10,7 +10,6 @@ using VpdbAgent.Application;
 using VpdbAgent.Data;
 using VpdbAgent.PinballX;
 using VpdbAgent.PinballX.Models;
-using Game = VpdbAgent.Models.Game;
 
 namespace VpdbAgent.ViewModels.Games
 {
@@ -29,7 +28,7 @@ namespace VpdbAgent.ViewModels.Games
 
 		// privates
 		private readonly ReactiveList<string> _systemFilter = new ReactiveList<string>();
-		private readonly IReactiveDerivedList<GameItemViewModel> _allGames;
+		private readonly IReactiveDerivedList<GameItemViewModel> _allGameViewModels;
 
 		public GamesViewModel(IDependencyResolver resolver)
 		{
@@ -46,40 +45,25 @@ namespace VpdbAgent.ViewModels.Games
 				(x, y) => string.Compare(x.Name, y.Name, StringComparison.OrdinalIgnoreCase)
 			);
 
-			// push all games into AllGames as view models and sorted
-			_allGames = gameManager.AggregatedGames.CreateDerivedCollection(
-				game => new GameItemViewModel(game, resolver) { IsVisible = true /*IsGameVisible(game)*/ },
-				gameViewModel => true																 // filter
+			// this is the list we only create once
+			_allGameViewModels = gameManager.AggregatedGames.CreateDerivedCollection(
+				game => new GameItemViewModel(game, resolver) { IsVisible = IsGameVisible(game) }
 			);
 
-			// push filtered game view models into Games
-			Games = _allGames.CreateDerivedCollection(
+			// this is the list that gets filtered
+			Games = _allGameViewModels.CreateDerivedCollection(
 				gameViewModel => gameViewModel, 
-				gameViewModel => gameViewModel.IsVisible && gameViewModel.Game.IsVisible,
+				gameViewModel => gameViewModel.IsVisible,
 				(x, y) => string.Compare(Path.GetFileName(x.Game.FileId), Path.GetFileName(y.Game.FileId), StringComparison.OrdinalIgnoreCase)
 			);
-		}
+			_allGameViewModels.ChangeTrackingEnabled = true;
 
-
-		/// <summary>
-		/// Sets up the triggers that refresh the lists. Run this once
-		/// the origial (i.e. non-derived) lists are populated.
-		/// </summary>
-		private void SetupTracking()
-		{
 			// update platform filter when platforms change
 			Systems.Changed
 				.Select(_ => Unit.Default)
 				.StartWith(Unit.Default)
 				.Subscribe(UpdatePlatforms);
 			
-			_allGames.ChangeTrackingEnabled = true;
-
-			// just print that we're happy
-			_allGames.Changed.Subscribe(_ => {
-				Logger.Info("We've got {0} games, {1} in total.", Games.Count, _allGames.Count);
-			});
-
 			// update games view models when platform filter changes
 			_systemFilter.Changed
 				.Select(_ => Unit.Default)
@@ -107,12 +91,10 @@ namespace VpdbAgent.ViewModels.Games
 		/// </summary>
 		/// <param name="args">Change arguments from ReactiveList</param>
 		private void RefreshGameVisibility(Unit args)
-		{/*
-			using (_allGames.SuppressChangeNotifications()) {
-				foreach (var gameViewModel in _allGames) {
-					gameViewModel.IsVisible = IsGameVisible(gameViewModel.Game);
-				}
-			}*/
+		{
+			foreach (var gameViewModel in _allGameViewModels) {
+				gameViewModel.IsVisible = IsGameVisible(gameViewModel.Game);
+			}
 		}
 
 		/// <summary>
@@ -125,7 +107,10 @@ namespace VpdbAgent.ViewModels.Games
 		/// <returns>True if visible, false otherwise</returns>
 		private bool IsGameVisible(AggregatedGame game)
 		{
-			return game.IsVisible;
+			if (game.System != null && !_systemFilter.Contains(game.System.Name)) {
+				return false;
+			}
+			return true;
 		}
 
 		/// <summary>
