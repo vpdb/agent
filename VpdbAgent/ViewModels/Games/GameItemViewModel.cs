@@ -55,6 +55,7 @@ namespace VpdbAgent.ViewModels.Games
 		public bool ShowResults { get { return _showResults; } set { this.RaiseAndSetIfChanged(ref _showResults, value); } }
 		public bool HasResults { get { return _hasResults; } set { this.RaiseAndSetIfChanged(ref _hasResults, value); } }
 		public bool IsDownloading => _isDownloading.Value;
+		public bool IsQueued => _isQueued.Value;
 		public bool ShowButtons => _showButtons.Value;
 		public double DownloadPercent { get { return _downloadPercent; } set { this.RaiseAndSetIfChanged(ref _downloadPercent, value); } }
 
@@ -65,6 +66,7 @@ namespace VpdbAgent.ViewModels.Games
 		private readonly ObservableAsPropertyHelper<bool> _showDownloadMissingButton;
 		private readonly ObservableAsPropertyHelper<bool> _isExecuting;
 		private readonly ObservableAsPropertyHelper<bool> _isDownloading;
+		private readonly ObservableAsPropertyHelper<bool> _isQueued;
 		private readonly ObservableAsPropertyHelper<bool> _showButtons;
 		private bool _showResults;
 		private bool _hasResults;
@@ -82,6 +84,7 @@ namespace VpdbAgent.ViewModels.Games
 			var threadManager = resolver.GetService<IThreadManager>();
 
 			game.WhenAnyValue(g => g.IsDownloading).ToProperty(this, vm => vm.IsDownloading, out _isDownloading);
+			game.WhenAnyValue(g => g.IsQueued).ToProperty(this, vm => vm.IsQueued, out _isQueued);
 
 			// release identify
 			IdentifyRelease = ReactiveCommand.CreateFromObservable(() => _vpdbClient.Api.GetReleasesBySize(Game.FileSize, MatchThreshold).SubscribeOn(threadManager.WorkerScheduler));
@@ -149,7 +152,8 @@ namespace VpdbAgent.ViewModels.Games
 				vm => vm.ShowResults, 
 				vm => vm.IsExecuting, 
 				vm => vm.IsDownloading, 
-				(showResults, isExecuting, isDownloading) => !showResults && !isExecuting && !isDownloading
+				vm => vm.IsQueued, 
+				(showResults, isExecuting, isDownloading, isQueued) => !showResults && !isExecuting && !isDownloading && !isQueued
 			).ToProperty(this, vm => vm.ShowButtons, out _showButtons);
 
 			// identify button visibility

@@ -112,6 +112,7 @@ namespace VpdbAgent.Data
 		public bool HasXmlGame => _hasXmlGame.Value;
 		public bool HasSystem => System != null;
 		public bool IsDownloading => _isDownloading.Value;
+		public bool IsQueued => _isQueued.Value;
 
 		// watched props
 		private string _fileId;
@@ -128,6 +129,7 @@ namespace VpdbAgent.Data
 		private readonly ObservableAsPropertyHelper<bool> _hasXmlGame;
 		private ObservableAsPropertyHelper<bool> _isVisible;
 		private ObservableAsPropertyHelper<bool> _isDownloading;
+		private ObservableAsPropertyHelper<bool> _isQueued;
 		private ObservableAsPropertyHelper<string> _fileName;
 		private ObservableAsPropertyHelper<Job> _mappedJob;
 
@@ -218,8 +220,12 @@ namespace VpdbAgent.Data
 					job.WhenAnyValue(j => j.Status)
 						.Select(status => status == Job.JobStatus.Transferring)
 						.ToProperty(this, game => game.IsDownloading, out _isDownloading);
+					job.WhenAnyValue(j => j.Status)
+						.Select(status => status == Job.JobStatus.Queued)
+						.ToProperty(this, game => game.IsQueued, out _isQueued);
 				} else {
 					Observable.Return(false).ToProperty(this, game => game.IsDownloading, out _isDownloading);
+					Observable.Return(false).ToProperty(this, game => game.IsQueued, out _isQueued);
 				}
 			});
 

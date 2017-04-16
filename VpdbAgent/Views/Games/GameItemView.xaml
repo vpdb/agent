@@ -86,11 +86,6 @@
                     <TextBlock Text="{Binding Game.FileDisplayName}" Background="{Binding Path=Game.HasLocalFile, Converter={StaticResource FalseToRed}}" TextTrimming="CharacterEllipsis"/>
                 </Label>
 
-                <!-- download progress -->
-                <ProgressBar Value="{Binding Path=DownloadPercent, Mode=OneWay}" Style="{StaticResource BlehProgressBar}" 
-                             Visibility="{Binding Path=Game.IsDownloading, Converter={StaticResource TrueToVisible}}"
-                             Grid.Column="1" Width="150" Margin="0,5,15,0" IsIndeterminate="False"/>
-                
                 <!-- buttons -->
                 <StackPanel Grid.Column="1" Orientation="Horizontal">
 
@@ -132,6 +127,15 @@
 
                     <loadin:LoadingIndicator Foreground="{StaticResource PrimaryColorBrush}" SpeedRatio="1" IsActive="{Binding IsExecuting}" Style="{DynamicResource LoadingIndicatorArcsStyle}"/>
                 </Viewbox>
+
+                <!-- download progress -->
+                <ProgressBar Value="{Binding Path=DownloadPercent, Mode=OneWay}" Style="{StaticResource BlehProgressBar}" 
+                             Visibility="{Binding Path=Game.IsDownloading, Converter={StaticResource TrueToVisible}}"
+                             Grid.Column="1" Width="150" Margin="0,5,15,0" IsIndeterminate="False"/>
+
+                <!-- queued notice -->
+                <Label Visibility="{Binding Path=Game.IsQueued, Converter={StaticResource TrueToVisible}}" 
+                       Grid.Column="1" Content="Queued for download" Margin="0,0,10,0" FontStyle="Italic" />
                 
                 <!-- update notice -->
                 <!--Label Visibility="{Binding Path=Game.HasUpdate, Converter={StaticResource TrueToVisible}}" 

@@ -203,9 +203,9 @@ namespace VpdbAgent.Vpdb.Download
 				var job = new Job(release, tableFile, FileType.TableFile, platform);
 				fileTypes.Add(FileType.TableFile);
 				_logger.Info("Found {0} file type(s) to download: {1}", fileTypes.Count, string.Join(", ", fileTypes));
-				_logger.Info("Created new job for {0} - {1} v{2} ({3}): {4}", job.Release.Game.DisplayName, job.Release.Name, job.Version.Name, job.File.Id, tableFile.ToString());
 				_jobManager.AddJob(job);
 				game.SetJob(job);
+				_logger.Info("Created new job for {0} - {1} v{2} ({3}): {4}", job.Release.Game.DisplayName, job.Release.Name, job.Version.Name, job.File.Id, tableFile.ToString());
 
 				_currentlyDownloading.Remove(release.Id);
 
