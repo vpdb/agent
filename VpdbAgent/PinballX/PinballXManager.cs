@@ -33,8 +33,6 @@ namespace VpdbAgent.PinballX
 	/// read/write maintenance of the user's configuration. See <see cref="GameManager"/> for
 	/// data structures that are actually used in the application.
 	/// </remarks>
-	/// 
-	/// TODO rename to PinballXManager
 	public interface IPinballXManager
 	{
 		/// <summary>

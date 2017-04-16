@@ -31,13 +31,8 @@ namespace VpdbAgent.PinballX.Models
 	/// </remarks>
 	public class PinballXSystem : ReactiveObject, IDisposable
 	{
-		// deps
-		private readonly ISettingsManager _settingsManager;
-		private readonly IMarshallManager _marshallManager;
-		private readonly IFileSystemWatcher _watcher;
-		private readonly ILogger _logger;
-		private readonly IDirectory _dir;
-		private readonly IFile _file;
+
+		public const string DefaultExecutableLabel = "<default>";
 
 		// from pinballx.ini
 		public string Name { get; set; }
@@ -58,6 +53,16 @@ namespace VpdbAgent.PinballX.Models
 		/// is renamed.
 		/// </remarks>
 		public Dictionary<string, List<PinballXGame>> Games { get; } = new Dictionary<string, List<PinballXGame>>();
+
+		/// <summary>
+		/// A list of database files (without path) of this system.
+		/// </summary>
+		public IReactiveList<string> DatabaseFiles { get; } = new ReactiveList<string>();
+
+		/// <summary>
+		/// A list of executables used in this system. Note that null string equals default executable.
+		/// </summary>
+		public IReactiveList<string> Executables { get; } = new ReactiveList<string>();
 
 		/// <summary>
 		/// Mappings of this system. Adding, removing and updating stuff from here
@@ -91,12 +96,6 @@ namespace VpdbAgent.PinballX.Models
 		/// </remarks>
 		public IObservable<List<Mapping>> MappingsUpdated => _mappingsUpdated;
 
-		/// <summary>
-		/// Triggers every time the mapping file (`vpdb.json`) for this system is
-		/// updated, created or removed.
-		/// </summary>
-		//public IObservable<string> MappingFileUpdated => _mappingFileUpdated;
-
 		// convenient props
 		public string DatabasePath { get; private set; }
 		public string MediaPath { get; private set; }
@@ -116,6 +115,15 @@ namespace VpdbAgent.PinballX.Models
 		private readonly SystemMapping _mapping;
 		private IDisposable _mappingFileWatcher;
 
+		// deps
+		private readonly ISettingsManager _settingsManager;
+		private readonly IMarshallManager _marshallManager;
+		private readonly IFileSystemWatcher _watcher;
+		private readonly IThreadManager _threadManager;
+		private readonly ILogger _logger;
+		private readonly IDirectory _dir;
+		private readonly IFile _file;
+
 		/// <summary>
 		/// Base constructor
 		/// </summary>
@@ -123,6 +131,7 @@ namespace VpdbAgent.PinballX.Models
 		{
 			_settingsManager = resolver.GetService<ISettingsManager>();
 			_marshallManager = resolver.GetService<IMarshallManager>();
+			_threadManager = resolver.GetService<IThreadManager>();
 			_watcher = resolver.GetService<IFileSystemWatcher>();
 			_logger = resolver.GetService<ILogger>();
 			_file = resolver.GetService<IFile>();
@@ -292,6 +301,11 @@ namespace VpdbAgent.PinballX.Models
 			// read enabled games from XML
 			Games[databaseFile] = ParseGames(databaseFile);
 
+			// update list of database files
+			if (!DatabaseFiles.Contains(databaseFile)) {
+				DatabaseFiles.Add(databaseFile);
+			}
+
 			// trigger update
 			_gamesUpdated.OnNext(new Tuple<string, List<PinballXGame>>(databaseFile, Games[databaseFile]));
 		}
@@ -312,6 +326,10 @@ namespace VpdbAgent.PinballX.Models
 				return;
 			}
 			var databaseFile = Path.GetFileName(databaseFilePath);
+
+			// update database files
+			DatabaseFiles.Remove(databaseFile);
+
 			_gamesUpdated.OnNext(new Tuple<string, List<PinballXGame>>(databaseFile, new List<PinballXGame>()));
 		}
 
@@ -357,6 +375,10 @@ namespace VpdbAgent.PinballX.Models
 			// update properties of concerned games
 			Games[databaseOld].ToList().ForEach(g => g.DatabaseFile = databaseNew);
 
+			// update database file list
+			DatabaseFiles.Remove(databaseOld);
+			DatabaseFiles.Add(databaseNew);
+
 			// rename key
 			Games[databaseNew] = Games[databaseOld];
 			Games.Remove(databaseOld);
@@ -379,10 +401,28 @@ namespace VpdbAgent.PinballX.Models
 			var games = new List<PinballXGame>();
 			if (_dir.Exists(DatabasePath)) {
 				var menu = _marshallManager.UnmarshallXml(xmlPath);
+				var remainingExecutables = Executables.ToList();
 				menu.Games.ForEach(game => {
+
+					// update links
 					game.System = this;
 					game.DatabaseFile = databaseFile;
+
+					// update executables
+					var executable = game.AlternateExe != null && game.AlternateExe.Trim() != "" ? game.AlternateExe : DefaultExecutableLabel;
+					if (!Executables.Contains(executable)) {
+						_logger.Debug("Adding new alternate executable \"{0}\" to system \"{1}\"", executable, Name);
+						_threadManager.MainDispatcher.Invoke(() => Executables.Add(executable));
+					} else {
+						if (remainingExecutables.Contains(executable)) {
+							remainingExecutables.Remove(executable);
+						}
+					}
 				});
+				_logger.Debug("Removing alternate executables [ \"{0}\" ] from system \"{1}\"", string.Join("\", \"", remainingExecutables), Name);
+				_threadManager.MainDispatcher.Invoke(() => Executables.RemoveAll(remainingExecutables));
+				_threadManager.MainDispatcher.Invoke(() => Executables.Sort(string.Compare));
+
 				games.AddRange(menu.Games);
 			}
 			_logger.Debug("Parsed {0} games from {1}.", games.Count, xmlPath);

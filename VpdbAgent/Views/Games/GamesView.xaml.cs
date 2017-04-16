@@ -22,7 +22,7 @@ namespace VpdbAgent.Views.Games
 			//this.WhenAnyValue(x => x.ViewModel).BindTo(this, x => x.DataContext);
 			this.WhenActivated(d =>
 			{
-				d(this.OneWayBind(ViewModel, vm => vm.Systems, v => v.PlatformList.ItemsSource));
+				d(this.OneWayBind(ViewModel, vm => vm.Systems, v => v.SystemList.ItemsSource));
 				d(this.OneWayBind(ViewModel, vm => vm.Games, v => v.GameList.ItemsSource));
 				d(this.BindCommand(ViewModel, vm => vm.IdentifyAll, v => v.IdentifyAllButton));
 			});
@@ -36,6 +36,16 @@ namespace VpdbAgent.Views.Games
 			}
 			var platformName = checkbox.Tag as string;
 			ViewModel.OnPlatformFilterChanged(platformName, checkbox.IsChecked == true);
+		}
+
+		public void OnExecutableFilterChanged(object sender, object e)
+		{
+			var checkbox = (sender as CheckBox);
+			if (checkbox == null) {
+				return;
+			}
+			var fileName = checkbox.Tag as string;
+			ViewModel.OnExecutableFilterChanged(fileName, checkbox.IsChecked == true);
 		}
 
 		#region ViewModel

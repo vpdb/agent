@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reactive;
@@ -27,16 +28,13 @@ namespace VpdbAgent.ViewModels.Games
 		public ReactiveCommand<Unit, Unit> IdentifyAll { get; }
 
 		// privates
-		private readonly ReactiveList<string> _systemFilter = new ReactiveList<string>();
+		private readonly HashSet<string> _systemFilter = new HashSet<string>();
 		private readonly IReactiveDerivedList<GameItemViewModel> _allGameViewModels;
 
 		public GamesViewModel(IDependencyResolver resolver)
 		{
 			var menuManager = resolver.GetService<IPinballXManager>();
 			var gameManager = resolver.GetService<IGameManager>();
-
-			// setup init listener
-			//gameManager.Initialized.Subscribe(_ => SetupTracking());
 
 			// create platforms, filtered and sorted
 			Systems = menuManager.Systems.CreateDerivedCollection(
@@ -62,13 +60,7 @@ namespace VpdbAgent.ViewModels.Games
 			Systems.Changed
 				.Select(_ => Unit.Default)
 				.StartWith(Unit.Default)
-				.Subscribe(UpdatePlatforms);
-			
-			// update games view models when platform filter changes
-			_systemFilter.Changed
-				.Select(_ => Unit.Default)
-				.StartWith(Unit.Default)
-				.Subscribe(RefreshGameVisibility);
+				.Subscribe(UpdateSystems);
 		}
 
 		/// <summary>
@@ -83,14 +75,21 @@ namespace VpdbAgent.ViewModels.Games
 			} else {
 				_systemFilter.Remove(platformName);
 			}
+			RefreshGameVisibility();
+		}
+
+		public void OnExecutableFilterChanged(string fileName, bool isChecked)
+		{
+			if (isChecked) {
+			} else {
+			}
 		}
 
 		/// <summary>
 		/// Updates the IsVisible flag on all games in order to filter
 		/// depending on the selected platforms.
 		/// </summary>
-		/// <param name="args">Change arguments from ReactiveList</param>
-		private void RefreshGameVisibility(Unit args)
+		private void RefreshGameVisibility()
 		{
 			foreach (var gameViewModel in _allGameViewModels) {
 				gameViewModel.IsVisible = IsGameVisible(gameViewModel.Game);
@@ -114,16 +113,14 @@ namespace VpdbAgent.ViewModels.Games
 		}
 
 		/// <summary>
-		/// Updates the platform filter when platforms change.
+		/// Updates the platform filter when systems change.
 		/// </summary>
 		/// <param name="args">Change arguments from ReactiveList</param>
-		private void UpdatePlatforms(Unit args)
+		private void UpdateSystems(Unit args)
 		{
 			// populate filter
-			using (_systemFilter.SuppressChangeNotifications()) {
-				_systemFilter.Clear();
-				_systemFilter.AddRange(Systems.Select(p => p.Name));
-			}
+			_systemFilter.Clear();
+			Systems.ToList().ForEach(system => _systemFilter.Add(system.Name));
 			Logger.Info("We've got {0} systems.", Systems.Count);
 		}
 	}

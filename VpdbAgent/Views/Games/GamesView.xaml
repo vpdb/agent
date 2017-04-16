@@ -4,6 +4,7 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:ctrl="clr-namespace:VpdbAgent.Controls"
+      xmlns:models="clr-namespace:VpdbAgent.PinballX.Models"
       mc:Ignorable="d" 
       d:DesignHeight="300"
 	  d:DesignWidth="900">
@@ -20,13 +21,42 @@
             
             <!-- SYSTEMS -->
             <Label Content="SYSTEMS" Style="{StaticResource Header3}" />
-            <ItemsControl x:Name="PlatformList">
+            <ItemsControl x:Name="SystemList">
                 <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <CheckBox IsChecked="True" Tag="{Binding Name}"
-                                  Content="{Binding Name}"
-                                  Checked="OnPlatformFilterChanged" Unchecked="OnPlatformFilterChanged"
-                                  Margin="10,5,0,0" FontSize="18"/>
+                    <DataTemplate DataType="models:PinballXSystem">
+                        <StackPanel Orientation="Vertical">
+                            <CheckBox IsChecked="True" Tag="{Binding Name}"
+                                      Content="{Binding Name}"
+                                      Checked="OnPlatformFilterChanged" Unchecked="OnPlatformFilterChanged"
+                                      Margin="5,5,0,0" FontSize="18"/>
+
+                            <!-- DB FILES -->
+                            <Label Content="XML Files" Margin="15,0,0,0" />
+                            <ItemsControl ItemsSource="{Binding DatabaseFiles}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <CheckBox IsChecked="True" Tag="{Binding}"
+                                          Content="{Binding}"
+                                          Checked="OnExecutableFilterChanged" Unchecked="OnExecutableFilterChanged"
+                                          Margin="15,5,0,0" FontSize="18"/>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            
+                            <!-- EXECUTABLES -->
+                            <Label Content="Executables" Margin="15,0,0,0" />
+                            <ItemsControl ItemsSource="{Binding Executables}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <CheckBox IsChecked="True" Tag="{Binding}"
+                                          Content="{Binding}"
+                                          Checked="OnExecutableFilterChanged" Unchecked="OnExecutableFilterChanged"
+                                          Margin="15,5,0,0" FontSize="18"/>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
