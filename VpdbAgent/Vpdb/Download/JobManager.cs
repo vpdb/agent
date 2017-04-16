@@ -72,7 +72,7 @@ namespace VpdbAgent.Vpdb.Download
 	public class JobManager : IJobManager
 	{
 		// increase this on demand...
-		public const int MaximalSimultaneousDownloads = 2;
+		public const int MaximalSimultaneousDownloads = 1;
 
 		// dependencies
 		private readonly IDatabaseManager _databaseManager;
@@ -110,6 +110,7 @@ namespace VpdbAgent.Vpdb.Download
 
 			// setup transfer queue
 			_queue = _jobs
+				.Do(job => _logger.Info("----- Added job {0} to active transfers.", job.File.Name))
 				.ObserveOn(Scheduler.Default)
 				.Select(job => Observable.DeferAsync(async token => Observable.Return(await ProcessDownload(job, token))))
 				.Merge(MaximalSimultaneousDownloads)
@@ -136,9 +137,11 @@ namespace VpdbAgent.Vpdb.Download
 		public IJobManager Initialize()
 		{
 			var jobs = _databaseManager.GetJobs();
-			using (CurrentJobs.SuppressChangeNotifications()) {
-				CurrentJobs.AddRange(jobs);
-			}
+			_threadManager.MainDispatcher.Invoke(() => {
+				using (CurrentJobs.SuppressChangeNotifications()) {
+					CurrentJobs.AddRange(jobs);
+				}
+			});
 
 			// add queued to queue
 			jobs.Where(j => j.Status == Job.JobStatus.Queued).ToList().ForEach(job => {
@@ -155,7 +158,7 @@ namespace VpdbAgent.Vpdb.Download
 
 			// persist to db and memory
 			_databaseManager.AddJob(job);
-			CurrentJobs.Add(job);
+			_threadManager.MainDispatcher.Invoke(() => CurrentJobs.Add(job));
 
 			// queue it up so it gets downloaded
 			_jobs.OnNext(job);
@@ -178,9 +181,7 @@ namespace VpdbAgent.Vpdb.Download
 			_databaseManager.RemoveJob(job);
 
 			// update jobs back on main thread
-			_threadManager.MainDispatcher.Invoke(() => {
-				CurrentJobs.Remove(job);
-			});
+			_threadManager.MainDispatcher.Invoke(() => CurrentJobs.Remove(job));
 			return this;
 		}
 
