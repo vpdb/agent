@@ -303,7 +303,7 @@ namespace VpdbAgent.PinballX.Models
 
 			// update list of database files
 			if (!DatabaseFiles.Contains(databaseFile)) {
-				DatabaseFiles.Add(databaseFile);
+				_threadManager.MainDispatcher.Invoke(() => DatabaseFiles.Add(databaseFile));
 			}
 
 			// trigger update
@@ -328,7 +328,7 @@ namespace VpdbAgent.PinballX.Models
 			var databaseFile = Path.GetFileName(databaseFilePath);
 
 			// update database files
-			DatabaseFiles.Remove(databaseFile);
+			_threadManager.MainDispatcher.Invoke(() => DatabaseFiles.Remove(databaseFile));
 
 			_gamesUpdated.OnNext(new Tuple<string, List<PinballXGame>>(databaseFile, new List<PinballXGame>()));
 		}
@@ -376,8 +376,10 @@ namespace VpdbAgent.PinballX.Models
 			Games[databaseOld].ToList().ForEach(g => g.DatabaseFile = databaseNew);
 
 			// update database file list
-			DatabaseFiles.Remove(databaseOld);
-			DatabaseFiles.Add(databaseNew);
+			_threadManager.MainDispatcher.Invoke(() => {
+				DatabaseFiles.Remove(databaseOld);
+				DatabaseFiles.Add(databaseNew);
+			});
 
 			// rename key
 			Games[databaseNew] = Games[databaseOld];

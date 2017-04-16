@@ -20,7 +20,7 @@ namespace VpdbAgent.ViewModels.Games
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		// data
-		public IReactiveDerivedList<PinballXSystem> Systems { get; }
+		public IReactiveDerivedList<SystemItemViewModel> Systems { get; }
 		public IReactiveDerivedList<GameItemViewModel> Games { get; }
 
 		// commands
@@ -38,9 +38,9 @@ namespace VpdbAgent.ViewModels.Games
 
 			// create platforms, filtered and sorted
 			Systems = menuManager.Systems.CreateDerivedCollection(
-				platform => platform,
-				platform => platform.Enabled,
-				(x, y) => string.Compare(x.Name, y.Name, StringComparison.OrdinalIgnoreCase)
+				system => new SystemItemViewModel(system),
+				system => system.Enabled,
+				(x, y) => string.Compare(x.System.Name, y.System.Name, StringComparison.OrdinalIgnoreCase)
 			);
 
 			// this is the list we only create once
@@ -120,7 +120,7 @@ namespace VpdbAgent.ViewModels.Games
 		{
 			// populate filter
 			_systemFilter.Clear();
-			Systems.ToList().ForEach(system => _systemFilter.Add(system.Name));
+			Systems.ToList().ForEach(vm => _systemFilter.Add(vm.System.Name));
 			Logger.Info("We've got {0} systems.", Systems.Count);
 		}
 	}

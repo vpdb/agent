@@ -263,6 +263,7 @@
     <Compile Include="AkavacheSqliteLinkerOverride.cs" />
     <Compile Include="Common\TypeConverters\NullToVisibilityConverter.cs" />
     <Compile Include="Common\TypeConverters\NullConverter.cs" />
+    <Compile Include="ViewModels\Games\SystemItemViewModel.cs" />
     <Compile Include="Vpdb\VpdbManager.cs" />
     <Compile Include="Application\CrashManager.cs" />
     <Compile Include="Application\DatabaseManager.cs" />
