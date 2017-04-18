@@ -28,50 +28,7 @@
                 <Label Grid.Column="0" Content="SYSTEMS" Style="{StaticResource Header3}" />
                
             </Grid>
-            <ItemsControl x:Name="SystemList">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate DataType="games:SystemItemViewModel">
-                        <StackPanel Orientation="Vertical">
-                            <CheckBox IsChecked="True" Tag="{Binding System.Name}"
-                                      Content="{Binding System.Name}"
-                                      Checked="OnPlatformFilterChanged" Unchecked="OnPlatformFilterChanged"
-                                      Margin="5,5,0,0" FontSize="18"/>
-
-                            <Expander IsExpanded="{Binding IsExpanded}" Style="{StaticResource AnimatedExpander}">
-
-                                <StackPanel Orientation="Vertical">
-
-                                    <!-- DB FILES -->
-                                    <Label Content="XML Files" Margin="15,0,0,0" />
-                                    <ItemsControl ItemsSource="{Binding System.DatabaseFiles}">
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate>
-                                                <CheckBox IsChecked="True" Tag="{Binding}"
-                                              Content="{Binding}"
-                                              Checked="OnExecutableFilterChanged" Unchecked="OnExecutableFilterChanged"
-                                              Margin="15,5,0,0" FontSize="18"/>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-
-                                    <!-- EXECUTABLES -->
-                                    <Label Content="Executables" Margin="15,0,0,0" />
-                                    <ItemsControl ItemsSource="{Binding System.Executables}">
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate>
-                                                <CheckBox IsChecked="True" Tag="{Binding}"
-                                              Content="{Binding}"
-                                              Checked="OnExecutableFilterChanged" Unchecked="OnExecutableFilterChanged"
-                                              Margin="15,5,0,0" FontSize="18"/>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                                </StackPanel>
-                            </Expander>
-                        </StackPanel>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
+            <ItemsControl x:Name="SystemList" />
 
             <!-- ACTIONS -->
             <Label Content="ACTIONS" Style="{StaticResource Header3}" Margin="0,15,0,0" />

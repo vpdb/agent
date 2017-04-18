@@ -226,6 +226,7 @@ namespace VpdbAgent
 			deps.RegisterLazySingleton(() => new GamesView(), typeof(IViewFor<GamesViewModel>));
 			deps.RegisterLazySingleton(() => new DownloadsView(), typeof(IViewFor<DownloadsViewModel>));
 			deps.RegisterLazySingleton(() => new MessagesView(), typeof(IViewFor<MessagesViewModel>));
+			deps.Register(() => new SystemItemView(), typeof(IViewFor<SystemItemViewModel>));
 			deps.Register(() => new GameItemView(), typeof(IViewFor<GameItemViewModel>));
 			deps.Register(() => new GameResultItemView(), typeof(IViewFor<GameResultItemViewModel>));
 			deps.Register(() => new DownloadItemView(), typeof(IViewFor<DownloadItemViewModel>));

@@ -264,6 +264,9 @@
     <Compile Include="Common\TypeConverters\NullToVisibilityConverter.cs" />
     <Compile Include="Common\TypeConverters\NullConverter.cs" />
     <Compile Include="ViewModels\Games\SystemItemViewModel.cs" />
+    <Compile Include="Views\Games\SystemItemView.xaml.cs">
+      <DependentUpon>SystemItemView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Vpdb\VpdbManager.cs" />
     <Compile Include="Application\CrashManager.cs" />
     <Compile Include="Application\DatabaseManager.cs" />
@@ -423,6 +426,10 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="Views\Games\SystemItemView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\MainView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

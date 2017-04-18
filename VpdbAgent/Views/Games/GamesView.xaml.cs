@@ -28,26 +28,6 @@ namespace VpdbAgent.Views.Games
 			});
 		}
 
-		public void OnPlatformFilterChanged(object sender, object e)
-		{
-			var checkbox = (sender as CheckBox);
-			if (checkbox == null) {
-				return;
-			}
-			var platformName = checkbox.Tag as string;
-			ViewModel.OnPlatformFilterChanged(platformName, checkbox.IsChecked == true);
-		}
-
-		public void OnExecutableFilterChanged(object sender, object e)
-		{
-			var checkbox = (sender as CheckBox);
-			if (checkbox == null) {
-				return;
-			}
-			var fileName = checkbox.Tag as string;
-			ViewModel.OnExecutableFilterChanged(fileName, checkbox.IsChecked == true);
-		}
-
 		#region ViewModel
 		public GamesViewModel ViewModel
 		{
