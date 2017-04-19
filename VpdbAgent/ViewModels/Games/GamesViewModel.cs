@@ -29,6 +29,7 @@ namespace VpdbAgent.ViewModels.Games
 
 		// privates
 		private readonly HashSet<string> _systemFilter = new HashSet<string>();
+		private readonly Dictionary<PinballXSystem, HashSet<string>> _executableFilter = new Dictionary<PinballXSystem, HashSet<string>>();
 		private readonly IReactiveDerivedList<GameItemViewModel> _allGameViewModels;
 
 		public GamesViewModel(IDependencyResolver resolver)
@@ -78,11 +79,15 @@ namespace VpdbAgent.ViewModels.Games
 			RefreshGameVisibility();
 		}
 
-		public void OnExecutableFilterChanged(string fileName, bool isChecked)
+		public void OnExecutableFilterChanged(PinballXSystem system, string fileName, bool isChecked)
 		{
+			fileName = fileName == PinballXSystem.DefaultExecutableLabel ? "" : fileName;
 			if (isChecked) {
+				_executableFilter[system].Add(fileName);
 			} else {
+				_executableFilter[system].Remove(fileName);
 			}
+			RefreshGameVisibility();
 		}
 
 		/// <summary>
@@ -106,8 +111,13 @@ namespace VpdbAgent.ViewModels.Games
 		/// <returns>True if visible, false otherwise</returns>
 		private bool IsGameVisible(AggregatedGame game)
 		{
-			if (game.System != null && !_systemFilter.Contains(game.System.Name)) {
-				return false;
+			if (game.System != null) {
+				if (!_systemFilter.Contains(game.System.Name)) {
+					return false;
+				}
+				if (game.HasXmlGame && !_executableFilter[game.System].Contains(game.XmlGame.AlternateExe ?? "")) {
+					return false;
+				}
 			}
 			return true;
 		}
@@ -118,9 +128,17 @@ namespace VpdbAgent.ViewModels.Games
 		/// <param name="args">Change arguments from ReactiveList</param>
 		private void UpdateSystems(Unit args)
 		{
-			// populate filter
+			// populate system filter
 			_systemFilter.Clear();
 			Systems.ToList().ForEach(vm => _systemFilter.Add(vm.System.Name));
+
+			// populate executable filter
+			_executableFilter.Clear();
+			Systems.ToList().ForEach(vm => _executableFilter.Add(
+				vm.System, 
+				new HashSet<string>(vm.System.Executables.Select(fileName => fileName == PinballXSystem.DefaultExecutableLabel ? "" : fileName))
+			));
+
 			Logger.Info("We've got {0} systems.", Systems.Count);
 		}
 	}
