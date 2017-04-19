@@ -61,7 +61,7 @@ namespace VpdbAgent.ViewModels.Games
 			Systems.Changed
 				.Select(_ => Unit.Default)
 				.StartWith(Unit.Default)
-				.Subscribe(UpdateSystems);
+				.Subscribe(x => UpdateSystems());
 		}
 
 		/// <summary>
@@ -125,19 +125,37 @@ namespace VpdbAgent.ViewModels.Games
 		/// <summary>
 		/// Updates the platform filter when systems change.
 		/// </summary>
-		/// <param name="args">Change arguments from ReactiveList</param>
-		private void UpdateSystems(Unit args)
+		private void UpdateSystems()
 		{
 			// populate system filter
-			_systemFilter.Clear();
-			Systems.ToList().ForEach(vm => _systemFilter.Add(vm.System.Name));
+			var remainingSystems = _systemFilter.ToList();
+			Systems.ToList().ForEach(vm => {
+				if (!_systemFilter.Contains(vm.System.Name)) {
+					_systemFilter.Add(vm.System.Name);
+				} else {
+					remainingSystems.Remove(vm.System.Name);
+				}
+			});
+			remainingSystems.ForEach(systemName => _systemFilter.Remove(systemName));
 
 			// populate executable filter
-			_executableFilter.Clear();
-			Systems.ToList().ForEach(vm => _executableFilter.Add(
-				vm.System, 
-				new HashSet<string>(vm.System.Executables.Select(fileName => fileName == PinballXSystem.DefaultExecutableLabel ? "" : fileName))
-			));
+			Systems.ToList().ForEach(vm => {
+				if (!_executableFilter.ContainsKey(vm.System)) {
+					_executableFilter.Add(vm.System, new HashSet<string>());
+				}
+				var remainingExecutables = _executableFilter[vm.System].ToList();
+				vm.System.Executables.ToList().ForEach(fileName => {
+					fileName = fileName == PinballXSystem.DefaultExecutableLabel ? "" : fileName;
+					if (!_executableFilter[vm.System].Contains(fileName)) {
+						_executableFilter[vm.System].Add(fileName);
+					} else {
+						remainingExecutables.Remove(fileName);
+					}
+				});
+				remainingExecutables.ForEach(fileName => _executableFilter[vm.System].Remove(fileName));
+			});
+			remainingSystems.ForEach(systemName => _systemFilter.Remove(systemName));
+			RefreshGameVisibility();
 
 			Logger.Info("We've got {0} systems.", Systems.Count);
 		}
