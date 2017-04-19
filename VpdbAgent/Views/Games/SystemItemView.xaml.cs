@@ -30,21 +30,21 @@ namespace VpdbAgent.Views.Games
 		public void OnPlatformFilterChanged(object sender, object e)
 		{
 			var checkbox = (sender as CheckBox);
-			if (checkbox == null) {
+			if (checkbox == null || ViewModel == null) {
 				return;
 			}
 			var platformName = checkbox.Tag as string;
-			//ViewModel.OnPlatformFilterChanged(platformName, checkbox.IsChecked == true);
+			ViewModel.OnPlatformFilterChanged(platformName, checkbox.IsChecked == true);
 		}
 
 		public void OnExecutableFilterChanged(object sender, object e)
 		{
 			var checkbox = (sender as CheckBox);
-			if (checkbox == null) {
+			if (checkbox == null || ViewModel == null) {
 				return;
 			}
 			var fileName = checkbox.Tag as string;
-			//ViewModel.OnExecutableFilterChanged(fileName, checkbox.IsChecked == true);
+			ViewModel.OnExecutableFilterChanged(fileName, checkbox.IsChecked == true);
 		}
 
 		#region ViewModel

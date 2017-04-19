@@ -38,7 +38,7 @@ namespace VpdbAgent.ViewModels.Games
 
 			// create platforms, filtered and sorted
 			Systems = menuManager.Systems.CreateDerivedCollection(
-				system => new SystemItemViewModel(system),
+				system => new SystemItemViewModel(this, system),
 				system => system.Enabled,
 				(x, y) => string.Compare(x.System.Name, y.System.Name, StringComparison.OrdinalIgnoreCase)
 			);

@@ -4,14 +4,36 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:VpdbAgent.Views.Games"
+             xmlns:games="clr-namespace:VpdbAgent.ViewModels.Games"
+             xmlns:controls="clr-namespace:VpdbAgent.Controls"
              mc:Ignorable="d" 
-             d:DesignHeight="50" d:DesignWidth="1 00">
+             d:DesignHeight="50" d:DesignWidth="1 00" 
+             d:DataContext="{d:DesignInstance Type=games:SystemItemViewModel}">
+    
     <StackPanel Orientation="Vertical">
-        <CheckBox IsChecked="True" Tag="{Binding System.Name}"
-                                      Content="{Binding System.Name}"
-                                      Checked="OnPlatformFilterChanged" Unchecked="OnPlatformFilterChanged"
-                                      Margin="5,5,0,0" FontSize="18"/>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
 
+            <CheckBox Tag="{Binding System.Name}" Grid.Column="0"
+                      Content="{Binding System.Name}" IsChecked="True" 
+                      Checked="OnPlatformFilterChanged" Unchecked="OnPlatformFilterChanged"
+                      Margin="5,5,0,0" FontSize="18"/>
+
+            <Button Command="{Binding ToggleDetails}" Grid.Column="1" Style="{StaticResource ButtonLink}" 
+                    HorizontalAlignment="Right">
+                <controls:IconControl Data="{StaticResource IconExpand}" Height="16" Width="16" 
+                       HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,4,10,0" RenderTransformOrigin="0.5, 0.5">
+                    <controls:IconControl.RenderTransform>
+                        <RotateTransform Angle="{Binding ExpanderRotation}"/>
+                    </controls:IconControl.RenderTransform>
+                </controls:IconControl>
+            </Button>
+        </Grid>
+
+        <!-- DETAILS (collapsed) -->
         <Expander IsExpanded="{Binding IsExpanded}" Style="{StaticResource AnimatedExpander}">
 
             <StackPanel Orientation="Vertical">
