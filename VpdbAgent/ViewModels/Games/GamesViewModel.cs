@@ -62,6 +62,8 @@ namespace VpdbAgent.ViewModels.Games
 				.Select(_ => Unit.Default)
 				.StartWith(Unit.Default)
 				.Subscribe(x => UpdateSystems());
+
+			menuManager.GamesUpdated.Subscribe(x => RefreshGameVisibility());
 		}
 
 		/// <summary>
@@ -72,9 +74,9 @@ namespace VpdbAgent.ViewModels.Games
 		public void OnPlatformFilterChanged(string platformName, bool isChecked)
 		{
 			if (isChecked) {
-				_systemFilter.Add(platformName);
+				_systemFilter.Remove(platformName);				
 			} else {
-				_systemFilter.Remove(platformName);
+				_systemFilter.Add(platformName);
 			}
 			RefreshGameVisibility();
 		}
@@ -83,9 +85,10 @@ namespace VpdbAgent.ViewModels.Games
 		{
 			fileName = fileName == PinballXSystem.DefaultExecutableLabel ? "" : fileName;
 			if (isChecked) {
-				_executableFilter[system].Add(fileName);
-			} else {
 				_executableFilter[system].Remove(fileName);
+			} else {
+				_executableFilter[system].Add(fileName);
+				
 			}
 			RefreshGameVisibility();
 		}
@@ -112,10 +115,10 @@ namespace VpdbAgent.ViewModels.Games
 		private bool IsGameVisible(AggregatedGame game)
 		{
 			if (game.System != null) {
-				if (!_systemFilter.Contains(game.System.Name)) {
+				if (_systemFilter.Contains(game.System.Name)) {
 					return false;
 				}
-				if (game.HasXmlGame && !_executableFilter[game.System].Contains(game.XmlGame.AlternateExe ?? "")) {
+				if (game.HasXmlGame && _executableFilter[game.System].Contains(game.XmlGame.AlternateExe ?? "")) {
 					return false;
 				}
 			}
@@ -128,35 +131,26 @@ namespace VpdbAgent.ViewModels.Games
 		private void UpdateSystems()
 		{
 			// populate system filter
-			var remainingSystems = _systemFilter.ToList();
+			var remainingSystemNames = _systemFilter.ToList();
 			Systems.ToList().ForEach(vm => {
-				if (!_systemFilter.Contains(vm.System.Name)) {
-					_systemFilter.Add(vm.System.Name);
-				} else {
-					remainingSystems.Remove(vm.System.Name);
+				if (_systemFilter.Contains(vm.System.Name)) {
+					remainingSystemNames.Remove(vm.System.Name);
 				}
 			});
-			remainingSystems.ForEach(systemName => _systemFilter.Remove(systemName));
+			remainingSystemNames.ForEach(systemName => _systemFilter.Remove(systemName));
 
 			// populate executable filter
+			var remainingSystems = _executableFilter.Keys.ToList();
 			Systems.ToList().ForEach(vm => {
-				if (!_executableFilter.ContainsKey(vm.System)) {
+				if (_executableFilter.ContainsKey(vm.System)) {
+					remainingSystems.Remove(vm.System);
+				} else {
 					_executableFilter.Add(vm.System, new HashSet<string>());
 				}
-				var remainingExecutables = _executableFilter[vm.System].ToList();
-				vm.System.Executables.ToList().ForEach(fileName => {
-					fileName = fileName == PinballXSystem.DefaultExecutableLabel ? "" : fileName;
-					if (!_executableFilter[vm.System].Contains(fileName)) {
-						_executableFilter[vm.System].Add(fileName);
-					} else {
-						remainingExecutables.Remove(fileName);
-					}
-				});
-				remainingExecutables.ForEach(fileName => _executableFilter[vm.System].Remove(fileName));
 			});
-			remainingSystems.ForEach(systemName => _systemFilter.Remove(systemName));
-			RefreshGameVisibility();
+			remainingSystems.ForEach(system => _executableFilter.Remove(system));
 
+			RefreshGameVisibility();
 			Logger.Info("We've got {0} systems.", Systems.Count);
 		}
 	}
