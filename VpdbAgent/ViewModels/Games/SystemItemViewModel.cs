@@ -42,5 +42,10 @@ namespace VpdbAgent.ViewModels.Games
 		{
 			_parent.OnExecutableFilterChanged(System, fileName, enabled);
 		}
+
+		public void OnDatabaseFileFilterChanged(string fileName, bool enabled)
+		{
+			_parent.OnDatabaseFileFilterChanged(System, fileName, enabled);
+		}
 	}
 }

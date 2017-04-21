@@ -45,7 +45,7 @@
                         <DataTemplate>
                             <CheckBox IsChecked="True" Tag="{Binding}"
                                               Content="{Binding}"
-                                              Checked="OnExecutableFilterChanged" Unchecked="OnExecutableFilterChanged"
+                                              Checked="OnDatabaseFileFilterChanged" Unchecked="OnDatabaseFileFilterChanged"
                                               Margin="15,5,0,0" FontSize="18"/>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>

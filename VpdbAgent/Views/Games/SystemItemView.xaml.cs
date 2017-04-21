@@ -47,6 +47,16 @@ namespace VpdbAgent.Views.Games
 			ViewModel.OnExecutableFilterChanged(fileName, checkbox.IsChecked == true);
 		}
 
+		public void OnDatabaseFileFilterChanged(object sender, object e)
+		{
+			var checkbox = (sender as CheckBox);
+			if (checkbox == null || ViewModel == null) {
+				return;
+			}
+			var fileName = checkbox.Tag as string;
+			ViewModel.OnDatabaseFileFilterChanged(fileName, checkbox.IsChecked == true);
+		}
+
 		#region ViewModel
 		public SystemItemViewModel ViewModel
 		{

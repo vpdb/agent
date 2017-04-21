@@ -5,6 +5,7 @@ using System.Reactive.Linq;
 using JetBrains.Annotations;
 using ReactiveUI;
 using Splat;
+using VpdbAgent.Application;
 using VpdbAgent.Common.Filesystem;
 using VpdbAgent.PinballX.Models;
 using VpdbAgent.Vpdb;

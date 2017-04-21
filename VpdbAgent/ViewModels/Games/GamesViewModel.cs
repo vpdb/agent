@@ -30,6 +30,7 @@ namespace VpdbAgent.ViewModels.Games
 		// privates
 		private readonly HashSet<string> _systemFilter = new HashSet<string>();
 		private readonly Dictionary<PinballXSystem, HashSet<string>> _executableFilter = new Dictionary<PinballXSystem, HashSet<string>>();
+		private readonly Dictionary<PinballXSystem, HashSet<string>> _databaseFileFilter = new Dictionary<PinballXSystem, HashSet<string>>();
 		private readonly IReactiveDerivedList<GameItemViewModel> _allGameViewModels;
 
 		public GamesViewModel(IDependencyResolver resolver)
@@ -93,6 +94,17 @@ namespace VpdbAgent.ViewModels.Games
 			RefreshGameVisibility();
 		}
 
+		public void OnDatabaseFileFilterChanged(PinballXSystem system, string fileName, bool isChecked)
+		{
+			if (isChecked) {
+				_databaseFileFilter[system].Remove(fileName);
+			} else {
+				_databaseFileFilter[system].Add(fileName);
+				
+			}
+			RefreshGameVisibility();
+		}
+
 		/// <summary>
 		/// Updates the IsVisible flag on all games in order to filter
 		/// depending on the selected platforms.
@@ -116,6 +128,9 @@ namespace VpdbAgent.ViewModels.Games
 		{
 			if (game.System != null) {
 				if (_systemFilter.Contains(game.System.Name)) {
+					return false;
+				}
+				if (game.HasXmlGame && _databaseFileFilter[game.System].Contains(game.XmlGame.DatabaseFile)) {
 					return false;
 				}
 				if (game.HasXmlGame && _executableFilter[game.System].Contains(game.XmlGame.AlternateExe ?? "")) {
@@ -149,6 +164,17 @@ namespace VpdbAgent.ViewModels.Games
 				}
 			});
 			remainingSystems.ForEach(system => _executableFilter.Remove(system));
+
+			// populate xml file filter
+			remainingSystems = _databaseFileFilter.Keys.ToList();
+			Systems.ToList().ForEach(vm => {
+				if (_databaseFileFilter.ContainsKey(vm.System)) {
+					remainingSystems.Remove(vm.System);
+				} else {
+					_databaseFileFilter.Add(vm.System, new HashSet<string>());
+				}
+			});
+			remainingSystems.ForEach(system => _databaseFileFilter.Remove(system));
 
 			RefreshGameVisibility();
 			Logger.Info("We've got {0} systems.", Systems.Count);
