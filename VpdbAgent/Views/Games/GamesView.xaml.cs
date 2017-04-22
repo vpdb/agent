@@ -26,6 +26,7 @@ namespace VpdbAgent.Views.Games
 				d(this.OneWayBind(ViewModel, vm => vm.Games, v => v.GameList.ItemsSource));
 				d(this.BindCommand(ViewModel, vm => vm.IdentifyAll, v => v.IdentifyAllButton));
 				d(this.Bind(ViewModel, vm => vm.ShowFilesNotInDatabase, v => v.ShowFilesNotInDatabase.IsChecked));
+				d(this.Bind(ViewModel, vm => vm.ShowGamesNotOnDisk, v => v.ShowGamesNotOnDisk.IsChecked));
 			});
 		}
 

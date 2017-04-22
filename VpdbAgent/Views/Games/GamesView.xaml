@@ -32,8 +32,8 @@
             
             <!-- SHOW -->
             <Label Content="SHOW" Style="{StaticResource Header3}" Margin="0,15,0,0" />
-            <CheckBox Name="ShowFilesNotInDatabase" Content="Files not in DB" IsChecked="True" 
-                      Margin="5,5,0,0" FontSize="18"/>
+            <CheckBox Name="ShowFilesNotInDatabase" Content="Files not in DB" Margin="5,5,0,0" FontSize="18"/>            
+            <CheckBox Name="ShowGamesNotOnDisk" Content="Games not on disk" Margin="5,5,0,0" FontSize="18"/>
 
 
             <!-- ACTIONS -->

@@ -25,6 +25,7 @@ namespace VpdbAgent.ViewModels.Games
 
 		// generic filters
 		public bool ShowFilesNotInDatabase  { get { return _showFilesNotInDatabase; } private set { this.RaiseAndSetIfChanged(ref _showFilesNotInDatabase, value); } }
+		public bool ShowGamesNotOnDisk  { get { return _showGamesNotOnDisk; } private set { this.RaiseAndSetIfChanged(ref _showGamesNotOnDisk, value); } }
 
 		// commands
 		//public ReactiveCommand<Unit, Unit> FilterPlatforms { get; }
@@ -38,6 +39,7 @@ namespace VpdbAgent.ViewModels.Games
 
 		// watched props
 		private bool _showFilesNotInDatabase = true;
+		private bool _showGamesNotOnDisk = true;
 
 		public GamesViewModel(IDependencyResolver resolver)
 		{
@@ -71,7 +73,7 @@ namespace VpdbAgent.ViewModels.Games
 				.Subscribe(x => UpdateSystems());
 
 			menuManager.GamesUpdated.Subscribe(x => RefreshGameVisibility());
-			this.WhenAnyValue(vm => vm.ShowFilesNotInDatabase).Subscribe(x => RefreshGameVisibility());
+			this.WhenAnyValue(vm => vm.ShowFilesNotInDatabase, vm => vm.ShowGamesNotOnDisk).Subscribe(x => RefreshGameVisibility());
 		}
 
 		/// <summary>
@@ -145,6 +147,9 @@ namespace VpdbAgent.ViewModels.Games
 				}
 			}
 			if (!game.HasXmlGame && !_showFilesNotInDatabase) {
+				return false;
+			}
+			if (!game.HasLocalFile && !_showGamesNotOnDisk) {
 				return false;
 			}
 
