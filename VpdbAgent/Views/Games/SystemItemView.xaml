@@ -39,27 +39,27 @@
             <StackPanel Orientation="Vertical">
 
                 <!-- DB FILES -->
-                <Label Content="XML Files" Margin="15,0,0,0" />
+                <Label Content="XML Files" Margin="13,0,0,0" />
                 <ItemsControl ItemsSource="{Binding System.DatabaseFiles}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <CheckBox IsChecked="True" Tag="{Binding}"
                                               Content="{Binding}"
                                               Checked="OnDatabaseFileFilterChanged" Unchecked="OnDatabaseFileFilterChanged"
-                                              Margin="15,5,0,0" FontSize="18"/>
+                                              Margin="17,5,0,0" FontSize="18"/>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
 
                 <!-- EXECUTABLES -->
-                <Label Content="Executables" Margin="15,0,0,0" />
+                <Label Content="Executables" Margin="13,0,0,0" />
                 <ItemsControl ItemsSource="{Binding System.Executables}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <CheckBox IsChecked="True" Tag="{Binding}"
                                               Content="{Binding}"
                                               Checked="OnExecutableFilterChanged" Unchecked="OnExecutableFilterChanged"
-                                              Margin="15,5,0,0" FontSize="18"/>
+                                              Margin="17,5,0,0" FontSize="18"/>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
