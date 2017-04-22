@@ -23,6 +23,9 @@ namespace VpdbAgent.ViewModels.Games
 		public IReactiveDerivedList<SystemItemViewModel> Systems { get; }
 		public IReactiveDerivedList<GameItemViewModel> Games { get; }
 
+		// generic filters
+		public bool ShowFilesNotInDatabase  { get { return _showFilesNotInDatabase; } private set { this.RaiseAndSetIfChanged(ref _showFilesNotInDatabase, value); } }
+
 		// commands
 		//public ReactiveCommand<Unit, Unit> FilterPlatforms { get; }
 		public ReactiveCommand<Unit, Unit> IdentifyAll { get; }
@@ -32,6 +35,9 @@ namespace VpdbAgent.ViewModels.Games
 		private readonly Dictionary<PinballXSystem, HashSet<string>> _executableFilter = new Dictionary<PinballXSystem, HashSet<string>>();
 		private readonly Dictionary<PinballXSystem, HashSet<string>> _databaseFileFilter = new Dictionary<PinballXSystem, HashSet<string>>();
 		private readonly IReactiveDerivedList<GameItemViewModel> _allGameViewModels;
+
+		// watched props
+		private bool _showFilesNotInDatabase = true;
 
 		public GamesViewModel(IDependencyResolver resolver)
 		{
@@ -65,6 +71,7 @@ namespace VpdbAgent.ViewModels.Games
 				.Subscribe(x => UpdateSystems());
 
 			menuManager.GamesUpdated.Subscribe(x => RefreshGameVisibility());
+			this.WhenAnyValue(vm => vm.ShowFilesNotInDatabase).Subscribe(x => RefreshGameVisibility());
 		}
 
 		/// <summary>
@@ -137,6 +144,10 @@ namespace VpdbAgent.ViewModels.Games
 					return false;
 				}
 			}
+			if (!game.HasXmlGame && !_showFilesNotInDatabase) {
+				return false;
+			}
+
 			return true;
 		}
 
