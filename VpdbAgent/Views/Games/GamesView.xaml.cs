@@ -1,4 +1,7 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using System.Reactive.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using NLog;
@@ -13,7 +16,7 @@ namespace VpdbAgent.Views.Games
 	[ExcludeFromCodeCoverage]
 	public partial class GamesView : UserControl, IViewFor<GamesViewModel>
 	{
-		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+		public DataStatus DataFilter { get; set; }
 
 		public GamesView()
 		{
@@ -25,8 +28,14 @@ namespace VpdbAgent.Views.Games
 				d(this.OneWayBind(ViewModel, vm => vm.Systems, v => v.SystemList.ItemsSource));
 				d(this.OneWayBind(ViewModel, vm => vm.Games, v => v.GameList.ItemsSource));
 				d(this.BindCommand(ViewModel, vm => vm.IdentifyAll, v => v.IdentifyAllButton));
-				d(this.Bind(ViewModel, vm => vm.ShowFilesNotInDatabase, v => v.ShowFilesNotInDatabase.IsChecked));
-				d(this.Bind(ViewModel, vm => vm.ShowGamesNotOnDisk, v => v.ShowGamesNotOnDisk.IsChecked));
+				d(this.Bind(ViewModel, vm => vm.ShowDisabled, v => v.ShowDisabled.IsChecked));
+				d(this.Bind(ViewModel, vm => vm.ShowHidden, v => v.ShowHidden.IsChecked));
+
+				new[] { FilterAll, FilterFilesNotInDatabase, FilterGamesNotOnDisk, FilterUnmappedFiles }
+					.Select(y => y.WhenAny(x => x.IsChecked, x => x).Where(x => x.Value == true).Select(x => x.Sender.Tag))
+					.Merge()
+					.Subscribe(x => ViewModel.DataFilter = (DataStatus)Enum.Parse(typeof(DataStatus), (string)x));
+
 			});
 		}
 
