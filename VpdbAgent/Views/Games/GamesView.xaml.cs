@@ -34,7 +34,7 @@ namespace VpdbAgent.Views.Games
 				new[] { FilterAll, FilterFilesNotInDatabase, FilterGamesNotOnDisk, FilterUnmappedFiles }
 					.Select(y => y.WhenAny(x => x.IsChecked, x => x).Where(x => x.Value == true).Select(x => x.Sender.Tag))
 					.Merge()
-					.Subscribe(x => ViewModel.DataFilter = (DataStatus)Enum.Parse(typeof(DataStatus), (string)x));
+					.Subscribe(x => ViewModel.StatusFilter = (DataStatus)Enum.Parse(typeof(DataStatus), (string)x));
 
 			});
 		}

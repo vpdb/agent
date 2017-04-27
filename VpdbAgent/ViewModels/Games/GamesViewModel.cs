@@ -24,8 +24,9 @@ namespace VpdbAgent.ViewModels.Games
 		public IReactiveDerivedList<GameItemViewModel> Games { get; }
 
 		// generic filters
-		public bool ShowFilesNotInDatabase  { get { return _showFilesNotInDatabase; } private set { this.RaiseAndSetIfChanged(ref _showFilesNotInDatabase, value); } }
-		public bool ShowGamesNotOnDisk  { get { return _showGamesNotOnDisk; } private set { this.RaiseAndSetIfChanged(ref _showGamesNotOnDisk, value); } }
+		public bool ShowDisabled { get { return _showDisabled; } private set { this.RaiseAndSetIfChanged(ref _showDisabled, value); } }
+		public bool ShowHidden { get { return _showHidden; } private set { this.RaiseAndSetIfChanged(ref _showHidden, value); } }
+		public DataStatus StatusFilter { get { return _statusFilter; } set { this.RaiseAndSetIfChanged(ref _statusFilter, value); } }
 
 		// commands
 		//public ReactiveCommand<Unit, Unit> FilterPlatforms { get; }
@@ -38,8 +39,10 @@ namespace VpdbAgent.ViewModels.Games
 		private readonly IReactiveDerivedList<GameItemViewModel> _allGameViewModels;
 
 		// watched props
-		private bool _showFilesNotInDatabase = true;
-		private bool _showGamesNotOnDisk = true;
+		private bool _showDisabled = true;
+		private bool _showHidden = true;
+		private DataStatus _statusFilter = DataStatus.All;
+		private bool _showUnmappedFiles = true;
 
 		public GamesViewModel(IDependencyResolver resolver)
 		{
@@ -73,7 +76,8 @@ namespace VpdbAgent.ViewModels.Games
 				.Subscribe(x => UpdateSystems());
 
 			menuManager.GamesUpdated.Subscribe(x => RefreshGameVisibility());
-			this.WhenAnyValue(vm => vm.ShowFilesNotInDatabase, vm => vm.ShowGamesNotOnDisk).Subscribe(x => RefreshGameVisibility());
+			this.WhenAnyValue(vm => vm.ShowDisabled, vm => vm.ShowHidden).Subscribe(x => RefreshGameVisibility());
+			this.WhenAnyValue(vm => vm.StatusFilter).Subscribe(x => RefreshGameVisibility());
 		}
 
 		/// <summary>
@@ -146,10 +150,13 @@ namespace VpdbAgent.ViewModels.Games
 					return false;
 				}
 			}
-			if (!game.HasXmlGame && !_showFilesNotInDatabase) {
+			if (StatusFilter == DataStatus.FilesNotInDatabase && game.HasXmlGame) {
 				return false;
 			}
-			if (!game.HasLocalFile && !_showGamesNotOnDisk) {
+			if (StatusFilter == DataStatus.GamesNotOnDisk && game.HasLocalFile) {
+				return false;
+			}
+			if (StatusFilter == DataStatus.UnmappedFiles && game.HasMapping) {
 				return false;
 			}
 
@@ -163,8 +170,10 @@ namespace VpdbAgent.ViewModels.Games
 		{
 			// populate system filter
 			var remainingSystemNames = _systemFilter.ToList();
-			Systems.ToList().ForEach(vm => {
-				if (_systemFilter.Contains(vm.System.Name)) {
+			Systems.ToList().ForEach(vm =>
+			{
+				if (_systemFilter.Contains(vm.System.Name))
+				{
 					remainingSystemNames.Remove(vm.System.Name);
 				}
 			});
@@ -172,10 +181,14 @@ namespace VpdbAgent.ViewModels.Games
 
 			// populate executable filter
 			var remainingSystems = _executableFilter.Keys.ToList();
-			Systems.ToList().ForEach(vm => {
-				if (_executableFilter.ContainsKey(vm.System)) {
+			Systems.ToList().ForEach(vm =>
+			{
+				if (_executableFilter.ContainsKey(vm.System))
+				{
 					remainingSystems.Remove(vm.System);
-				} else {
+				}
+				else
+				{
 					_executableFilter.Add(vm.System, new HashSet<string>());
 				}
 			});
@@ -183,10 +196,14 @@ namespace VpdbAgent.ViewModels.Games
 
 			// populate xml file filter
 			remainingSystems = _databaseFileFilter.Keys.ToList();
-			Systems.ToList().ForEach(vm => {
-				if (_databaseFileFilter.ContainsKey(vm.System)) {
+			Systems.ToList().ForEach(vm =>
+			{
+				if (_databaseFileFilter.ContainsKey(vm.System))
+				{
 					remainingSystems.Remove(vm.System);
-				} else {
+				}
+				else
+				{
 					_databaseFileFilter.Add(vm.System, new HashSet<string>());
 				}
 			});
@@ -195,5 +212,13 @@ namespace VpdbAgent.ViewModels.Games
 			RefreshGameVisibility();
 			Logger.Info("We've got {0} systems.", Systems.Count);
 		}
+	}
+
+	public enum DataStatus
+	{
+		All,
+		FilesNotInDatabase,
+		GamesNotOnDisk,
+		UnmappedFiles
 	}
 }

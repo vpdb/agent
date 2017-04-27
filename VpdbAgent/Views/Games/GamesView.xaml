@@ -10,10 +10,6 @@
       d:DesignHeight="300"
 	  d:DesignWidth="900">
 
-    <UserControl.Resources>
-        <valueConverters:EnumMatchToBooleanConverter x:Key="EnumConverter" />
-    </UserControl.Resources>
-
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="200" />
