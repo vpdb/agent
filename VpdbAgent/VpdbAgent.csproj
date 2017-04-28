@@ -263,6 +263,7 @@
     <Compile Include="AkavacheSqliteLinkerOverride.cs" />
     <Compile Include="Common\TypeConverters\NullToVisibilityConverter.cs" />
     <Compile Include="Common\TypeConverters\NullConverter.cs" />
+    <Compile Include="Data\SystemMapping.cs" />
     <Compile Include="ViewModels\Games\SystemItemViewModel.cs" />
     <Compile Include="Views\Games\SystemItemView.xaml.cs">
       <DependentUpon>SystemItemView.xaml</DependentUpon>

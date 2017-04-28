@@ -84,6 +84,11 @@ namespace VpdbAgent.Data
 		/// </summary>
 		public PinballXSystem System { get; set; }
 
+		/// <summary>
+		/// Stale means that the mapping is of no use anymore, i.e. no more linked release and no non-default flags.
+		/// </summary>
+		public bool IsStale => _fileId == null && !_isHidden;
+
 		// read/write fields
 		private string _fileName;
 		private string _releaseId;
@@ -105,9 +110,10 @@ namespace VpdbAgent.Data
 		/// Constructor with given game
 		/// </summary>
 		/// <param name="game">Game to which the mapping is linked to</param>
-		public Mapping(AggregatedGame game)
+		/// <param name="system">System to which the game is linked to</param>
+		public Mapping(AggregatedGame game, PinballXSystem system)
 		{
-			System = game.System;
+			System = system;
 			FileName = Path.GetFileName(game.FilePath);
 		}
 
@@ -115,9 +121,10 @@ namespace VpdbAgent.Data
 		/// Constructor when linking game to VPDB
 		/// </summary>
 		/// <param name="game">Game to link to</param>
+		/// <param name="system">System to link to</param>
 		/// <param name="release">VPDB release</param>
 		/// <param name="fileId">File ID of VPDB release</param>
-		public Mapping(AggregatedGame game, VpdbRelease release, string fileId) : this(game)
+		public Mapping(AggregatedGame game, PinballXSystem system, VpdbRelease release, string fileId) : this(game, system)
 		{
 			ReleaseId = release.Id;
 			FileId = fileId;
@@ -212,74 +219,6 @@ namespace VpdbAgent.Data
 		{
 			// ReSharper disable once NonReadonlyMemberInGetHashCode
 			return FileName.GetHashCode();
-		}
-	}
-
-	/// <summary>
-	/// Maps data to VPDB. This is the root node.
-	/// </summary>
-	/// 
-	/// <remarks>
-	/// When linking local data to VPDB, we need a way of persisting that 
-	/// mapping in a transparent way. For that, we create a `vpdb.json` file
-	/// in every system folder. Such a file looks something like that:
-	/// <code>
-	/// {
-	///   "mappings": [
-	///     {
-	///       "filename": "Theatre of magic VPX NZ-TT 1.0.vpx",
-	///       "release_id": "e2wm7hdp9b",
-	///       "file_id": "skkj298nr8",
-	///       "is_synced": false
-	///     }
-	///   ]
-	/// }
-	/// </code>
-	/// 
-	/// This class is used to serialize the above data. Note that for every
-	/// system from PinballX, a separate instance of this class is created.
-	/// </remarks>
-	public class SystemMapping
-	{
-		/// <summary>
-		/// List of mappings
-		/// </summary>
-		[DataMember] public IReactiveList<Mapping> Mappings { set; get; }
-
-		public PinballXSystem System { set { Mappings.ToList().ForEach(m => m.System = value); } }
-
-		/// <summary>
-		/// Constructor when instantiating self-saving object
-		/// </summary>
-		/// <param name="path">Path to save</param>
-		/// <param name="marshallManager">Marshaller dependency</param>
-		public SystemMapping(string path, IMarshallManager marshallManager)
-		{
-			var mappings = new ReactiveList<Mapping> { ChangeTrackingEnabled = true };
-			Observable.Merge(
-				mappings.ItemChanged.Select(x => Unit.Default), 
-				mappings.ItemsAdded.Select(x => Unit.Default),
-				mappings.ItemsRemoved.Select(x => Unit.Default)
-			).Sample(TimeSpan.FromSeconds(1)).Subscribe(x => Save(path, marshallManager));
-			Mappings = mappings;
-		}
-
-		/// <summary>
-		/// Default constructor when serializing
-		/// </summary>
-		public SystemMapping()
-		{
-			Mappings = new ReactiveList<Mapping>();
-		}
-
-		private void Save(string path, IMarshallManager marshallManager)
-		{
-			marshallManager.MarshallMappings(this, path);
-		}
-
-		public override string ToString()
-		{
-			return $"[SystemMapping] {Mappings.Count()} mapping(s)";
 		}
 	}
 
