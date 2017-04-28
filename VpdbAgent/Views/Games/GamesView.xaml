@@ -33,23 +33,12 @@
             
             <!-- SHOW -->
             <Label Content="SHOW" Style="{StaticResource Header3}" Margin="0,15,0,0" />
-
             <RadioButton Name="FilterAll" Content="All" GroupName="DataStatus" Tag="All" IsChecked="True"/>
             <RadioButton Name="FilterFilesNotInDatabase" Content="Files not in DB" GroupName="DataStatus" Tag="FilesNotInDatabase"/>
             <RadioButton Name="FilterGamesNotOnDisk" Content="Games not on disk" GroupName="DataStatus" Tag="GamesNotOnDisk"/>
             <RadioButton Name="FilterUnmappedFiles" Content="Unidentified games" GroupName="DataStatus" Tag="UnmappedFiles"/>
-
-            <!--RadioButton Content="All" GroupName="DataStatus" IsChecked="{Binding Path=DataFilter, Mode=TwoWay, 
-                         Converter={StaticResource EnumConverter}, ConverterParameter=All}" />
-            <RadioButton Content="Files not in DB" GroupName="DataStatus" IsChecked="{Binding Path=DataFilter, Mode=TwoWay, 
-                         Converter={StaticResource EnumConverter}, ConverterParameter=FilesNotInDatabase}" />
-            <RadioButton Content="Games not on disk" GroupName="DataStatus" IsChecked="{Binding Path=DataFilter, Mode=TwoWay, 
-                         Converter={StaticResource EnumConverter}, ConverterParameter=GamesNotOnDisk}" />
-            <RadioButton Content="Unidentified games" GroupName="DataStatus" IsChecked="{Binding Path=DataFilter, Mode=TwoWay, 
-                         Converter={StaticResource EnumConverter}, ConverterParameter=UnmappedFiles}" /-->
             <CheckBox Name="ShowDisabled" Content="Disabled games" Margin="5,20,0,0" FontSize="18" />            
             <CheckBox Name="ShowHidden" Content="Hidden games" Margin="5,5,0,0" FontSize="18" />
-
 
             <!-- ACTIONS -->
             <Label Content="ACTIONS" Style="{StaticResource Header3}" Margin="0,15,0,0" />

@@ -39,10 +39,9 @@ namespace VpdbAgent.ViewModels.Games
 		private readonly IReactiveDerivedList<GameItemViewModel> _allGameViewModels;
 
 		// watched props
-		private bool _showDisabled = true;
-		private bool _showHidden = true;
+		private bool _showDisabled;
+		private bool _showHidden;
 		private DataStatus _statusFilter = DataStatus.All;
-		private bool _showUnmappedFiles = true;
 
 		public GamesViewModel(IDependencyResolver resolver)
 		{
@@ -157,6 +156,13 @@ namespace VpdbAgent.ViewModels.Games
 				return false;
 			}
 			if (StatusFilter == DataStatus.UnmappedFiles && game.HasMapping) {
+				return false;
+			}
+
+			if (!ShowHidden && (game.HasMapping && game.Mapping.IsHidden)) {
+				return false;
+			}
+			if (!ShowDisabled && game.HasXmlGame && game.XmlGame.Enabled != null && !"true".Equals(game.XmlGame.Enabled, StringComparison.InvariantCultureIgnoreCase)) {
 				return false;
 			}
 
