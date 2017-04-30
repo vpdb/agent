@@ -206,7 +206,7 @@ namespace VpdbAgent.PinballX.Models
 
 					// mappings
 					UpdateOrRemoveMappings(MappingPath);
-					_mappingFileWatcher = _watcher.FileWatcher(MappingPath).Subscribe(UpdateOrRemoveMappings);
+					_mappingFileWatcher = _watcher.FileWatcher(MappingPath).Sample(TimeSpan.FromMilliseconds(100)).Subscribe(UpdateOrRemoveMappings);
 
 				} else {
 					// clear games and destroy watchers
@@ -342,12 +342,15 @@ namespace VpdbAgent.PinballX.Models
 			if (_file.Exists(path)) {
 
 				var mapping = _marshallManager.UnmarshallMappings(path, this);
-				
+				foreach (var m in mapping.Mappings) {
+					m.System = this;
+				}
+
 				// update self-saving mapping (should not trigger save because we don't subscribe to ShouldReset, which is triggered when using SuppressChangeNotifications).
 				using (_mapping.Mappings.SuppressChangeNotifications()) {
 					_mapping.Mappings.Clear();
-					if (!mapping.Mappings.IsEmpty) {
-						_mapping.Mappings.AddRange(mapping.Mappings);
+					foreach (var m in mapping.Mappings) {
+						_mapping.Mappings.Add(m);
 					}
 				}
 				_mappingsUpdated.OnNext(_mapping.Mappings.ToList());

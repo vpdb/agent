@@ -30,6 +30,7 @@ namespace VpdbAgent.ViewModels.Games
 		public ReactiveCommand<Unit, Unit> AddGame { get; protected set; }
 		public ReactiveCommand<Unit, Unit> RemoveGame { get; protected set; }
 		public ReactiveCommand<Unit, Unit> HideGame { get; protected set; }
+		public ReactiveCommand<Unit, Unit> UnHideGame { get; protected set; }
 		public ReactiveCommand<Unit, Unit> DownloadMissing { get; }
 		public ReactiveCommand<Unit, Unit> CloseResults { get; }
 		public ReactiveCommand<Unit, Unit> SyncToggled { get; }
@@ -49,6 +50,7 @@ namespace VpdbAgent.ViewModels.Games
 		public bool IsExecuting => _isExecuting.Value;
 		public bool ShowIdentifyButton => _showIdentifyButton.Value;
 		public bool ShowHideButton => _showHideButton.Value;
+		public bool ShowUnHideButton => _showUnHideButton.Value;
 		public bool ShowAddToDbButton => _showAddToDbButton.Value;
 		public bool ShowRemoveFromDbButton => _showRemoveFromDbButton.Value;
 		public bool ShowDownloadMissingButton => _showDownloadMissingButton.Value;
@@ -61,6 +63,7 @@ namespace VpdbAgent.ViewModels.Games
 
 		private readonly ObservableAsPropertyHelper<bool> _showIdentifyButton;
 		private readonly ObservableAsPropertyHelper<bool> _showHideButton;
+		private readonly ObservableAsPropertyHelper<bool> _showUnHideButton;
 		private readonly ObservableAsPropertyHelper<bool> _showAddToDbButton;
 		private readonly ObservableAsPropertyHelper<bool> _showRemoveFromDbButton;
 		private readonly ObservableAsPropertyHelper<bool> _showDownloadMissingButton;
@@ -141,6 +144,9 @@ namespace VpdbAgent.ViewModels.Games
 			// hide button
 			HideGame = ReactiveCommand.Create(() => _gameManager.HideGame(Game));
 
+			// unhide button
+			UnHideGame = ReactiveCommand.Create(() => _gameManager.UnHideGame(Game));
+
 			// download button
 			DownloadMissing = ReactiveCommand.Create(() => _gameManager.DownloadGame(Game));
 
@@ -172,6 +178,13 @@ namespace VpdbAgent.ViewModels.Games
 				vm => vm.ShowButtons,
 				(hasLocalFile, hasMapping, hasXmlGame, showButtons) => hasLocalFile.Value && !hasMapping.Value && !hasXmlGame.Value && showButtons.Value
 			).ToProperty(this, vm => vm.ShowHideButton, out _showHideButton);
+			
+			// unhide button visibility
+			this.WhenAny(
+				vm => vm.Game.Mapping,
+				vm => vm.ShowButtons,
+				(mapping, showButtons) => mapping.Value != null && mapping.Value.IsHidden && showButtons.Value
+			).ToProperty(this, vm => vm.ShowUnHideButton, out _showUnHideButton);
 
 			// add to db button visibility
 			this.WhenAny(

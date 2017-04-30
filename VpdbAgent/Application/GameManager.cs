@@ -70,8 +70,14 @@ namespace VpdbAgent.Application
 		/// the first system with the same table path as the give local file.
 		/// </remarks>
 		/// 
-		/// <param name="game"></param>
+		/// <param name="game">Game to mark as hidden</param>
 		void HideGame(AggregatedGame game);
+
+		/// <summary>
+		/// Removes the hidden attribute from a game.
+		/// </summary>
+		/// <param name="game">Game to unmark as hidden</param>
+		void UnHideGame(AggregatedGame game);
 
 		/// <summary>
 		/// Links a release from VPDB to a game.
@@ -604,6 +610,17 @@ namespace VpdbAgent.Application
 			mapping.IsHidden = true;
 		}
 
+		public void UnHideGame(AggregatedGame game)
+		{
+			_logger.Info("Unhiding game {0}", game.FileId);
+
+			if (!game.HasMapping) {
+				_logger.Error("Cannot unhide game without mapping.");
+				return;
+			}
+			game.Mapping.IsHidden = false;
+		}
+
 		public void MapGame(AggregatedGame game, VpdbRelease release, string fileId)
 		{
 			// update in case we didn't catch the last version.
@@ -629,13 +646,13 @@ namespace VpdbAgent.Application
 		[NotNull]
 		private Mapping GetOrCreateMapping(AggregatedGame game)
 		{
-			var system = FindSystem(game);
-			var mapping = game.Mapping ?? new Mapping(game);
-
-			if (!game.HasMapping) {
-				game.Update(mapping);
-				system.Mappings.Add(mapping);
+			if (game.HasMapping) {
+				return game.Mapping;
 			}
+			var system = FindSystem(game);
+			var mapping = game.Mapping ?? new Mapping(game, system);
+			game.Update(mapping);
+			system.Mappings.Add(mapping);
 			return mapping;
 		}
 
@@ -648,13 +665,11 @@ namespace VpdbAgent.Application
 		[NotNull]
 		private PinballXSystem FindSystem(AggregatedGame game)
 		{
-			PinballXSystem system;
-			if (!game.HasSystem) {
-				var tablePath = PathHelper.NormalizePath(Path.GetDirectoryName(game.FilePath));
-				system = _pinballXManager.Systems.FirstOrDefault(s => s.TablePath == tablePath);
-			} else {
-				system = game.System;
-			}
+			if (game.HasSystem) {
+				return game.System;
+			} 
+			var tablePath = PathHelper.NormalizePath(Path.GetDirectoryName(game.FilePath));
+			var system = _pinballXManager.Systems.FirstOrDefault(s => s.TablePath == tablePath);
 
 			if (system == null) {
 				throw new Exception($"Got game at {game.FilePath} but no systems that match path ({string.Join(", ", _pinballXManager.Systems.Select(s => s.TablePath))}).");

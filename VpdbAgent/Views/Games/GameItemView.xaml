@@ -112,7 +112,13 @@
                         Visibility="{Binding Path=ShowHideButton, Converter={StaticResource TrueToVisible}}" 
                         Style="{StaticResource ButtonLine}" 
                         Content="HIDE" HorizontalAlignment="Right" Margin="0,-3,10,-8"/>
-                    
+
+                    <!-- unhide button -->
+                    <Button Command="{Binding UnHideGame}" 
+                        Visibility="{Binding Path=ShowUnHideButton, Converter={StaticResource TrueToVisible}}" 
+                        Style="{StaticResource ButtonLine}" 
+                        Content="UNHIDE" HorizontalAlignment="Right" Margin="0,-3,10,-8"/>
+
                     <!-- identify button -->
                     <Button Command="{Binding IdentifyRelease}" 
                         Visibility="{Binding Path=ShowIdentifyButton, Converter={StaticResource TrueToVisible}}" 

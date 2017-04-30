@@ -112,7 +112,6 @@ namespace VpdbAgent.PinballX
 				using (JsonReader reader = new JsonTextReader(sr)) {
 					try {
 						var db = _serializer.Deserialize<SystemMapping>(reader);
-						db.System = system;
 						reader.Close();
 						return db;
 					} catch (Exception e) {

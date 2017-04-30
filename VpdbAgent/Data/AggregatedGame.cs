@@ -301,7 +301,7 @@ namespace VpdbAgent.Data
 
 			// update mapping
 			var previousFileId = Mapping.FileId;
-			Mapping = new Mapping(this, MappedRelease, file.Id) {
+			Mapping = new Mapping(this, Mapping.System, MappedRelease, file.Id) {
 				PreviousFileId = previousFileId
 			};
 		}
