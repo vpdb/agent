@@ -172,11 +172,12 @@ namespace VpdbAgent.ViewModels.Games
 
 			// hide button visibility
 			this.WhenAny(
+				vm => vm.Game.Mapping,
 				vm => vm.Game.HasLocalFile,
-				vm => vm.Game.HasMapping,
+				vm => vm.Game.HasMappedRelease,
 				vm => vm.Game.HasXmlGame,
 				vm => vm.ShowButtons,
-				(hasLocalFile, hasMapping, hasXmlGame, showButtons) => hasLocalFile.Value && !hasMapping.Value && !hasXmlGame.Value && showButtons.Value
+				(mapping, hasLocalFile, hasMappedRelease, hasXmlGame, showButtons) => (mapping.Value == null || !mapping.Value.IsHidden) && hasLocalFile.Value && !hasMappedRelease.Value && !hasXmlGame.Value && showButtons.Value
 			).ToProperty(this, vm => vm.ShowHideButton, out _showHideButton);
 			
 			// unhide button visibility

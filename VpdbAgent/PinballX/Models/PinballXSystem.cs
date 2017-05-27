@@ -65,7 +65,7 @@ namespace VpdbAgent.PinballX.Models
 		public IReactiveList<string> Executables { get; } = new ReactiveList<string>();
 
 		/// <summary>
-		/// Mappings of this system. Adding, removing and updating stuff from here
+		/// Mappings of this system. Adding, removing and updating stuff in here
 		/// will result in the mappings being written to disk.
 		/// </summary>
 		public IReactiveList<Mapping> Mappings => _mapping.Mappings;

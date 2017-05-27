@@ -114,6 +114,7 @@ namespace VpdbAgent.Data
 		public bool HasSystem => System != null;
 		public bool IsDownloading => _isDownloading.Value;
 		public bool IsQueued => _isQueued.Value;
+		public bool HasMappedRelease => _mappedRelease != null;
 
 		// watched props
 		private string _fileId;
