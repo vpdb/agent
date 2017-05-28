@@ -7,7 +7,6 @@ using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading.Tasks;
-using System.Windows.Forms.VisualStyles;
 using JetBrains.Annotations;
 using NLog;
 using ReactiveUI;

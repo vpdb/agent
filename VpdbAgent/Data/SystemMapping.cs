@@ -50,25 +50,24 @@ namespace VpdbAgent.Data
 		/// <param name="marshallManager">Marshaller dependency</param>
 		public SystemMapping(string path, IMarshallManager marshallManager)
 		{
-			var mappings = new ReactiveList<Mapping> { ChangeTrackingEnabled = true };
+			Mappings = new ReactiveList<Mapping> { ChangeTrackingEnabled = true };
 			Observable.Merge(
-				mappings.ItemChanged.Select(x => Unit.Default), 
-				mappings.ItemsAdded.Select(x => Unit.Default),
-				mappings.ItemsRemoved.Select(x => Unit.Default)
+				Mappings.ItemChanged.Select(x => Unit.Default), 
+				Mappings.ItemsAdded.Select(x => Unit.Default),
+				Mappings.ItemsRemoved.Select(x => Unit.Default)
 			).Sample(TimeSpan.FromSeconds(1)).Subscribe(x => Save(path, marshallManager));
-			Mappings = mappings;
 
 			// if mapping goes stale, remove it.
-			mappings.ItemChanged.Subscribe(e => {
+			Mappings.ItemChanged.Subscribe(e => {
 				var mapping = e.Sender;
 				if (mapping.IsStale) {
-					mappings.Remove(mapping);
+					Mappings.Remove(mapping);
 				}
 			});
 		}
 
 		/// <summary>
-		/// Default constructor when serializing
+		/// Default constructor when serializing. Nothing auto-saves here.
 		/// </summary>
 		public SystemMapping()
 		{

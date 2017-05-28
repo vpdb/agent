@@ -112,7 +112,7 @@ namespace VpdbAgent.PinballX.Models
 		private readonly Subject<Tuple<string, List<PinballXGame>>> _gamesUpdated = new Subject<Tuple<string, List<PinballXGame>>>();
 		private readonly Subject<List<Mapping>> _mappingsUpdated = new Subject<List<Mapping>>();
 		private readonly CompositeDisposable _databaseWatchers = new CompositeDisposable();
-		private readonly SystemMapping _mapping;
+		private readonly SystemMapping _mapping; // that's the self-saving one
 		private IDisposable _mappingFileWatcher;
 
 		// deps
@@ -341,17 +341,40 @@ namespace VpdbAgent.PinballX.Models
 		{
 			if (_file.Exists(path)) {
 
-				var mapping = _marshallManager.UnmarshallMappings(path, this);
-				foreach (var m in mapping.Mappings) {
-					m.System = this;
+				var systemMapping = _marshallManager.UnmarshallMappings(path, this); // *not* self-saving
+				foreach (var mapping in systemMapping.Mappings) {
+					mapping.System = this;
 				}
 
-				// update self-saving mapping (should not trigger save because we don't subscribe to ShouldReset, which is triggered when using SuppressChangeNotifications).
+				// update self-saving mappings (should not trigger save because we don't subscribe to ShouldReset, which is triggered when using SuppressChangeNotifications).
 				using (_mapping.Mappings.SuppressChangeNotifications()) {
-					_mapping.Mappings.Clear();
-					foreach (var m in mapping.Mappings) {
-						_mapping.Mappings.Add(m);
+
+					var remainingMappings = new HashSet<Mapping>(_mapping.Mappings); 
+
+					// update games
+					foreach (var mapping in systemMapping.Mappings) {
+
+						// todo could also use an index
+						var existingMapping = _mapping.Mappings.FirstOrDefault(m => m.FileName == mapping.FileName);
+				
+						// no match, add
+						if (existingMapping == null) {
+							_mapping.Mappings.Add(mapping);
+
+						// match and not equal, so update.
+						} else if (!existingMapping.Equals(mapping)) {
+							existingMapping.Update(mapping);
+							remainingMappings.Remove(existingMapping);
+
+						// match but equal, ignore.
+						} else {
+							remainingMappings.Remove(existingMapping);
+						}
 					}
+
+					// remove remaining
+					_mapping.Mappings.RemoveAll(remainingMappings);
+
 				}
 				_mappingsUpdated.OnNext(_mapping.Mappings.ToList());
 

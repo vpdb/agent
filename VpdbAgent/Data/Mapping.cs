@@ -15,6 +15,7 @@ namespace VpdbAgent.Data
 	/// <summary>
 	/// Maps a local file to VPDB.
 	/// </summary>
+	/// 
 	/// <remarks>
 	/// It's also possible to use a Mapping for ignoring local unimportant files.
 	/// In this case, the mapping doesn't contain `id` or VPDB IDs, just 

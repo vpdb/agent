@@ -43,6 +43,10 @@ namespace VpdbAgent.PinballX
 		/// Reads the internal .json file of a given platform and returns the 
 		/// unmarshalled data object.
 		/// </summary>
+		/// 
+		/// <remarks>
+		/// Note that the mappings returned in this object are *not* auto-saving.
+		/// </remarks>
 		/// <param name="databaseFile">Absolute path of the data file to read</param>
 		/// <param name="system">The system of the mappings</param>
 		/// <returns>Deserialized object or empty data if no file exists or parsing error</returns>
@@ -111,9 +115,9 @@ namespace VpdbAgent.PinballX
 				using (var sr = new StreamReader(databaseFile))
 				using (JsonReader reader = new JsonTextReader(sr)) {
 					try {
-						var db = _serializer.Deserialize<SystemMapping>(reader);
+						var systemMapping = _serializer.Deserialize<SystemMapping>(reader);
 						reader.Close();
-						return db;
+						return systemMapping;
 					} catch (Exception e) {
 						_logger.Error(e, "Error parsing vpdb.json, deleting and ignoring.");
 						_crashManager.Report(e, "json");
