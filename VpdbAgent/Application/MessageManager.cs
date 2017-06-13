@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using Humanizer;
 using Refit;
+using VpdbAgent.Data;
 using VpdbAgent.Models;
 using VpdbAgent.Vpdb.Models;
-using Game = VpdbAgent.Models.Game;
 
 namespace VpdbAgent.Application
 {
@@ -34,7 +34,7 @@ namespace VpdbAgent.Application
 		/// <param name="release">Release that has been linked to the game</param>
 		/// <param name="fileId">File ID of the file of the release that was linked</param>
 		/// <returns>Created message</returns>
-		Message LogReleaseLinked(Game game, VpdbRelease release, string fileId);
+		Message LogReleaseLinked(AggregatedGame game, VpdbRelease release, string fileId);
 
 		/// <summary>
 		/// Logs a generic error.
@@ -91,10 +91,10 @@ namespace VpdbAgent.Application
 			return Log(msg);
 		}
 
-		public Message LogReleaseLinked(Game game, VpdbRelease release, string fileId)
+		public Message LogReleaseLinked(AggregatedGame game, VpdbRelease release, string fileId)
 		{
 			var msg = new Message(MessageType.ReleaseLinked, MessageLevel.Info, new Dictionary<string, string> {
-				{ DataGameName, game.Id },
+				{ DataGameName, game.FileId },
 				{ DataRelease, release.Id },
 				{ DataFile, fileId }
 			});

@@ -341,7 +341,6 @@
       <DependentUpon>GameResultItemView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Application\GameManager.cs" />
-    <Compile Include="Models\Game.cs" />
     <Compile Include="Bootstrapper.cs" />
     <Compile Include="ViewModels\Games\GameItemViewModel.cs" />
     <Compile Include="ViewModels\Settings\SettingsViewModel.cs" />

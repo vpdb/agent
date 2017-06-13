@@ -18,7 +18,6 @@ using VpdbAgent.VisualPinball;
 using VpdbAgent.Vpdb;
 using VpdbAgent.Vpdb.Download;
 using VpdbAgent.Vpdb.Models;
-using Game = VpdbAgent.Models.Game;
 // ReSharper disable InconsistentlySynchronizedField
 
 namespace VpdbAgent.Application
@@ -681,8 +680,6 @@ namespace VpdbAgent.Application
 		// --------------------------------------------------------------------------------------------------------------
 		// still dragons below
 
-		public ReactiveList<Game> Games { get; } = new ReactiveList<Game>();
-
 		/// <summary>
 		/// Sets up what happens when realtime messages from Pusher arrive.
 		/// </summary>
@@ -712,7 +709,7 @@ namespace VpdbAgent.Application
 
 			// new release version
 			_realtimeManager.WhenReleaseUpdated.Subscribe(msg => {
-				var game = Games.FirstOrDefault(g => g.ReleaseId == msg.ReleaseId);
+				var game = AggregatedGames.FirstOrDefault(g => g.MappedRelease?.Id == msg.ReleaseId);
 				if (game != null) {
 					_vpdbClient.Api.GetFullRelease(msg.ReleaseId)
 						.Subscribe(_databaseManager.SaveRelease,
@@ -741,9 +738,9 @@ namespace VpdbAgent.Application
 			}
 
 			// subscribe all linked releases (we want to at least know about updates for non-synched releases)
-			_settingsManager.AuthenticatedUser.ChannelConfig.SubscribedReleases = Games
-					.Where(g => !string.IsNullOrEmpty(g.ReleaseId))
-					.Select(g => g.ReleaseId)
+			_settingsManager.AuthenticatedUser.ChannelConfig.SubscribedReleases = AggregatedGames
+					.Where(g => !string.IsNullOrEmpty(g.MappedRelease?.Id))
+					.Select(g => g.MappedRelease.Id)
 					.ToList();
 
 			_settingsManager.AuthenticatedUser.ChannelConfig.SubscribeToStarred = _settingsManager.Settings.SyncStarred;
@@ -760,15 +757,15 @@ namespace VpdbAgent.Application
 		/// See <see cref="AddGame"/> for an explanation.
 		private void CheckGameLinks()
 		{
-			if (_gamesToLink.Count > 0) {
+			/*if (_gamesToLink.Count > 0) {
 				for (var i = _gamesToLink.Count - 1; i >= 0; i--) {
 					var x = _gamesToLink[i];
-					var game = Games.FirstOrDefault(g => g.Id.Equals(x.Item1));
+					var game = AggregatedGames.FirstOrDefault(g => g.Id.Equals(x.Item1));
 					var release = _databaseManager.GetRelease(x.Item2);
 					//LinkRelease(game, release, x.Item3);
 					_gamesToLink.RemoveAt(i); 
 				}
-			}
+			}*/
 		}
 
 		/// <summary>
@@ -780,7 +777,7 @@ namespace VpdbAgent.Application
 		private void UpdateReleaseData()
 		{
 			// get local release ids
-			var releaseIds = Games.Where(g => g.HasRelease).Select(g => g.ReleaseId).ToList();
+			var releaseIds = AggregatedGames.Where(g => g.HasMappedRelease).Select(g => g.Mapping.ReleaseId).ToList();
 			if (releaseIds.Count > 0) {
 				_logger.Info("Updating {0} release(s)", releaseIds.Count);
 
@@ -843,7 +840,7 @@ namespace VpdbAgent.Application
 		/// <param name="game">Game where to apply changes to</param>
 		/// <param name="baseFileName">File name of the previous version</param>
 		/// <param name="fileToPatchId">File ID of the updated version</param>
-		private void PatchGame(Game game, string baseFileName, string fileToPatchId)
+		private void PatchGame(AggregatedGame game, string baseFileName, string fileToPatchId)
 		{
 			// todo create log message when something goes wrong.
 			/*
@@ -951,17 +948,12 @@ namespace VpdbAgent.Application
 		/// <param name="releaseId">Release ID</param>
 		/// <param name="starred">If true, star, otherwise unstar</param>
 		/// <returns>Local game if found, null otherwise</returns>
-		private Game OnStarRelease(string releaseId, bool starred)
+		private AggregatedGame OnStarRelease(string releaseId, bool starred)
 		{
-			var game = Games.FirstOrDefault(g => !string.IsNullOrEmpty(g.ReleaseId) && g.ReleaseId.Equals(releaseId));
-			if (game != null) {
-				var release = _databaseManager.GetRelease(releaseId);
-				release.Starred = starred;
-				if (_settingsManager.Settings.SyncStarred) {
-					game.IsSynced = starred;
-				}
-				_databaseManager.Save();
-				_logger.Info("Toggled star on release {0} [{1}]", release.Name, starred ? "on" : "off");
+			var game = AggregatedGames.FirstOrDefault(g => releaseId.Equals(g.MappedRelease?.Id));
+			if (game != null && _settingsManager.Settings.SyncStarred) {
+				game.Mapping.IsSynced = starred;
+				_logger.Info("Toggled star on release {0} [{1}]", game.MappedRelease.Name, starred ? "on" : "off");
 			}
 			return game;
 		}
