@@ -11,9 +11,7 @@ namespace VpdbAgent.Models
 {
 	public class Message
 	{
-		[JsonConverter(typeof(StringEnumConverter))]
 		public MessageLevel Level { get; set; }
-		[JsonConverter(typeof(StringEnumConverter))]
 		public MessageType Type { get; set; }
 		public DateTime CreatedAt { get; set; }
 		public bool WasRead { get; set; }

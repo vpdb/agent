@@ -7,15 +7,11 @@ using System.Reactive;
 using System.Reactive.Subjects;
 using JetBrains.Annotations;
 using LiteDB;
-using Newtonsoft.Json;
 using NLog;
 using ReactiveUI;
 using VpdbAgent.Models;
 using VpdbAgent.Vpdb.Download;
 using VpdbAgent.Vpdb.Models;
-using VpdbAgent.Vpdb.Network;
-using File = System.IO.File;
-using JsonSerializer = Newtonsoft.Json.JsonSerializer;
 
 namespace VpdbAgent.Application
 {
@@ -128,8 +124,6 @@ namespace VpdbAgent.Application
 		/// Removes all messages from the database.
 		/// </summary>
 		void ClearLog();
-
-		[Obsolete] void Save();
 	}
 
 	[ExcludeFromCodeCoverage]
@@ -151,6 +145,7 @@ namespace VpdbAgent.Application
 		public const string TableBuilds = "builds";
 		public const string TableUsers = "users";
 		public const string TableJobs = "jobs";
+		public const string TableMessages = "messages";
 
 		// collections
 		private LiteCollection<VpdbGame> _games;
@@ -159,14 +154,13 @@ namespace VpdbAgent.Application
 		private LiteCollection<VpdbUser> _users;
 		private LiteCollection<VpdbTableFile.VpdbCompatibility> _builds;
 		private LiteCollection<Job> _jobs;
+		private LiteCollection<Message> _messages;
 
 		// props
 		public IObservable<bool> Initialized => _initialized;
 		private string _dbPath;
 		private readonly BehaviorSubject<bool> _initialized = new BehaviorSubject<bool>(false);
-
-		[Obsolete] private GlobalDatabase Database { get; } = new GlobalDatabase();
-		[Obsolete] private readonly Subject<Unit> _save = new Subject<Unit>();
+		private ReactiveList<Message> _messageList;
 
 		public DatabaseManager(ISettingsManager settingsManager, CrashManager crashManager, ILogger logger)
 		{
@@ -186,6 +180,7 @@ namespace VpdbAgent.Application
 			_builds = _db.GetCollection<VpdbTableFile.VpdbCompatibility>(TableBuilds); 
 			_users = _db.GetCollection<VpdbUser>(TableUsers);
 			_jobs = _db.GetCollection<Job>(TableJobs);
+			_messages = _db.GetCollection<Message>(TableMessages);
 
 			_mapper.UseLowerCaseDelimiter('_');
 			_mapper.Entity<VpdbRelease>().Ignore(x => x.Changing).Ignore(x => x.Changed).Ignore(x => x.ThrownExceptions);
@@ -200,6 +195,7 @@ namespace VpdbAgent.Application
 			return this;
 		}
 
+		#region VPDB
 		public VpdbRelease GetRelease(string releaseId)
 		{
 			var release = _releases.Include(x => x.Game).FindById(releaseId);
@@ -313,7 +309,9 @@ namespace VpdbAgent.Application
 				_files.Upsert(game.Logo);
 			}
 		}
+		#endregion
 
+		#region Jobs
 		public void AddJob(Job job)
 		{
 			if (GetRelease(job.Release.Id) == null) {
@@ -345,97 +343,26 @@ namespace VpdbAgent.Application
 		{
 			_jobs.Delete(job.Id);
 		}
+		#endregion
 
+		#region Messages
 		public IReactiveList<Message> GetMessages()
 		{
-			return Database.Messages;
+			return _messageList ?? (_messageList = new ReactiveList<Message>(_messages.FindAll()));
 		}
 
 		public void Log(Message msg)
 		{
-			System.Windows.Application.Current.Dispatcher.Invoke(delegate {
-				Database.Messages.Add(msg);
-				Save();
-			});
+			_messages.Insert(msg);
+			_messageList.Add(msg);
 		}
 
 		public void ClearLog()
 		{
-			System.Windows.Application.Current.Dispatcher.Invoke(delegate {
-				Database.Messages.Clear();
-				Save();
-			});
+			_messages.Delete(Query.All());
+			_messageList.Clear();
 		}
-
-		public void Save()
-		{
-		}
-
-		/// <summary>
-		/// Reads the internal global .json file of a given platform and 
-		/// returns the unmarshalled database object.
-		/// </summary>
-		/// <returns>Deserialized object or empty database if no file exists or parsing error</returns>
-		private GlobalDatabase UnmarshallDatabase()
-		{
-			if (!File.Exists(_dbPath)) {
-				_logger.Info("Creating new global database, {0} not found.", _dbPath);
-				return null;
-			}
-			try {
-				using (var sr = new StreamReader(_dbPath))
-				using (JsonReader reader = new JsonTextReader(sr)) {
-					try {
-						var db = _serializer.Deserialize<GlobalDatabase>(reader);
-						reader.Close();
-						return db;
-					} catch (Exception e) {
-						_logger.Error(e, "Error parsing {0}, deleting and ignoring.", _dbPath);
-						_crashManager.Report(e, "json");
-						reader.Close();
-						File.Delete(_dbPath);
-						return null;
-					}
-				}
-			} catch (Exception e) {
-				_logger.Error(e, "Error reading {0}, deleting and ignoring.", _dbPath);
-				_crashManager.Report(e, "json");
-				return null;
-			}
-		}
-
-		/// <summary>
-		/// Writes the database to the internal .json file for the global database.
-		/// </summary>
-		private void MarshallDatabase()
-		{
-			var dbFolder = Path.GetDirectoryName(_dbPath);
-			if (dbFolder != null && !Directory.Exists(dbFolder)) {
-				_logger.Warn("Directory {0} does not exist, not writing vpdb.json.", dbFolder);
-				return;
-			}
-
-			try {
-				_logger.Info("Saving global database...");
-				using (var sw = new StreamWriter(_dbPath))
-				using (JsonWriter writer = new JsonTextWriter(sw)) {
-					_serializer.Serialize(writer, Database);
-				}
-				_logger.Info("Saved at {0}", _dbPath);
-			} catch (Exception e) {
-				_logger.Error(e, "Error writing database to {0}", _dbPath);
-				_crashManager.Report(e, "json");
-			}
-		}
-
-		/// <summary>
-		/// JSON serialization rules
-		/// </summary>
-		private readonly JsonSerializer _serializer = new JsonSerializer {
-			NullValueHandling = NullValueHandling.Ignore,
-			ContractResolver = new SnakeCasePropertyNamesContractResolver(),
-			Formatting = Formatting.Indented
-		};
+		#endregion
 
 		public void Dispose()
 		{
