@@ -8,10 +8,10 @@ namespace VpdbAgent.Vpdb
 {
 	public interface IVpdbApi
 	{
-		[Get("/v1/user")]
+		[Get("/v1/profile")]
 		IObservable<VpdbUserFull> GetProfile();
 
-		[Patch("/v1/user")]
+		[Patch("/v1/profile")]
 		IObservable<VpdbUserFull> UpdateProfile([Body] VpdbUserFull profile);
 
 		[Get("/v1/games/{id}")]
